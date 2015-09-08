@@ -13,6 +13,8 @@ class ApiPresenter extends Presenter
 
     public function renderDefault()
     {
+        
+
         $handler = $this->apiDecider->getApiHandler(
             $this->request->getMethod(),
             $this->params['version'],
@@ -20,7 +22,7 @@ class ApiPresenter extends Presenter
             $this->params['apiAction']
         );
 
-        $response = $handler->handle($this->params['params']);
+        $response = $handler->handle($this->params);
         $code = $response->getCode();
         $this->getHttpResponse()->setCode($code);
         $this->sendResponse($response);

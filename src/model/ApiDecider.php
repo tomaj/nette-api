@@ -2,6 +2,7 @@
 
 namespace Tomaj\NetteApi;
 
+use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 
@@ -21,11 +22,12 @@ class ApiDecider
         return new DefaultHandler($version, $package, $apiAction);
     }
 
-    public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler)
+    public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization)
     {
         $this->handlers[] = [
             'endpoint' => $endpointIdentifier,
             'handler' => $handler,
+            'authorization' => $apiAuthorization,
         ];
         return $this;
     }
