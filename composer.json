@@ -1,0 +1,23 @@
+{
+    "name": "tomaj/nette-api",
+    "description": "Nette api",
+    "license": "LGPL",
+    "keywords": ["nette", "api"],
+    "authors": [
+        {
+            "name": "Tomas Majer",
+            "email": "tomasmajer@gmail.com",
+            "homepage": "http://www.tomaj.sk/"
+        }
+    ],
+    "require": {
+        "php": ">= 5.3.7"
+    },
+    "require-dev": {
+    },
+    "autoload": {
+        "classmap": [
+            "src/"
+        ]
+    }
+}
