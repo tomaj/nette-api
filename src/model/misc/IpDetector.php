@@ -2,7 +2,7 @@
 
 namespace Tomaj\NetteApi\Misc;
 
-class IpDetector
+class IpDetector implements IpDetectorInterface
 {
     public function getRequestIp()
     {

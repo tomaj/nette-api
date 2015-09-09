@@ -19,9 +19,10 @@ interface BearerTokenRepositoryInterface
      *   '*' - all access
      *   '152.26.252.142' - access only from this ip
      *   '156.26.252/32' - access from ip range
+     *   false - if token doesn't exists
      *
      * @param $token string
-     * @return string
+     * @return string|false
      */
     public function ipRestrictions($token);
 }
