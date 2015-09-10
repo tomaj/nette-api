@@ -7,14 +7,25 @@ use Nette\Application\UI\Presenter;
 use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Params\ParamsProcessor;
+use Tomaj\NetteApi\Misc\IpDetectorInterface;
 
 class ApiPresenter extends Presenter
 {
     /** @var  ApiDecider @inject */
     public $apiDecider;
 
+    /** @var  IpDetectorInterface @inject */
+    public $ipDetector;
+
     public function renderDefault()
     {
+        $start = microtime(true);
+
+        $logger = null;
+        if ($this->context->hasService('apiLogger')) {
+            $logger = $this->context->getService('apiLogger');
+        }
+
         // get handler
         $hand = $this->apiDecider->getApiHandler(
             $this->request->getMethod(),
@@ -44,6 +55,26 @@ class ApiPresenter extends Presenter
         // process handler
         $response = $handler->handle($params);
         $code = $response->getCode();
+
+        $end = microtime(true);
+
+        if ($logger) {
+            $headers = getallheaders();
+            $requestHeaders = '';
+            foreach ($headers as $key => $value) {
+                $requestHeaders .= "$key: $value\n";
+            }
+
+            $logger->log(
+                $code,
+                $this->request->getMethod(),
+                $requestHeaders,
+                $_SERVER['REQUEST_URI'],
+                $this->ipDetector->getRequestIp(),
+                $_SERVER['HTTP_USER_AGENT'],
+                ($end-$start) * 1000
+            );
+        }
 
         // output to nette
         $this->getHttpResponse()->setCode($code);

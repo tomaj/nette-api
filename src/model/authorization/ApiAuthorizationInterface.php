@@ -7,4 +7,6 @@ interface ApiAuthorizationInterface
     public function authorized();
 
     public function getErrorMessage();
+
+//    public function getAuthorizedResource();
 }
