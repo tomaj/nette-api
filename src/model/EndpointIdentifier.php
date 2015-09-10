@@ -37,6 +37,9 @@ class EndpointIdentifier implements EndpointInterface
 
     public function getApiAction()
     {
+        if ($this->apiAction == '') {
+            return null;
+        }
         return $this->apiAction;
     }
 

@@ -19,6 +19,8 @@ class ApiDecider
         foreach ($this->handlers as $handler) {
             $identifier = $handler['endpoint'];
             if ($method == $identifier->getMethod() && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
+                $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
+                $handler['handler']->setEndpointIdentifier($endpointIdentifier);
                 return $handler;
             }
         }
