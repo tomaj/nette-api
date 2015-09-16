@@ -12,7 +12,7 @@ class EndpointIdentifier implements EndpointInterface
 
     private $apiAction;
 
-    public function __construct($method, $version, $package, $apiAction)
+    public function __construct($method, $version, $package, $apiAction = '')
     {
         $this->method = strtoupper($method);
         $this->version = $version;

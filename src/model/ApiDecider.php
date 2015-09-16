@@ -14,7 +14,7 @@ class ApiDecider
     /** @var ApiHandlerInterface[] */
     private $handlers = [];
 
-    public function getApiHandler($method, $version, $package, $apiAction)
+    public function getApiHandler($method, $version, $package, $apiAction = '')
     {
         foreach ($this->handlers as $handler) {
             $identifier = $handler['endpoint'];
