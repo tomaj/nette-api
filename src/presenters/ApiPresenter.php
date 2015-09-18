@@ -59,7 +59,11 @@ class ApiPresenter extends Presenter
         $end = microtime(true);
 
         if ($logger) {
-            $headers = \getallheaders();
+            $headers = [];
+            if (function_exists('getallheaders')) {
+                $headers = getallheaders();
+            }
+
             $requestHeaders = '';
             foreach ($headers as $key => $value) {
                 $requestHeaders .= "$key: $value\n";
