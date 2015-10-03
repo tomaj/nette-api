@@ -8,6 +8,7 @@ class InputParam
 {
     const TYPE_POST = 'POST';
     const TYPE_GET  = 'GET';
+    const TYPE_FILE = 'FILE';
 
     const OPTIONAL = false;
     const REQUIRED = true;
@@ -91,7 +92,12 @@ class InputParam
             }
             return filter_input(INPUT_POST, $this->key);
         }
-
+        if ($this->type == self::TYPE_FILE) {
+           if (isset($_FILES[$this->key])) {
+               return $_FILES[$this->key];
+           }
+        }
+        
         throw new Exception("Invalid type");
     }
 }
