@@ -21,6 +21,8 @@ class ApiPresenter extends Presenter
     {
         $start = microtime(true);
 
+        $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', '*');
+
         $logger = null;
         if ($this->context->hasService('apiLogger')) {
             $logger = $this->context->getService('apiLogger');
