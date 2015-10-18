@@ -6,7 +6,6 @@ use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
 use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
-use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 
@@ -18,25 +17,9 @@ class ApiPresenter extends Presenter
     /** @var  IpDetectorInterface @inject */
     public $ipDetector;
 
-    /** @var ApiLink @inject */
-    public $apiLink;
-    
     public function renderList($version = null)
     {
-        $list = [];
-        $handlers = $this->apiDecider->getHandlers();
-        foreach ($handlers as $handler) {
-            $endpoint = $handler['endpoint'];
-            if (!$version || ($version && $version == $endpoint->getVersion())) {
-                $list[] = [
-                    'method' => $endpoint->getMethod(),
-                    'version' => $endpoint->getVersion(),
-                    'package' => $endpoint->getPackage(),
-                    'api_action' => $endpoint->getApiAction(),
-                    'url' => $this->apiLink->link($endpoint, []),
-                ];
-            }
-        }
+        $list = $this->apiDecider->getHandlersList($version);
         $this->sendJson($list);
     }
     

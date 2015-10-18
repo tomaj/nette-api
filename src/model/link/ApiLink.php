@@ -12,7 +12,7 @@ class ApiLink
         $this->linkGenerator = $linkGenerator;
     }
 
-    public function link(EndpointIdentifier $endpoint, $params)
+    public function link(EndpointIdentifier $endpoint, $params = [])
     {
 //        return $this->linkGenerator->link('Api:Api:default', ['version' => 1, 'package' => '123213', 'apiAction' => null]);
         $params = array_merge(['version' => $endpoint->getVersion(), 'package' => $endpoint->getPackage(), 'apiAction' => $endpoint->getApiAction()], $params);

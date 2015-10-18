@@ -4,7 +4,7 @@ namespace Tomaj\NetteApi\Params;
 
 use Exception;
 
-class InputParam
+class InputParam implements ParamInterface
 {
     const TYPE_POST = 'POST';
     const TYPE_GET  = 'GET';
