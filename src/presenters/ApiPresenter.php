@@ -6,8 +6,8 @@ use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
 use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
-use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
+use Tomaj\NetteApi\Params\ParamsProcessor;
 
 class ApiPresenter extends Presenter
 {
@@ -17,6 +17,12 @@ class ApiPresenter extends Presenter
     /** @var  IpDetectorInterface @inject */
     public $ipDetector;
 
+    public function renderList($version = null)
+    {
+        $list = $this->apiDecider->getHandlersList($version);
+        $this->sendJson($list);
+    }
+    
     public function renderDefault()
     {
         $start = microtime(true);
