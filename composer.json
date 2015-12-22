@@ -15,10 +15,20 @@
         "league/fractal": "^0.12.0"
     },
     "require-dev": {
+        "phpunit/phpunit": "~4.3",
+        "scrutinizer/ocular": "~1.1"
     },
     "autoload": {
-        "classmap": [
-            "src/"
-        ]
+        "psr-4": {
+             "Tomaj\\NetteApi\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tomaj\\NetteApi\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }

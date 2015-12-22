@@ -62,7 +62,8 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         return false;
     }
 
-    private function ipInRange($ip, $range) {
+    private function ipInRange($ip, $range)
+    {
         if (strpos($range, '/') == false) {
             $range .= '/32';
         }
