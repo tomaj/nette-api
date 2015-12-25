@@ -1,0 +1,28 @@
+<div class="api-listing">
+    <div n:foreach="$handlers as $version => $handlers" class="listing-verions listing-version-{$version}">
+        <h3>Verzia {$version}</h3>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Url</th>
+                        <th>Handler</th>
+                        <th>Authorization</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr n:foreach="$handlers as $handler">
+                        <td><span class="label label-default">{$handler['endpoint']->getMethod()}</span></td>
+                        <td>
+                            <a href="{link Select! $handler['endpoint']->getMethod(), $handler['endpoint']->getVersion(), $handler['endpoint']->getPackage(), $handler['endpoint']->getApiAction()}"><b>/{$handler['endpoint']->getUrl()}</b></a>
+                        </td>
+                        <td>{get_class($handler['handler'])}</td>
+                        <td>{get_class($handler['authorization'])}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
