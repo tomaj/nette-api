@@ -21,12 +21,15 @@ class InputParam implements ParamInterface
 
     private $availableValues;
 
-    public function __construct($type, $key, $required = self::OPTIONAL, $availableValues = null)
+    private $multi;
+
+    public function __construct($type, $key, $required = self::OPTIONAL, $availableValues = null, $multi = false)
     {
         $this->type = $type;
         $this->key = $key;
         $this->required = $required;
         $this->availableValues = $availableValues;
+        $this->multi = $multi;
     }
 
     /**
@@ -56,6 +59,14 @@ class InputParam implements ParamInterface
     public function getAvailableValues()
     {
         return $this->availableValues;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMulti()
+    {
+        return $this->multi;
     }
 
     public function isValid()

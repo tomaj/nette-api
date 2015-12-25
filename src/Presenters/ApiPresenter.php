@@ -1,6 +1,6 @@
 <?php
 
-namespace App\ApiModule\Presenters;
+namespace Tomaj\NetteApi\Presenters;
 
 use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
@@ -83,7 +83,7 @@ class ApiPresenter extends Presenter
                 $requestHeaders,
                 $_SERVER['REQUEST_URI'],
                 $this->ipDetector->getRequestIp(),
-                $_SERVER['HTTP_USER_AGENT'],
+                isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : null,
                 ($end-$start) * 1000
             );
         }
