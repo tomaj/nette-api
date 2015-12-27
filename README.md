@@ -36,12 +36,22 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 First you have register library presenter for routing. In *config.neon* just add this line:
 
 ```
-todo
+application:
+    mapping:
+        Api: Tomaj\NetteApi\Presenters\*Presenter
 ```
 
-After that you need only register your api handlers to apiDecider. This can be done also with *config.neon*:
+And add route to you RouterFactory:
 
 ```
+$router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default', $flags);
+```
+
+After that you need only register your api handlers to *apiDecider* and register ApiLink and IpDetector. This can be done also with *config.neon*:
+
+```
+- Tomaj\NetteApi\Link\ApiLink
+- Tomaj\NetteApi\Misc\IpDetector
 apiDecider:
 		class: Tomaj\NetteApi\ApiDecider
 		setup:
