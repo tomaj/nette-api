@@ -13,11 +13,12 @@
     "require": {
         "php": ">= 5.4.0",
         "nette/application": "~2.0",
-        "league/fractal": "^0.12.0"
+        "league/fractal": "^0.12.0",
+        "tomaj/nette-bootstrap-form": "~1.1"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.3",
-        "scrutinizer/ocular": "~1.1"
+        "scrutinizer/ocular": "~1.1",
     },
     "autoload": {
         "psr-4": {

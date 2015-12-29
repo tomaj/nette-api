@@ -5,6 +5,7 @@ namespace Tomaj\NetteApi\Component;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 use Nette\Http\Request;
+use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
@@ -44,7 +45,7 @@ class ApiConsoleControl extends Control
 
         $defaults = [];
 
-//        $form->setRenderer(new BootstrapRenderer());
+        $form->setRenderer(new BootstrapRenderer());
 
         $uri = $this->request->getUrl();
         $scheme = $uri->scheme;
