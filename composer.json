@@ -18,7 +18,7 @@
     },
     "require-dev": {
         "phpunit/phpunit": "~4.3",
-        "scrutinizer/ocular": "~1.1",
+        "scrutinizer/ocular": "~1.1"
     },
     "autoload": {
         "psr-4": {
