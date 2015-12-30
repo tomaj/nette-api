@@ -46,7 +46,7 @@ class ApiPresenter extends Presenter
 
         // check authorization
         if (!$authorization->authorized()) {
-            $this->getHttpResponse()->setCode(Response::S500_INTERNAL_SERVER_ERROR);
+            $this->getHttpResponse()->setCode(Response::S403_FORBIDDEN);
             $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]));
             return;
         }
