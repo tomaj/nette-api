@@ -157,6 +157,9 @@ class ApiConsoleControl extends Control
         $result .= "\n";
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
+        if ($this->endpoint->getMethod() == 'DELETE') {
+            curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE');
+        }
         curl_setopt($curl, CURLOPT_NOBODY, false);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -169,7 +172,7 @@ class ApiConsoleControl extends Control
 
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         if ($token) {
-            $headers = array('Authorization: Bearer ' . $token);
+            $headers = ['Authorization: Bearer ' . $token];
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
             $result .= implode("\n", $headers);
         }
