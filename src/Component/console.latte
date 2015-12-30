@@ -2,7 +2,46 @@
 <h2>Api Web Console</h2>
 
 {ifset $response}
-    <pre>{$response}</pre>
+    <div class="row">
+        <div class="col-md-12">
+            <h3>Request</h3>
+            <p>
+                <span class="label label-default">{$response->getMethod()}</span>
+                <code>{$response->getUrl()}</code>
+            </p>
+            <p>
+                {if $response->getPostFields()}
+                    <b>POST:</b>
+                    <pre>{!implode("\n", $response->getPostFields())}</pre>
+                {/if}
+                {if $response->getGetFields()}
+                    <b>GET:</b>
+                    <pre>{!implode("\n", $response->getGetFields())}</pre>
+                {/if}
+                {if $response->getHeaders()}
+                    <b>HEADERS:</b>
+                    <pre>{!implode("\n", $response->getHeaders())}</pre>
+                {/if}
+            </p>
+
+            <hr>
+
+            <h3>Response</h3>
+            <p>
+                Took: {$response->getResponseTime()}ms
+                <br>
+                {if $response->isError()}
+                    <b>Error {$response->getErrorNumber()}</b>
+                    {$response->getErrorMessage()}
+                {else}
+                    <span class="label label-default">{$response->getResponseCode()}</span>
+                    <pre>{$response->getFormattedJsonBody()}</pre>
+                {/if}
+            </p>
+
+            <hr>
+        </div>
+    </div>
 {/ifset}
 
 <div class="row">
