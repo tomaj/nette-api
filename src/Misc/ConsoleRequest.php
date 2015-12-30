@@ -51,7 +51,7 @@ class ConsoleRequest
 
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         $headers = [];
-        if ($token) {
+        if ($token !== null) {
             $headers = ['Authorization: Bearer ' . $token];
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
