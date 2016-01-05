@@ -69,6 +69,9 @@ abstract class BaseHandler implements ApiHandlerInterface
         if (!$this->linkGenerator) {
             throw new InvalidStateException("You have setupLinkGenerator for this handler if you want to generate link in this handler");
         }
+        if (!$this->endpoint) {
+            throw new InvalidStateException("You have setEndpoint() for this handler if you want to generate link in this handler");
+        }
         $params = array_merge([
             'version' => $this->endpoint->getVersion(),
             'package' => $this->endpoint->getPackage(),
