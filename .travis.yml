@@ -25,6 +25,7 @@ before_script:
 
 script:
     - mkdir -p build/logs
+    - php vendor/bin/phpcs src/ --standard=PSR2 -n
     - vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
 
 after_script:

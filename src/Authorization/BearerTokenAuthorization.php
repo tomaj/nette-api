@@ -64,7 +64,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
      * Check if actual IP from detector satisfies @ipRestristions
      * $ipRestrictions should contains multiple formats:
      *   '*'                  - accessible from anywhare
-     *   '127.0.0.1'          - accessible from single IP 
+     *   '127.0.0.1'          - accessible from single IP
      *   '127.0.0.1,127.0.02' - accessible from multiple IP, separator could be new line or space
      *   '127.0.0.1/32'       - accessible from ip range
      *

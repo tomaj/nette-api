@@ -104,9 +104,9 @@ class InputParam implements ParamInterface
             return filter_input(INPUT_POST, $this->key);
         }
         if ($this->type == self::TYPE_FILE) {
-           if (isset($_FILES[$this->key])) {
-               return $_FILES[$this->key];
-           }
+            if (isset($_FILES[$this->key])) {
+                return $_FILES[$this->key];
+            }
         }
         
         throw new Exception("Invalid type");
