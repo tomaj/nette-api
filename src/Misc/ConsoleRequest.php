@@ -125,13 +125,13 @@ class ConsoleRequest
     /**
      * Process one param and returns value
      *
-     * @param InputParam $param  input param
-     * @param string $key        param key
-     * @param string $value      actual value from request
+     * @param InputParam  $param   input param
+     * @param string      $key     param key
+     * @param string      $value   actual value from request
      *
      * @return string
      */
-    private function processParam($param, $key, $value)
+    private function processParam(InputParam $param, $key, $value)
     {
         if ($param->getKey() == $key) {
             if (!$value) {
