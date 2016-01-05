@@ -44,7 +44,7 @@ application:
 And add route to you RouterFactory:
 
 ``` php
-$router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default', $flags);
+$router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default');
 ```
 
 After that you need only register your api handlers to *apiDecider* [ApiDecider](src/ApiDecider.php) and register [ApiLink](src/Link/ApiLink.php) and [Tomaj\NetteApi\Misc\IpDetector](src/Misc/IpDetector.php). This can be done also with *config.neon*:
@@ -182,7 +182,7 @@ services:
     
 ```
 
-With this registration you will have api `/api/v1/users` that will be accesible from anywhare with Authorization HTTP header *'Bearer dasfoihwet90hidsg'* or from '127.0.0.1' with *'Bearer asfoihweiohgwegi'*.
+With this registration you will have api `/api/v1/users` that will be accesible from anywhare with Authorization HTTP header `Bearer dasfoihwet90hidsg` or from *127.0.0.1* with `Bearer asfoihweiohgwegi`.
 In NetteApi if you would like to specify IP restrictions for tokens you can use this patterns:
 
 | IP Pattern                | Access
@@ -199,7 +199,7 @@ But it is very easy to implement your own Authorization for API.
 
 It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all api requests.
 
-## WEB console - API tester
+# WEB console - API tester
 
 Nette-api contains 2 UI controls that can be used to validate you api.
 It will generate listing with all API calls and also auto generate form with all api params.
