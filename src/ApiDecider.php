@@ -71,7 +71,7 @@ class ApiDecider
                 'url' => $this->apiLink->link($endpoint),
             ];
             $params = $this->createParamsList($handler);
-            if ($params) {
+            if (count($params) > 0) {
                 $item['params'] = $params;
             }
             $list[] = $item;

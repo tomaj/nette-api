@@ -12,6 +12,11 @@ class ConsoleRequest
      */
     private $handler;
 
+    /**
+     * Create ConsoleRequest
+     *
+     * @param ApiHandlerInterface $handler
+     */
     public function __construct(ApiHandlerInterface $handler)
     {
         $this->handler = $handler;
@@ -24,6 +29,7 @@ class ConsoleRequest
      * @param string $method
      * @param array $values
      * @param string|null $token
+     *
      * @return ConsoleResponse
      */
     public function makeRequest($url, $method, $values, $token = null)
@@ -79,6 +85,13 @@ class ConsoleRequest
         return $consoleResponse;
     }
 
+    /**
+     * Process given values to POST and GET fields
+     *
+     * @param InputParam[] $values
+     *
+     * @return array
+     */
     private function processValues($values)
     {
         $params = $this->handler->params();
@@ -109,6 +122,15 @@ class ConsoleRequest
         return [$postFields, $getFields];
     }
 
+    /**
+     * Process one param and returns value
+     *
+     * @param InputParam $param  input param
+     * @param string $key        param key
+     * @param string $value      actual value from request
+     *
+     * @return string
+     */
     private function processParam($param, $key, $value)
     {
         if ($param->getKey() == $key) {

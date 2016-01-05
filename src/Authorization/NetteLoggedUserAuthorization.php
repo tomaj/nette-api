@@ -9,7 +9,7 @@ class NetteLoggedAuthorization implements ApiAuthorizationInterface
     /** @var User  */
     private $user;
 
-    private $errorMessage = false;
+    private $errorMessage = null;
 
     public function __construct(User $user)
     {

@@ -110,6 +110,6 @@ class ApiConsoleControl extends Control
         $consoleRequest = new ConsoleRequest($this->handler);
         $result = $consoleRequest->makeRequest($url, $method, $values, $token);
 
-        $this->template->response = $result;
+        $this->template->add('response', $result);
     }
 }
