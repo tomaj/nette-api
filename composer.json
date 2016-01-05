@@ -18,7 +18,6 @@
     },
     "require-dev": {
         "phpunit/phpunit": "~4.3",
-        "scrutinizer/ocular": "~1.1",
         "squizlabs/php_codesniffer": "2.*"
     },
     "autoload": {
