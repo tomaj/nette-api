@@ -17,4 +17,11 @@ class EndpointIdentifierTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('show', $endpoint->getApiAction());
         $this->assertEquals('v1/core/show', $endpoint->getUrl());
     }
+
+    public function testSimpleUrl()
+    {
+        $endpoint = new EndpointIdentifier('get', 2, 'main');
+        $this->assertNull($endpoint->getApiAction());
+        $this->assertEquals('GET', $endpoint->getMethod());
+    }
 }
