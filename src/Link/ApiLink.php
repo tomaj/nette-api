@@ -26,7 +26,7 @@ class ApiLink
      * Create link to specified api endpoint
      *
      * @param EndpointIdentifier  $endpoint
-     * @param array               $param
+     * @param array               $params
      *
      * @return string
      */
