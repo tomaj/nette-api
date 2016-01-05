@@ -4,13 +4,14 @@ namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\ApiResponse;
+use Tomaj\NetteApi\Params\InputParam;
 
 interface ApiHandlerInterface
 {
     /**
      * Returns available parameters that handler need
      *
-     * @return array
+     * @return InputParam[]
      */
     public function params();
 

@@ -12,17 +12,37 @@ use Tomaj\NetteApi\Link\ApiLink;
 
 class ApiDecider
 {
-    /** @var ApiHandlerInterface[] */
+    /**
+     * @var ApiHandlerInterface[]
+     */
     private $handlers = [];
 
-    /** @var ApiLink */
+    /**
+     * @var ApiLink
+     */
     private $apiLink;
-    
+
+    /**
+     * ApiDecider constructor.
+     *
+     * @param ApiLink $apiLink
+     */
     public function __construct(ApiLink $apiLink)
     {
         $this->apiLink = $apiLink;
     }
 
+    /**
+     * Get api handler that match input method, version, package and apiAction.
+     * If decider cannot find handler for given handler, returns defaults.
+     *
+     * @param string   $method
+     * @param integer  $version
+     * @param string   $package
+     * @param string   $apiAction
+     *
+     * @return array
+     */
     public function getApiHandler($method, $version, $package, $apiAction = '')
     {
         foreach ($this->handlers as $handler) {
@@ -40,6 +60,15 @@ class ApiDecider
         ];
     }
 
+    /**
+     * Register new api handler
+     *
+     * @param EndpointInterface         $endpointIdentifier
+     * @param ApiHandlerInterface       $handler
+     * @param ApiAuthorizationInterface $apiAuthorization
+     *
+     * @return $this
+     */
     public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization)
     {
         $this->handlers[] = [
@@ -50,11 +79,17 @@ class ApiDecider
         return $this;
     }
 
+    /**
+     * Get all registered handlers
+     *
+     * @return Handlers\ApiHandlerInterface[]
+     */
     public function getHandlers()
     {
         return $this->handlers;
     }
-    
+
+    /*
     public function getHandlersList($version)
     {
         $list = [];
@@ -88,7 +123,6 @@ class ApiDecider
                 'type' => $param->getType(),
                 'key' => $param->getKey(),
                 'is_required' => $param->isRequired(),
-                
             ];
             if ($param->getAvailableValues()) {
                 $parameter['available_values'] = $param->getAvailableValues();
@@ -97,4 +131,5 @@ class ApiDecider
         }
         return $params;
     }
+    */
 }

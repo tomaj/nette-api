@@ -11,18 +11,21 @@ use Tomaj\NetteApi\Params\ParamsProcessor;
 
 class ApiPresenter extends Presenter
 {
-    /** @var  ApiDecider @inject */
+    /**
+     * @var  ApiDecider @inject
+     */
     public $apiDecider;
 
-    /** @var  IpDetectorInterface @inject */
+    /**
+     * @var  IpDetectorInterface @inject
+     */
     public $ipDetector;
 
-    public function renderList($version = null)
-    {
-        $list = $this->apiDecider->getHandlersList($version);
-        $this->sendJson($list);
-    }
-    
+    /**
+     * Nette render default method
+     *
+     * @return void
+     */
     public function renderDefault()
     {
         $start = microtime(true);

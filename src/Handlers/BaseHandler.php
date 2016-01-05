@@ -22,7 +22,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * @var  LinkGenerator
      */
-    private $linkGenerator;
+    protected $linkGenerator;
 
     public function __construct()
     {
