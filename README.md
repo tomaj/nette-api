@@ -20,7 +20,7 @@ This library requires PHP 5.4 or later. It works also on HHVM and PHP 7.0.
 
 Recommended installation method is via Composer:
 
-```bash
+``` bash
 $ composer require tomaj/nette-api
 ```
 
@@ -35,7 +35,7 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 
 First you have register library presenter for routing. In *config.neon* just add this line:
 
-```
+``` yaml
 application:
     mapping:
         Api: Tomaj\NetteApi\Presenters\*Presenter
@@ -43,13 +43,13 @@ application:
 
 And add route to you RouterFactory:
 
-```
+``` php
 $router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default', $flags);
 ```
 
 After that you need only register your api handlers to *apiDecider* and register ApiLink and IpDetector. This can be done also with *config.neon*:
 
-```
+``` yaml
 - Tomaj\NetteApi\Link\ApiLink
 - Tomaj\NetteApi\Misc\IpDetector
 apiDecider:
@@ -68,9 +68,8 @@ Core of the nette api is handlers. For this example you need implement 2 classes
 
 This handlers implements interface *ApiHandlerInterface* but for easier usage you can extens your handler from BaseHandler. 
 
-```
-
-namespace App\MyApi\v1\Handlers
+``` php
+namespace App\MyApi\v1\Handlers;
 
 class UsersListingHandler extends Basehandler
 {
@@ -91,7 +90,6 @@ class UsersListingHandler extends Basehandler
 		return new ApiResponse(200, ['status' => 'ok', 'users' => $users]);
 	}
 }
-
 ```
 
 This simple handler is usign UsersRepository that was created by Nette Container (so you have to register App\MyApi\v1\Handlers\UsersListingHandler in config.neon).
@@ -117,7 +115,7 @@ All components generate bootstrap html and can be style:
 
 You have to create components in your controller:
 
-```
+``` php
 use Nette\Application\UI\Presenter;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Component\ApiConsoleControl;
@@ -140,7 +138,7 @@ class MyPresenter extends Presenter
     protected function createComponentApiListing()
     {
         $apiListing = new ApiListingControl($this, 'apiListingControl', $this->apiDecider);
-        $apiListing->onClick(function($method, $version, $package, $apiAction) {
+        $apiListing->onClick(function ($method, $version, $package, $apiAction) {
             $this->redirect('show', $method, $version, $package, $apiAction);
         });
         return $apiListing;
@@ -152,7 +150,7 @@ class MyPresenter extends Presenter
         $apiConsole = new ApiConsoleControl($this->getHttpRequest(), $api['endpoint'], $api['handler'], $api['authorization']);
         return $apiConsole;
     }
-{
+}
 ```
 
 ## Change log
