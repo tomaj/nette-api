@@ -4,6 +4,7 @@ namespace Tomaj\NetteApi\Fractal;
 
 use League\Fractal\Pagination\PaginatorInterface;
 use Nette\Database\Table\Selection;
+use Closure;
 
 class NetteSelectionPaginator implements PaginatorInterface
 {
@@ -17,7 +18,7 @@ class NetteSelectionPaginator implements PaginatorInterface
 
     private $totalCount = null;
 
-    public function __construct(Selection $items, $perPage, $page, \Closure $apiLinkGenerator = null)
+    public function __construct(Selection $items, $perPage, $page, Closure $apiLinkGenerator = null)
     {
         $this->items = $items;
         $this->perPage = $perPage;

@@ -9,13 +9,19 @@ use Tomaj\NetteApi\EndpointInterface;
 
 abstract class BaseHandler implements ApiHandlerInterface
 {
-    /** @var Manager  */
+    /**
+     * @var Manager
+     */
     private $fractal;
 
-    /** @var EndpointInterface  */
+    /**
+     * @var EndpointInterface
+     */
     private $endpoint;
 
-    /** @var  LinkGenerator */
+    /**
+     * @var  LinkGenerator
+     */
     private $linkGenerator;
 
     public function __construct()
@@ -23,6 +29,9 @@ abstract class BaseHandler implements ApiHandlerInterface
         $this->fractal = new Manager();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function params()
     {
         return [];
@@ -36,6 +45,9 @@ abstract class BaseHandler implements ApiHandlerInterface
         return $this->fractal;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function setEndpointIdentifier(EndpointInterface $endpoint)
     {
         $this->endpoint = $endpoint;
@@ -57,11 +69,16 @@ abstract class BaseHandler implements ApiHandlerInterface
         if (!$this->linkGenerator) {
             throw new InvalidStateException("You have setupLinkGenerator for this handler if you want to generate link in this handler");
         }
-//        $a = $this->linkGenerator->link('Api:Api:default', , 'page' => 2]);
-        $params = array_merge(['version' => $this->endpoint->getVersion(), 'package' => $this->endpoint->getPackage(), 'apiAction' => $this->endpoint->getApiAction()], $params);
+        $params = array_merge([
+            'version' => $this->endpoint->getVersion(),
+            'package' => $this->endpoint->getPackage(),
+            'apiAction' => $this->endpoint->getApiAction()
+        ], $params);
         return $this->linkGenerator->link('Api:Api:default', $params);
-
     }
 
+    /**
+     * {@inheritdoc}
+     */
     abstract public function handle($params);
 }
