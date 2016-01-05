@@ -7,11 +7,19 @@ use Tomaj\NetteApi\Misc\IpDetectorInterface;
 
 class BearerTokenAuthorization implements ApiAuthorizationInterface
 {
-    /** @var BearerTokenRepositoryInterface  */
+    /**
+     * @var BearerTokenRepositoryInterface
+     */
     private $tokenRepository;
 
+    /**
+     * @var string|boolean
+     */
     private $errorMessage = false;
 
+    /**
+     * @var IpDetectorInterface
+     */
     private $ipDetector;
 
     public function __construct(BearerTokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
@@ -20,6 +28,9 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         $this->ipDetector = $ipDetector;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function authorized()
     {
         $token = $this->readAuthorizationToken();
@@ -41,6 +52,24 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         return true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function getErrorMessage()
+    {
+        return $this->errorMessage;
+    }
+
+    /**
+     * Check if actual IP from detector satisfies @ipRestristions
+     * $ipRestrictions should contains multiple formats:
+     *   '*'                  - accessible from anywhare
+     *   '127.0.0.1'          - accessible from single IP 
+     *   '127.0.0.1,127.0.02' - accessible from multiple IP, separator could be new line or space
+     *   '127.0.0.1/32'       - accessible from ip range
+     *
+     * @return boolean
+     */
     private function isValidIp($ipRestrictions)
     {
         if ($ipRestrictions == '*' || $ipRestrictions == '' || $ipRestrictions == null) {
@@ -62,6 +91,13 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         return false;
     }
 
+    /**
+     * Check if IP is in $range
+     *
+     * @param string $ip
+     * @param string $range
+     * @return boolean
+     */
     private function ipInRange($ip, $range)
     {
         if (strpos($range, '/') == false) {
@@ -76,12 +112,14 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         return ( ( $ip_decimal & $netmask_decimal ) == ( $range_decimal & $netmask_decimal ) );
     }
 
-    public function getErrorMessage()
-    {
-        return $this->errorMessage;
-    }
 
-    public function readAuthorizationToken()
+    /**
+     * Read HTTP reader with authorization token
+     * If everything is ok, it return token. In other situations returns false and set errorMessage.
+     *
+     * @return string|boolean
+     */
+    private function readAuthorizationToken()
     {
         if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
             $this->errorMessage = 'Authorization header HTTP_Authorization is not set';

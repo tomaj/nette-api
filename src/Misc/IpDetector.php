@@ -4,6 +4,9 @@ namespace Tomaj\NetteApi\Misc;
 
 class IpDetector implements IpDetectorInterface
 {
+    /**
+     * {@inheritdoc}
+     */
     public function getRequestIp()
     {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
