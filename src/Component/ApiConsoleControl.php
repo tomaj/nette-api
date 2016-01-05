@@ -12,6 +12,7 @@ use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
+use Tomaj\NetteApi\Params\InputParam;
 
 class ApiConsoleControl extends Control
 {
@@ -76,7 +77,7 @@ class ApiConsoleControl extends Control
                 if ($param->isMulti()) {
                     $key = $key . '___' . $i;
                 }
-                $c = $form->addText($key, $param->getKey());
+                $c = $form->addText($key, $this->getParamLabel($param));
                 if ($param->getAvailableValues()) {
                     $c->setOption('description', 'available values: ' . implode(' | ', $param->getAvailableValues()));
                 }
@@ -92,6 +93,15 @@ class ApiConsoleControl extends Control
 
         $form->onSuccess[] = array($this, 'formSucceeded');
         return $form;
+    }
+
+    private function getParamLabel(InputParam $param)
+    {
+        $title = $param->getKey();
+        if ($param->isRequired()) {
+            $title .= ' *';
+        }
+        return $title;
     }
 
     public function formSucceeded($form, $values)
