@@ -63,8 +63,8 @@ services:
 As you can see in example, you can register as many endpoints as you want with different configuration. Nette-api support api version from the beggining.
 This example will prepare this api calls:
 
-1. http://yourapp/api/v1/users - available via GET
-2. http://yourapp/api/v1/users/send-email  - available via POST
+1. `http://yourapp/api/v1/users` - available via GET
+2. `http://yourapp/api/v1/users/send-email`  - available via POST
 
 
 Core of the nette api is handlers. For this example you need implement 2 classes:
@@ -73,7 +73,7 @@ Core of the nette api is handlers. For this example you need implement 2 classes
 2. App\MyApi\v1\Handlers\SendEmailHandler
 
 This handlers implements interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extens your handler from [BaseHandler](src/Handlers/BaseHandler.php). 
-When someone reach your api this handlers will be triggered and handle() method will be called.
+When someone reach your api this handlers will be triggered and *handle()* method will be called.
 
 ``` php
 namespace App\MyApi\v1\Handlers;
@@ -167,9 +167,9 @@ I have to recomment to take a look at Fractal library (http://fractal.thephpleag
 
 ## Security
 
-Protecting your api is easy with NetteApi. You need only implement your Authorization (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to your ApiEndpoint.
+Protecting your api is easy with NetteApi. You need only implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApiHandler()* method in *config.neon*.
 
-For simple use, if you want to use Bearer token authorization with few tokens, you can use **Tomaj\NetteApi\Misc\StaticBearerTokenRepository**.
+For simple use, if you want to use Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
 
 ``` yaml
 services:
@@ -182,7 +182,7 @@ services:
     
 ```
 
-With this registration you will have api /api/v1/users that will be accesible from anywhare with Authorization HTTP header *'Bearer dasfoihwet90hidsg'* or from '127.0.0.1' with *'Bearer asfoihweiohgwegi'*.
+With this registration you will have api `/api/v1/users` that will be accesible from anywhare with Authorization HTTP header *'Bearer dasfoihwet90hidsg'* or from '127.0.0.1' with *'Bearer asfoihweiohgwegi'*.
 In NetteApi if you would like to specify IP restrictions for tokens you can use this patterns:
 
 | IP Pattern                | Access
@@ -197,7 +197,7 @@ But it is very easy to implement your own Authorization for API.
 
 ## Logging
 
-It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface **Tomaj\NetteApi\Logger\ApiLoggerInterface** and register it as service in *config.neon*. It will be automatically wired and called after execution of all api requests.
+It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all api requests.
 
 ## WEB console - API tester
 
