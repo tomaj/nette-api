@@ -6,8 +6,10 @@ use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
 use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\ApiResponse;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
+use Exception;
 
 class ApiPresenter extends Presenter
 {
@@ -64,8 +66,13 @@ class ApiPresenter extends Presenter
         $params = $paramsProcessor->getValues();
 
         // process handler
-        $response = $handler->handle($params);
-        $code = $response->getCode();
+        try {
+            $response = $handler->handle($params);
+            $code = $response->getCode();
+        } catch (Exception $exception) {
+            $response = new ApiResponse(500, ['status' => 'error', 'message' => 'Internal server error']);
+            $code = $response->getCode();
+        }
 
         $end = microtime(true);
 
