@@ -22,6 +22,12 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
      */
     private $ipDetector;
 
+    /**
+     * BearerTokenAuthorization constructor.
+     *
+     * @param BearerTokenRepositoryInterface $tokenRepository
+     * @param IpDetectorInterface            $ipDetector
+     */
     public function __construct(BearerTokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         $this->tokenRepository = $tokenRepository;

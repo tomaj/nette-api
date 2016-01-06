@@ -53,17 +53,35 @@ abstract class BaseHandler implements ApiHandlerInterface
         $this->endpoint = $endpoint;
     }
 
+    /**
+     * @return EndpointInterface
+     */
     public function getEndpoint()
     {
         return $this->endpoint;
     }
 
+    /**
+     * Set link generator to handler
+     *
+     * @param LinkGenerator $linkGenerator
+     *
+     * @return $this
+     */
     public function setupLinkGenerator(LinkGenerator $linkGenerator)
     {
         $this->linkGenerator = $linkGenerator;
         return $this;
     }
 
+    /**
+     * Create link to actual handler endpoint
+     *
+     * @param array   $params
+     *
+     * @return string
+     * @throws \Nette\Application\UI\InvalidLinkException it handler doesn't have linkgenerator or endpoint
+     */
     public function createLink($params)
     {
         if (!$this->linkGenerator) {

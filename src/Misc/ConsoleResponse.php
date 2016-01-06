@@ -26,7 +26,16 @@ class ConsoleResponse
 
     private $errorMessage;
 
-    public function __construct($url, $method, $postFields, $getFields, $headers)
+    /**
+     * ConsoleResponse constructor.
+     *
+     * @param string  $url
+     * @param string  $method
+     * @param array   $postFields
+     * @param array   $getFields
+     * @param array   $headers
+     */
+    public function __construct($url, $method, array $postFields = [], array $getFields = [], array $headers = [])
     {
         $this->url = $url;
         $this->method = $method;
@@ -35,6 +44,15 @@ class ConsoleResponse
         $this->headers = $headers;
     }
 
+    /**
+     * Log response from request
+     *
+     * @param $responseCode
+     * @param $responseBody
+     * @param $responseTime
+     *
+     * @return voiud
+     */
     public function logRequest($responseCode, $responseBody, $responseTime)
     {
         $this->responseCode = $responseCode;
