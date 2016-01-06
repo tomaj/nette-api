@@ -1,7 +1,5 @@
 # nette-api
 
-### work in progress - in early development mode
-
 **Nette simple api library**
 
 [![Build Status](https://travis-ci.org/tomaj/nette-api.svg)](https://travis-ci.org/tomaj/nette-api)
@@ -267,4 +265,3 @@ If you discover any security related issues, please email tomasmajer@gmail.com i
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information
-
