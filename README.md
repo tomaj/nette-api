@@ -1,4 +1,4 @@
-# nette-api
+# Nette-Api
 
 **Nette simple api library**
 
@@ -8,13 +8,13 @@
 [![Code Coverage](https://scrutinizer-ci.com/g/tomaj/nette-api/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/tomaj/nette-api/?branch=master)
 [![Latest Stable Version](https://img.shields.io/packagist/v/tomaj/nette-api.svg)](https://packagist.org/packages/tomaj/nette-api)
 
-## Why Nette-api
+## Why Nette-Api
 
-This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement you custom busines logic. Library provide autorization, validation and formating services for you api.
+This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement you custom business logic. Library provide authorisation, validation and formatting services for you api.
 
 ## Installation
 
-This library requires PHP 5.4 or later. It works also on HHVM and PHP 7.0.
+This library requires PHP 5.4 or later. It works also on PHP 7.0.
 
 Recommended installation method is via Composer:
 
@@ -58,19 +58,19 @@ services:
         - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
 ```
 
-As you can see in example, you can register as many endpoints as you want with different configuration. Nette-api support api version from the beggining.
+As you can see in example, you can register as many endpoints as you want with different configurations. Nette-Api support api versioning from the beginning.
 This example will prepare this api calls:
 
 1. `http://yourapp/api/v1/users` - available via GET
 2. `http://yourapp/api/v1/users/send-email`  - available via POST
 
 
-Core of the nette api is handlers. For this example you need implement 2 classes:
+Core of the Nette-Api is handlers. For this example you need implement 2 classes:
 
 1. App\MyApi\v1\Handlers\UsersListingHandler
 2. App\MyApi\v1\Handlers\SendEmailHandler
 
-This handlers implements interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extens your handler from [BaseHandler](src/Handlers/BaseHandler.php). 
+This handlers implements interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extends your handler from [BaseHandler](src/Handlers/BaseHandler.php). 
 When someone reach your api this handlers will be triggered and *handle()* method will be called.
 
 ``` php
@@ -80,33 +80,33 @@ use Tomaj\NetteApi\Handlers\BaseHandler;
 
 class UsersListingHandler extends Basehandler
 {
-	private $userRepository;
+    private $userRepository;
 
-	public function __construct(UsersRepository $userRepository)
-	{
-		parent::__construct();
-		$this->userRepository = $userRepository;
-	}
+    public function __construct(UsersRepository $userRepository)
+    {
+        parent::__construct();
+        $this->userRepository = $userRepository;
+    }
 
-	public function handle($params)
-	{
-		$users = [] 
-		foreach ($this->useRepository->all() as $user) {
-			$users[] = $user->toArray();
-		}
-		return new ApiResponse(200, ['status' => 'ok', 'users' => $users]);
-	}
+    public function handle($params)
+    {
+        $users = [] 
+        foreach ($this->useRepository->all() as $user) {
+            $users[] = $user->toArray();
+        }
+        return new ApiResponse(200, ['status' => 'ok', 'users' => $users]);
+    }
 }
 ```
 
-This simple handler is usign *UsersRepository* that was created by Nette Container (so you have to register your *App\MyApi\v1\Handlers\UsersListingHandler* in config.neon).
+This simple handler is using *UsersRepository* that was created by Nette Container (so you have to register your *App\MyApi\v1\Handlers\UsersListingHandler* in config.neon).
 
 ## Advanced use (with Fractal)
 
-NetteApi provides integration with [Fractal][] library for formatting API responses.
-If you want to use it you have to extend your handler from *[BaseHandler](src/Handlers/BaseHandler.php)* and your Fractal class will be accesible be `$this->getFractal()`.
+Nette-Api provides integration with [Fractal][] library for formatting API responses.
+If you want to use it, you have to extend your handler from *[BaseHandler](src/Handlers/BaseHandler.php)* and your Fractal instance will be accessible be `$this->getFractal()`.
 
-Main advantage that you will gain when you use Fractal is separation you api "view" like transformation data to json object (or xml or anything...). Also you can include transformators in other transformators to include other objects to others. 
+Main advantage from Fractal is separation your api "view" (like transformation data to json object or xml or anything...). Also you can include transformations in other transformations to include other objects to others. 
 
 Example with fractal:
 
@@ -159,39 +159,39 @@ class UsersListingHandler extends Basehandler
 }
 ```
 
-I have to recomment to take a look at Fractal library (http://fractal.thephpleague.com/)[http://fractal.thephpleague.com/]. There are much more information about transformers, serializers, paginations etc. It is really nice library.
+I have to recommend to take a look at Fractal library (http://fractal.thephpleague.com/)[http://fractal.thephpleague.com/]. There are much more information about transformers, serialisers, paginations etc. It is really nice library.
 
 [Fractal]: http://fractal.thephpleague.com/
 
 ## Security
 
-Protecting your api is easy with NetteApi. You need only implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApiHandler()* method in *config.neon*.
+Protecting your api is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApiHandler()* method in *config.neon*.
 
-For simple use, if you want to use Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
+For simple use, if you want to use Bearer token authorisation with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
 
 ``` yaml
 services:
     staticBearer: Tomaj\NetteApi\Misc\StaticBearerTokenRepository(['dasfoihwet90hidsg' => '*', 'asfoihweiohgwegi' => '127.0.0.1'])
-    
+
     apiDecider:
         class: Tomaj\NetteApi\ApiDecider
         setup:
             - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), @staticBearer)
-    
+
 ```
 
-With this registration you will have api `/api/v1/users` that will be accesible from anywhare with Authorization HTTP header `Bearer dasfoihwet90hidsg` or from *127.0.0.1* with `Bearer asfoihweiohgwegi`.
-In NetteApi if you would like to specify IP restrictions for tokens you can use this patterns:
+With this registration you will have api `/api/v1/users` that will be accessible from anywhere with Authorisation HTTP header `Bearer dasfoihwet90hidsg` or from *127.0.0.1* with `Bearer asfoihweiohgwegi`.
+In Nette-Api if you would like to specify IP restrictions for tokens you can use this patterns:
 
 | IP Pattern                | Access
 | ----------                | ------
-|`*`                        | accessible from anywhare
+|`*`                        | accessible from anywhere
 |`127.0.0.1`                | accessible from single IP
 |`127.0.0.1,127.0.02`       | accessible from multiple IP, separator could be new line or space
 |`127.0.0.1/32`             | accessible from ip range
 
 
-But it is very easy to implement your own Authorization for API.
+But it is very easy to implement your own Authorisation for API.
 
 ## Logging
 
@@ -199,7 +199,7 @@ It is good practice to log you api access if you provide valuable information wi
 
 # WEB console - API tester
 
-Nette-api contains 2 UI controls that can be used to validate you api.
+Nette-Api contains 2 UI controls that can be used to validate you api.
 It will generate listing with all API calls and also auto generate form with all api params.
 
 All components generate bootstrap html and can be styled with bootstrap css:
@@ -215,7 +215,7 @@ use Tomaj\NetteApi\Component\ApiListingControl;
 class MyPresenter extends Presenter
 {
     private $apiDecider;
-    
+
     public function __construct(ApiDecider $apiDecider)
     {
         parent::__construct();
@@ -225,7 +225,7 @@ class MyPresenter extends Presenter
     public function renderShow($method, $version, $package, $apiAction)
     {
     }
-    
+
     protected function createComponentApiListing()
     {
         $apiListing = new ApiListingControl($this, 'apiListingControl', $this->apiDecider);
@@ -264,4 +264,4 @@ If you discover any security related issues, please email tomasmajer@gmail.com i
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information 
