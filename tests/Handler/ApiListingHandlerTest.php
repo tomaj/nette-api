@@ -70,5 +70,4 @@ class ApiListingHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(2, count($payload['endpoints']));
         $this->assertEquals(2, count($payload['endpoints'][0]['params']));
     }
-
 }
