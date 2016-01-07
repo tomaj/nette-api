@@ -100,16 +100,12 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
     /**
      * Check if IP is in $range
      *
-     * @param string $ip
-     * @param string $range
+     * @param string $ip     this ip will be verified
+     * @param string $range  is in IP/CIDR format eg 127.0.0.1/24
      * @return boolean
      */
     private function ipInRange($ip, $range)
     {
-        if (strpos($range, '/') == false) {
-            $range .= '/32';
-        }
-        // $range is in IP/CIDR format eg 127.0.0.1/24
         list( $range, $netmask ) = explode('/', $range, 2);
         $range_decimal = ip2long($range);
         $ip_decimal = ip2long($ip);
@@ -136,7 +132,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
             $this->errorMessage = 'Authorization header contains invalid structure';
             return false;
         }
-        if (!strtolower($parts[0]) == 'bearer') {
+        if (strtolower($parts[0]) != 'bearer') {
             $this->errorMessage = 'Authorization header doesn\'t contains bearer token';
             return false;
         }

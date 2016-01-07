@@ -38,6 +38,16 @@ class BearerTokenAuthorizationTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('Authorization header contains invalid structure', $bearerTokenAuthorization->getErrorMessage());
     }
 
+    public function testWrongBearerAuthorizationFormat()
+    {
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bdsdsdssd asflkhwetiohegedgfsdgwe';
+        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $ipDetector = new StaticIpDetector('34.24.126.44');
+        $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
+        $this->assertFalse($bearerTokenAuthorization->authorized());
+        $this->assertEquals('Authorization header doesn\'t contains bearer token', $bearerTokenAuthorization->getErrorMessage());
+    }
+
     public function testNoAuthorizationHeader()
     {
         unset($_SERVER['HTTP_AUTHORIZATION']);
