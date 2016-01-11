@@ -6,6 +6,7 @@ use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\ApiResponse;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class ApiListingHandler extends BaseHandler
 {
@@ -39,7 +40,7 @@ class ApiListingHandler extends BaseHandler
     {
         $version = $this->getEndpoint()->getVersion();
         $endpoints = $this->getHandlersList($version);
-        return new ApiResponse(200, ['endpoints' => $endpoints]);
+        return new JsonApiResponse(200, ['endpoints' => $endpoints]);
     }
 
     /**
