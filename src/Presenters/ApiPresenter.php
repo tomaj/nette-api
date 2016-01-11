@@ -26,6 +26,12 @@ class ApiPresenter extends Presenter
      */
     public $ipDetector;
 
+    public function startup()
+    {
+        parent::startup();
+        $this->autoCanonicalize = false;
+    }
+
     /**
      * Nette render default method
      *
