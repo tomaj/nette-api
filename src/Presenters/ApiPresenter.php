@@ -11,6 +11,9 @@ use Tomaj\NetteApi\Params\ParamsProcessor;
 use Exception;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 
+/**
+ * @property-read \Nette\DI\Container $context
+ */
 class ApiPresenter extends Presenter
 {
     /**
