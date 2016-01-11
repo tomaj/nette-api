@@ -6,10 +6,10 @@ use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
 use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
-use Tomaj\NetteApi\ApiResponse;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Exception;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class ApiPresenter extends Presenter
 {
@@ -41,7 +41,7 @@ class ApiPresenter extends Presenter
 
         // get handler
         $hand = $this->apiDecider->getApiHandler(
-            $this->request->getMethod(),
+            $this->getRequest()->getMethod(),
             $this->params['version'],
             $this->params['package'],
             $this->params['apiAction']
@@ -70,7 +70,7 @@ class ApiPresenter extends Presenter
             $response = $handler->handle($params);
             $code = $response->getCode();
         } catch (Exception $exception) {
-            $response = new ApiResponse(500, ['status' => 'error', 'message' => 'Internal server error']);
+            $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error']);
             $code = $response->getCode();
         }
 
@@ -89,11 +89,11 @@ class ApiPresenter extends Presenter
 
             $logger->log(
                 $code,
-                $this->request->getMethod(),
+                $this->getRequest()->getMethod(),
                 $requestHeaders,
-                $_SERVER['REQUEST_URI'],
+                filter_input(INPUT_SERVER, 'REQUEST_URI'),
                 $this->ipDetector->getRequestIp(),
-                isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : null,
+                filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
                 ($end-$start) * 1000
             );
         }
