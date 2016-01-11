@@ -77,6 +77,7 @@ When someone reach your api this handlers will be triggered and *handle()* metho
 namespace App\MyApi\v1\Handlers;
 
 use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class UsersListingHandler extends Basehandler
 {
@@ -94,7 +95,7 @@ class UsersListingHandler extends Basehandler
         foreach ($this->useRepository->all() as $user) {
             $users[] = $user->toArray();
         }
-        return new ApiResponse(200, ['status' => 'ok', 'users' => $users]);
+        return new JsonApiResponse(200, ['status' => 'ok', 'users' => $users]);
     }
 }
 ```
@@ -136,6 +137,7 @@ class LoginTransformer extends TransformerAbstract
 namespace App\MyApi\v1\Handlers;
 
 use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class UsersListingHandler extends Basehandler
 {
@@ -154,7 +156,7 @@ class UsersListingHandler extends Basehandler
         $resource = new Collection($users, $this->loginTransformer);
         $result = $this->getFractal()->createData($resource)->toArray();
 
-        return new ApiResponse(200, $result);
+        return new JsonApiResponse(200, $result);
     }
 }
 ```

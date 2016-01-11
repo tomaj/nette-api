@@ -3,8 +3,8 @@
 namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\EndpointInterface;
-use Tomaj\NetteApi\ApiResponse;
 use Tomaj\NetteApi\Params\InputParam;
+use Nette\Application\IResponse;
 
 interface ApiHandlerInterface
 {
@@ -21,7 +21,7 @@ interface ApiHandlerInterface
      *
      * @param array $params
      *
-     * @return ApiResponse
+     * @return IResponse
      */
     public function handle($params);
 
