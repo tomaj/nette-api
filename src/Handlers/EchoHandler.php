@@ -2,11 +2,14 @@
 
 namespace Tomaj\NetteApi\Handlers;
 
-use Tomaj\NetteApi\ApiResponse;
 use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class EchoHandler extends BaseHandler
 {
+    /**
+     * {@inheritdoc}
+     */
     public function params()
     {
         return [
@@ -21,6 +24,6 @@ class EchoHandler extends BaseHandler
     public function handle($params)
     {
         $status = $params['status'];
-        return new ApiResponse(200, ['status' => $status, 'params' => $params]);
+        return new JsonApiResponse(200, ['status' => $status, 'params' => $params]);
     }
 }

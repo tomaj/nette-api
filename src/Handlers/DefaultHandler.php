@@ -2,7 +2,7 @@
 
 namespace Tomaj\NetteApi\Handlers;
 
-use Tomaj\NetteApi\ApiResponse;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class DefaultHandler extends BaseHandler
 {
@@ -11,6 +11,6 @@ class DefaultHandler extends BaseHandler
      */
     public function handle($params)
     {
-        return new ApiResponse(500, ['status' => 'error', 'message' => 'Unknown api endpoint']);
+        return new JsonApiResponse(500, ['status' => 'error', 'message' => 'Unknown api endpoint']);
     }
 }

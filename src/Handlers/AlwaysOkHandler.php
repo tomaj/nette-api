@@ -2,7 +2,7 @@
 
 namespace Tomaj\NetteApi\Handlers;
 
-use Tomaj\NetteApi\ApiResponse;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class AlwaysOkHandler extends BaseHandler
 {
@@ -11,6 +11,6 @@ class AlwaysOkHandler extends BaseHandler
      */
     public function handle($params)
     {
-        return new ApiResponse(200, ['status' => 'ok']);
+        return new JsonApiResponse(200, ['status' => 'ok']);
     }
 }
