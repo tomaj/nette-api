@@ -5,6 +5,7 @@ namespace Tomaj\NetteApi\Handlers;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\ApiResponse;
 use Tomaj\NetteApi\Link\ApiLink;
+use Tomaj\NetteApi\Params\InputParam;
 
 class ApiListingHandler extends BaseHandler
 {
@@ -50,27 +51,21 @@ class ApiListingHandler extends BaseHandler
      */
     private function getHandlersList($version)
     {
-        $list = [];
-        foreach ($this->apiDecider->getHandlers() as $handler) {
-            $endpoint = $handler['endpoint'];
-            if ($version && $version != $endpoint->getVersion()) {
-                continue;
-            }
-            $item = [
-                'method' => $endpoint->getMethod(),
-                'version' => $endpoint->getVersion(),
-                'package' => $endpoint->getPackage(),
-                'api_action' => $endpoint->getApiAction(),
+        $versionHandlers = array_filter($this->apiDecider->getHandlers(), function ($handler) use ($version) {
+            return $version == $handler['endpoint']->getVersion();
+        });
+
+        return array_map(function ($handler) {
+            return [
+                'method' => $handler['endpoint']->getMethod(),
+                'version' => $handler['endpoint']->getVersion(),
+                'package' => $handler['endpoint']->getPackage(),
+                'api_action' => $handler['endpoint']->getApiAction(),
                 'authorization' => get_class($handler['authorization']),
-                'url' => $this->apiLink->link($endpoint),
+                'url' => $this->apiLink->link($handler['endpoint']),
+                'params' => $this->createParamsList($handler['handler']),
             ];
-            $params = $this->createParamsList($handler['handler']);
-            if (count($params) > 0) {
-                $item['params'] = $params;
-            }
-            $list[] = $item;
-        }
-        return $list;
+        }, $versionHandlers);
     }
 
     /**
@@ -82,9 +77,7 @@ class ApiListingHandler extends BaseHandler
      */
     private function createParamsList(ApiHandlerInterface $handler)
     {
-        $paramsList = $handler->params();
-        $params = [];
-        foreach ($paramsList as $param) {
+        return array_map(function (InputParam $param) {
             $parameter = [
                 'type' => $param->getType(),
                 'key' => $param->getKey(),
@@ -93,8 +86,7 @@ class ApiListingHandler extends BaseHandler
             if ($param->getAvailableValues()) {
                 $parameter['available_values'] = $param->getAvailableValues();
             }
-            $params[] = $parameter;
-        }
-        return $params;
+            return $parameter;
+        }, $handler->params());
     }
 }
