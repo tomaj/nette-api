@@ -32,7 +32,7 @@ class ConsoleRequest
      *
      * @return ConsoleResponse
      */
-    public function makeRequest($url, $method, $values, $token = null)
+    public function makeRequest($url, $method, array $values, $token = null)
     {
         list($postFields, $getFields) = $this->processValues($values);
 
@@ -88,11 +88,11 @@ class ConsoleRequest
     /**
      * Process given values to POST and GET fields
      *
-     * @param InputParam[] $values
+     * @param array $values
      *
      * @return array
      */
-    private function processValues($values)
+    private function processValues(array $values)
     {
         $params = $this->handler->params();
 
