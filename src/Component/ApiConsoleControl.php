@@ -35,8 +35,8 @@ class ApiConsoleControl extends Control
 
     public function render()
     {
-        $this->template->setFile(__DIR__ . '/console.latte');
-        $this->template->render();
+        $this->getTemplate()->setFile(__DIR__ . '/console.latte');
+        $this->getTemplate()->render();
     }
 
     protected function createComponentConsoleForm()
@@ -120,6 +120,6 @@ class ApiConsoleControl extends Control
         $consoleRequest = new ConsoleRequest($this->handler);
         $result = $consoleRequest->makeRequest($url, $method, $values, $token);
 
-        $this->template->add('response', $result);
+        $this->getTemplate()->add('response', $result);
     }
 }

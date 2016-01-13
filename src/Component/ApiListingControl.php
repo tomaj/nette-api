@@ -32,9 +32,9 @@ class ApiListingControl extends Control
     public function render()
     {
         $handlers = $this->apiDecider->getHandlers();
-        $this->template->add('handlers', $this->sortHandlers($handlers));
-        $this->template->setFile(__DIR__ . '/api_listing.latte');
-        $this->template->render();
+        $this->getTemplate()->add('handlers', $this->sortHandlers($handlers));
+        $this->getTemplate()->setFile(__DIR__ . '/api_listing.latte');
+        $this->getTemplate()->render();
     }
 
     public function handleSelect($method, $version, $package, $apiAction)
