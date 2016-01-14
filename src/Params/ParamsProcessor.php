@@ -26,7 +26,7 @@ class ParamsProcessor
     {
         $result = [];
         foreach ($this->params as $param) {
-            $result[ $param->getKey() ] = $param->getValue();
+            $result[$param->getKey()] = $param->getValue();
         }
 
         return $result;

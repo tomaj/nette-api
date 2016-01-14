@@ -6,10 +6,13 @@ use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
 use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
-use Exception;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Exception;
 
 /**
  * @property-read \Nette\DI\Container $context
@@ -26,6 +29,11 @@ class ApiPresenter extends Presenter
      */
     public $ipDetector;
 
+    /**
+     * Presenter startup method
+     *
+     * @return void
+     */
     public function startup()
     {
         parent::startup();
@@ -56,7 +64,6 @@ class ApiPresenter extends Presenter
             return;
         }
 
-        // process handler
         try {
             $response = $handler->handle($params);
             $code = $response->getCode();
@@ -68,7 +75,7 @@ class ApiPresenter extends Presenter
         $end = microtime(true);
 
         if ($this->context->hasService('apiLogger')) {
-            $this->logRequest($this->context->getService('apiLogger'), $code, $end-$start);
+            $this->logRequest($this->context->getService('apiLogger'), $code, $end - $start);
         }
 
         // output to nette
@@ -76,6 +83,11 @@ class ApiPresenter extends Presenter
         $this->sendResponse($response);
     }
 
+    /**
+     * Get handler information triplet (endpoint, handler, authorization)
+     *
+     * @return array
+     */
     private function getHandler()
     {
         return $this->apiDecider->getApiHandler(
@@ -86,7 +98,14 @@ class ApiPresenter extends Presenter
         );
     }
 
-    private function checkAuth($authorization)
+    /**
+     * Check authorization
+     *
+     * @param ApiAuthorizationInterface  $authorization
+     *
+     * @return bool
+     */
+    private function checkAuth(ApiAuthorizationInterface $authorization)
     {
         if (!$authorization->authorized()) {
             $this->getHttpResponse()->setCode(Response::S403_FORBIDDEN);
@@ -96,7 +115,14 @@ class ApiPresenter extends Presenter
         return true;
     }
 
-    private function processParams($handler)
+    /**
+     * Process input parameters
+     *
+     * @param ApiHandlerInterface   $handler
+     *
+     * @return array|bool
+     */
+    private function processParams(ApiHandlerInterface $handler)
     {
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
@@ -107,7 +133,16 @@ class ApiPresenter extends Presenter
         return $paramsProcessor->getValues();
     }
 
-    private function logRequest($logger, $code, $elapsed)
+    /**
+     * Log request
+     *
+     * @param ApiLoggerInterface  $logger
+     * @param integer             $code
+     * @param double              $elapsed
+     *
+     * @return void
+     */
+    private function logRequest(ApiLoggerInterface $logger, $code, $elapsed)
     {
         $headers = [];
         if (function_exists('getallheaders')) {
