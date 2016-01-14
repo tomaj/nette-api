@@ -43,36 +43,18 @@ class ApiPresenter extends Presenter
 
         $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', '*');
 
-        $logger = null;
-        if ($this->context->hasService('apiLogger')) {
-            $logger = $this->context->getService('apiLogger');
-        }
-
-        // get handler
-        $hand = $this->apiDecider->getApiHandler(
-            $this->getRequest()->getMethod(),
-            $this->params['version'],
-            $this->params['package'],
-            $this->params['apiAction']
-        );
+        $hand = $this->getHandler();
         $handler = $hand['handler'];
         $authorization = $hand['authorization'];
 
-        // check authorization
-        if (!$authorization->authorized()) {
-            $this->getHttpResponse()->setCode(Response::S403_FORBIDDEN);
-            $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]));
+        if ($this->checkAuth($authorization) == false) {
             return;
         }
 
-        // process params
-        $paramsProcessor = new ParamsProcessor($handler->params());
-        if ($paramsProcessor->isError()) {
-            $this->getHttpResponse()->setCode(Response::S500_INTERNAL_SERVER_ERROR);
-            $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => 'wrong input']));
+        $params = $this->processParams($handler);
+        if ($params == false) {
             return;
         }
-        $params = $paramsProcessor->getValues();
 
         // process handler
         try {
@@ -85,30 +67,66 @@ class ApiPresenter extends Presenter
 
         $end = microtime(true);
 
-        if ($logger) {
-            $headers = [];
-            if (function_exists('getallheaders')) {
-                $headers = getallheaders();
-            }
-
-            $requestHeaders = '';
-            foreach ($headers as $key => $value) {
-                $requestHeaders .= "$key: $value\n";
-            }
-
-            $logger->log(
-                $code,
-                $this->getRequest()->getMethod(),
-                $requestHeaders,
-                filter_input(INPUT_SERVER, 'REQUEST_URI'),
-                $this->ipDetector->getRequestIp(),
-                filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
-                ($end-$start) * 1000
-            );
+        if ($this->context->hasService('apiLogger')) {
+            $this->logRequest($this->context->getService('apiLogger'), $code, $end-$start);
         }
 
         // output to nette
         $this->getHttpResponse()->setCode($code);
         $this->sendResponse($response);
+    }
+
+    private function getHandler()
+    {
+        return $this->apiDecider->getApiHandler(
+            $this->getRequest()->getMethod(),
+            $this->params['version'],
+            $this->params['package'],
+            $this->params['apiAction']
+        );
+    }
+
+    private function checkAuth($authorization)
+    {
+        if (!$authorization->authorized()) {
+            $this->getHttpResponse()->setCode(Response::S403_FORBIDDEN);
+            $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]));
+            return false;
+        }
+        return true;
+    }
+
+    private function processParams($handler)
+    {
+        $paramsProcessor = new ParamsProcessor($handler->params());
+        if ($paramsProcessor->isError()) {
+            $this->getHttpResponse()->setCode(Response::S500_INTERNAL_SERVER_ERROR);
+            $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => 'wrong input']));
+            return false;
+        }
+        return $paramsProcessor->getValues();
+    }
+
+    private function logRequest($logger, $code, $elapsed)
+    {
+        $headers = [];
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+        }
+
+        $requestHeaders = '';
+        foreach ($headers as $key => $value) {
+            $requestHeaders .= "$key: $value\n";
+        }
+
+        $logger->log(
+            $code,
+            $this->getRequest()->getMethod(),
+            $requestHeaders,
+            filter_input(INPUT_SERVER, 'REQUEST_URI'),
+            $this->ipDetector->getRequestIp(),
+            filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
+            ($elapsed) * 1000
+        );
     }
 }
