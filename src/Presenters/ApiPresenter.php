@@ -81,7 +81,7 @@ class ApiPresenter extends Presenter
         $handler = $hand['handler'];
         $authorization = $hand['authorization'];
 
-        if ($this->checkAuth($authorization) == false) {
+        if ($this->checkAuth($authorization) === false) {
             return;
         }
 
@@ -195,7 +195,7 @@ class ApiPresenter extends Presenter
     {
         if ($this->corsHeader == 'auto') {
             $domain = $this->getRequestDomain();
-            if ($domain) {
+            if ($domain !== false) {
                 $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $domain);
                 $this->getHttpResponse()->addHeader('Access-Control-Allow-Credentials', 'true');
             }
@@ -220,6 +220,6 @@ class ApiPresenter extends Presenter
                 return $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
             }
         }
-        return null;
+        return false;
     }
 }
