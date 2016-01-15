@@ -30,6 +30,20 @@ class ApiPresenter extends Presenter
     public $ipDetector;
 
     /**
+     * CORS header settings
+     *
+     * Available values:
+     *   'auto'  - send back header Access-Control-Allow-Origin with domain that made request
+     *   '*'     - send header with '*' - this will workf fine if you dont need to send cookies via ajax calls to api
+     *             with jquery $.ajax with xhrFields: { withCredentials: true } settings
+     *   'off'   - will not send any CORS header
+     *   other   - any other value will be send in Access-Control-Allow-Origin header
+     *
+     * @var string
+     */
+    protected $corsHeader = '*';
+
+    /**
      * Presenter startup method
      *
      * @return void
@@ -41,6 +55,18 @@ class ApiPresenter extends Presenter
     }
 
     /**
+     * Set cors header
+     *
+     * See description to property $corsHeader for valid inputs
+     *
+     * @param string $corsHeader
+     */
+    public function setCorsHeader($corsHeader)
+    {
+        $this->corsHeader = $corsHeader;
+    }
+
+    /**
      * Nette render default method
      *
      * @return void
@@ -49,7 +75,7 @@ class ApiPresenter extends Presenter
     {
         $start = microtime(true);
 
-        $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', '*');
+        $this->sendCorsHeaders();
 
         $hand = $this->getHandler();
         $handler = $hand['handler'];
@@ -163,5 +189,37 @@ class ApiPresenter extends Presenter
             filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
             ($elapsed) * 1000
         );
+    }
+
+    protected function sendCorsHeaders()
+    {
+        if ($this->corsHeader == 'auto') {
+            $domain = $this->getRequestDomain();
+            if ($domain) {
+                $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $domain);
+                $this->getHttpResponse()->addHeader('Access-Control-Allow-Credentials', 'true');
+            }
+            return;
+        }
+
+        if ($this->corsHeader == '*') {
+            $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', '*');
+            return;
+        }
+
+        if ($this->corsHeader != 'off') {
+            $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $this->corsHeader);
+        }
+    }
+
+    private function getRequestDomain()
+    {
+        if (filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
+            $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
+            if (isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host'])) {
+                return $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
+            }
+        }
+        return null;
     }
 }
