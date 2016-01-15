@@ -137,14 +137,9 @@ class ConsoleRequest
             if (!$value) {
                 return null;
             }
+
             if ($param->isMulti()) {
-                $valueKey = '';
-                if (strstr($value, '=') !== false) {
-                    $parts = explode('=', $value);
-                    $valueKey = $parts[0];
-                    $value = $parts[1];
-                }
-                $valueData = $key . "[$valueKey]=$value";
+                $valueData = $this->processMultiParam($key, $value);
             } else {
                 $valueData = "$key=$value";
             }
@@ -152,5 +147,23 @@ class ConsoleRequest
             return $valueData;
         }
         return null;
+    }
+
+    /**
+     * Process multi param
+     *
+     * @param string  $key
+     * @param string  $value
+     * @return string
+     */
+    private function processMultiParam($key, $value)
+    {
+        $valueKey = '';
+        if (strstr($value, '=') !== false) {
+            $parts = explode('=', $value);
+            $valueKey = $parts[0];
+            $value = $parts[1];
+        }
+        return $key . "[$valueKey]=$value";
     }
 }

@@ -118,7 +118,7 @@ class ApiConsoleControl extends Control
         unset($values['method']);
 
         $consoleRequest = new ConsoleRequest($this->handler);
-        $result = $consoleRequest->makeRequest($url, $method, $values, $token);
+        $result = $consoleRequest->makeRequest($url, $method, (array) $values, $token);
 
         $this->getTemplate()->add('response', $result);
     }
