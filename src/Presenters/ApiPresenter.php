@@ -60,7 +60,7 @@ class ApiPresenter extends Presenter
         }
 
         $params = $this->processParams($handler);
-        if ($params == false) {
+        if ($params === false) {
             return;
         }
 
