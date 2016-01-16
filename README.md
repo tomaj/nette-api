@@ -199,6 +199,28 @@ But it is very easy to implement your own Authorisation for API.
 
 It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all api requests.
 
+## CORS Security
+
+If you need to iteract with your API with Javascript you will need to send correct CORS headers. [ApiPresenter](src/Presenters/ApiPresenter.php) has property to set this headers. By default api will send header **'Access-Control-Allow-Origin'** with value *'*'*. If you need to change it you can set property $corsHeader to values:
+
+1. *'auto'* - send back header Access-Control-Allow-Origin with domain that made request. It is not secure, but you can acces this api from other domains via AJAX
+2. *'*'* - send header with '*' - this will work fine if you dont need to send cookies via ajax calls to api with jquery *$.ajax with xhrFields: { withCredentials: true }* settings
+3. *'off'* - will not send any CORS header
+5. other - any other value will be send in *Access-Control-Allow-Origin* header
+
+You can set this property in config.neon if you register [ApiPresenter](src/Presenters/ApiPresenter.php):
+
+``` yaml
+services:
+  -
+    class: Tomaj\NetteApi\Presenters\ApiPresenter
+    setup:
+      - setCorsHeader('auto')
+```
+
+or if you extend [ApiPresenter](src/Presenters/ApiPresenter.php), than you can set it on your own presenter.
+
+
 # WEB console - API tester
 
 Nette-Api contains 2 UI controls that can be used to validate you api.
