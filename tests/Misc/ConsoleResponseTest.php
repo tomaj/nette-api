@@ -24,8 +24,9 @@ class ConsoleRequestTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['Content-Type' => 'text'], $response->getHeaders());
         $this->assertFalse($response->isError());
 
-        $response->logRequest(202, 'asdsafsdgdsg', 145);
+        $response->logRequest(202, 'asdsafsdgdsg', 'responseheadersd', 145);
         $this->assertEquals('asdsafsdgdsg', $response->getResponseBody());
+        $this->assertEquals('responseheadersd', $response->getResponseHeaders());
         $this->assertEquals('asdsafsdgdsg', $response->getFormattedJsonBody());
         $this->assertEquals(145, $response->getResponseTime());
         $this->assertFalse($response->isError());

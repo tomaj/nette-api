@@ -18,6 +18,8 @@ class ConsoleResponse
 
     private $responseBody;
 
+    private $responseHeaders;
+
     private $responseTime;
 
     private $isError = false;
@@ -49,14 +51,16 @@ class ConsoleResponse
      *
      * @param $responseCode
      * @param $responseBody
+     * @param $responseHeaders
      * @param $responseTime
      *
      * @return voiud
      */
-    public function logRequest($responseCode, $responseBody, $responseTime)
+    public function logRequest($responseCode, $responseBody, $responseHeaders, $responseTime)
     {
         $this->responseCode = $responseCode;
         $this->responseBody = $responseBody;
+        $this->responseHeaders = $responseHeaders;
         $this->responseTime = $responseTime;
     }
 
@@ -125,6 +129,11 @@ class ConsoleResponse
             $body = json_encode($decoded, JSON_PRETTY_PRINT);
         }
         return $body;
+    }
+
+    public function getResponseHeaders()
+    {
+        return $this->responseHeaders;
     }
 
     /**

@@ -50,6 +50,7 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
+        curl_setopt($curl, CURLOPT_HEADER, 1);
         if (count($postFields)) {
             curl_setopt($curl, CURLOPT_POST, 1);
             curl_setopt($curl, CURLOPT_POSTFIELDS, implode('&', $postFields));
@@ -70,8 +71,12 @@ class ConsoleRequest
             $headers
         );
 
-        $responseBody = curl_exec($curl);
+        $response = curl_exec($curl);
         $elapsed = intval((microtime() - $startTime) * 1000);
+
+        $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $responseHeaders = substr($response, 0, $headerSize);
+        $responseBody = substr($response, $headerSize);
 
         $curlErrorNumber = curl_errno($curl);
         $curlError = curl_error($curl);
@@ -79,7 +84,7 @@ class ConsoleRequest
             $consoleResponse->logError($curlErrorNumber, $curlError, $elapsed);
         } else {
             $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-            $consoleResponse->logRequest($httpCode, $responseBody, $elapsed);
+            $consoleResponse->logRequest($httpCode, $responseBody, $responseHeaders, $elapsed);
         }
 
         return $consoleResponse;

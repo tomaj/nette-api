@@ -33,9 +33,14 @@
                 {if $response->isError()}
                     <b>Error {$response->getErrorNumber()}</b>
                     {$response->getErrorMessage()}
+                    <br>
+                    <b>Headers:</b><pre>{$response->getResponseHeaders()}</pre>
                 {else}
                     <span class="label label-default">{$response->getResponseCode()}</span>
-                    <pre>{$response->getFormattedJsonBody()}</pre>
+                    <br>
+                    <br>
+                    <b>Headers:</b><pre>{$response->getResponseHeaders()}</pre>
+                    <b>Body:</b><pre>{$response->getFormattedJsonBody()}</pre>
                 {/if}
             </p>
 
