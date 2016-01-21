@@ -5,7 +5,7 @@ namespace Tomaj\NetteApi\Test\Params;
 use PHPUnit_Framework_TestCase;
 use Tomaj\NetteApi\Misc\ConsoleResponse;
 
-class ConsoleRequestTest extends PHPUnit_Framework_TestCase
+class ConsoleResponseTest extends PHPUnit_Framework_TestCase
 {
     public function testLogRequest()
     {
@@ -22,6 +22,7 @@ class ConsoleRequestTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['mykey1' => 'asdsd'], $response->getPostFields());
         $this->assertEquals(['mykey2' => 'wegewg'], $response->getGetFields());
         $this->assertEquals(['Content-Type' => 'text'], $response->getHeaders());
+        $this->assertNull($response->getResponseCode());
         $this->assertFalse($response->isError());
 
         $response->logRequest(202, 'asdsafsdgdsg', 'responseheadersd', 145);
@@ -30,6 +31,7 @@ class ConsoleRequestTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('asdsafsdgdsg', $response->getFormattedJsonBody());
         $this->assertEquals(145, $response->getResponseTime());
         $this->assertFalse($response->isError());
+        $this->assertEquals(202, $response->getResponseCode());
     }
 
     public function testLogErrorRequest()

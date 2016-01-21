@@ -47,4 +47,30 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(true, $inputParam->isRequired());
         $this->assertEquals(['c', 'asdsadsad'], $inputParam->getAvailableValues());
     }
+
+    /**
+     * @expectedException Exception
+     */
+    public function testNotFoundFileType()
+    {
+        $inputParam = new InputParam(InputParam::TYPE_FILE, 'myfile', InputParam::REQUIRED);
+        $inputParam->getValue();
+    }
+
+    public function testFileInputType()
+    {
+        $_FILES['myfile'] = 'hello';
+        $inputParam = new InputParam(InputParam::TYPE_FILE, 'myfile', InputParam::REQUIRED);
+        $this->assertEquals('hello', $inputParam->getValue());
+    }
+
+    public function testStaticAvailableValuesTest()
+    {
+        $_GET['dsgerg'] = 'asfsaf';
+        $inputParam = new InputParam(InputParam::TYPE_GET, 'dsgerg', InputParam::REQUIRED, 'vgdgr');
+        $this->assertFalse($inputParam->isValid());
+
+        $_GET['dsgerg'] = 'vgdgr';
+        $this->assertTrue($inputParam->isValid());
+    }
 }
