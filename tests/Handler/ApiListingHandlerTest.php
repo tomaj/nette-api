@@ -1,6 +1,6 @@
 <?php
 
-namespace Tomaj\NetteApi\Test\Params;
+namespace Tomaj\NetteApi\Test\Handler;
 
 use PHPUnit_Framework_TestCase;
 use Nette\Application\LinkGenerator;
