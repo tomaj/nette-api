@@ -61,8 +61,8 @@ class ApiConsoleControl extends Control
         $defaults['method'] = $this->endpoint->getMethod();
 
         if ($this->authorization instanceof BearerTokenAuthorization) {
-            $form->addText('token', 'Token:')
-                ->setAttribute('placeholder', 'napište token');
+            $form->addText('token', 'Token')
+                ->setAttribute('placeholder', 'Enter token');
         } elseif ($this->authorization instanceof NoAuthorization) {
             $form->addText('authorization', 'Authorization')
                 ->setDisabled(true);
@@ -97,7 +97,7 @@ class ApiConsoleControl extends Control
 
     private function getParamLabel(InputParam $param)
     {
-        $title = $param->getKey();
+        $title = ucfirst(str_replace('_', ' ', $param->getKey()));
         if ($param->isRequired()) {
             $title .= ' *';
         }
