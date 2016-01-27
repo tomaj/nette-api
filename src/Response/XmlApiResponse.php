@@ -26,7 +26,6 @@ class XmlApiResponse implements ApplicationIResponse
      */
     public function __construct($code, $data)
     {
-        parent::__construct($data);
         $this->code = $code;
         $this->response = $data;
     }
