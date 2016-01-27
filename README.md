@@ -191,6 +191,7 @@ In Nette-Api if you would like to specify IP restrictions for tokens you can use
 |`127.0.0.1`                | accessible from single IP
 |`127.0.0.1,127.0.02`       | accessible from multiple IP, separator could be new line or space
 |`127.0.0.1/32`             | accessible from ip range
+|*false*                    | token is disabled, cannot access 
 
 
 But it is very easy to implement your own Authorisation for API.

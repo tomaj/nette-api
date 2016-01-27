@@ -73,11 +73,15 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
      *   '127.0.0.1'          - accessible from single IP
      *   '127.0.0.1,127.0.02' - accessible from multiple IP, separator could be new line or space
      *   '127.0.0.1/32'       - accessible from ip range
+     *   false                - disabled access
      *
      * @return boolean
      */
     private function isValidIp($ipRestrictions)
     {
+        if ($ipRestrictions === false) {
+            return false;
+        }
         if ($ipRestrictions == '*' || $ipRestrictions == '' || $ipRestrictions == null) {
             return true;
         }

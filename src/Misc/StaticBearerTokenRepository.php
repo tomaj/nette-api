@@ -2,8 +2,6 @@
 
 namespace Tomaj\NetteApi\Misc;
 
-use Exception;
-
 class StaticBearerTokenRepository implements BearerTokenRepositoryInterface
 {
     /**
@@ -47,6 +45,6 @@ class StaticBearerTokenRepository implements BearerTokenRepositoryInterface
         if (isset($this->validTokens[$token])) {
             return $this->validTokens[$token];
         }
-        throw new Exception('Token not found - this should never happend because token validation is before IP validation');
+        return false;
     }
 }
