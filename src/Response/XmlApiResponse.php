@@ -13,7 +13,9 @@ class XmlApiResponse implements ApplicationIResponse
      */
     private $code;
 
-    /** @var null|string  */
+    /**
+     * @var string
+     */
     private $response = null;
 
     /**
@@ -22,7 +24,7 @@ class XmlApiResponse implements ApplicationIResponse
      * to setup response code and automaticaly set content type
      *
      * @param integer $code
-     * @param mixed $data
+     * @param string $data
      */
     public function __construct($code, $data)
     {
@@ -40,13 +42,11 @@ class XmlApiResponse implements ApplicationIResponse
         return $this->code;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function send(IRequest $httpRequest, IResponse $httpResponse)
     {
-        if (!$this->response) {
-            echo 'Generate or set response first';
-            return;
-        }
-
         $httpResponse->setContentType('text/xml');
         $httpResponse->setExpiration(false);
         $httpResponse->setCode($this->getCode());
