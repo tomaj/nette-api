@@ -1,7 +1,7 @@
 {
     "name": "tomaj/nette-api",
     "description": "Nette api",
-    "license": "LGPL",
+    "license": "MIT",
     "keywords": ["nette", "api"],
     "authors": [
         {
