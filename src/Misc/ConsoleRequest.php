@@ -112,7 +112,7 @@ class ConsoleRequest
 
             foreach ($params as $param) {
                 $valueData = $this->processParam($param, $key, $value);
-                if ($valueData == null) {
+                if ($valueData === null) {
                     continue;
                 }
 

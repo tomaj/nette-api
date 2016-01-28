@@ -82,7 +82,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         if ($ipRestrictions === false) {
             return false;
         }
-        if ($ipRestrictions == '*' || $ipRestrictions == '' || $ipRestrictions == null) {
+        if ($ipRestrictions == '*' || $ipRestrictions == '' || $ipRestrictions === null) {
             return true;
         }
         $ip = $this->ipDetector->getRequestIp();

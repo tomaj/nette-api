@@ -94,14 +94,14 @@ class InputParam implements ParamInterface
     public function isValid()
     {
         $value = $this->getValue();
-        if ($this->availableValues != null) {
+        if ($this->availableValues !== null) {
             if (is_array($this->availableValues)) {
                 return in_array($value, $this->availableValues);
             }
         }
 
         if ($this->required) {
-            if ($value == null || $value == '') {
+            if ($value === null || $value == '') {
                 return false;
             }
             if (is_string($this->availableValues)) {
