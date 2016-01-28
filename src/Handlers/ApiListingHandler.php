@@ -3,7 +3,6 @@
 namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\ApiDecider;
-use Tomaj\NetteApi\ApiResponse;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;

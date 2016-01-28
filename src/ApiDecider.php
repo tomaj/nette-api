@@ -6,7 +6,6 @@ use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
-use Tomaj\NetteApi\Link\ApiLink;
 
 class ApiDecider
 {
@@ -14,21 +13,6 @@ class ApiDecider
      * @var ApiHandlerInterface[]
      */
     private $handlers = [];
-
-    /**
-     * @var ApiLink
-     */
-    private $apiLink;
-
-    /**
-     * ApiDecider constructor.
-     *
-     * @param ApiLink $apiLink
-     */
-    public function __construct(ApiLink $apiLink)
-    {
-        $this->apiLink = $apiLink;
-    }
 
     /**
      * Get api handler that match input method, version, package and apiAction.
