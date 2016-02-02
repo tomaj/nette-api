@@ -142,9 +142,9 @@ class InputParam implements ParamInterface
             if (isset($_FILES[$this->key])) {
                 return $_FILES[$this->key];
             }
-            return false;
+            return null;
         }
 
-        throw new Exception("Invalid type");
+        throw new Exception('Invalid type');
     }
 }

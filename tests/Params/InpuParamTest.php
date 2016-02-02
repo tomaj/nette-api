@@ -4,6 +4,7 @@ namespace Tomaj\NetteApi\Test\Params;
 
 use PHPUnit_Framework_TestCase;
 use Tomaj\NetteApi\Params\InputParam;
+use Exception;
 
 class InputParamTest extends PHPUnit_Framework_TestCase
 {
@@ -27,6 +28,9 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($inputParam->isValid());
         $this->assertEquals('a', $inputParam->getValue());
         unset($_POST['mykey3']);
+
+        $inputParam = new InputParam(InputParam::TYPE_GET, 'asdsd');
+        $this->assertNull($inputParam->getValue());
     }
 
     /**
@@ -48,13 +52,11 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(['c', 'asdsadsad'], $inputParam->getAvailableValues());
     }
 
-    /**
-     * @expectedException Exception
-     */
     public function testNotFoundFileType()
     {
         $inputParam = new InputParam(InputParam::TYPE_FILE, 'myfile', InputParam::REQUIRED);
-        $inputParam->getValue();
+        $this->assertNull($inputParam->getValue());
+        $this->assertFalse($inputParam->isValid());
     }
 
     public function testFileInputType()

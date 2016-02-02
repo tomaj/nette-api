@@ -37,7 +37,11 @@ class ConsoleRequest
         list($postFields, $getFields) = $this->processValues($values);
 
         if (count($getFields)) {
-            $url = $url . '?' . implode('&', $getFields);
+            $parts = [];
+            foreach ($getFields as $key => $value) {
+                $parts[] = "$key=$value";
+            }
+            $url = $url . '?' . implode('&', $parts);
         }
 
         $startTime = microtime();
