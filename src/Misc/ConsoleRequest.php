@@ -36,6 +36,9 @@ class ConsoleRequest
     {
         list($postFields, $getFields) = $this->processValues($values);
 
+        $postFields = $this->normalizeValues($postFields);
+        $getFields = $this->normalizeValues($getFields);
+
         if (count($getFields)) {
             $parts = [];
             foreach ($getFields as $key => $value) {
@@ -54,9 +57,10 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
-        curl_setopt($curl, CURLOPT_HEADER, 1);
+        curl_setopt($curl, CURLOPT_HEADER, true);
         if (count($postFields)) {
-            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POST, true);
+
             curl_setopt($curl, CURLOPT_POSTFIELDS, $postFields);
         }
 
@@ -107,7 +111,7 @@ class ConsoleRequest
 
         $postFields = [];
         $getFields = [];
-        $fileFields = [];
+
 
         foreach ($values as $key => $value) {
             if (strstr($key, '___') !== false) {
@@ -117,21 +121,28 @@ class ConsoleRequest
 
             foreach ($params as $param) {
                 $valueData = $this->processParam($param, $key, $value);
+
                 if ($valueData === null) {
                     continue;
                 }
 
-                if ($param->getType() == InputParam::TYPE_FILE) {
-                    $postFields[$key] = $valueData;
-                } elseif ($param->getType() == InputParam::TYPE_POST) {
-                    $postFields[$key] = $valueData;
+                if ($param->isMulti()) {
+                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
+                        $postFields[$key][] = $valueData;
+                    } else {
+                        $getFields[$key][] = $valueData;
+                    }
                 } else {
-                    $getFields[$key] = $valueData;
+                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
+                        $postFields[$key] = $valueData;
+                    } else {
+                        $getFields[$key] = $valueData;
+                    }
                 }
             }
         }
 
-        return [$postFields, $getFields, $fileFields];
+        return [$postFields, $getFields];
     }
 
     /**
@@ -150,16 +161,14 @@ class ConsoleRequest
                 return null;
             }
 
-            if ($param->isMulti()) {
-                $valueData = $this->processMultiParam($key, $value);
-            } elseif ($param->getType() == InputParam::TYPE_FILE) {
+            $valueData = $value;
+
+            if ($param->getType() == InputParam::TYPE_FILE) {
                 if ($value->isOk()) {
                     $valueData = curl_file_create($value->getTemporaryFile(), $value->getContentType(), $value->getName());
                 } else {
                     $valueData = false;
                 }
-            } else {
-                $valueData = "$value";
             }
 
             return $valueData;
@@ -168,20 +177,26 @@ class ConsoleRequest
     }
 
     /**
-     * Process multi param
+     * Normalize values array.
      *
-     * @param string  $key
-     * @param string  $value
-     * @return string
+     * @param $values
+     * @return array
      */
-    private function processMultiParam($key, $value)
+    private function normalizeValues($values)
     {
-        $valueKey = '';
-        if (strstr($value, '=') !== false) {
-            $parts = explode('=', $value);
-            $valueKey = $parts[0];
-            $value = $parts[1];
+        $result = [];
+        foreach ($values as $key => $value) {
+            if (is_array($value)) {
+                $counter = 0;
+                foreach ($value as $innerValue) {
+                    if ($innerValue != null) {
+                        $result[$key . "[".$counter++."]"] = $innerValue;
+                    }
+                }
+            } else {
+                $result[$key] = $value;
+            }
         }
-        return $key . "[$valueKey]=$value";
+        return $result;
     }
 }
