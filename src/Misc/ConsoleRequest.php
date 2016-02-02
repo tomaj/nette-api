@@ -53,12 +53,12 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_HEADER, 1);
         if (count($postFields)) {
             curl_setopt($curl, CURLOPT_POST, 1);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, implode('&', $postFields));
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $postFields);
         }
 
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         $headers = [];
-        if ($token !== null) {
+        if ($token !== null && $token !== false) {
             $headers = ['Authorization: Bearer ' . $token];
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
@@ -103,6 +103,7 @@ class ConsoleRequest
 
         $postFields = [];
         $getFields = [];
+        $fileFields = [];
 
         foreach ($values as $key => $value) {
             if (strstr($key, '___') !== false) {
@@ -116,15 +117,17 @@ class ConsoleRequest
                     continue;
                 }
 
-                if ($param->getType() == InputParam::TYPE_POST) {
-                    $postFields[] = $valueData;
+                if ($param->getType() == InputParam::TYPE_FILE) {
+                    $postFields[$key] = $valueData;
+                } elseif ($param->getType() == InputParam::TYPE_POST) {
+                    $postFields[$key] = $valueData;
                 } else {
-                    $getFields[] = $valueData;
+                    $getFields[$key] = $valueData;
                 }
             }
         }
 
-        return [$postFields, $getFields];
+        return [$postFields, $getFields, $fileFields];
     }
 
     /**
@@ -145,8 +148,14 @@ class ConsoleRequest
 
             if ($param->isMulti()) {
                 $valueData = $this->processMultiParam($key, $value);
+            } elseif ($param->getType() == InputParam::TYPE_FILE) {
+                if ($value->isOk()) {
+                    $valueData = curl_file_create($value->getTemporaryFile(), $value->getContentType(), $value->getName());
+                } else {
+                    $valueData = false;
+                }
             } else {
-                $valueData = "$key=$value";
+                $valueData = "$value";
             }
 
             return $valueData;

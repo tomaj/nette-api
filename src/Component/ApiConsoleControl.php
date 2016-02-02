@@ -77,7 +77,13 @@ class ApiConsoleControl extends Control
                 if ($param->isMulti()) {
                     $key = $key . '___' . $i;
                 }
-                $c = $form->addText($key, $this->getParamLabel($param));
+
+                if ($param->getType() == InputParam::TYPE_FILE) {
+                    $c = $form->addUpload($key, $this->getParamLabel($param));
+                } else {
+                    $c = $form->addText($key, $this->getParamLabel($param));
+                }
+
                 if ($param->getAvailableValues()) {
                     $c->setOption('description', 'available values: ' . implode(' | ', $param->getAvailableValues()));
                 }

@@ -6,9 +6,9 @@ use Exception;
 
 class InputParam implements ParamInterface
 {
-    const TYPE_POST = 'POST';
-    const TYPE_GET  = 'GET';
-    const TYPE_FILE = 'FILE';
+    const TYPE_POST   = 'POST';
+    const TYPE_GET    = 'GET';
+    const TYPE_FILE   = 'FILE';
 
     const OPTIONAL = false;
     const REQUIRED = true;
@@ -142,6 +142,7 @@ class InputParam implements ParamInterface
             if (isset($_FILES[$this->key])) {
                 return $_FILES[$this->key];
             }
+            return false;
         }
 
         throw new Exception("Invalid type");
