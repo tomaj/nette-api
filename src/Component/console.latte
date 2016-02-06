@@ -26,6 +26,14 @@
                     <b>GET:</b>
                     <pre>{!implode("\n", $response->getGetFields())}</pre>
                 {/if}
+                {if $response->getCookieFields()}
+                    <b>COOKIES:</b>
+                    <pre>{foreach $response->getCookieFields() as $key => $value}
+                        {block |strip}
+                        {$key}={$value}
+                        {/block}
+                    {/foreach}</pre>
+                {/if}
                 {if $response->getHeaders()}
                     <b>HEADERS:</b>
                     <pre>{!implode("\n", $response->getHeaders())}</pre>

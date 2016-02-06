@@ -91,6 +91,13 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(102, $value[1]['size']);
     }
 
+    public function testCookiesValues()
+    {
+        $_COOKIE['mykey'] = 'asd';
+        $inputParam = new InputParam(InputParam::TYPE_COOKIE, 'mykey', InputParam::REQUIRED);
+        $this->assertEquals('asd', $inputParam->getValue());
+    }
+
     public function testStaticAvailableValues()
     {
         $_GET['dsgerg'] = 'asfsaf';

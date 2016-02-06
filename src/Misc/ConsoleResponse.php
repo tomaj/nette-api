@@ -8,6 +8,8 @@ class ConsoleResponse
 
     private $getFields;
 
+    private $cookieFields;
+
     private $url;
 
     private $method;
@@ -35,14 +37,16 @@ class ConsoleResponse
      * @param string  $method
      * @param array   $postFields
      * @param array   $getFields
+     * @param array   $cookieFields
      * @param array   $headers
      */
-    public function __construct($url, $method, array $postFields = [], array $getFields = [], array $headers = [])
+    public function __construct($url, $method, array $postFields = [], array $getFields = [], $cookieFields = [], array $headers = [])
     {
         $this->url = $url;
         $this->method = $method;
         $this->postFields = $postFields;
         $this->getFields = $getFields;
+        $this->cookieFields = $cookieFields;
         $this->headers = $headers;
     }
 
@@ -80,6 +84,11 @@ class ConsoleResponse
     public function getGetFields()
     {
         return $this->getFields;
+    }
+
+    public function getCookieFields()
+    {
+        return $this->cookieFields;
     }
 
     public function getUrl()

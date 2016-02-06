@@ -9,6 +9,7 @@ class InputParam implements ParamInterface
     const TYPE_POST   = 'POST';
     const TYPE_GET    = 'GET';
     const TYPE_FILE   = 'FILE';
+    const TYPE_COOKIE = 'COOKIE';
 
     const OPTIONAL = false;
     const REQUIRED = true;
@@ -147,6 +148,11 @@ class InputParam implements ParamInterface
                 }
             }
             return null;
+        }
+        if ($this->type == self::TYPE_COOKIE) {
+            if (isset($_COOKIE[$this->key])) {
+                return $_COOKIE[$this->key];
+            }
         }
 
         throw new Exception('Invalid type');

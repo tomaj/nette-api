@@ -34,7 +34,7 @@ class ConsoleRequest
      */
     public function makeRequest($url, $method, array $values, $token = null)
     {
-        list($postFields, $getFields) = $this->processValues($values);
+        list($postFields, $getFields, $cookieFields) = $this->processValues($values);
 
         $postFields = $this->normalizeValues($postFields);
         $getFields = $this->normalizeValues($getFields);
@@ -60,8 +60,14 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_HEADER, true);
         if (count($postFields)) {
             curl_setopt($curl, CURLOPT_POST, true);
-
             curl_setopt($curl, CURLOPT_POSTFIELDS, $postFields);
+        }
+        if (count($cookieFields)) {
+            $parts = [];
+            foreach ($cookieFields as $key => $value) {
+                $parts[] = "$key=$value";
+            }
+            curl_setopt($curl, CURLOPT_HTTPHEADER, ["Cookie: " . implode('&', $parts)]);
         }
 
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
@@ -76,6 +82,7 @@ class ConsoleRequest
             $method,
             $postFields,
             $getFields,
+            $cookieFields,
             $headers
         );
 
@@ -111,7 +118,7 @@ class ConsoleRequest
 
         $postFields = [];
         $getFields = [];
-
+        $cookieFields = [];
 
         foreach ($values as $key => $value) {
             if (strstr($key, '___') !== false) {
@@ -129,12 +136,16 @@ class ConsoleRequest
                 if ($param->isMulti()) {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
                         $postFields[$key][] = $valueData;
+                    } elseif ($param->getType() == InputParam::TYPE_COOKIE) {
+                        $cookieFields[$key][] = $valueData;
                     } else {
                         $getFields[$key][] = $valueData;
                     }
                 } else {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
                         $postFields[$key] = $valueData;
+                    } elseif ($param->getType() == InputParam::TYPE_COOKIE) {
+                        $cookieFields[$key] = $valueData;
                     } else {
                         $getFields[$key] = $valueData;
                     }
@@ -142,7 +153,7 @@ class ConsoleRequest
             }
         }
 
-        return [$postFields, $getFields];
+        return [$postFields, $getFields, $cookieFields];
     }
 
     /**

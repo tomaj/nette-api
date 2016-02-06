@@ -14,6 +14,7 @@ class ConsoleResponseTest extends PHPUnit_Framework_TestCase
             'POST',
             ['mykey1' => 'asdsd'],
             ['mykey2' => 'wegewg'],
+            ['mykey3' => 'gwegerg'],
             ['Content-Type' => 'text']
         );
 
@@ -21,6 +22,7 @@ class ConsoleResponseTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('POST', $response->getMethod());
         $this->assertEquals(['mykey1' => 'asdsd'], $response->getPostFields());
         $this->assertEquals(['mykey2' => 'wegewg'], $response->getGetFields());
+        $this->assertEquals(['mykey3' => 'gwegerg'], $response->getCookieFields());
         $this->assertEquals(['Content-Type' => 'text'], $response->getHeaders());
         $this->assertNull($response->getResponseCode());
         $this->assertFalse($response->isError());

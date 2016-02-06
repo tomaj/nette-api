@@ -107,6 +107,7 @@ class ApiConsoleControl extends Control
         if ($param->isRequired()) {
             $title .= ' *';
         }
+        $title .= ' (' . $param->getType() . ')';
         return $title;
     }
 
