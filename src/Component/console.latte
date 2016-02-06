@@ -12,7 +12,15 @@
             <p>
                 {if $response->getPostFields()}
                     <b>POST:</b>
-                    <pre>{!implode("\n", $response->getPostFields())}</pre>
+                    <pre>{foreach $response->getPostFields() as $key => $field}
+                        {block |strip}
+                        {if !is_string($field) && get_class($field) == 'CURLFile'}
+                            {$key}=@{$field->getFilename()} ({$field->getMimeType()}) [{$field->getPostFilename()}] (file)
+                        {else}
+                            {$key}={$field}
+                        {/if}
+                        {/block}
+                    {/foreach}</pre>
                 {/if}
                 {if $response->getGetFields()}
                     <b>GET:</b>
