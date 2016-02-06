@@ -66,7 +66,32 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $this->assertEquals('hello', $inputParam->getValue());
     }
 
-    public function testStaticAvailableValuesTest()
+    public function testMultiFileInput()
+    {
+        $_FILES['myfile'] = [
+            'name' => ['file1', 'file2'],
+            'type' => ['text/plain', 'image/jpeg'],
+            'tmp_name' => ['/tmp/1', '/tmp/2'],
+            'size' => [101, 102],
+        ];
+
+        $inputParam = new InputParam(InputParam::TYPE_FILE, 'myfile', InputParam::REQUIRED, null, true);
+        $value = $inputParam->getValue();
+
+        $this->assertCount(2, $value);
+
+        $this->assertEquals('file1', $value[0]['name']);
+        $this->assertEquals('text/plain', $value[0]['type']);
+        $this->assertEquals('/tmp/1', $value[0]['tmp_name']);
+        $this->assertEquals(101, $value[0]['size']);
+
+        $this->assertEquals('file2', $value[1]['name']);
+        $this->assertEquals('image/jpeg', $value[1]['type']);
+        $this->assertEquals('/tmp/2', $value[1]['tmp_name']);
+        $this->assertEquals(102, $value[1]['size']);
+    }
+
+    public function testStaticAvailableValues()
     {
         $_GET['dsgerg'] = 'asfsaf';
         $inputParam = new InputParam(InputParam::TYPE_GET, 'dsgerg', InputParam::REQUIRED, 'vgdgr');

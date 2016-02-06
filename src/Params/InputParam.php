@@ -140,11 +140,26 @@ class InputParam implements ParamInterface
         }
         if ($this->type == self::TYPE_FILE) {
             if (isset($_FILES[$this->key])) {
-                return $_FILES[$this->key];
+                if ($this->isMulti()) {
+                    return $this->processMultiFileUploads($_FILES[$this->key]);
+                } else {
+                    return $_FILES[$this->key];
+                }
             }
             return null;
         }
 
         throw new Exception('Invalid type');
+    }
+
+    private function processMultiFileUploads($files)
+    {
+        $result = [];
+        foreach ($files as $key => $values) {
+            foreach ($values as $index => $value) {
+                $result[$index][$key] = $value;
+            }
+        }
+        return $result;
     }
 }
