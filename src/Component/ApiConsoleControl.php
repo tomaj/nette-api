@@ -80,6 +80,9 @@ class ApiConsoleControl extends Control
 
                 if ($param->getType() == InputParam::TYPE_FILE) {
                     $c = $form->addUpload($key, $this->getParamLabel($param));
+                } elseif ($param->getType() == InputParam::TYPE_POST_RAW) {
+                    $c = $form->addTextArea('post_raw', $this->getParamLabel($param))
+                        ->setAttribute('rows', 10);
                 } else {
                     $c = $form->addText($key, $this->getParamLabel($param));
                 }

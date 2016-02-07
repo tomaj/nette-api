@@ -6,10 +6,11 @@ use Exception;
 
 class InputParam implements ParamInterface
 {
-    const TYPE_POST   = 'POST';
-    const TYPE_GET    = 'GET';
-    const TYPE_FILE   = 'FILE';
-    const TYPE_COOKIE = 'COOKIE';
+    const TYPE_POST      = 'POST';
+    const TYPE_GET       = 'GET';
+    const TYPE_FILE      = 'FILE';
+    const TYPE_COOKIE    = 'COOKIE';
+    const TYPE_POST_RAW  = 'POST_RAW';
 
     const OPTIONAL = false;
     const REQUIRED = true;
@@ -153,6 +154,9 @@ class InputParam implements ParamInterface
             if (isset($_COOKIE[$this->key])) {
                 return $_COOKIE[$this->key];
             }
+        }
+        if ($this->type == self::TYPE_POST_RAW) {
+            return file_get_contents("php://input");
         }
 
         throw new Exception('Invalid type');
