@@ -107,4 +107,10 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $_GET['dsgerg'] = 'vgdgr';
         $this->assertTrue($inputParam->isValid());
     }
+
+    public function testRawPostData()
+    {
+        $inputParam = new InputParam(InputParam::TYPE_POST_RAW, 'raw_post');
+        $this->assertEquals('', $inputParam->getValue());
+    }
 }
