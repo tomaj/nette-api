@@ -28,7 +28,11 @@
                 {/if}
                 {if $response->getGetFields()}
                     <b>GET:</b>
-                    <pre>{!implode("\n", $response->getGetFields())}</pre>
+                    <pre>{foreach $response->getGetFields() as $key => $field}
+                         {block |strip}
+                             {$key}={$field}
+                         {/block}
+                    {/foreach}</pre>
                 {/if}
                 {if $response->getCookieFields()}
                     <b>COOKIES:</b>
