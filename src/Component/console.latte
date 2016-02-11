@@ -11,7 +11,7 @@
             </p>
             <p>
                 {if $response->getPostFields()}
-                    <b>POST:</b>
+                    <b>POST FIELDS:</b>
                     <pre>{foreach $response->getPostFields() as $key => $field}
                         {block |strip}
                         {if !is_string($field) && get_class($field) == 'CURLFile'}
@@ -21,6 +21,10 @@
                         {/if}
                         {/block}
                     {/foreach}</pre>
+                {/if}
+                {if $response->getRawPost()}
+                    <b>RAW POST</b>
+                    <pre>{$response->getRawPost()}</pre>
                 {/if}
                 {if $response->getGetFields()}
                     <b>GET:</b>
