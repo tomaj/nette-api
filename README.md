@@ -167,7 +167,7 @@ I have to recommend to take a look at Fractal library (http://fractal.thephpleag
 
 [Fractal]: http://fractal.thephpleague.com/
 
-## Inputs
+## Input Types
 
 Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES or RAW POST data.
 All input types are available via test console.
