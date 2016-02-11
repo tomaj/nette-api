@@ -167,6 +167,21 @@ I have to recommend to take a look at Fractal library (http://fractal.thephpleag
 
 [Fractal]: http://fractal.thephpleague.com/
 
+## Inputs
+
+Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES or RAW POST data.
+All input types are available via test console.
+
+This is table with support input types:
+
+| Input type      | Example
+| ----------      | -------
+| POST            | `new InputParam(InputParam::TYPE_POST, 'key')`
+| GET             | `new InputParam(InputParam::TYPE_GET, 'key')`
+| FILE            | `new InputParam(InputParam::TYPE_FILE, 'key')`
+| COOKIE          | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
+| RAW POST        | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
+
 ## Security
 
 Protecting your api is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApiHandler()* method in *config.neon*.
