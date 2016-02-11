@@ -34,7 +34,7 @@ class ConsoleRequest
      */
     public function makeRequest($url, $method, array $values, $token = null)
     {
-        list($postFields, $getFields, $cookieFields) = $this->processValues($values);
+        list($postFields, $getFields, $cookieFields, $rawPost) = $this->processValues($values);
 
         $postFields = $this->normalizeValues($postFields);
         $getFields = $this->normalizeValues($getFields);
@@ -62,6 +62,10 @@ class ConsoleRequest
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $postFields);
         }
+        if ($rawPost) {
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $rawPost);
+        }
         if (count($cookieFields)) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
@@ -83,7 +87,8 @@ class ConsoleRequest
             $postFields,
             $getFields,
             $cookieFields,
-            $headers
+            $headers,
+            $rawPost
         );
 
         $response = curl_exec($curl);
@@ -117,6 +122,7 @@ class ConsoleRequest
         $params = $this->handler->params();
 
         $postFields = [];
+        $rawPost = isset($values['post_raw']) ? $values['post_raw'] : false;
         $getFields = [];
         $cookieFields = [];
 
@@ -128,7 +134,6 @@ class ConsoleRequest
 
             foreach ($params as $param) {
                 $valueData = $this->processParam($param, $key, $value);
-
                 if ($valueData === null) {
                     continue;
                 }
@@ -153,7 +158,7 @@ class ConsoleRequest
             }
         }
 
-        return [$postFields, $getFields, $cookieFields];
+        return [$postFields, $getFields, $cookieFields, $rawPost];
     }
 
     /**
@@ -179,6 +184,14 @@ class ConsoleRequest
                     $valueData = curl_file_create($value->getTemporaryFile(), $value->getContentType(), $value->getName());
                 } else {
                     $valueData = false;
+                }
+            }
+
+            if ($param->getType() == InputParam::TYPE_POST_RAW) {
+                if (isset($HTTP_RAW_POST_DATA)) {
+                    $valueData = $HTTP_RAW_POST_DATA;
+                } else {
+                    $valueData = file_get_contents('php://input');
                 }
             }
 
