@@ -93,7 +93,7 @@ class UsersListingHandler extends Basehandler
 
     public function handle($params)
     {
-        $users = [] 
+        $users = [];
         foreach ($this->useRepository->all() as $user) {
             $users[] = $user->toArray();
         }
