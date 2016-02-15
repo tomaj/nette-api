@@ -9,14 +9,18 @@ use Nette\Http\Response as HttpResponse;
 use Nette\Http\Request as HttpRequest;
 use Nette\Http\UrlScript;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
+use Tomaj\NetteApi\Handlers\EchoHandler;
+use Tomaj\NetteApi\Misc\IpDetector;
+use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
 
 class ApiPresenterTest extends PHPUnit_Framework_TestCase
 {
-    public function testValidation()
+    public function testSimpleResponse()
     {
         $apiDecider = new ApiDecider();
         $apiDecider->addApiHandler(new EndpointIdentifier('GET', 1, 'test', 'api'), new AlwaysOkHandler(), new NoAuthorization());
@@ -31,5 +35,45 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(200, $result->getCode());
         $this->assertEquals(['status' => 'ok'], $result->getPayload());
         $this->assertEquals('application/json; charset=utf-8', $result->getContentType());
+    }
+
+    public function testWithAuthorization()
+    {
+        $apiDecider = new ApiDecider();
+        $apiDecider->addApiHandler(
+            new EndpointIdentifier('GET', 1, 'test', 'api'),
+            new AlwaysOkHandler(),
+            new BearerTokenAuthorization(new StaticBearerTokenRepository([]), new IpDetector())
+        );
+
+        $presenter = new ApiPresenter();
+        $presenter->apiDecider = $apiDecider;
+        $presenter->injectPrimary(new Container(), null, null, $httpRequest = new HttpRequest(new UrlScript('')), new HttpResponse());
+
+        $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
+        $result = $presenter->run($request);
+
+        $this->assertEquals(['status' => 'error', 'message' => 'Authorization header HTTP_Authorization is not set'], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
+    }
+
+    public function testWithParams()
+    {
+        $apiDecider = new ApiDecider();
+        $apiDecider->addApiHandler(
+            new EndpointIdentifier('GET', 1, 'test', 'api'),
+            new EchoHandler(),
+            new NoAuthorization()
+        );
+
+        $presenter = new ApiPresenter();
+        $presenter->apiDecider = $apiDecider;
+        $presenter->injectPrimary(new Container(), null, null, $httpRequest = new HttpRequest(new UrlScript('')), new HttpResponse());
+
+        $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
+        $result = $presenter->run($request);
+        
+        $this->assertEquals(['status' => 'error', 'message' => 'wrong input'], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
     }
 }
