@@ -12,6 +12,7 @@ use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tracy\Debugger;
 use Exception;
 
 /**
@@ -96,6 +97,7 @@ class ApiPresenter extends Presenter
         } catch (Exception $exception) {
             $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error']);
             $code = $response->getCode();
+            Debugger::log($exception, Debugger::EXCEPTION);
         }
 
         $end = microtime(true);
