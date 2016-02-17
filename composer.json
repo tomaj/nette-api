@@ -14,7 +14,7 @@
         "php": ">= 5.4.0",
         "nette/application": "^2.0",
         "nette/http": "^2.0",
-        "nette/tracy": "^2.0",
+        "tracy/tracy": "^2.0",
         "league/fractal": "^0.12.0",
         "tomaj/nette-bootstrap-form": "^1.1"
     },
