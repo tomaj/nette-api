@@ -120,7 +120,7 @@ namespace App\MyApi\v1\Transformers;
 
 use League\Fractal\TransformerAbstract;
 
-class LoginTransformer extends TransformerAbstract
+class UserTransformer extends TransformerAbstract
 {
     public function transform($user)
     {
@@ -143,19 +143,19 @@ use Tomaj\NetteApi\Response\JsonApiResponse;
 
 class UsersListingHandler extends Basehandler
 {
-    private $loginTransformer;
+    private $userTransformer;
 
-    public function __construct(LoginTransformer $loginTransformer)
+    public function __construct(UserTransformer $userTransformer)
     {
         parent::__construct();
-        $this->loginTransformer = $loginTransformer;
+        $this->userTransformer = $userTransformer;
     }
 
     public function handle($params)
     {
         $users = $this->useRepository->all(); 
 
-        $resource = new Collection($users, $this->loginTransformer);
+        $resource = new Collection($users, $this->userTransformer);
         $result = $this->getFractal()->createData($resource)->toArray();
 
         return new JsonApiResponse(200, $result);
