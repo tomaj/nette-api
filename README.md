@@ -94,7 +94,7 @@ class UsersListingHandler extends Basehandler
     public function handle($params)
     {
         $users = [];
-        foreach ($this->useRepository->all() as $user) {
+        foreach ($this->userRepository->all() as $user) {
             $users[] = $user->toArray();
         }
         return new JsonApiResponse(200, ['status' => 'ok', 'users' => $users]);
@@ -167,6 +167,51 @@ I have to recommend to take a look at Fractal library (http://fractal.thephpleag
 
 [Fractal]: http://fractal.thephpleague.com/
 
+## Endpoint inputs
+
+Each handler can describe which input is required. It could be GET or POST parameters, also COOKIES, raw post json or file uploads. You have to implement method `params()` where you have to return array with params. This params are used in api console to generate right form.
+
+Example with user detail:
+
+``` php
+namespace App\MyApi\v1\Handlers;
+
+use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Params\InputParam;
+
+class UsersDetailHandler extends Basehandler
+{
+    private $userRepository;
+
+    public function __construct(UsersRepository $userRepository)
+    {
+        parent::__construct();
+        $this->userRepository = $userRepository;
+    }
+
+    public function params()
+    {
+        return [
+            new InputParam(InputParam::TYPE_GET, 'id', InputParam::REQUIRED),
+        ];
+    }
+
+    public function handle($params)
+    {
+        $user = $this->userRepository->find($params['id']);
+        if (!$user) {
+            return new JsonApiResponse(404, ['status' => 'error', 'message' => 'User not found']);
+        }
+        return new JsonApiResponse(200, ['status' => 'ok', 'user' => [
+            'id' => $user->id,
+            'email' => $user->email,
+            'name' => $user->name,
+        ]);
+    }
+}
+```
+
 ## Input Types
 
 Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES or RAW POST data.
@@ -181,6 +226,7 @@ This is table with support input types:
 | FILE            | `new InputParam(InputParam::TYPE_FILE, 'key')`
 | COOKIE          | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
 | RAW POST        | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
+
 
 ## Security
 
