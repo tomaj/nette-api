@@ -47,7 +47,7 @@ class ConsoleRequest
             $url = $url . '?' . implode('&', $parts);
         }
 
-        $startTime = microtime();
+        $startTime = microtime(true);
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
@@ -92,7 +92,7 @@ class ConsoleRequest
         );
 
         $response = curl_exec($curl);
-        $elapsed = intval((microtime() - $startTime) * 1000);
+        $elapsed = intval((microtime(true) - $startTime) * 1000);
 
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
         $responseHeaders = substr($response, 0, $headerSize);
