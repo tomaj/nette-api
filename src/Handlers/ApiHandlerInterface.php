@@ -9,12 +9,24 @@ use Nette\Application\IResponse;
 interface ApiHandlerInterface
 {
     /**
+     * Description of handler
+     * @return string
+     */
+    public function description();
+    
+    /**
      * Returns available parameters that handler need
      *
      * @return InputParam[]
      */
     public function params();
 
+    /**
+     * Returns list of tags for handler
+     * @return []
+     */
+    public function tags();
+    
     /**
      * Main handle method that will be executed when api
      * endpoint contected with this handler will be triggered

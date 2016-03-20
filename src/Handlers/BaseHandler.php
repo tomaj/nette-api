@@ -32,7 +32,23 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    public function description()
+    {
+        return '';
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
     public function params()
+    {
+        return [];
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function tags()
     {
         return [];
     }

@@ -9,11 +9,15 @@ use Tomaj\NetteApi\Handlers\DefaultHandler;
 
 class ApiDecider
 {
-    /**
-     * @var ApiHandlerInterface[]
-     */
+    /** @var ApiHandlerInterface[] */
     private $handlers = [];
 
+    /** @var string */
+    private $title;
+    
+    /** @var string */
+    private $description;
+    
     /**
      * Get api handler that match input method, version, package and apiAction.
      * If decider cannot find handler for given handler, returns defaults.
@@ -64,10 +68,46 @@ class ApiDecider
     /**
      * Get all registered handlers
      *
-     * @return Handlers\ApiHandlerInterface[]
+     * @return ApiHandlerInterface[]
      */
     public function getHandlers()
     {
         return $this->handlers;
+    }
+    
+    /**
+     * @param string $title
+     * @return ApiDecider
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+        return $this;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+
+    /**
+     * @param string $description
+     * @return ApiDecider
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
     }
 }

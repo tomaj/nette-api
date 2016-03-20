@@ -15,38 +15,38 @@ class InputParam implements ParamInterface
     const OPTIONAL = false;
     const REQUIRED = true;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $type;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $key;
 
-    /**
-     * @var bool
-     */
+    /** @var bool */
     private $required;
 
-    /**
-     * @var array|null
-     */
+    /** @var array|null */
     private $availableValues;
 
-    /**
-     * @var bool
-     */
+    /** @var bool */
     private $multi;
 
-    public function __construct($type, $key, $required = self::OPTIONAL, $availableValues = null, $multi = false)
-    {
+    /** @var string */
+    private $description;
+    
+    public function __construct(
+        $type,
+        $key,
+        $required = self::OPTIONAL,
+        $availableValues = null,
+        $multi = false,
+        $description = ''
+    ) {
         $this->type = $type;
         $this->key = $key;
         $this->required = $required;
         $this->availableValues = $availableValues;
         $this->multi = $multi;
+        $this->description = $description;
     }
 
     /**
@@ -84,6 +84,14 @@ class InputParam implements ParamInterface
     public function isMulti()
     {
         return $this->multi;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
     }
 
     /**
