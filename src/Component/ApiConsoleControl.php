@@ -81,18 +81,22 @@ class ApiConsoleControl extends Control
                 if ($param->isMulti()) {
                     $key = $key . '___' . $i;
                 }
-
-                if ($param->getType() == InputParam::TYPE_FILE) {
+                
+                if ($param->getAvailableValues() && is_array($param->getAvailableValues())) {
+                    $c = $form->addSelect($key, $this->getParamLabel($param), array_combine($param->getAvailableValues(), $param->getAvailableValues()));
+                    if (!$param->isRequired()) {
+                        $c->setPrompt('Select ' . $this->getLabel($param));
+                    }
+                } elseif ($param->getAvailableValues() && is_string($param->getAvailableValues())) {
+                    $c = $form->addText($key, $this->getParamLabel($param))->setDisabled(true);
+                    $defaults[$key] = $param->getAvailableValues();
+                } elseif ($param->getType() == InputParam::TYPE_FILE) {
                     $c = $form->addUpload($key, $this->getParamLabel($param));
                 } elseif ($param->getType() == InputParam::TYPE_POST_RAW) {
                     $c = $form->addTextArea('post_raw', $this->getParamLabel($param))
                         ->setAttribute('rows', 10);
                 } else {
                     $c = $form->addText($key, $this->getParamLabel($param));
-                }
-
-                if ($param->getAvailableValues()) {
-                    $c->setOption('description', 'available values: ' . implode(' | ', $param->getAvailableValues()));
                 }
             }
         }
@@ -108,9 +112,14 @@ class ApiConsoleControl extends Control
         return $form;
     }
 
+    private function getLabel(InputParam $param)
+    {
+        return ucfirst(str_replace('_', ' ', $param->getKey()));
+    }
+
     private function getParamLabel(InputParam $param)
     {
-        $title = ucfirst(str_replace('_', ' ', $param->getKey()));
+        $title = $this->getLabel($param);
         if ($param->isRequired()) {
             $title .= ' *';
         }

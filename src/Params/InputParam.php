@@ -95,6 +95,10 @@ class InputParam implements ParamInterface
      */
     public function isValid()
     {
+        if ($this->required == self::OPTIONAL) {
+            return true;
+        }
+
         $value = $this->getValue();
         if ($this->availableValues !== null) {
             if (is_array($this->availableValues)) {
