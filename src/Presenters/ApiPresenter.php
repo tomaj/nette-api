@@ -219,7 +219,11 @@ class ApiPresenter extends Presenter
         if (filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
             $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
             if (isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host'])) {
-                return $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
+                $url = $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
+                if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== 80) {
+                    $url .= ':' . $refererParsedUrl['port'];
+                }
+                return $url;
             }
         }
         return false;
