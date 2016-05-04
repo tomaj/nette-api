@@ -60,8 +60,8 @@ class JsonApiResponse extends JsonResponse
      */
     public function send(Nette\Http\IRequest $httpRequest, Nette\Http\IResponse $httpResponse)
     {
-        $httpResponse->setContentType($this->contentType, $this->charset);
+        $httpResponse->setContentType($this->getContentType(), $this->charset);
         $httpResponse->setExpiration(false);
-        echo Nette\Utils\Json::encode($this->payload);
+        echo Nette\Utils\Json::encode($this->getPayload());
     }
 }
