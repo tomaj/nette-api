@@ -27,7 +27,7 @@ class JsonApiResponse extends JsonResponse
      * @param string $contentType
      * @param string $charset
      */
-    public function __construct($code, $data, $contentType = 'application/json', $charset ='utf-8')
+    public function __construct($code, $data, $contentType = 'application/json', $charset = 'utf-8')
     {
         parent::__construct($data, $contentType);
         $this->charset = $charset;
@@ -61,7 +61,7 @@ class JsonApiResponse extends JsonResponse
     public function send(Nette\Http\IRequest $httpRequest, Nette\Http\IResponse $httpResponse)
     {
         $httpResponse->setContentType($this->contentType, $this->charset);
-        $httpResponse->setExpiration(FALSE);
+        $httpResponse->setExpiration(false);
         echo Nette\Utils\Json::encode($this->payload);
     }
 }
