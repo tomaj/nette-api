@@ -16,7 +16,8 @@ class DefaultHandlerTest extends PHPUnit_Framework_TestCase
         $defaultHandler = new DefaultHandler();
         $result = $defaultHandler->handle([]);
         $this->assertEquals(500, $result->getCode());
-        $this->assertEquals('application/json; charset=utf-8', $result->getContentType());
+        $this->assertEquals('application/json', $result->getContentType());
+        $this->assertEquals('utf-8', $result->getCharset());
         $this->assertEquals(['status' => 'error', 'message' => 'Unknown api endpoint'], $result->getPayload());
     }
 

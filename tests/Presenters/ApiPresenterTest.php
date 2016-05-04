@@ -34,7 +34,8 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(200, $result->getCode());
         $this->assertEquals(['status' => 'ok'], $result->getPayload());
-        $this->assertEquals('application/json; charset=utf-8', $result->getContentType());
+        $this->assertEquals('application/json', $result->getContentType());
+        $this->assertEquals('utf-8', $result->getCharset());
     }
 
     public function testWithAuthorization()
