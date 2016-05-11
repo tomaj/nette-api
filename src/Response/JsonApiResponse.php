@@ -62,6 +62,8 @@ class JsonApiResponse extends JsonResponse
     {
         $httpResponse->setContentType($this->getContentType(), $this->charset);
         $httpResponse->setExpiration(false);
-        echo Nette\Utils\Json::encode($this->getPayload());
+        $result = Nette\Utils\Json::encode($this->getPayload())
+        $httpResponse->setHeader('Content-Length', strlen($result));
+        echo $result;
     }
 }

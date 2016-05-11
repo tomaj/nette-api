@@ -50,6 +50,7 @@ class XmlApiResponse implements ApplicationIResponse
         $httpResponse->setContentType('text/xml');
         $httpResponse->setExpiration(false);
         $httpResponse->setCode($this->getCode());
+        $httpResponse->setHeader('Content-Length', strlen($this->response));
 
         echo $this->response;
     }
