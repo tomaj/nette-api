@@ -2,21 +2,21 @@
 
 namespace Tomaj\NetteApi\Presenters;
 
+use Exception;
 use Nette\Application\Responses\JsonResponse;
 use Nette\Application\UI\Presenter;
+use Nette\DI\Container;
 use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
-use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
-use Exception;
 
 /**
- * @property-read \Nette\DI\Container $context
+ * @property-read Container $context
  */
 class ApiPresenter extends Presenter
 {
@@ -24,11 +24,6 @@ class ApiPresenter extends Presenter
      * @var  ApiDecider @inject
      */
     public $apiDecider;
-
-    /**
-     * @var  IpDetectorInterface @inject
-     */
-    public $ipDetector;
 
     /**
      * CORS header settings
@@ -102,8 +97,8 @@ class ApiPresenter extends Presenter
 
         $end = microtime(true);
 
-        if ($this->context->hasService('apiLogger')) {
-            $this->logRequest($this->context->getService('apiLogger'), $code, $end - $start);
+        if ($this->context->findByType('Tomaj\NetteApi\Logger\ApiLoggerInterface')) {
+            $this->logRequest($this->context->getByType('Tomaj\NetteApi\Logger\ApiLoggerInterface'), $code, $end - $start);
         }
 
         // output to nette
@@ -182,12 +177,13 @@ class ApiPresenter extends Presenter
             $requestHeaders .= "$key: $value\n";
         }
 
+        $ipDetector = $this->context->getByType('Tomaj\NetteApi\Misc\IpDetectorInterface');
         $logger->log(
             $code,
             $this->getRequest()->getMethod(),
             $requestHeaders,
             filter_input(INPUT_SERVER, 'REQUEST_URI'),
-            $this->ipDetector->getRequestIp(),
+            $ipDetector->getRequestIp(),
             filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
             ($elapsed) * 1000
         );
@@ -216,16 +212,17 @@ class ApiPresenter extends Presenter
 
     private function getRequestDomain()
     {
-        if (filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
-            $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
-            if (isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host'])) {
-                $url = $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
-                if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== 80) {
-                    $url .= ':' . $refererParsedUrl['port'];
-                }
-                return $url;
-            }
+        if (!filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
+            return false;
         }
-        return false;
+        $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
+        if (!(isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host']))) {
+            return false;
+        }
+        $url = $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
+        if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== 80) {
+            $url .= ':' . $refererParsedUrl['port'];
+        }
+        return $url;
     }
 }

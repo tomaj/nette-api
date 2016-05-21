@@ -27,7 +27,7 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, $httpRequest = new HttpRequest(new UrlScript('')), new HttpResponse());
+        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript('')), new HttpResponse());
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -49,7 +49,7 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, $httpRequest = new HttpRequest(new UrlScript('')), new HttpResponse());
+        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript('')), new HttpResponse());
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -69,7 +69,7 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, $httpRequest = new HttpRequest(new UrlScript('')), new HttpResponse());
+        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript('')), new HttpResponse());
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);

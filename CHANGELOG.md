@@ -4,6 +4,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Changed
+
+* Service of type Tomaj\NetteApi\Misc\IpDetectorInterface is no more required if service of type Tomaj\NetteApi\Logger\ApiLoggerInterface is not configured and used
+* Service of type Tomaj\NetteApi\Logger\ApiLoggerInterface need not be named "apiLogger"
+
 ## 1.6.0 - 2016-05-11
 
 ### Added
