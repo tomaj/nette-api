@@ -19,15 +19,15 @@ class ParamsProcessorTest extends PHPUnit_Framework_TestCase
 
     public function testPass()
     {
+        $_POST['mykey1'] = 'hello';
+        $_GET['mykey2'] = 'asdasd';
+        $_POST['mykey3'] = 'asd';
+
         $processor = new ParamsProcessor([
             new InputParam(InputParam::TYPE_POST, 'mykey1', InputParam::REQUIRED),
             new InputParam(InputParam::TYPE_GET, 'mykey2', InputParam::REQUIRED),
             new InputParam(InputParam::TYPE_POST, 'mykey3', InputParam::OPTIONAL),
         ]);
-
-        $_POST['mykey1'] = 'hello';
-        $_GET['mykey2'] = 'asdasd';
-        $_POST['mykey3'] = 'asd';
 
         $this->assertFalse($processor->isError());
 
