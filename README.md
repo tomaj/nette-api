@@ -225,7 +225,7 @@ This is table with support input types:
 | GET             | `new InputParam(InputParam::TYPE_GET, 'key')`
 | FILE            | `new InputParam(InputParam::TYPE_FILE, 'key')`
 | COOKIE          | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
-| RAW POST        | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
+| RAW POST        | `new InputParam(InputParam::TYPE_POST_RAW, 'key')`
 
 
 ## Security
