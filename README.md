@@ -163,7 +163,7 @@ class UsersListingHandler extends Basehandler
 }
 ```
 
-I have to recommend to take a look at Fractal library (http://fractal.thephpleague.com/)[http://fractal.thephpleague.com/]. There are much more information about transformers, serialisers, paginations etc. It is really nice library.
+I have to recommend to take a look at [Fractal][] library. There are much more information about transformers, serialisers, paginations etc. It is really nice library.
 
 [Fractal]: http://fractal.thephpleague.com/
 
