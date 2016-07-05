@@ -13,13 +13,13 @@
                 {if $response->getPostFields()}
                     <b>POST FIELDS:</b>
                     <pre>{foreach $response->getPostFields() as $key => $field}
-                        {block |strip}
+                        {spaceless}
                         {if !is_string($field) && get_class($field) == 'CURLFile'}
                             {$key}=@{$field->getFilename()} ({$field->getMimeType()}) [{$field->getPostFilename()}] (file)
                         {else}
                             {$key}={$field}
                         {/if}
-                        {/block}
+                        {/spaceless}
                     {/foreach}</pre>
                 {/if}
                 {if $response->getRawPost()}
@@ -29,17 +29,17 @@
                 {if $response->getGetFields()}
                     <b>GET:</b>
                     <pre>{foreach $response->getGetFields() as $key => $field}
-                         {block |strip}
+                         {spaceless}
                              {$key}={$field}
-                         {/block}
+                         {/spaceless}
                     {/foreach}</pre>
                 {/if}
                 {if $response->getCookieFields()}
                     <b>COOKIES:</b>
                     <pre>{foreach $response->getCookieFields() as $key => $value}
-                        {block |strip}
+                        {spaceless}
                         {$key}={$value}
-                        {/block}
+                        {/spaceless}
                     {/foreach}</pre>
                 {/if}
                 {if $response->getHeaders()}
