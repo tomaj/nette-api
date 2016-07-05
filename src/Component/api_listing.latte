@@ -1,5 +1,5 @@
 <div class="api-listing">
-    <div n:foreach="$handlers as $version => $handlers" class="listing-verions listing-version-{$version}">
+    <div n:foreach="$handlers as $version => $versionHandlers" class="listing-verions listing-version-{$version}">
         <h3>Version {$version}</h3>
 
         <div class="table-responsive">
@@ -13,7 +13,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr n:foreach="$handlers as $handler">
+                    <tr n:foreach="$versionHandlers as $handler">
                         <td><span class="label label-default">{$handler['endpoint']->getMethod()}</span></td>
                         <td>
                             <a href="{link Select! $handler['endpoint']->getMethod(), $handler['endpoint']->getVersion(), $handler['endpoint']->getPackage(), $handler['endpoint']->getApiAction()}"><b>/{$handler['endpoint']->getUrl()}</b></a>
