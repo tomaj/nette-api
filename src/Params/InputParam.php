@@ -102,7 +102,7 @@ class InputParam implements ParamInterface
         $value = $this->getValue();
         if ($this->availableValues !== null) {
             if (is_array($this->availableValues)) {
-                return in_array($value, $this->availableValues);
+                return empty(array_diff(($this->isMulti() ? $value : [$value]), $this->availableValues));
             }
         }
 
