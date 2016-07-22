@@ -4,9 +4,14 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+
+## 1.6.2 - 2016-07-22
+
 ### Fixed
 
 * InputParam validation of multi params, if available values are defined
+
+## 1.6.1 - 2016-07-05
 
 ### Changed
 
