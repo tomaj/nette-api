@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Fixed
+
+* InputParam validation of multi params, if available values are defined
+
 ### Changed
 
 * End of support for php < 5.6
