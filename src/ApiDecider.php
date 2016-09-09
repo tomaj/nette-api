@@ -2,9 +2,11 @@
 
 namespace Tomaj\NetteApi;
 
+use Nette\Http\Response;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 
 class ApiDecider
@@ -13,6 +15,11 @@ class ApiDecider
      * @var ApiHandlerInterface[]
      */
     private $handlers = [];
+
+    /**
+     * @var bool
+     */
+    private $globalPreflight = false;
 
     /**
      * Get api handler that match input method, version, package and apiAction.
@@ -34,12 +41,24 @@ class ApiDecider
                 $handler['handler']->setEndpointIdentifier($endpointIdentifier);
                 return $handler;
             }
+            if ($method == 'OPTIONS'  && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
+                return [
+                    'endpoint' => new EndpointIdentifier('OPTION', $version, $package, $apiAction),
+                    'authorization' => new NoAuthorization(),
+                    'handler' => new CorsPreflightHandler(new Response()),
+                ];
+            }
         }
         return [
             'endpoint' => new EndpointIdentifier($method, $version, $package, $apiAction),
             'authorization' => new NoAuthorization(),
             'handler' => new DefaultHandler($version, $package, $apiAction)
         ];
+    }
+
+    public function enableGlobalPreflight()
+    {
+        $this->globalPreflight = true;
     }
 
     /**

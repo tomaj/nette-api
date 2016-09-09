@@ -25,7 +25,7 @@ class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
         $defaultHandler = new CorsPreflightHandler(new Response());
         $this->assertNull($defaultHandler->getEndpoint());
 
-        $endpointIdentifier = new EndpointIdentifier('OPTION', 1, 'article', 'detail');
+        $endpointIdentifier = new EndpointIdentifier('OPTIONS', 1, 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
         $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
@@ -59,7 +59,7 @@ class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
         $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
         $defaultHandler->setupLinkGenerator($linkGenerator);
 
-        $endpointIdentifier = new EndpointIdentifier('OPTION', 1, 'article', 'detail');
+        $endpointIdentifier = new EndpointIdentifier('OPTIONS', 1, 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
 
         $this->assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
