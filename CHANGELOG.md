@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Added
+
+* Added default CORS preflight handler
+* Added possibility to enable global preflight handler for all handlers with `enableGlobalPreflight()` on `ApiDecider` 
 
 ## 1.6.2 - 2016-07-22
 

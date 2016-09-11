@@ -68,4 +68,26 @@ class ApiDeciderTest extends PHPUnit_Framework_TestCase
 
         $this->assertEquals(1, count($apiDecider->getHandlers()));
     }
+
+    public function testGlobalPreflight()
+    {
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
+        $apiLink = new ApiLink($linkGenerator);
+
+        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider->enableGlobalPreflight();
+
+        $this->assertEquals(0, count($apiDecider->getHandlers()));
+
+        $apiDecider->addApiHandler(
+            new EndpointIdentifier('POST', 2, 'comments', 'list'),
+            new AlwaysOkHandler(),
+            new NoAuthorization()
+        );
+
+        $this->assertEquals(1, count($apiDecider->getHandlers()));
+
+        $handler = $apiDecider->getApiHandler('OPTIONS', 2, 'comments', 'list');
+        $this->assertInstanceOf('Tomaj\NetteApi\Handlers\CorsPreflightHandler', $handler['handler']);
+    }
 }

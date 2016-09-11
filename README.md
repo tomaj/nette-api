@@ -259,6 +259,34 @@ In Nette-Api if you would like to specify IP restrictions for tokens you can use
 
 But it is very easy to implement your own Authorisation for API.
 
+## Javascript ajax calls (CORS - preflight OPTIONS calls)
+
+If you need to call API via javascript ajax from other domains, you will need to prepare API for [preflight calls with OPTIONS method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
+Nette-api is ready for this situation and you can choose if you want to enable pre-flight calls globally or you can register prepared prefligt handlers.
+
+Globally enabled - every api endpoint will be available for preflight OPTIONS call:
+
+``` neon
+services:
+    apiDecider:
+        class: Tomaj\NetteApi\ApiDecider
+        setup:
+            - enableGlobalPreflight()
+            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+```
+
+Or you can register custom OPTIONS endpoints:
+
+``` neon
+services:
+    apiDecider:
+        class: Tomaj\NetteApi\ApiDecider
+        setup:
+            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('OPTIONS', 1, 'users'), \Tomaj\NetteApi\Handlers\CorsPreflightHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+            
+```
+
 ## Logging
 
 It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all api requests.
@@ -274,7 +302,7 @@ If you need to iteract with your API with Javascript you will need to send corre
 
 You can set this property in config.neon if you register [ApiPresenter](src/Presenters/ApiPresenter.php):
 
-``` yaml
+``` neon
 services:
   -
     class: Tomaj\NetteApi\Presenters\ApiPresenter
