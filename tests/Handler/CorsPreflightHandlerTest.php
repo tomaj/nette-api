@@ -9,7 +9,6 @@ use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\SimpleRouter;
 use Nette\Http\Url;
 use PHPUnit_Framework_TestCase;
-use Nette\InvalidStateException;
 
 class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
 {
@@ -32,7 +31,7 @@ class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidStateException
+     * @expectedException \Nette\InvalidStateException
      */
     public function testExceptionWhenCreatingLinkWithoutLinkGenerator()
     {
@@ -41,7 +40,7 @@ class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException InvalidStateException
+     * @expectedException \Nette\InvalidStateException
      */
     public function testExceptionWHenCreatingLinkWithoutEndpoint()
     {
