@@ -41,7 +41,7 @@ class ApiDecider
                 $handler['handler']->setEndpointIdentifier($endpointIdentifier);
                 return $handler;
             }
-            if ($method == 'OPTIONS'  && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
+            if ($method == 'OPTIONS' && $this->globalPreflight && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
                 return [
                     'endpoint' => new EndpointIdentifier('OPTION', $version, $package, $apiAction),
                     'authorization' => new NoAuthorization(),
