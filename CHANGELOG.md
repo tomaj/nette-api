@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.7.0 - 2016-09-11
+
 ### Added
 
 * Added default CORS preflight handler
