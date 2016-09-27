@@ -236,12 +236,12 @@ For simple use, if you want to use Bearer token authorisation with few tokens, y
 
 ``` yaml
 services:
-    staticBearer: Tomaj\NetteApi\Misc\StaticBearerTokenRepository(['dasfoihwet90hidsg' => '*', 'asfoihweiohgwegi' => '127.0.0.1'])
+    staticBearer: Tomaj\NetteApi\Misc\StaticBearerTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
 
     apiDecider:
         class: Tomaj\NetteApi\ApiDecider
         setup:
-            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), @staticBearer)
+            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticBearer))
 
 ```
 
