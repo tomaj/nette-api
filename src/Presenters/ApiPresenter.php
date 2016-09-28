@@ -191,6 +191,9 @@ class ApiPresenter extends Presenter
 
     protected function sendCorsHeaders()
     {
+        $this->getHttpResponse()->addHeader('Access-Control-Allow-Headers', 'Content-Type');
+        $this->getHttpResponse()->addHeader('Access-Control-Allow-Methods', 'POST, DELETE, PUT, GET, OPTIONS');
+
         if ($this->corsHeader == 'auto') {
             $domain = $this->getRequestDomain();
             if ($domain !== false) {
