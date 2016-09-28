@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.8.0 - 2016-09-28
+
 ### Added
 
 * Added cors headers - Access-Control-Allow-Headers and Access-Control-Allow-Methods
