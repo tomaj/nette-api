@@ -66,6 +66,7 @@ class ConsoleRequest
             curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $rawPost);
         }
+        $cookieFields['PHPSESSID'] = session_id();
         if (count($cookieFields)) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
@@ -90,6 +91,8 @@ class ConsoleRequest
             $headers,
             $rawPost
         );
+        /** @see http://stackoverflow.com/questions/15627217/curl-not-passing-phpsessid */
+        session_write_close();
 
         $response = curl_exec($curl);
         $elapsed = intval((microtime(true) - $startTime) * 1000);
