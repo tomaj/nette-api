@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Added
+
+* Added support for PUT fields
+
 ## 1.8.1 - 2016-10-28
 
 * Updated league/fractal library to 0.14.0
