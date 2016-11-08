@@ -8,6 +8,7 @@ class InputParam implements ParamInterface
 {
     const TYPE_POST      = 'POST';
     const TYPE_GET       = 'GET';
+    const TYPE_PUT       = 'PUT';
     const TYPE_FILE      = 'FILE';
     const TYPE_COOKIE    = 'COOKIE';
     const TYPE_POST_RAW  = 'POST_RAW';
@@ -161,6 +162,13 @@ class InputParam implements ParamInterface
         }
         if ($this->type == self::TYPE_POST_RAW) {
             return file_get_contents("php://input");
+        }
+        if ($this->type == self::TYPE_PUT) {
+            parse_str(file_get_contents("php://input"), $params);
+            if (isset($params[$this->key])) {
+                return $params[$this->key];
+            }
+            return '';
         }
 
         throw new Exception('Invalid type');

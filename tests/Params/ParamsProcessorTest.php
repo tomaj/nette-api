@@ -43,11 +43,13 @@ class ParamsProcessorTest extends PHPUnit_Framework_TestCase
         $processor = new ParamsProcessor([
             new InputParam(InputParam::TYPE_POST, 'mykey10', InputParam::OPTIONAL),
             new InputParam(InputParam::TYPE_GET, 'mykey20', InputParam::OPTIONAL),
+            new InputParam(InputParam::TYPE_PUT, 'mykey30', InputParam::OPTIONAL),
         ]);
 
         $this->assertEquals($processor->getValues(), [
             'mykey10' => null,
             'mykey20' => null,
+            'mykey30' => null,
         ]);
     }
 }
