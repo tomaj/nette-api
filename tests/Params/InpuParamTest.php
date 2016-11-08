@@ -113,4 +113,10 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $inputParam = new InputParam(InputParam::TYPE_POST_RAW, 'raw_post');
         $this->assertEquals('', $inputParam->getValue());
     }
+
+    public function testPutData()
+    {
+        $inputParam = new InputParam(InputParam::TYPE_PUT, 'put');
+        $this->assertEquals('', $inputParam->getValue());
+    }
 }
