@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.9.0 - 2016-11-08
+
 ### Added
 
 * Added support for PUT fields
