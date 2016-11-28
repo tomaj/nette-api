@@ -192,10 +192,6 @@ class ConsoleRequest
     private function processParam(InputParam $param, $key, $value)
     {
         if ($param->getKey() == $key) {
-            if (!$value) {
-                return null;
-            }
-
             $valueData = $value;
 
             if ($param->getType() == InputParam::TYPE_FILE) {
