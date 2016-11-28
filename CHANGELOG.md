@@ -4,6 +4,12 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.9.1 - 2016-11-28
+
+### Fixed
+
+* Added possibility to send empty fields via console request
+
 ## 1.9.0 - 2016-11-08
 
 ### Added
