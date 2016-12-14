@@ -18,6 +18,7 @@ class CorsPreflightHandler extends BaseHandler
     public function handle($params)
     {
         $this->response->addHeader('Access-Control-Allow-Headers', 'Authorization');
+        $this->response->addHeader('Access-Control-Allow-Headers', 'X-Requested-With');
         return new JsonApiResponse(Response::S200_OK, []);
     }
 }

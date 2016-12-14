@@ -4,6 +4,12 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.10.0 - 2016-12-14
+
+### Added
+
+* Added X-Requested-With header to Cors handler
+
 ## 1.9.1 - 2016-11-28
 
 ### Fixed
