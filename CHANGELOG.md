@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Added
+
+* Added possibility to send current PHPSESSID via API Web Console
+
 ## 1.10.0 - 2016-12-14
 
 ### Added
