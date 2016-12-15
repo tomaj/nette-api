@@ -73,7 +73,7 @@ class ApiConsoleControl extends Control
             $defaults['authorization'] = 'No authorization - global access';
         }
 
-        $form->addCheckbox('send_phpsessid', 'Send PHPSESSID');
+        $form->addCheckbox('send_session_id', 'Send session id cookie');
 
         $params = $this->handler->params();
         foreach ($params as $param) {
@@ -143,8 +143,8 @@ class ApiConsoleControl extends Control
         unset($values['method']);
 
         $additionalValues = [];
-        if (isset($values['send_phpsessid']) && $values['send_phpsessid']) {
-            $additionalValues['cookieFields']['PHPSESSID'] = session_id();
+        if (isset($values['send_session_id']) && $values['send_session_id']) {
+            $additionalValues['cookieFields'][session_name()] = session_id();
             session_write_close();
         }
 
