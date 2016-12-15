@@ -28,13 +28,30 @@ class ConsoleRequest
      * @param string $url
      * @param string $method
      * @param array $values
+     * @param array $additionalValues
      * @param string|null $token
      *
      * @return ConsoleResponse
      */
-    public function makeRequest($url, $method, array $values, $token = null)
+    public function makeRequest($url, $method, array $values, array $additionalValues = [], $token = null)
     {
         list($postFields, $getFields, $cookieFields, $rawPost, $putFields) = $this->processValues($values);
+
+        if (isset($additionalValues['postFields'])) {
+            $postFields = array_merge($postFields, $additionalValues['postFields']);
+        }
+
+        if (isset($additionalValues['getFields'])) {
+            $getFields = array_merge($postFields, $additionalValues['getFields']);
+        }
+
+        if (isset($additionalValues['cookieFields'])) {
+            $cookieFields = array_merge($postFields, $additionalValues['cookieFields']);
+        }
+
+        if (isset($additionalValues['putFields'])) {
+            $putFields = array_merge($putFields, $additionalValues['putFields']);
+        }
 
         $postFields = $this->normalizeValues($postFields);
         $getFields = $this->normalizeValues($getFields);
