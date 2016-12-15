@@ -73,6 +73,8 @@ class ApiConsoleControl extends Control
             $defaults['authorization'] = 'No authorization - global access';
         }
 
+        $form->addCheckbox('send_phpsessid', 'Send PHPSESSID');
+
         $params = $this->handler->params();
         foreach ($params as $param) {
             $count = $param->isMulti() ? 5 : 1;
@@ -81,7 +83,7 @@ class ApiConsoleControl extends Control
                 if ($param->isMulti()) {
                     $key = $key . '___' . $i;
                 }
-                
+
                 if ($param->getAvailableValues() && is_array($param->getAvailableValues())) {
                     $c = $form->addSelect($key, $this->getParamLabel($param), array_combine($param->getAvailableValues(), $param->getAvailableValues()));
                     if (!$param->isRequired()) {
@@ -140,8 +142,14 @@ class ApiConsoleControl extends Control
         $method = $values['method'];
         unset($values['method']);
 
+        $additionalValues = [];
+        if (isset($values['send_phpsessid']) && $values['send_phpsessid']) {
+            $additionalValues['cookieFields']['PHPSESSID'] = session_id();
+            session_write_close();
+        }
+
         $consoleRequest = new ConsoleRequest($this->handler);
-        $result = $consoleRequest->makeRequest($url, $method, (array) $values, $token);
+        $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);
 
         $this->getTemplate()->add('response', $result);
     }
