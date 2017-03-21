@@ -7,6 +7,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Added
 
 * Added possibility to send current PHPSESSID via API Web Console
+* Removed Content-Type from CORS headers
 
 ## 1.10.0 - 2016-12-14
 
