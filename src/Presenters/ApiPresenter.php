@@ -150,7 +150,7 @@ class ApiPresenter extends Presenter
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
             $this->getHttpResponse()->setCode(Response::S500_INTERNAL_SERVER_ERROR);
-            $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => 'wrong input']));
+            $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => $paramsProcessor->isError()]));
             return false;
         }
         return $paramsProcessor->getValues();
