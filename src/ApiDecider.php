@@ -17,9 +17,9 @@ class ApiDecider
     private $handlers = [];
 
     /**
-     * @var bool
+     * @var ApiHandlerInterface
      */
-    private $globalPreflight = false;
+    private $globalPreflightHandler = null;
 
     /**
      * Get api handler that match input method, version, package and apiAction.
@@ -41,11 +41,11 @@ class ApiDecider
                 $handler['handler']->setEndpointIdentifier($endpointIdentifier);
                 return $handler;
             }
-            if ($method == 'OPTIONS' && $this->globalPreflight && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
+            if ($method == 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
                 return [
                     'endpoint' => new EndpointIdentifier('OPTION', $version, $package, $apiAction),
                     'authorization' => new NoAuthorization(),
-                    'handler' => new CorsPreflightHandler(new Response()),
+                    'handler' => $this->globalPreflightHandler,
                 ];
             }
         }
@@ -56,9 +56,12 @@ class ApiDecider
         ];
     }
 
-    public function enableGlobalPreflight()
+    public function enableGlobalPreflight(ApiHandlerInterface $corsHandler = null)
     {
-        $this->globalPreflight = true;
+        if (!$corsHandler) {
+            $corsHandler = new CorsPreflightHandler(new Response());
+        }
+        $this->globalPreflightHandler = $corsHandler;
     }
 
     /**
