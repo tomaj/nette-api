@@ -360,6 +360,16 @@ class MyPresenter extends Presenter
 }
 ```
 
+## Troubleshooting
+
+If your apache server is runing on CGI or fastCGI script, *$_SERVER['HTTP_AUTHORIZATION']* is empty.
+You'll need to do some mod_rewrite wizardry to get your headers past the CGI barrier, like so:
+
+```
+RewriteEngine on
+RewriteRule .? - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]`
+```
+
 ## Change log
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
