@@ -4,17 +4,19 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
-## 1.11.0 - 2018-02-08
-
-### Added
-
-* Added possibility to send current PHPSESSID via API Web Console
-* Removed Content-Type from CORS headers
+## 1.12.0 - 2018-02-08
 
 ### Fixed
 
 * Fixed console POST FIELDS output for integer values
 * Fixed parsing headers on nginx - missing method `getallheaders`
+
+## 1.11.0 - 2017-05-12
+
+### Added
+
+* Added possibility to send current PHPSESSID via API Web Console
+* Removed Content-Type from CORS headers
 
 ## 1.10.0 - 2016-12-14
 
