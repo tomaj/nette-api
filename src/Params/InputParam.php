@@ -12,6 +12,7 @@ class InputParam implements ParamInterface
     const TYPE_FILE      = 'FILE';
     const TYPE_COOKIE    = 'COOKIE';
     const TYPE_POST_RAW  = 'POST_RAW';
+    const TYPE_POST_JSON_RAW  = 'POST_JSON_RAW';
 
     const OPTIONAL = false;
     const REQUIRED = true;
@@ -162,6 +163,14 @@ class InputParam implements ParamInterface
         }
         if ($this->type == self::TYPE_POST_RAW) {
             return file_get_contents("php://input");
+        }
+        if ($this->type == self::TYPE_POST_JSON_RAW) {
+            $body = file_get_contents("php://input");
+            $body = @json_decode($body, TRUE);
+            if ( isset($body[$this->key]) ) {
+                return $body[$this->key];
+            }
+            return '';
         }
         if ($this->type == self::TYPE_PUT) {
             parse_str(file_get_contents("php://input"), $params);
