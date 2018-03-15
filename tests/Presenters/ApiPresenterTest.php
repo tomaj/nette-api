@@ -17,6 +17,8 @@ use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
+use Tomaj\NetteApi\Params\ParamsProcessor;
+use Tomaj\NetteApi\Params\InputParam;
 
 class ApiPresenterTest extends PHPUnit_Framework_TestCase
 {
@@ -66,7 +68,11 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
             new EchoHandler(),
             new NoAuthorization()
         );
-
+  
+        $processor = new ParamsProcessor([
+            new InputParam(InputParam::TYPE_POST_JSON_KEY, 'status', InputParam::REQUIRED),
+        ]);
+        
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
         $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript('')), new HttpResponse());
@@ -74,7 +80,7 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
         
-        $this->assertEquals(['status' => 'error', 'message' => 'wrong input'], $result->getPayload());
+        $this->assertEquals(['status' => 'error', 'message' => $processor->isError()], $result->getPayload());
         $this->assertEquals('application/json', $result->getContentType());
     }
 }
