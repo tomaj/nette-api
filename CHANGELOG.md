@@ -4,6 +4,13 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.13.0 - 2018-03-15
+
+### Added
+
+* New InputParam type - POST_JSON_KEY for parsing key from json data in post body
+* Updated leaguge/fractal and other packages minor upgrade
+
 ## 1.12.0 - 2018-02-08
 
 ### Fixed
