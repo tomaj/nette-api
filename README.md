@@ -226,7 +226,7 @@ This is table with support input types:
 | FILE            | `new InputParam(InputParam::TYPE_FILE, 'key')`
 | COOKIE          | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
 | RAW POST        | `new InputParam(InputParam::TYPE_POST_RAW, 'key')`
-| JSON        | `new InputParam(InputParam::TYPE_POST_JSON_KEY, 'key')`
+| JSON            | `new InputParam(InputParam::TYPE_POST_JSON_KEY, 'key')`
 
 
 ## Security
