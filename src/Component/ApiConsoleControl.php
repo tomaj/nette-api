@@ -76,6 +76,8 @@ class ApiConsoleControl extends Control
         $form->addCheckbox('send_session_id', 'Send session id cookie');
 
         $params = $this->handler->params();
+        $jsonField = null;
+        $jsonParams = [];
         foreach ($params as $param) {
             $count = $param->isMulti() ? 5 : 1;
             for ($i = 0; $i < $count; $i++) {
@@ -97,10 +99,19 @@ class ApiConsoleControl extends Control
                 } elseif ($param->getType() == InputParam::TYPE_POST_RAW) {
                     $c = $form->addTextArea('post_raw', $this->getParamLabel($param))
                         ->setAttribute('rows', 10);
+                } elseif ($param->getType() == InputParam::TYPE_POST_JSON_KEY) {
+                    if ($jsonField === null) {
+                        $jsonField = $form->addTextArea('post_raw', 'JSON')
+                            ->setOption('description', 'Empty string means "key is required", null means "key is optional"');
+                    }
+                    $jsonParams[$key] = $param->isRequired() ? '' : null;
                 } else {
                     $c = $form->addText($key, $this->getParamLabel($param));
                 }
             }
+        }
+        if ($jsonField !== null && $jsonParams) {
+            $jsonField->setDefaultValue(json_encode($jsonParams, JSON_PRETTY_PRINT));
         }
 
         $form->addSubmit('send', 'Otestuj')
