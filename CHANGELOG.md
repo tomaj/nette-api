@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.13.1 - 2018-03-16
+
 ### Fixed
 
 * Fixed console for POST_JSON_KEY(s)
