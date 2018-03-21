@@ -26,7 +26,7 @@ class ApiConsoleControl extends Control
 
     public function __construct(Request $request, EndpointIdentifier $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
     {
-        parent::__construct(null, 'apiconsolecontrol');
+        parent::__construct();
         $this->endpoint = $endpoint;
         $this->handler = $handler;
         $this->authorization = $authorization;

@@ -19,10 +19,9 @@ class ApiListingControl extends Control
 
     public function __construct(IContainer $parent, $name, ApiDecider $apiDecider)
     {
-        parent::__construct(null, $name);
+        parent::__construct();
         $this->apiDecider = $apiDecider;
     }
-
 
     public function onClick(Closure $callback)
     {
