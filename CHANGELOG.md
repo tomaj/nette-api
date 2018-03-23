@@ -6,6 +6,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ### Fixed
 
+## 1.13.2 - 2018-03-23
+
 * Removed names of components because of commit in nette/component-model (https://github.com/nette/component-model/commit/1fb769f4602cf82694941530bac1111b3c5cd11b)
 
 ## 1.13.1 - 2018-03-16
