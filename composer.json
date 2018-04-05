@@ -13,6 +13,9 @@
     "require": {
         "php": ">= 5.6.0",
         "ext-curl": "*",
+        "ext-json": "*",
+        "ext-session": "*",
+        "ext-filter": "*",
         "nette/application": "^2.3.12",
         "nette/http": "^2.0",
         "tracy/tracy": "^2.0",
