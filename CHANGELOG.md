@@ -4,9 +4,13 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
-### Fixed
+### Added
+
+* Added possibility to set own headers for CorsPreflightHandler
 
 ## 1.13.2 - 2018-03-23
+
+### Fixed
 
 * Removed names of components because of commit in nette/component-model (https://github.com/nette/component-model/commit/1fb769f4602cf82694941530bac1111b3c5cd11b)
 
