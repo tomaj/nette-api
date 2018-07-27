@@ -13,7 +13,7 @@ class CorsPreflightHandler extends BaseHandler
 
     public function __construct(
         Response $response,
-        $headers = [
+        array $headers = [
             'Access-Control-Allow-Headers' => [
                 'Authorization',
                 'X-Requested-With',
