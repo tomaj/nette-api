@@ -2,8 +2,9 @@
 
 namespace Tomaj\NetteApi\Response;
 
-use Nette\Application\Responses\JsonResponse;
+use DateTimeInterface;
 use Nette;
+use Nette\Application\Responses\JsonResponse;
 
 class JsonApiResponse extends JsonResponse
 {
@@ -18,6 +19,11 @@ class JsonApiResponse extends JsonResponse
     private $charset;
 
     /**
+     * @var string|int|bool|DateTimeInterface
+     */
+    private $expiration;
+
+    /**
      * Create JsonApiResponse
      * This class only wrap JsonResponse from Nette and add possibility
      * to setup response code and automaticaly set content type
@@ -26,12 +32,14 @@ class JsonApiResponse extends JsonResponse
      * @param mixed $data
      * @param string $contentType
      * @param string $charset
+     * @param string|int|bool|DateTimeInterface $expiration
      */
-    public function __construct($code, $data, $contentType = 'application/json', $charset = 'utf-8')
+    public function __construct($code, $data, $contentType = 'application/json', $charset = 'utf-8', $expiration = false)
     {
         parent::__construct($data, $contentType);
         $this->charset = $charset;
         $this->code = $code;
+        $this->expiration = $expiration;
     }
 
     /**
@@ -61,7 +69,7 @@ class JsonApiResponse extends JsonResponse
     public function send(Nette\Http\IRequest $httpRequest, Nette\Http\IResponse $httpResponse)
     {
         $httpResponse->setContentType($this->getContentType(), $this->charset);
-        $httpResponse->setExpiration(false);
+        $httpResponse->setExpiration($this->expiration);
         $result = Nette\Utils\Json::encode($this->getPayload());
         $httpResponse->setHeader('Content-Length', strlen($result));
         echo $result;

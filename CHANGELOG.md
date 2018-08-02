@@ -7,6 +7,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Added
 
 * Added possibility to set own headers for CorsPreflightHandler
+* Added expiration to JsonApiResponse
 
 ## 1.13.2 - 2018-03-23
 
