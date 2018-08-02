@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.14.0 - 2018-08-02
+
 ### Added
 
 * Added possibility to set own headers for CorsPreflightHandler
