@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Added JSON validation - if JSON is invalid, throw "wrong input" error instead of setting params to null
+
 ## 1.14.0 - 2018-08-02
 
 ### Added

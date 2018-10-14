@@ -97,6 +97,14 @@ class InputParam implements ParamInterface
      */
     public function isValid()
     {
+        if ($this->type == self::TYPE_POST_JSON_KEY) {
+            $input = file_get_contents("php://input");
+            $params = json_decode($input, true);
+            if ($input && $params === null) {
+                return false;
+            }
+        }
+
         if ($this->required == self::OPTIONAL) {
             return true;
         }
@@ -173,7 +181,7 @@ class InputParam implements ParamInterface
         }
         if ($this->type == self::TYPE_POST_JSON_KEY) {
             $params = file_get_contents("php://input");
-            $params = @json_decode($params, true);
+            $params = json_decode($params, true);
             if (isset($params[$this->key])) {
                 return $params[$this->key];
             }
