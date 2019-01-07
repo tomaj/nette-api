@@ -2,7 +2,6 @@
 
 namespace Tomaj\NetteApi\Params;
 
-
 use JsonSchema\Constraints\Constraint;
 use JsonSchema\Exception\InvalidSchemaException;
 use JsonSchema\Validator;
@@ -15,7 +14,7 @@ class JsonInputParam extends InputParam
 
     private $schema;
 
-    public function __construct($key, bool $required = self::OPTIONAL, string $schema)
+    public function __construct($key, string $schema, bool $required = self::OPTIONAL)
     {
         parent::__construct(self::TYPE_POST_JSON, $key, $required);
 
