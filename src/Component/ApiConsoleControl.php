@@ -2,9 +2,11 @@
 
 namespace Tomaj\NetteApi\Component;
 
+use JSONSchemaFaker\Faker;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 use Nette\Http\Request;
+use Nette\Utils\Html;
 use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
@@ -13,6 +15,7 @@ use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
 use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\JsonInputParam;
 
 class ApiConsoleControl extends Control
 {
@@ -105,6 +108,17 @@ class ApiConsoleControl extends Control
                             ->setOption('description', 'Empty string means "key is required", null means "key is optional"');
                     }
                     $jsonParams[$key] = $param->isRequired() ? '' : null;
+                } elseif ($param->getType() === JsonInputParam::TYPE_POST_JSON) {
+                    $jsonField = $form->addTextArea('post_raw', $this->getParamLabel($param))
+                        ->setOption('description', Html::el()->setHtml(
+                            '<div id="show_schema_link"><a href="#" onclick="document.getElementById(\'json_schema\').style.display = \'block\'; document.getElementById(\'show_schema_link\').style.display = \'none\'; return false;">Show schema</a></div>
+                            <div id="json_schema" style="display: none;">
+                            <div><a href="#" onclick="document.getElementById(\'show_schema_link\').style.display = \'block\'; document.getElementById(\'json_schema\').style.display = \'none\'; return false;">Hide schema</a></div>'
+                            . nl2br(str_replace(' ', '&nbsp;', $param->getSchema()))
+                            . '</div>'
+                        ));
+                    $faker = new Faker();
+                    $jsonParams = $faker->generate(json_decode($param->getSchema()));
                 } else {
                     $c = $form->addText($key, $this->getParamLabel($param));
                 }

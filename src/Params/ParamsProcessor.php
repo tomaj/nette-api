@@ -4,7 +4,7 @@ namespace Tomaj\NetteApi\Params;
 
 class ParamsProcessor
 {
-    /** @var array(ParamInterface) */
+    /** @var ParamInterface[] */
     private $params;
 
     public function __construct(array $params)
