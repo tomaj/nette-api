@@ -16,6 +16,12 @@ class ApiDecider
      */
     private $handlers = [];
 
+    /** @var string */
+    private $title;
+
+    /** @var string */
+    private $description;
+
     /**
      * @var ApiHandlerInterface
      */
@@ -91,5 +97,39 @@ class ApiDecider
     public function getHandlers()
     {
         return $this->handlers;
+    }
+
+    /**
+     * @param string $title
+     * @return ApiDecider
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTitle()
+    {
+        return $this->title;
+    }
+    /**
+     * @param string $description
+     * @return ApiDecider
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+        return $this;
+    }
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
     }
 }

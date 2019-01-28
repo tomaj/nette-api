@@ -36,4 +36,19 @@ class JsonOutput implements OutputInterface
         $this->schemaValidator->validate($value, json_decode($this->schema));
         return $this->schemaValidator->isValid();
     }
+
+    public function getCode()
+    {
+        return $this->code;
+    }
+
+    public function getSchema()
+    {
+        return $this->schema;
+    }
+
+    public function getDescription()
+    {
+        return $this->description;
+    }
 }

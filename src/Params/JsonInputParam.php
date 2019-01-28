@@ -2,8 +2,6 @@
 
 namespace Tomaj\NetteApi\Params;
 
-use JsonSchema\Constraints\Constraint;
-use JsonSchema\Exception\InvalidSchemaException;
 use JsonSchema\Validator;
 
 class JsonInputParam extends InputParam
@@ -14,9 +12,9 @@ class JsonInputParam extends InputParam
 
     private $schema;
 
-    public function __construct($key, string $schema, bool $required = self::OPTIONAL)
+    public function __construct($key, $schema, $required = self::OPTIONAL, $description = '')
     {
-        parent::__construct(self::TYPE_POST_JSON, $key, $required);
+        parent::__construct(self::TYPE_POST_JSON, $key, $required, $description);
 
         $this->schemaValidator = new Validator();
         $this->schema = $schema;

@@ -10,11 +10,29 @@ use Nette\Application\IResponse;
 interface ApiHandlerInterface
 {
     /**
+     * Description of handler
+     * @return string
+     */
+    public function description();
+
+    /**
      * Returns available parameters that handler need
      *
      * @return InputParam[]
      */
     public function params();
+
+    /**
+     * Returns list of tags for handler
+     * @return array
+     */
+    public function tags();
+
+    /**
+     * Marks handler as deprecated
+     * @return bool
+     */
+    public function deprecated();
 
     /**
      * Main handle method that will be executed when api
@@ -41,5 +59,5 @@ interface ApiHandlerInterface
      *
      * @return OutputInterface[]
      */
-    public function outputs(): array;
+    public function outputs();
 }
