@@ -102,12 +102,4 @@ abstract class BaseHandler implements ApiHandlerInterface
      * {@inheritdoc}
      */
     abstract public function handle($params);
-
-    /**
-     * {@inheritdoc}
-     */
-    public function outputs(): array
-    {
-        return [];
-    }
 }

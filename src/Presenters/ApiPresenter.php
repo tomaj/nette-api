@@ -88,15 +88,6 @@ class ApiPresenter extends Presenter
 
         try {
             $response = $handler->handle($params);
-            $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
-            foreach ($handler->outputs() as $output) {
-                if ($output->validate($response)) {
-                    $outputValid = true;
-                }
-            }
-            if (!$outputValid) {
-                throw new Exception('Response doesn\'t match any output');
-            }
             $code = $response->getCode();
         } catch (Exception $exception) {
             if (Debugger::isEnabled()) {

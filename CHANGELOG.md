@@ -8,7 +8,6 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Added JSON validation - if JSON is invalid, throw "wrong input" error instead of setting params to null
 * Added JsonInputParam which allows to define json schema
-* Added output validator
 
 ## 1.14.0 - 2018-08-02
 
