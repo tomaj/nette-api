@@ -92,6 +92,7 @@ class ApiPresenter extends Presenter
             foreach ($handler->outputs() as $output) {
                 if ($output->validate($response)) {
                     $outputValid = true;
+                    break;
                 }
             }
             if (!$outputValid) {
@@ -162,7 +163,7 @@ class ApiPresenter extends Presenter
     {
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
-            $this->getHttpResponse()->setCode(Response::S500_INTERNAL_SERVER_ERROR);
+            $this->getHttpResponse()->setCode(Response::S400_BAD_REQUEST);
             $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => 'wrong input']));
             return false;
         }

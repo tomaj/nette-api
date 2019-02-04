@@ -11,6 +11,6 @@ class DefaultHandler extends BaseHandler
      */
     public function handle($params)
     {
-        return new JsonApiResponse(500, ['status' => 'error', 'message' => 'Unknown api endpoint']);
+        return new JsonApiResponse(404, ['status' => 'error', 'message' => 'Unknown api endpoint']);
     }
 }

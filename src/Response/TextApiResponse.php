@@ -3,6 +3,8 @@
 namespace Tomaj\NetteApi\Response;
 
 use Nette\Application\Responses\TextResponse;
+use Nette\Http\IRequest;
+use Nette\Http\IResponse;
 
 class TextApiResponse extends TextResponse
 {
@@ -11,18 +13,31 @@ class TextApiResponse extends TextResponse
      */
     private $code;
 
+    private $data;
+
+    private $contentType;
+
+    private $charset;
+
+    private $expiration;
+
     /**
      * Create TextApiResponse
-     * This class only wrap JsonResponse from Nette and add possibility
-     * to setup response code and automaticaly set content type
      *
      * @param integer $code
-     * @param mixed $data
+     * @param string $data
+     * @param string $contentType
+     * @param string $charset
+     * @param mixed $expiration
      */
-    public function __construct($code, $data)
+    public function __construct($code, $data, $contentType = 'text/plain', $charset = 'utf-8', $expiration = false)
     {
         parent::__construct($data);
         $this->code = $code;
+        $this->data = $data;
+        $this->contentType = $contentType;
+        $this->charset = $charset;
+        $this->expiration = $expiration;
     }
 
     /**
@@ -33,5 +48,13 @@ class TextApiResponse extends TextResponse
     public function getCode()
     {
         return $this->code;
+    }
+
+    public function send(IRequest $httpRequest, IResponse $httpResponse)
+    {
+        $httpResponse->setContentType($this->contentType, $this->charset);
+        $httpResponse->setExpiration($this->expiration);
+        $httpResponse->setHeader('Content-Length', strlen($this->data));
+        echo $this->data;
     }
 }

@@ -3,12 +3,15 @@
 namespace Tomaj\NetteApi\Handlers;
 
 use Nette\Http\Request;
+use Symfony\Component\Yaml\Yaml;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Output\JsonOutput;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Params\JsonInputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\TextApiResponse;
 
 class SwaggerHandler extends BaseHandler
 {
@@ -20,9 +23,6 @@ class SwaggerHandler extends BaseHandler
 
     /** @var Request */
     private $request;
-
-    /** @var string */
-    private $basePath;
 
     /**
      * ApiListingHandler constructor.
@@ -36,6 +36,13 @@ class SwaggerHandler extends BaseHandler
         $this->apiDecider = $apiDecider;
         $this->apiLink = $apiLink;
         $this->request = $request;
+    }
+
+    public function params()
+    {
+        return [
+            new InputParam(InputParam::TYPE_GET, 'format', InputParam::OPTIONAL, ['json', 'yaml'], false, 'Response format')
+        ];
     }
 
     /**
@@ -61,23 +68,77 @@ class SwaggerHandler extends BaseHandler
     {
         $version = $this->getEndpoint()->getVersion();
         $handlers = $this->getHandlers($version);
+        $scheme = $this->request->getUrl()->getScheme();
+        $host = $this->request->getUrl()->getHost();
+        $baseUrl = $scheme . '://' . $host;
+        $basePath = $this->getBasePath($handlers, $baseUrl);
+
+        $responses = [
+            404 => [
+                'description' => 'Not found',
+                'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'status' => [
+                            'type' => 'string',
+                            'enum' => ['error'],
+                        ],
+                        'message' => [
+                            'type' => 'string',
+                            'enum' => ['Unknown api endpoint'],
+                        ],
+                    ],
+                    'required' => ['status', 'message'],
+                ],
+            ],
+            500 => [
+                'description' => 'Internal server error',
+                'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'status' => [
+                            'type' => 'string',
+                            'enum' => ['error'],
+                        ],
+                        'message' => [
+                            'type' => 'string',
+                            'enum' => ['Internal server error'],
+                        ],
+                    ],
+                    'required' => ['status', 'message'],
+                ],
+            ],
+        ];
+
         $data = [
-            'swagger' => '2.0', // ?
+            'swagger' => '2.0',
             'info' => [
                 'title' => $this->apiDecider->getTitle(),
                 'description' => $this->apiDecider->getDescription(),
                 'version' => $version,
             ],
-            'host' => $this->request->getUrl()->getHost(),
+            'host' => $host,
             'schemes' => [
-                $this->request->getUrl()->getScheme(),
+                $scheme,
             ],
-            'basePath' => $this->getBasePath($handlers),
+            'securityDefinitions' => [
+                'Bearer' => [
+                    'type' => 'apiKey',
+                    'name' => 'Authorization',
+                    'in' => 'header'
+                ],
+            ],
+            'basePath' => $basePath,
             'produces' => [
                 'application/json'
             ],
-            'paths' => $this->getHandlersList($handlers),
+            'responses' => $responses,
+            'paths' => $this->getHandlersList($handlers, $baseUrl, $basePath),
         ];
+
+        if ($params['format'] === 'yaml') {
+            return new TextApiResponse(200, Yaml::dump($data, PHP_INT_MAX, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE), 'text/plain');
+        }
         return new JsonApiResponse(200, $data);
     }
 
@@ -97,66 +158,122 @@ class SwaggerHandler extends BaseHandler
      * Create handler list for specified version
      *
      * @param array $versionHandlers
+     * @param string $basePath
      *
      * @return array
      */
-    private function getHandlersList($versionHandlers)
+    private function getHandlersList($versionHandlers, $baseUrl, $basePath)
     {
         $list = [];
-        $baseUrl = $this->request->getUrl()->getScheme() . '://' . $this->request->getUrl()->getHost() . $this->basePath;
         foreach ($versionHandlers as $handler) {
-            $path = str_replace($baseUrl, '', $this->apiLink->link($handler['endpoint']));
+            $path = str_replace([$baseUrl, $basePath], '', $this->apiLink->link($handler['endpoint']));
 
             $responses = [];
-            foreach ($handler->outputs() as $output) {
+            foreach ($handler['handler']->outputs() as $output) {
                 if ($output instanceof JsonOutput) {
                     $responses[$output->getCode()] = [
                         'description' => $output->getDescription(),
-                        'schema' => $output->getSchema(),
+                        'schema' => json_decode($output->getSchema(), true),
                     ];
                 }
             }
 
-            $responses[403] = [
-                'description' => 'Operation forbidden',
-            ];
-            $responses[500] = [
-                'description' => 'Wrong input',
+            $responses[400] = [
+                'description' => 'Bad request',
+                'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'status' => [
+                            'type' => 'string',
+                            'enum' => ['error'],
+                        ],
+                        'message' => [
+                            'type' => 'string',
+                            'enum' => ['Wrong input'],
+                        ],
+                    ],
+                    'required' => ['status', 'message'],
+                ],
             ];
 
-            $list[$path][strtolower($handler['endpoint']->getMethod())] = [
+            $responses[403] = [
+                'description' => 'Operation forbidden',
+                'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'status' => [
+                            'type' => 'string',
+                            'enum' => ['error'],
+                        ],
+                        'message' => [
+                            'type' => 'string',
+                            'enum' => ['Authorization header HTTP_Authorization is not set', 'Authorization header contains invalid structure'],
+                        ],
+                    ],
+                    'required' => ['status', 'message'],
+                ],
+            ];
+
+            $responses[500] = [
+                'description' => 'Internal server error',
+                'schema' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'status' => [
+                            'type' => 'string',
+                            'enum' => ['error'],
+                        ],
+                        'message' => [
+                            'type' => 'string',
+                            'enum' => ['Internal server error'],
+                        ],
+                    ],
+                    'required' => ['status', 'message'],
+                ],
+            ];
+
+            $settings = [
                 'summary' => $handler['handler']->description(),
-                'operationId' => get_class($handler['handler']), // TODO zistit co to moze byt,
                 'tags' => $handler['handler']->tags(),
                 'parameters' => $this->createParamsList($handler['handler']),
-                'responses' => $responses,
+
             ];
+            if ($handler['authorization'] instanceof BearerTokenAuthorization) {
+                $settings['security'] = [
+                    [
+                        'Bearer' => [],
+                    ],
+                ];
+            }
+            $settings['responses'] = $responses;
+            $list[$path][strtolower($handler['endpoint']->getMethod())] = $settings;
         }
         return $list;
     }
 
-    private function getBasePath($handlers)
+    private function getBasePath($handlers, $baseUrl)
     {
-        $baseUrl = $this->request->getUrl()->getScheme() . '://' . $this->request->getUrl()->getHost();
+        $basePath = null;
         foreach ($handlers as $handler) {
-            if (!$handler instanceof SwaggerHandler) {
-                $link = $this->apiLink->link($handler['endpoint']);
+            $basePath = $this->getLongestCommonSubstring($basePath, $this->apiLink->link($handler['endpoint']));
+        }
+        return rtrim(str_replace($baseUrl, '', $basePath), '/');
+    }
+
+    private function getLongestCommonSubstring($path1, $path2)
+    {
+        if ($path1 === null) {
+            return $path2;
+        }
+        $commonSubstring = '';
+        $shortest = min(strlen($path1), strlen($path2));
+        for ($i = 0; $i <= $shortest; ++$i) {
+            if (substr($path1, 0, $i) !== substr($path2, 0, $i)) {
                 break;
             }
+            $commonSubstring = substr($path1, 0, $i);
         }
-        $commonPath = '';
-        $actualPath = $this->request->getUrl()->getPath();
-        $link = str_replace($baseUrl, '', $link);
-        for ($i = 0; $i < strlen($link); $i++) {
-            if ($link[$i] != $actualPath[$i]) {
-                break;
-            }
-            if ($link[$i] == $actualPath[$i]) {
-                $commonPath .= $link[$i];
-            }
-        }
-        $this->basePath = rtrim($commonPath, '/');
-        return $this->basePath;
+        return $commonSubstring;
     }
 
     /**
@@ -177,9 +294,9 @@ class SwaggerHandler extends BaseHandler
             ];
 
             if ($param instanceof JsonInputParam) {
-                $parameter['schema'] = $param->getSchema();
+                $parameter['schema'] = json_decode($param->getSchema(), true);
             } else {
-                $parameter['type'] = $param->getAvailableValues() ? 'list' : 'string';
+                $parameter['type'] = $param->isMulti() ? 'list' : 'string';
             }
 
             if ($param->getAvailableValues()) {

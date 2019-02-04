@@ -14,7 +14,7 @@ class JsonInputParam extends InputParam
 
     public function __construct($key, $schema, $required = self::OPTIONAL, $description = '')
     {
-        parent::__construct(self::TYPE_POST_JSON, $key, $required, $description);
+        parent::__construct(self::TYPE_POST_JSON, $key, $required, null, false, $description);
 
         $this->schemaValidator = new Validator();
         $this->schema = $schema;

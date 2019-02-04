@@ -114,7 +114,7 @@ class ApiConsoleControl extends Control
                             '<div id="show_schema_link"><a href="#" onclick="document.getElementById(\'json_schema\').style.display = \'block\'; document.getElementById(\'show_schema_link\').style.display = \'none\'; return false;">Show schema</a></div>
                             <div id="json_schema" style="display: none;">
                             <div><a href="#" onclick="document.getElementById(\'show_schema_link\').style.display = \'block\'; document.getElementById(\'json_schema\').style.display = \'none\'; return false;">Hide schema</a></div>'
-                            . nl2br(str_replace(' ', '&nbsp;', $param->getSchema()))
+                            . nl2br(str_replace(' ', '&nbsp;', json_encode(json_decode($param->getSchema()), JSON_PRETTY_PRINT)))
                             . '</div>'
                         ));
                     $faker = new Faker();
