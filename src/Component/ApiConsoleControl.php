@@ -61,8 +61,8 @@ class ApiConsoleControl extends Control
         $form->addText('api_url', 'Api Url');
         $defaults['api_url'] = $url;
 
-        $form->addText('method', 'Method');
-        $defaults['method'] = $this->endpoint->getMethod();
+        $form->addText('api_method', 'Method');
+        $defaults['api_method'] = $this->endpoint->getMethod();
 
         if ($this->authorization instanceof BearerTokenAuthorization) {
             $form->addText('token', 'Token')
@@ -150,8 +150,8 @@ class ApiConsoleControl extends Control
             unset($values['token']);
         }
 
-        $method = $values['method'];
-        unset($values['method']);
+        $method = $values['api_method'];
+        unset($values['api_method']);
 
         $additionalValues = [];
         if (isset($values['send_session_id']) && $values['send_session_id']) {
@@ -163,5 +163,9 @@ class ApiConsoleControl extends Control
         $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);
 
         $this->getTemplate()->add('response', $result);
+
+        if ($this->getPresenter()->isAjax()) {
+            $this->getPresenter()->redrawControl();
+        }
     }
 }
