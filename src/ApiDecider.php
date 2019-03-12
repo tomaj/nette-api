@@ -52,7 +52,7 @@ class ApiDecider
         return [
             'endpoint' => new EndpointIdentifier($method, $version, $package, $apiAction),
             'authorization' => new NoAuthorization(),
-            'handler' => new DefaultHandler($version, $package, $apiAction)
+            'handler' => new DefaultHandler()
         ];
     }
 
