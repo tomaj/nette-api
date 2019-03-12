@@ -3,6 +3,7 @@
 namespace Tomaj\NetteApi\Handlers;
 
 use League\Fractal\Manager;
+use League\Fractal\ScopeFactoryInterface;
 use Nette\Application\LinkGenerator;
 use Nette\InvalidStateException;
 use Tomaj\NetteApi\EndpointInterface;
@@ -24,9 +25,9 @@ abstract class BaseHandler implements ApiHandlerInterface
      */
     protected $linkGenerator;
 
-    public function __construct()
+    public function __construct(ScopeFactoryInterface $scopeFactory = null)
     {
-        $this->fractal = new Manager();
+        $this->fractal = new Manager($scopeFactory);
     }
 
     /**
