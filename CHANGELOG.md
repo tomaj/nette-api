@@ -4,7 +4,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 1.15.0 - 2019-03-13
+
 #### Added
+
+* Added possibility to set own scope to Manager
 
 * Added JSON validation - if JSON is invalid, throw "wrong input" error instead of setting params to null
 
