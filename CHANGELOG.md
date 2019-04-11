@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Changed
+
+* Pretty JSON output in API console - without escaping unicode and slashes
+
 ## 1.15.0 - 2019-03-13
 
 #### Added
