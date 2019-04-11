@@ -28,7 +28,7 @@ class ApiDecider
      *
      * @return Api
      */
-    public function getApiHandler(string $method, int $version, string $package, ?string $apiAction = null)
+    public function getApi(string $method, int $version, string $package, ?string $apiAction = null)
     {
         foreach ($this->apis as $api) {
             $identifier = $api->getEndpoint();

@@ -15,7 +15,7 @@ class ApiDeciderTest extends TestCase
     public function testDefaultHandlerWithNoRegisteredHandlers()
     {
         $apiDecider = new ApiDecider();
-        $result = $apiDecider->getApiHandler('POST', 1, 'article', 'list');
+        $result = $apiDecider->getApi('POST', 1, 'article', 'list');
 
         $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
         $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
@@ -31,7 +31,7 @@ class ApiDeciderTest extends TestCase
             new NoAuthorization()
         );
 
-        $result = $apiDecider->getApiHandler('POST', 2, 'comments', 'list');
+        $result = $apiDecider->getApi('POST', 2, 'comments', 'list');
 
         $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
         $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
@@ -73,7 +73,7 @@ class ApiDeciderTest extends TestCase
 
         $this->assertEquals(1, count($apiDecider->getApis()));
 
-        $handler = $apiDecider->getApiHandler('OPTIONS', 2, 'comments', 'list');
+        $handler = $apiDecider->getApi('OPTIONS', 2, 'comments', 'list');
         $this->assertInstanceOf(CorsPreflightHandler::class, $handler->getHandler());
     }
 }

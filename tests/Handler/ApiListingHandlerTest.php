@@ -34,7 +34,7 @@ class ApiListingHandlerTest extends TestCase
             new NoAuthorization()
         );
 
-        $result = $apiDecider->getApiHandler('GET', 2, 'endpoints');
+        $result = $apiDecider->getApi('GET', 2, 'endpoints');
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);
@@ -61,7 +61,7 @@ class ApiListingHandlerTest extends TestCase
             new NoAuthorization()
         );
 
-        $result = $apiDecider->getApiHandler('GET', 1, 'endpoints');
+        $result = $apiDecider->getApi('GET', 1, 'endpoints');
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);
