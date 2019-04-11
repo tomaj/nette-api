@@ -5,6 +5,7 @@ namespace Tomaj\NetteApi\Misc;
 use Nette\Http\FileUpload;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\ParamInterface;
 
 class ConsoleRequest
 {
@@ -183,13 +184,13 @@ class ConsoleRequest
     /**
      * Process one param and returns value
      *
-     * @param InputParam  $param   input param
-     * @param string      $key     param key
-     * @param mixed      $value   actual value from request
+     * @param ParamInterface  $param   input param
+     * @param string          $key     param key
+     * @param mixed           $value   actual value from request
      *
      * @return string|null
      */
-    private function processParam(InputParam $param, string $key, $value): ?string
+    private function processParam(ParamInterface $param, string $key, $value): ?string
     {
         if ($param->getKey() == $key) {
             $valueData = $value;

@@ -1,0 +1,16 @@
+<?php
+
+namespace Tomaj\NetteApi\Params;
+
+class CookieInputParam extends InputParam
+{
+    protected $type = self::TYPE_COOKIE;
+
+    public function getValue()
+    {
+        if (!filter_has_var(INPUT_COOKIE, $this->key) && isset($_COOKIE[$this->key])) {
+            return $_COOKIE[$this->key];
+        }
+        return filter_input(INPUT_COOKIE, $this->key);
+    }
+}

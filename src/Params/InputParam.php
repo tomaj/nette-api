@@ -2,9 +2,10 @@
 
 namespace Tomaj\NetteApi\Params;
 
-use Exception;
+use Nette\Application\UI\Form;
+use Nette\Forms\Controls\BaseControl;
 
-class InputParam implements ParamInterface
+abstract class InputParam implements ParamInterface
 {
     const TYPE_POST      = 'POST';
     const TYPE_GET       = 'GET';
@@ -12,43 +13,49 @@ class InputParam implements ParamInterface
     const TYPE_FILE      = 'FILE';
     const TYPE_COOKIE    = 'COOKIE';
     const TYPE_POST_RAW  = 'POST_RAW';
-    const TYPE_POST_JSON_KEY  = 'POST_JSON_KEY';
+    const TYPE_POST_JSON  = 'POST_JSON';
 
     const OPTIONAL = false;
     const REQUIRED = true;
 
-    /**
-     * @var string
-     */
-    private $type;
+    /** @var string */
+    protected $type;
 
-    /**
-     * @var string
-     */
-    private $key;
+    /** @var string */
+    protected $key;
 
-    /**
-     * @var bool
-     */
-    private $required;
+    /** @var bool */
+    protected $required = self::OPTIONAL;
 
-    /**
-     * @var array|null
-     */
-    private $availableValues;
+    /** @var array|null */
+    protected $availableValues = null;
 
-    /**
-     * @var bool
-     */
-    private $multi;
+    /** @var bool */
+    protected $multi = false;
 
-    public function __construct(string $type, string $key, bool $required = self::OPTIONAL, ?array $availableValues = null, bool $multi = false)
+    protected $errors = [];
+
+    public function __construct(string $key)
     {
-        $this->type = $type;
         $this->key = $key;
-        $this->required = $required;
+    }
+
+    public function setRequired(): self
+    {
+        $this->required = self::REQUIRED;
+        return $this;
+    }
+
+    public function setAvailableValues(array $availableValues): self
+    {
         $this->availableValues = $availableValues;
-        $this->multi = $multi;
+        return $this;
+    }
+
+    public function setMulti(): self
+    {
+        $this->multi = true;
+        return $this;
     }
 
     public function getType(): string
@@ -76,113 +83,73 @@ class InputParam implements ParamInterface
         return $this->multi;
     }
 
+    public function updateConsoleForm(Form $form): void
+    {
+        $count = $this->isMulti() ? 5 : 1;  // TODO moznost nastavit kolko inputov sa ma vygenerovat v konzole, default moze byt 5
+        for ($i = 0; $i < $count; $i++) {
+            $key = $this->getKey();
+            if ($this->isMulti()) {
+                $key = $key . '___' . $i;
+            }
+            $this->addFormInput($form, $key);
+        }
+    }
+
+    public function addFormInput(Form $form, string $key): BaseControl
+    {
+        if ($this->getAvailableValues()) {
+            $select = $form->addSelect($key, $this->getParamLabel(), array_combine($this->getAvailableValues(), $this->getAvailableValues()))
+                ->setPrompt('Select ' . $this->getLabel());
+            return $select;
+        }
+        return $form->addText($key, $this->getParamLabel());
+    }
+
+    protected function getLabel(): string
+    {
+        return ucfirst(str_replace('_', ' ', $this->getKey()));
+    }
+
+    protected function getParamLabel(): string
+    {
+        $title = $this->getLabel();
+        if ($this->isRequired()) {
+            $title .= ' *';
+        }
+        $title .= ' (' . $this->getType() . ')';
+        return $title;
+    }
+
     /**
      * Check if actual value from environment is valid
-     *
-     * @return bool
-     *
-     * @throws Exception if actual InputParam has unsupported type
      */
     public function isValid(): bool
     {
-        if ($this->type === self::TYPE_POST_JSON_KEY) {
-            $input = file_get_contents("php://input");
-            $params = json_decode($input, true);
-            if ($input && $params === null) {
-                return false;
-            }
-        }
-
-        if ($this->required === self::OPTIONAL) {
+        $value = $this->getValue();
+        if ($this->required === self::OPTIONAL && ($value === null || $value == '')) {
             return true;
         }
 
-        $value = $this->getValue();
+        if ($this->required && ($value === null || $value == '')) {
+            $this->errors[] = 'Field is required';
+            return false;
+        }
+
         if ($this->availableValues !== null) {
             if (is_array($this->availableValues)) {
-                return empty(array_diff(($this->isMulti() ? $value : [$value]), $this->availableValues));
+                $result = empty(array_diff(($this->isMulti() ? $value : [$value]), $this->availableValues));
+                if ($result === false) {
+                    $this->errors[] = 'Field contains not available value(s)';
+                }
+                return $result;
             }
         }
 
-        if ($this->required) {
-            if ($value === null || $value == '') {
-                return false;
-            }
-        }
         return true;
     }
 
-    /**
-     * Process environment variables like POST|GET|etc.. and return actual value
-     *
-     * @return mixed
-     *
-     * @throws Exception if actual InputParam has unsupported type
-     */
-    public function getValue()
+    public function getErrors(): array
     {
-        if ($this->type == self::TYPE_GET) {
-            if (!filter_has_var(INPUT_GET, $this->key) && isset($_GET[$this->key])) {
-                return $_GET[$this->key];
-            }
-            if ($this->isMulti()) {
-                return filter_input(INPUT_GET, $this->key, FILTER_DEFAULT, FILTER_REQUIRE_ARRAY);
-            }
-            return filter_input(INPUT_GET, $this->key);
-        }
-        if ($this->type == self::TYPE_POST) {
-            if (!filter_has_var(INPUT_POST, $this->key) && isset($_POST[$this->key])) {
-                return $_POST[$this->key];
-            }
-            if ($this->isMulti()) {
-                return filter_input(INPUT_POST, $this->key, FILTER_DEFAULT, FILTER_REQUIRE_ARRAY);
-            }
-            return filter_input(INPUT_POST, $this->key);
-        }
-        if ($this->type == self::TYPE_FILE) {
-            if (isset($_FILES[$this->key])) {
-                if ($this->isMulti()) {
-                    return $this->processMultiFileUploads($_FILES[$this->key]);
-                } else {
-                    return $_FILES[$this->key];
-                }
-            }
-            return null;
-        }
-        if ($this->type == self::TYPE_COOKIE) {
-            if (isset($_COOKIE[$this->key])) {
-                return $_COOKIE[$this->key];
-            }
-        }
-        if ($this->type == self::TYPE_POST_RAW) {
-            return file_get_contents("php://input");
-        }
-        if ($this->type == self::TYPE_PUT) {
-            parse_str(file_get_contents("php://input"), $params);
-            if (isset($params[$this->key])) {
-                return $params[$this->key];
-            }
-            return '';
-        }
-        if ($this->type == self::TYPE_POST_JSON_KEY) {
-            $params = file_get_contents("php://input");
-            $params = json_decode($params, true);
-            if (isset($params[$this->key])) {
-                return $params[$this->key];
-            }
-            return '';
-        }
-        throw new Exception('Invalid type');
-    }
-
-    private function processMultiFileUploads($files)
-    {
-        $result = [];
-        foreach ($files as $key => $values) {
-            foreach ($values as $index => $value) {
-                $result[$index][$key] = $value;
-            }
-        }
-        return $result;
+        return $this->errors;
     }
 }
