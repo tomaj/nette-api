@@ -8,7 +8,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Update nette libs to version 3.0.0 (BC break)
 * Pretty JSON output in API console - without escaping unicode and slashes
-* Replaced handler information array triplet (endpoint, handler, authorization) with HandlerSettings
+* Replaced handler information array triplet (endpoint, handler, authorization) with Api
 
 #### Removed
 

@@ -5,7 +5,7 @@ namespace Tomaj\NetteApi;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 
-class HandlerSettings
+class Api
 {
     private $endpoint;
 

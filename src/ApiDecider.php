@@ -11,7 +11,7 @@ use Tomaj\NetteApi\Handlers\DefaultHandler;
 
 class ApiDecider
 {
-    /** @var HandlerSettings[] */
+    /** @var Api[] */
     private $handlers = [];
 
     /** @var ApiHandlerInterface|null */
@@ -26,7 +26,7 @@ class ApiDecider
      * @param string   $package
      * @param string   $apiAction
      *
-     * @return HandlerSettings
+     * @return Api
      */
     public function getApiHandler($method, $version, $package, $apiAction = '')
     {
@@ -38,10 +38,10 @@ class ApiDecider
                 return $handler;
             }
             if ($method == 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
-                return new HandlerSettings(new EndpointIdentifier('OPTION', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
+                return new Api(new EndpointIdentifier('OPTION', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
             }
         }
-        return new HandlerSettings(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
+        return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
     }
 
     public function enableGlobalPreflight(ApiHandlerInterface $corsHandler = null)
@@ -63,14 +63,14 @@ class ApiDecider
      */
     public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization)
     {
-        $this->handlers[] = new HandlerSettings($endpointIdentifier, $handler, $apiAuthorization);
+        $this->handlers[] = new Api($endpointIdentifier, $handler, $apiAuthorization);
         return $this;
     }
 
     /**
      * Get all registered handlers
      *
-     * @return HandlerSettings[]
+     * @return Api[]
      */
     public function getHandlers()
     {
