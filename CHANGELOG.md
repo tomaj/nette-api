@@ -8,7 +8,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Update nette libs to version 3.0.0 (BC break)
 
-* Removed support for PHP 5.6 and 7.0 (BC Break)
+* Removed support for PHP 5.6, 7.0 and hhvm (BC Break)
 
 ## 1.15.0 - 2019-03-13
 
