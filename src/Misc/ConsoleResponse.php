@@ -144,7 +144,7 @@ class ConsoleResponse
         $body = $this->responseBody;
         $decoded = json_decode($body);
         if ($decoded) {
-            $body = json_encode($decoded, JSON_PRETTY_PRINT);
+            $body = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
         return $body;
     }

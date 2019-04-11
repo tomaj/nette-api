@@ -7,6 +7,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 #### Changed
 
 * Update nette libs to version 3.0.0 (BC break)
+* Pretty JSON output in API console - without escaping unicode and slashes
+
+#### Removed
 
 * Removed support for PHP 5.6, 7.0 and hhvm (BC Break)
 
