@@ -2,12 +2,12 @@
 
 namespace Tomaj\NetteApi\Test\Handler;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
 
-class BearerTokenAuthorizationTest extends PHPUnit_Framework_TestCase
+class BearerTokenAuthorizationTest extends TestCase
 {
     public function testAuthorizedToken()
     {

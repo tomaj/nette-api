@@ -2,10 +2,10 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 
-class StaticBearerTokenRepositoryTest extends PHPUnit_Framework_TestCase
+class StaticBearerTokenRepositoryTest extends TestCase
 {
     public function testValidation()
     {

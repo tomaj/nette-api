@@ -2,7 +2,7 @@
 
 namespace Tomaj\NetteApi\Test\Presenters;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Nette\Application\Request;
 use Nette\DI\Container;
 use Nette\Http\Response as HttpResponse;
@@ -18,7 +18,7 @@ use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
 
-class ApiPresenterTest extends PHPUnit_Framework_TestCase
+class ApiPresenterTest extends TestCase
 {
     public function testSimpleResponse()
     {
@@ -27,7 +27,7 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript('')), new HttpResponse());
+        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -49,7 +49,7 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript('')), new HttpResponse());
+        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -69,7 +69,7 @@ class ApiPresenterTest extends PHPUnit_Framework_TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript('')), new HttpResponse());
+        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);

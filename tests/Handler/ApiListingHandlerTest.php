@@ -2,10 +2,10 @@
 
 namespace Tomaj\NetteApi\Test\Handler;
 
-use PHPUnit_Framework_TestCase;
 use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\SimpleRouter;
-use Nette\Http\Url;
+use Nette\Http\UrlScript;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
@@ -14,14 +14,14 @@ use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Handlers\ApiListingHandler;
 use Tomaj\NetteApi\Link\ApiLink;
 
-class ApiListingHandlerTest extends PHPUnit_Framework_TestCase
+class ApiListingHandlerTest extends TestCase
 {
     public function testDefaultHandle()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $apiLink = new ApiLink($linkGenerator);
 
-        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider = new ApiDecider();
         $apiDecider->addApiHandler(
             new EndpointIdentifier('POST', 2, 'comments', 'list'),
             new AlwaysOkHandler(),
@@ -45,10 +45,10 @@ class ApiListingHandlerTest extends PHPUnit_Framework_TestCase
 
     public function testHandlerWithParam()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $apiLink = new ApiLink($linkGenerator);
 
-        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider = new ApiDecider();
         $apiDecider->addApiHandler(
             new EndpointIdentifier('POST', 1, 'comments', 'list'),
             new EchoHandler(),

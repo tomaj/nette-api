@@ -5,10 +5,10 @@ namespace Tomaj\NetteApi\Test\Response;
 use Nette\Http\Request;
 use Nette\Http\Response;
 use Nette\Http\UrlScript;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Response\XmlApiResponse;
 
-class XmlApiResponseTest extends PHPUnit_Framework_TestCase
+class XmlApiResponseTest extends TestCase
 {
     public function testCreatingResponse()
     {

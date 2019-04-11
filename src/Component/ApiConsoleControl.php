@@ -4,7 +4,7 @@ namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
-use Nette\Http\Request;
+use Nette\Http\IRequest;
 use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
@@ -24,9 +24,8 @@ class ApiConsoleControl extends Control
 
     private $request;
 
-    public function __construct(Request $request, EndpointIdentifier $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
+    public function __construct(IRequest $request, EndpointIdentifier $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
     {
-        parent::__construct();
         $this->endpoint = $endpoint;
         $this->handler = $handler;
         $this->authorization = $authorization;

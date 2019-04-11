@@ -3,14 +3,15 @@
 namespace Tomaj\NetteApi\Test\Handler;
 
 use Nette\Http\Response;
+use Nette\Http\UrlScript;
+use Nette\InvalidStateException;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\SimpleRouter;
-use Nette\Http\Url;
-use PHPUnit_Framework_TestCase;
 
-class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
+class CorsPreflightHandlerTest extends TestCase
 {
     public function testResponse()
     {
@@ -30,25 +31,24 @@ class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
 
-    /**
-     * @expectedException \Nette\InvalidStateException
-     */
     public function testExceptionWhenCreatingLinkWithoutLinkGenerator()
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
+
+        $this->expectException(InvalidStateException::class);
+        $this->expectExceptionMessage('You have setupLinkGenerator for this handler if you want to generate link in this handler');
         $defaultHandler->createLink([]);
     }
 
-    /**
-     * @expectedException \Nette\InvalidStateException
-     */
     public function testExceptionWHenCreatingLinkWithoutEndpoint()
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
 
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $defaultHandler->setupLinkGenerator($linkGenerator);
 
+        $this->expectException(InvalidStateException::class);
+        $this->expectExceptionMessage('You have setEndpoint() for this handler if you want to generate link in this handler');
         $defaultHandler->createLink([]);
     }
 
@@ -56,7 +56,7 @@ class CorsPreflightHandlerTest extends PHPUnit_Framework_TestCase
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
 
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $defaultHandler->setupLinkGenerator($linkGenerator);
 
         $endpointIdentifier = new EndpointIdentifier('OPTIONS', 1, 'article', 'detail');

@@ -2,11 +2,11 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Params\InputParam;
 
-class ParamsProcessorTest extends PHPUnit_Framework_TestCase
+class ParamsProcessorTest extends TestCase
 {
     public function testError()
     {

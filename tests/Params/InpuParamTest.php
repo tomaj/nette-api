@@ -2,11 +2,11 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
-use Tomaj\NetteApi\Params\InputParam;
 use Exception;
+use PHPUnit\Framework\TestCase;
+use Tomaj\NetteApi\Params\InputParam;
 
-class InputParamTest extends PHPUnit_Framework_TestCase
+class InputParamTest extends TestCase
 {
     public function testValidation()
     {
@@ -33,12 +33,11 @@ class InputParamTest extends PHPUnit_Framework_TestCase
         $this->assertNull($inputParam->getValue());
     }
 
-    /**
-     * @expectedException Exception
-     */
     public function testUnexpectedType()
     {
         $inputParam = new InputParam('unknown', 'mykey4', InputParam::REQUIRED, ['c', 'asdsadsad']);
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('Invalid type');
         $inputParam->getValue();
     }
 

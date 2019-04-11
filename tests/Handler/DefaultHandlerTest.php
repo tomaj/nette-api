@@ -2,14 +2,15 @@
 
 namespace Tomaj\NetteApi\Test\Handler;
 
+use Nette\Http\UrlScript;
+use Nette\InvalidStateException;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\SimpleRouter;
-use Nette\Http\Url;
-use PHPUnit_Framework_TestCase;
 
-class DefaultHandlerTest extends PHPUnit_Framework_TestCase
+class DefaultHandlerTest extends TestCase
 {
     public function testResponse()
     {
@@ -31,25 +32,24 @@ class DefaultHandlerTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
 
-    /**
-     * @expectedException \Nette\InvalidStateException
-     */
     public function testExceptionWhenCreatingLinkWithoutLinkGenerator()
     {
         $defaultHandler = new DefaultHandler();
+
+        $this->expectException(InvalidStateException::class);
+        $this->expectExceptionMessage('You have setupLinkGenerator for this handler if you want to generate link in this handler');
         $defaultHandler->createLink([]);
     }
 
-    /**
-     * @expectedException \Nette\InvalidStateException
-     */
     public function testExceptionWHenCreatingLinkWithoutEndpoint()
     {
         $defaultHandler = new DefaultHandler();
 
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $defaultHandler->setupLinkGenerator($linkGenerator);
 
+        $this->expectException(InvalidStateException::class);
+        $this->expectExceptionMessage('You have setEndpoint() for this handler if you want to generate link in this handler');
         $defaultHandler->createLink([]);
     }
 
@@ -57,7 +57,7 @@ class DefaultHandlerTest extends PHPUnit_Framework_TestCase
     {
         $defaultHandler = new DefaultHandler();
 
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $defaultHandler->setupLinkGenerator($linkGenerator);
 
         $endpointIdentifier = new EndpointIdentifier('POST', 1, 'article', 'detail');
