@@ -100,7 +100,7 @@ class InputParamTest extends TestCase
     public function testStaticAvailableValues()
     {
         $_GET['dsgerg'] = 'asfsaf';
-        $inputParam = new InputParam(InputParam::TYPE_GET, 'dsgerg', InputParam::REQUIRED, 'vgdgr');
+        $inputParam = new InputParam(InputParam::TYPE_GET, 'dsgerg', InputParam::REQUIRED, ['vgdgr']);
         $this->assertFalse($inputParam->isValid());
 
         $_GET['dsgerg'] = 'vgdgr';

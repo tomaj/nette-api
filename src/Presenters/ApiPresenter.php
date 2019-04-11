@@ -12,6 +12,7 @@ use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
+use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
@@ -21,9 +22,7 @@ use Tracy\Debugger;
  */
 class ApiPresenter extends Presenter
 {
-    /**
-     * @var  ApiDecider @inject
-     */
+    /** @var ApiDecider @inject */
     public $apiDecider;
 
     /**
@@ -40,12 +39,7 @@ class ApiPresenter extends Presenter
      */
     protected $corsHeader = '*';
 
-    /**
-     * Presenter startup method
-     *
-     * @return void
-     */
-    public function startup()
+    public function startup(): void
     {
         parent::startup();
         $this->autoCanonicalize = false;
@@ -58,17 +52,12 @@ class ApiPresenter extends Presenter
      *
      * @param string $corsHeader
      */
-    public function setCorsHeader($corsHeader)
+    public function setCorsHeader(string $corsHeader): void
     {
         $this->corsHeader = $corsHeader;
     }
 
-    /**
-     * Nette render default method
-     *
-     * @return void
-     */
-    public function renderDefault()
+    public function renderDefault(): void
     {
         $start = microtime(true);
 
@@ -82,8 +71,8 @@ class ApiPresenter extends Presenter
             return;
         }
 
-        $params = $this->processParams($handler);
-        if ($params === false) {
+        $params = $this->processInputParams($handler);
+        if ($params === null) {
             return;
         }
 
@@ -102,8 +91,10 @@ class ApiPresenter extends Presenter
 
         $end = microtime(true);
 
-        if ($this->context->findByType('Tomaj\NetteApi\Logger\ApiLoggerInterface')) {
-            $this->logRequest($this->context->getByType('Tomaj\NetteApi\Logger\ApiLoggerInterface'), $code, $end - $start);
+        if ($this->context->findByType(ApiLoggerInterface::class)) {
+            /** @var ApiLoggerInterface $apiLogger */
+            $apiLogger = $this->context->getByType(ApiLoggerInterface::class);
+            $this->logRequest($apiLogger, $code, $end - $start);
         }
 
         // output to nette
@@ -111,12 +102,7 @@ class ApiPresenter extends Presenter
         $this->sendResponse($response);
     }
 
-    /**
-     * Get handler settings (endpoint, handler, authorization)
-     *
-     * @return Api
-     */
-    private function getApi()
+    private function getApi(): Api
     {
         return $this->apiDecider->getApi(
             $this->getRequest()->getMethod(),
@@ -126,14 +112,7 @@ class ApiPresenter extends Presenter
         );
     }
 
-    /**
-     * Check authorization
-     *
-     * @param ApiAuthorizationInterface  $authorization
-     *
-     * @return bool
-     */
-    private function checkAuth(ApiAuthorizationInterface $authorization)
+    private function checkAuth(ApiAuthorizationInterface $authorization): bool
     {
         if (!$authorization->authorized()) {
             $this->getHttpResponse()->setCode(Response::S403_FORBIDDEN);
@@ -143,39 +122,23 @@ class ApiPresenter extends Presenter
         return true;
     }
 
-    /**
-     * Process input parameters
-     *
-     * @param ApiHandlerInterface   $handler
-     *
-     * @return array|bool
-     */
-    private function processParams(ApiHandlerInterface $handler)
+    private function processInputParams(ApiHandlerInterface $handler): ?array
     {
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
             $this->getHttpResponse()->setCode(Response::S500_INTERNAL_SERVER_ERROR);
             $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => 'wrong input']));
-            return false;
+            return null;
         }
         return $paramsProcessor->getValues();
     }
 
-    /**
-     * Log request
-     *
-     * @param ApiLoggerInterface  $logger
-     * @param integer             $code
-     * @param double              $elapsed
-     *
-     * @return void
-     */
-    private function logRequest(ApiLoggerInterface $logger, $code, $elapsed)
+    private function logRequest(ApiLoggerInterface $logger, int $code, float $elapsed): void
     {
         $headers = [];
         if (function_exists('getallheaders')) {
             $headers = getallheaders();
-        } elseif (isset($_SERVER)) {
+        } else {
             foreach ($_SERVER as $name => $value) {
                 if (substr($name, 0, 5) == 'HTTP_') {
                     $key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
@@ -189,7 +152,7 @@ class ApiPresenter extends Presenter
             $requestHeaders .= "$key: $value\n";
         }
 
-        $ipDetector = $this->context->getByType('Tomaj\NetteApi\Misc\IpDetectorInterface');
+        $ipDetector = $this->context->getByType(IpDetectorInterface::class);
         $logger->log(
             $code,
             $this->getRequest()->getMethod(),
@@ -197,17 +160,17 @@ class ApiPresenter extends Presenter
             filter_input(INPUT_SERVER, 'REQUEST_URI'),
             $ipDetector->getRequestIp(),
             filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
-            ($elapsed) * 1000
+            (int) ($elapsed) * 1000
         );
     }
 
-    protected function sendCorsHeaders()
+    protected function sendCorsHeaders(): void
     {
         $this->getHttpResponse()->addHeader('Access-Control-Allow-Methods', 'POST, DELETE, PUT, GET, OPTIONS');
 
         if ($this->corsHeader == 'auto') {
             $domain = $this->getRequestDomain();
-            if ($domain !== false) {
+            if ($domain !== null) {
                 $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $domain);
                 $this->getHttpResponse()->addHeader('Access-Control-Allow-Credentials', 'true');
             }
@@ -224,14 +187,14 @@ class ApiPresenter extends Presenter
         }
     }
 
-    private function getRequestDomain()
+    private function getRequestDomain(): ?string
     {
         if (!filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
-            return false;
+            return null;
         }
         $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
         if (!(isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host']))) {
-            return false;
+            return null;
         }
         $url = $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
         if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== 80) {

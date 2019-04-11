@@ -13,7 +13,7 @@ use Tomaj\NetteApi\Response\ResponseInterface;
 abstract class BaseHandler implements ApiHandlerInterface
 {
     /**
-     * @var Manager
+     * @var Manager|null
      */
     private $fractal;
 
@@ -23,7 +23,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     private $endpoint;
 
     /**
-     * @var  LinkGenerator
+     * @var LinkGenerator|null
      */
     protected $linkGenerator;
 

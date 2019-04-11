@@ -22,7 +22,7 @@ class ParamsProcessor
         return false;
     }
 
-    public function getValues()
+    public function getValues(): array
     {
         $result = [];
         foreach ($this->params as $param) {

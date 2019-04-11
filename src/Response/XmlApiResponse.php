@@ -36,8 +36,8 @@ class XmlApiResponse implements ResponseInterface
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType('text/xml');
-        $httpResponse->setExpiration(false);
-        $httpResponse->setHeader('Content-Length', strlen($this->response));
+        $httpResponse->setExpiration(null);
+        $httpResponse->setHeader('Content-Length', (string) strlen($this->response));
 
         echo $this->response;
     }

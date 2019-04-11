@@ -2,38 +2,21 @@
 
 namespace Tomaj\NetteApi\Misc;
 
+use Nette\Http\FileUpload;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Params\InputParam;
 
 class ConsoleRequest
 {
-    /**
-     * @var ApiHandlerInterface
-     */
+    /** @var ApiHandlerInterface */
     private $handler;
 
-    /**
-     * Create ConsoleRequest
-     *
-     * @param ApiHandlerInterface $handler
-     */
     public function __construct(ApiHandlerInterface $handler)
     {
         $this->handler = $handler;
     }
 
-    /**
-     * Make request to API url
-     *
-     * @param string $url
-     * @param string $method
-     * @param array $values
-     * @param array $additionalValues
-     * @param string|null $token
-     *
-     * @return ConsoleResponse
-     */
-    public function makeRequest($url, $method, array $values, array $additionalValues = [], $token = null)
+    public function makeRequest(string $url, string $method, array $values, array $additionalValues = [], ?string $token = null): ConsoleResponse
     {
         list($postFields, $getFields, $cookieFields, $rawPost, $putFields) = $this->processValues($values);
 
@@ -148,7 +131,7 @@ class ConsoleRequest
      *
      * @return array
      */
-    private function processValues(array $values)
+    private function processValues(array $values): array
     {
         $params = $this->handler->params();
 
@@ -202,29 +185,25 @@ class ConsoleRequest
      *
      * @param InputParam  $param   input param
      * @param string      $key     param key
-     * @param string      $value   actual value from request
+     * @param mixed      $value   actual value from request
      *
-     * @return string
+     * @return string|null
      */
-    private function processParam(InputParam $param, $key, $value)
+    private function processParam(InputParam $param, string $key, $value): ?string
     {
         if ($param->getKey() == $key) {
             $valueData = $value;
 
-            if ($param->getType() == InputParam::TYPE_FILE) {
-                if ($value->isOk()) {
-                    $valueData = curl_file_create($value->getTemporaryFile(), $value->getContentType(), $value->getName());
+            if ($param->getType() === InputParam::TYPE_FILE) {
+                /** @var FileUpload $file */
+                $file = $value;
+                if ($file->isOk()) {
+                    $valueData = curl_file_create($file->getTemporaryFile(), $file->getContentType(), $file->getName());
                 } else {
                     $valueData = false;
                 }
-            }
-
-            if ($param->getType() == InputParam::TYPE_POST_RAW) {
-                if (isset($HTTP_RAW_POST_DATA)) {
-                    $valueData = $HTTP_RAW_POST_DATA;
-                } else {
-                    $valueData = file_get_contents('php://input');
-                }
+            } elseif ($param->getType() === InputParam::TYPE_POST_RAW) {
+                $valueData = file_get_contents('php://input');
             }
 
             return $valueData;
@@ -232,13 +211,7 @@ class ConsoleRequest
         return null;
     }
 
-    /**
-     * Normalize values array.
-     *
-     * @param $values
-     * @return array
-     */
-    private function normalizeValues($values)
+    private function normalizeValues(array $values): array
     {
         $result = [];
         foreach ($values as $key => $value) {

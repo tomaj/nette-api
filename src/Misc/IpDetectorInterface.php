@@ -9,5 +9,5 @@ interface IpDetectorInterface
      *
      * @return string
      */
-    public function getRequestIp();
+    public function getRequestIp(): string;
 }

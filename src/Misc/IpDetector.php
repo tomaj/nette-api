@@ -7,7 +7,7 @@ class IpDetector implements IpDetectorInterface
     /**
      * {@inheritdoc}
      */
-    public function getRequestIp()
+    public function getRequestIp(): string
     {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
             $ip = $_SERVER['HTTP_CLIENT_IP'];

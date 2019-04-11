@@ -5,6 +5,7 @@ namespace Tomaj\NetteApi\Component;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 use Nette\Http\IRequest;
+use Nette\Utils\ArrayHash;
 use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
@@ -32,13 +33,13 @@ class ApiConsoleControl extends Control
         $this->request = $request;
     }
 
-    public function render()
+    public function render(): void
     {
         $this->getTemplate()->setFile(__DIR__ . '/console.latte');
         $this->getTemplate()->render();
     }
 
-    protected function createComponentConsoleForm()
+    protected function createComponentConsoleForm(): Form
     {
         $form = new Form();
 
@@ -124,12 +125,12 @@ class ApiConsoleControl extends Control
         return $form;
     }
 
-    private function getLabel(InputParam $param)
+    private function getLabel(InputParam $param): string
     {
         return ucfirst(str_replace('_', ' ', $param->getKey()));
     }
 
-    private function getParamLabel(InputParam $param)
+    private function getParamLabel(InputParam $param): string
     {
         $title = $this->getLabel($param);
         if ($param->isRequired()) {
@@ -139,7 +140,7 @@ class ApiConsoleControl extends Control
         return $title;
     }
 
-    public function formSucceeded($form, $values)
+    public function formSucceeded(Form $form, ArrayHash $values): void
     {
         $url = $values['api_url'];
 
