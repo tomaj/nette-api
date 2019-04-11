@@ -39,7 +39,7 @@ class ApiListingHandler extends BaseHandler
     public function handle($params)
     {
         $version = $this->getEndpoint()->getVersion();
-        $endpoints = $this->getHandlersList($version);
+        $endpoints = $this->getApiList($version);
         return new JsonApiResponse(200, ['endpoints' => $endpoints]);
     }
 
@@ -50,23 +50,23 @@ class ApiListingHandler extends BaseHandler
      *
      * @return array
      */
-    private function getHandlersList($version)
+    private function getApiList($version)
     {
-        $versionHandlers = array_filter($this->apiDecider->getApis(), function (Api $handler) use ($version) {
-            return $version == $handler->getEndpoint()->getVersion();
+        $versionApis = array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
+            return $version == $api->getEndpoint()->getVersion();
         });
 
-        return array_map(function (Api $handler) {
+        return array_map(function (Api $api) {
             return [
-                'method' => $handler->getEndpoint()->getMethod(),
-                'version' => $handler->getEndpoint()->getVersion(),
-                'package' => $handler->getEndpoint()->getPackage(),
-                'api_action' => $handler->getEndpoint()->getApiAction(),
-                'authorization' => get_class($handler->getAuthorization()),
-                'url' => $this->apiLink->link($handler->getEndpoint()),
-                'params' => $this->createParamsList($handler->getHandler()),
+                'method' => $api->getEndpoint()->getMethod(),
+                'version' => $api->getEndpoint()->getVersion(),
+                'package' => $api->getEndpoint()->getPackage(),
+                'api_action' => $api->getEndpoint()->getApiAction(),
+                'authorization' => get_class($api->getAuthorization()),
+                'url' => $this->apiLink->link($api->getEndpoint()),
+                'params' => $this->createParamsList($api->getHandler()),
             ];
-        }, $versionHandlers);
+        }, $versionApis);
     }
 
     /**
