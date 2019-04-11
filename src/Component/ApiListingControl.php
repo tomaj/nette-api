@@ -29,7 +29,7 @@ class ApiListingControl extends Control
 
     public function render()
     {
-        $handlers = $this->apiDecider->getHandlers();
+        $handlers = $this->apiDecider->getApis();
         $this->getTemplate()->add('handlers', $this->sortHandlers($handlers));
         $this->getTemplate()->setFile(__DIR__ . '/api_listing.latte');
         $this->getTemplate()->render();
