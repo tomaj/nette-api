@@ -32,7 +32,7 @@ class StaticBearerTokenRepository implements BearerTokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function validToken($token)
+    public function validToken(string $token): bool
     {
         return in_array($token, array_keys($this->validTokens));
     }
@@ -40,11 +40,11 @@ class StaticBearerTokenRepository implements BearerTokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
-    public function ipRestrictions($token)
+    public function ipRestrictions(string $token): ?string
     {
         if (isset($this->validTokens[$token])) {
             return $this->validTokens[$token];
         }
-        return false;
+        return null;
     }
 }

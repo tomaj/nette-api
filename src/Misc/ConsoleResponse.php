@@ -57,12 +57,12 @@ class ConsoleResponse
     /**
      * Log response from request
      *
-     * @param $responseCode
-     * @param $responseBody
-     * @param $responseHeaders
-     * @param $responseTime
+     * @param int $responseCode
+     * @param mixed $responseBody
+     * @param mixed $responseHeaders
+     * @param int $responseTime
      *
-     * @return voiud
+     * @return void
      */
     public function logRequest($responseCode, $responseBody, $responseHeaders, $responseTime)
     {

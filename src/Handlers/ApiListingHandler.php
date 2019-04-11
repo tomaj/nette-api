@@ -7,6 +7,7 @@ use Tomaj\NetteApi\HandlerSettings;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 class ApiListingHandler extends BaseHandler
 {
@@ -36,7 +37,7 @@ class ApiListingHandler extends BaseHandler
     /**
      * {@inheritdoc}
      */
-    public function handle($params)
+    public function handle(array $params): ResponseInterface
     {
         $version = $this->getEndpoint()->getVersion();
         $endpoints = $this->getHandlersList($version);
@@ -50,7 +51,7 @@ class ApiListingHandler extends BaseHandler
      *
      * @return array
      */
-    private function getHandlersList($version)
+    private function getHandlersList(int $version): array
     {
         $versionHandlers = array_filter($this->apiDecider->getHandlers(), function (HandlerSettings $handler) use ($version) {
             return $version == $handler->getEndpoint()->getVersion();
@@ -76,7 +77,7 @@ class ApiListingHandler extends BaseHandler
      *
      * @return array
      */
-    private function createParamsList(ApiHandlerInterface $handler)
+    private function createParamsList(ApiHandlerInterface $handler): array
     {
         return array_map(function (InputParam $param) {
             $parameter = [

@@ -15,7 +15,7 @@ class JsonApiResponse implements ResponseInterface
     /** @var integer */
     private $code;
 
-    /** @var mixed */
+    /** @var array */
     private $payload;
 
     /** @var string */
@@ -24,20 +24,10 @@ class JsonApiResponse implements ResponseInterface
     /** @var string */
     private $charset;
 
-    /** @var bool|DateTimeInterface|int|string */
+    /** @var DateTimeInterface|null */
     private $expiration;
 
-    /**
-     * This class is only copy of JsonResponse from Nette with added possibility
-     * to setup response code, content type, charset and expiration
-     *
-     * @param integer $code
-     * @param mixed $data
-     * @param string $contentType
-     * @param string $charset
-     * @param bool|DateTimeInterface|int|string $expiration
-     */
-    public function __construct($code, $payload, $contentType = 'application/json', $charset = 'utf-8', $expiration = false)
+    public function __construct(int $code, array $payload, string $contentType = 'application/json', string $charset = 'utf-8', ?DateTimeInterface $expiration = null)
     {
         $this->code = $code;
         $this->payload = $payload;
@@ -54,10 +44,7 @@ class JsonApiResponse implements ResponseInterface
         return $this->code;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getPayload()
+    public function getPayload(): array
     {
         return $this->payload;
     }
@@ -72,10 +59,7 @@ class JsonApiResponse implements ResponseInterface
         return $this->charset;
     }
 
-    /**
-     * @return bool|DateTimeInterface|int|string
-     */
-    public function getExpiration()
+    public function getExpiration(): ?DateTimeInterface
     {
         return $this->expiration;
     }
@@ -86,7 +70,7 @@ class JsonApiResponse implements ResponseInterface
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType($this->getContentType(), $this->getCharset());
-        $httpResponse->setExpiration($this->getExpiration());
+        $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
         $result = Json::encode($this->getPayload());
         $httpResponse->setHeader('Content-Length', strlen($result));
         echo $result;

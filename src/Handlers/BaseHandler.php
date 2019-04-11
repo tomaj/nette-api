@@ -5,8 +5,10 @@ namespace Tomaj\NetteApi\Handlers;
 use League\Fractal\Manager;
 use League\Fractal\ScopeFactoryInterface;
 use Nette\Application\LinkGenerator;
+use Nette\Application\UI\InvalidLinkException;
 use Nette\InvalidStateException;
 use Tomaj\NetteApi\EndpointInterface;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 abstract class BaseHandler implements ApiHandlerInterface
 {
@@ -16,7 +18,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     private $fractal;
 
     /**
-     * @var EndpointInterface
+     * @var EndpointInterface|null
      */
     private $endpoint;
 
@@ -33,12 +35,12 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function params()
+    public function params(): array
     {
         return [];
     }
 
-    protected function getFractal()
+    protected function getFractal(): Manager
     {
         if (!$this->fractal) {
             throw new InvalidStateException("Fractal manager isnt initialized. Did you call parent::__construct() in your handler constructor?");
@@ -49,15 +51,12 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function setEndpointIdentifier(EndpointInterface $endpoint)
+    final public function setEndpointIdentifier(EndpointInterface $endpoint): void
     {
         $this->endpoint = $endpoint;
     }
 
-    /**
-     * @return EndpointInterface
-     */
-    public function getEndpoint()
+    final public function getEndpoint(): ?EndpointInterface
     {
         return $this->endpoint;
     }
@@ -67,9 +66,9 @@ abstract class BaseHandler implements ApiHandlerInterface
      *
      * @param LinkGenerator $linkGenerator
      *
-     * @return $this
+     * @return self
      */
-    public function setupLinkGenerator(LinkGenerator $linkGenerator)
+    final public function setupLinkGenerator(LinkGenerator $linkGenerator): self
     {
         $this->linkGenerator = $linkGenerator;
         return $this;
@@ -81,9 +80,9 @@ abstract class BaseHandler implements ApiHandlerInterface
      * @param array   $params
      *
      * @return string
-     * @throws \Nette\Application\UI\InvalidLinkException it handler doesn't have linkgenerator or endpoint
+     * @throws InvalidLinkException if handler doesn't have linkgenerator or endpoint
      */
-    public function createLink($params)
+    final public function createLink(array $params = []): string
     {
         if (!$this->linkGenerator) {
             throw new InvalidStateException("You have setupLinkGenerator for this handler if you want to generate link in this handler");
@@ -102,5 +101,5 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
-    abstract public function handle($params);
+    abstract public function handle(array $params): ResponseInterface;
 }

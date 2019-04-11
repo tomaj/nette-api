@@ -13,9 +13,9 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
     private $tokenRepository;
 
     /**
-     * @var string|boolean
+     * @var string|null
      */
-    private $errorMessage = false;
+    private $errorMessage = null;
 
     /**
      * @var IpDetectorInterface
@@ -37,7 +37,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
-    public function authorized()
+    public function authorized(): bool
     {
         $token = $this->readAuthorizationToken();
         if (!$token) {
@@ -61,7 +61,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
-    public function getErrorMessage()
+    public function getErrorMessage(): ?string
     {
         return $this->errorMessage;
     }
@@ -77,12 +77,12 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
      *
      * @return boolean
      */
-    private function isValidIp($ipRestrictions)
+    private function isValidIp(?string $ipRestrictions): bool
     {
-        if ($ipRestrictions === false) {
+        if ($ipRestrictions === null) {
             return false;
         }
-        if ($ipRestrictions == '*' || $ipRestrictions == '' || $ipRestrictions === null) {
+        if ($ipRestrictions === '*' || $ipRestrictions === '' || $ipRestrictions === null) {
             return true;
         }
         $ip = $this->ipDetector->getRequestIp();
@@ -108,36 +108,36 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
      * @param string $range  is in IP/CIDR format eg 127.0.0.1/24
      * @return boolean
      */
-    private function ipInRange($ip, $range)
+    private function ipInRange(string $ip, string $range): bool
     {
         list($range, $netmask) = explode('/', $range, 2);
         $range_decimal = ip2long($range);
-        $ip_decimal = ip2long($ip);
-        $wildcard_decimal = pow(2, (32 - $netmask)) - 1;
+        $ipDecimal = ip2long($ip);
+        $wildcard_decimal = pow(2, (32 - (int)$netmask)) - 1;
         $netmask_decimal = ~ $wildcard_decimal;
-        return (($ip_decimal & $netmask_decimal) == ($range_decimal & $netmask_decimal));
+        return (($ipDecimal & $netmask_decimal) == ($range_decimal & $netmask_decimal));
     }
 
     /**
      * Read HTTP reader with authorization token
      * If everything is ok, it return token. In other situations returns false and set errorMessage.
      *
-     * @return string|boolean
+     * @return string|null
      */
-    private function readAuthorizationToken()
+    private function readAuthorizationToken(): ?string
     {
         if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
             $this->errorMessage = 'Authorization header HTTP_Authorization is not set';
-            return false;
+            return null;
         }
         $parts = explode(' ', $_SERVER['HTTP_AUTHORIZATION']);
-        if (count($parts) != 2) {
+        if (count($parts) !== 2) {
             $this->errorMessage = 'Authorization header contains invalid structure';
-            return false;
+            return null;
         }
-        if (strtolower($parts[0]) != 'bearer') {
+        if (strtolower($parts[0]) !== 'bearer') {
             $this->errorMessage = 'Authorization header doesn\'t contains bearer token';
-            return false;
+            return null;
         }
         return $parts[1];
     }

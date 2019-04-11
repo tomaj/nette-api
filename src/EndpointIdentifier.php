@@ -12,7 +12,7 @@ class EndpointIdentifier implements EndpointInterface
 
     private $apiAction;
 
-    public function __construct($method, $version, $package, $apiAction = '')
+    public function __construct(string $method, int $version, string $package, ?string $apiAction = null)
     {
         $this->method = strtoupper($method);
         $this->version = $version;
@@ -20,30 +20,30 @@ class EndpointIdentifier implements EndpointInterface
         $this->apiAction = $apiAction;
     }
 
-    public function getMethod()
+    public function getMethod(): string
     {
         return $this->method;
     }
 
-    public function getVersion()
+    public function getVersion(): int
     {
         return $this->version;
     }
 
-    public function getPackage()
+    public function getPackage(): string
     {
         return $this->package;
     }
 
-    public function getApiAction()
+    public function getApiAction(): ?string
     {
-        if ($this->apiAction == '') {
+        if ($this->apiAction === '') {
             return null;
         }
         return $this->apiAction;
     }
 
-    public function getUrl()
+    public function getUrl(): string
     {
         return "v{$this->version}/{$this->package}/{$this->apiAction}";
     }
