@@ -4,7 +4,7 @@ namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Params\InputParam;
-use Nette\Application\IResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 interface ApiHandlerInterface
 {
@@ -13,7 +13,7 @@ interface ApiHandlerInterface
      *
      * @return InputParam[]
      */
-    public function params();
+    public function params(): array;
 
     /**
      * Main handle method that will be executed when api
@@ -21,9 +21,9 @@ interface ApiHandlerInterface
      *
      * @param array $params
      *
-     * @return IResponse
+     * @return ResponseInterface
      */
-    public function handle($params);
+    public function handle(array $params): ResponseInterface;
 
     /**
      * Set actual endpoint identifier to hnadler.
@@ -33,5 +33,5 @@ interface ApiHandlerInterface
      *
      * @return void
      */
-    public function setEndpointIdentifier(EndpointInterface $endpoint);
+    public function setEndpointIdentifier(EndpointInterface $endpoint): void;
 }

@@ -7,10 +7,10 @@ interface BearerTokenRepositoryInterface
     /**
      * Return true if token is valid, otherwise return false
      *
-     * @param $token string
+     * @param string $token
      * @return bool
      */
-    public function validToken($token);
+    public function validToken(string $token): bool;
 
     /**
      * Return ip mask
@@ -21,9 +21,9 @@ interface BearerTokenRepositoryInterface
      *   '156.26.252/32'  - access from ip range
      *   false            - if token doesn't exists
      *
-     * @param $token string
+     * @param string $token
      *
-     * @return string|false
+     * @return string|null
      */
-    public function ipRestrictions($token);
+    public function ipRestrictions(string $token): ?string;
 }

@@ -42,7 +42,7 @@ class InputParam implements ParamInterface
      */
     private $multi;
 
-    public function __construct($type, $key, $required = self::OPTIONAL, $availableValues = null, $multi = false)
+    public function __construct(string $type, string $key, bool $required = self::OPTIONAL, ?array $availableValues = null, bool $multi = false)
     {
         $this->type = $type;
         $this->key = $key;
@@ -51,39 +51,27 @@ class InputParam implements ParamInterface
         $this->multi = $multi;
     }
 
-    /**
-     * @return string
-     */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @return string
-     */
-    public function getKey()
+    public function getKey(): string
     {
         return $this->key;
     }
 
-    /**
-     * @return boolean
-     */
-    public function isRequired()
+    public function isRequired(): bool
     {
         return $this->required;
     }
 
-    public function getAvailableValues()
+    public function getAvailableValues(): ?array
     {
         return $this->availableValues;
     }
 
-    /**
-     * @return bool
-     */
-    public function isMulti()
+    public function isMulti(): bool
     {
         return $this->multi;
     }
@@ -95,9 +83,9 @@ class InputParam implements ParamInterface
      *
      * @throws Exception if actual InputParam has unsupported type
      */
-    public function isValid()
+    public function isValid(): bool
     {
-        if ($this->type == self::TYPE_POST_JSON_KEY) {
+        if ($this->type === self::TYPE_POST_JSON_KEY) {
             $input = file_get_contents("php://input");
             $params = json_decode($input, true);
             if ($input && $params === null) {
@@ -105,7 +93,7 @@ class InputParam implements ParamInterface
             }
         }
 
-        if ($this->required == self::OPTIONAL) {
+        if ($this->required === self::OPTIONAL) {
             return true;
         }
 
@@ -119,9 +107,6 @@ class InputParam implements ParamInterface
         if ($this->required) {
             if ($value === null || $value == '') {
                 return false;
-            }
-            if (is_string($this->availableValues)) {
-                return $value == $this->availableValues;
             }
         }
         return true;

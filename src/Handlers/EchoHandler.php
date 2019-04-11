@@ -4,13 +4,14 @@ namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 class EchoHandler extends BaseHandler
 {
     /**
      * {@inheritdoc}
      */
-    public function params()
+    public function params(): array
     {
         return [
             new InputParam(InputParam::TYPE_GET, 'status', InputParam::REQUIRED, ['ok', 'error']),
@@ -21,7 +22,7 @@ class EchoHandler extends BaseHandler
     /**
      * {@inheritdoc}
      */
-    public function handle($params)
+    public function handle(array $params): ResponseInterface
     {
         $status = $params['status'];
         return new JsonApiResponse(200, ['status' => $status, 'params' => $params]);

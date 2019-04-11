@@ -23,6 +23,6 @@ class StaticBearerTokenRepositoryTest extends TestCase
         $repository = new StaticBearerTokenRepository([
             'mytoken' => '*',
         ]);
-        $this->assertFalse($repository->ipRestrictions('mytoken2'));
+        $this->assertNull($repository->ipRestrictions('mytoken2'));
     }
 }

@@ -4,9 +4,9 @@ namespace Tomaj\NetteApi\Params;
 
 interface ParamInterface
 {
-    public function isValid();
+    public function isValid(): bool;
 
-    public function getKey();
+    public function getKey(): string;
 
     public function getValue();
 }

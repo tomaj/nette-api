@@ -7,7 +7,7 @@ class NoAuthorization implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
-    public function authorized()
+    public function authorized(): bool
     {
         return true;
     }
@@ -15,8 +15,8 @@ class NoAuthorization implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
-    public function getErrorMessage()
+    public function getErrorMessage(): ?string
     {
-        return false;
+        return null;
     }
 }

@@ -4,13 +4,13 @@ namespace Tomaj\NetteApi;
 
 interface EndpointInterface
 {
-    public function getMethod();
+    public function getMethod(): string;
 
-    public function getVersion();
+    public function getVersion(): int;
 
-    public function getPackage();
+    public function getPackage(): string;
 
-    public function getApiAction();
+    public function getApiAction(): ?string;
 
-    public function getUrl();
+    public function getUrl(): string;
 }

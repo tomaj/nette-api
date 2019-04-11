@@ -4,9 +4,7 @@ namespace Tomaj\NetteApi\Misc;
 
 class StaticIpDetector implements IpDetectorInterface
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     private $ip;
 
     /**
@@ -15,7 +13,7 @@ class StaticIpDetector implements IpDetectorInterface
      *
      * @param string $ip
      */
-    public function __construct($ip)
+    public function __construct(string $ip)
     {
         $this->ip = $ip;
     }
@@ -23,7 +21,7 @@ class StaticIpDetector implements IpDetectorInterface
     /**
      * {@inheritdoc}
      */
-    public function getRequestIp()
+    public function getRequestIp(): string
     {
         return $this->ip;
     }
