@@ -7,7 +7,7 @@ use Nette\ComponentModel\IContainer;
 use Tomaj\NetteApi\ApiDecider;
 use Closure;
 use Exception;
-use Tomaj\NetteApi\HandlerSettings;
+use Tomaj\NetteApi\Api;
 
 class ApiListingControl extends Control
 {
@@ -45,8 +45,8 @@ class ApiListingControl extends Control
     }
 
     /**
-     * @param HandlerSettings[] $handlers
-     * @return HandlerSettings[]
+     * @param Api[] $handlers
+     * @return Api[]
      */
     private function sortHandlers($handlers)
     {

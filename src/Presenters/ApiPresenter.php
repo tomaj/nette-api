@@ -10,7 +10,7 @@ use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
-use Tomaj\NetteApi\HandlerSettings;
+use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Response\JsonApiResponse;
@@ -114,7 +114,7 @@ class ApiPresenter extends Presenter
     /**
      * Get handler settings (endpoint, handler, authorization)
      *
-     * @return HandlerSettings
+     * @return Api
      */
     private function getHandler()
     {
