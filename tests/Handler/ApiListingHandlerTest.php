@@ -35,7 +35,7 @@ class ApiListingHandlerTest extends TestCase
         );
 
         $result = $apiDecider->getApiHandler('GET', 2, 'endpoints');
-        $handler = $result['handler'];
+        $handler = $result->getHandler();
 
         $response = $handler->handle([]);
         $this->assertEquals(200, $response->getCode());
@@ -62,7 +62,7 @@ class ApiListingHandlerTest extends TestCase
         );
 
         $result = $apiDecider->getApiHandler('GET', 1, 'endpoints');
-        $handler = $result['handler'];
+        $handler = $result->getHandler();
 
         $response = $handler->handle([]);
         $this->assertEquals(200, $response->getCode());

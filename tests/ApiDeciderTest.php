@@ -17,9 +17,9 @@ class ApiDeciderTest extends TestCase
         $apiDecider = new ApiDecider();
         $result = $apiDecider->getApiHandler('POST', 1, 'article', 'list');
 
-        $this->assertInstanceOf(EndpointIdentifier::class, $result['endpoint']);
-        $this->assertInstanceOf(NoAuthorization::class, $result['authorization']);
-        $this->assertInstanceOf(DefaultHandler::class, $result['handler']);
+        $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
+        $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
+        $this->assertInstanceOf(DefaultHandler::class, $result->getHandler());
     }
 
     public function testFindRightHandler()
@@ -33,14 +33,14 @@ class ApiDeciderTest extends TestCase
 
         $result = $apiDecider->getApiHandler('POST', 2, 'comments', 'list');
 
-        $this->assertInstanceOf(EndpointIdentifier::class, $result['endpoint']);
-        $this->assertInstanceOf(NoAuthorization::class, $result['authorization']);
-        $this->assertInstanceOf(AlwaysOkHandler::class, $result['handler']);
+        $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
+        $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
+        $this->assertInstanceOf(AlwaysOkHandler::class, $result->getHandler());
 
-        $this->assertEquals('POST', $result['endpoint']->getMethod());
-        $this->assertEquals(2, $result['endpoint']->getVersion());
-        $this->assertEquals('comments', $result['endpoint']->getPackage());
-        $this->assertEquals('list', $result['endpoint']->getApiAction());
+        $this->assertEquals('POST', $result->getEndpoint()->getMethod());
+        $this->assertEquals(2, $result->getEndpoint()->getVersion());
+        $this->assertEquals('comments', $result->getEndpoint()->getPackage());
+        $this->assertEquals('list', $result->getEndpoint()->getApiAction());
     }
 
     public function testGetHandlers()
@@ -74,6 +74,6 @@ class ApiDeciderTest extends TestCase
         $this->assertEquals(1, count($apiDecider->getHandlers()));
 
         $handler = $apiDecider->getApiHandler('OPTIONS', 2, 'comments', 'list');
-        $this->assertInstanceOf(CorsPreflightHandler::class, $handler['handler']);
+        $this->assertInstanceOf(CorsPreflightHandler::class, $handler->getHandler());
     }
 }

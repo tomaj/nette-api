@@ -11,14 +11,10 @@ use Tomaj\NetteApi\Handlers\DefaultHandler;
 
 class ApiDecider
 {
-    /**
-     * @var ApiHandlerInterface[]
-     */
+    /** @var HandlerSettings[] */
     private $handlers = [];
 
-    /**
-     * @var ApiHandlerInterface
-     */
+    /** @var ApiHandlerInterface|null */
     private $globalPreflightHandler = null;
 
     /**
@@ -30,30 +26,22 @@ class ApiDecider
      * @param string   $package
      * @param string   $apiAction
      *
-     * @return array
+     * @return HandlerSettings
      */
     public function getApiHandler($method, $version, $package, $apiAction = '')
     {
         foreach ($this->handlers as $handler) {
-            $identifier = $handler['endpoint'];
+            $identifier = $handler->getEndpoint();
             if ($method == $identifier->getMethod() && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
                 $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
-                $handler['handler']->setEndpointIdentifier($endpointIdentifier);
+                $handler->getHandler()->setEndpointIdentifier($endpointIdentifier);
                 return $handler;
             }
             if ($method == 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
-                return [
-                    'endpoint' => new EndpointIdentifier('OPTION', $version, $package, $apiAction),
-                    'authorization' => new NoAuthorization(),
-                    'handler' => $this->globalPreflightHandler,
-                ];
+                return new HandlerSettings(new EndpointIdentifier('OPTION', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
             }
         }
-        return [
-            'endpoint' => new EndpointIdentifier($method, $version, $package, $apiAction),
-            'authorization' => new NoAuthorization(),
-            'handler' => new DefaultHandler()
-        ];
+        return new HandlerSettings(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
     }
 
     public function enableGlobalPreflight(ApiHandlerInterface $corsHandler = null)
@@ -75,18 +63,14 @@ class ApiDecider
      */
     public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization)
     {
-        $this->handlers[] = [
-            'endpoint' => $endpointIdentifier,
-            'handler' => $handler,
-            'authorization' => $apiAuthorization,
-        ];
+        $this->handlers[] = new HandlerSettings($endpointIdentifier, $handler, $apiAuthorization);
         return $this;
     }
 
     /**
      * Get all registered handlers
      *
-     * @return Handlers\ApiHandlerInterface[]
+     * @return HandlerSettings[]
      */
     public function getHandlers()
     {

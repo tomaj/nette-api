@@ -3,6 +3,7 @@
 namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\HandlerSettings;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
@@ -51,19 +52,19 @@ class ApiListingHandler extends BaseHandler
      */
     private function getHandlersList($version)
     {
-        $versionHandlers = array_filter($this->apiDecider->getHandlers(), function ($handler) use ($version) {
-            return $version == $handler['endpoint']->getVersion();
+        $versionHandlers = array_filter($this->apiDecider->getHandlers(), function (HandlerSettings $handler) use ($version) {
+            return $version == $handler->getEndpoint()->getVersion();
         });
 
-        return array_map(function ($handler) {
+        return array_map(function (HandlerSettings $handler) {
             return [
-                'method' => $handler['endpoint']->getMethod(),
-                'version' => $handler['endpoint']->getVersion(),
-                'package' => $handler['endpoint']->getPackage(),
-                'api_action' => $handler['endpoint']->getApiAction(),
-                'authorization' => get_class($handler['authorization']),
-                'url' => $this->apiLink->link($handler['endpoint']),
-                'params' => $this->createParamsList($handler['handler']),
+                'method' => $handler->getEndpoint()->getMethod(),
+                'version' => $handler->getEndpoint()->getVersion(),
+                'package' => $handler->getEndpoint()->getPackage(),
+                'api_action' => $handler->getEndpoint()->getApiAction(),
+                'authorization' => get_class($handler->getAuthorization()),
+                'url' => $this->apiLink->link($handler->getEndpoint()),
+                'params' => $this->createParamsList($handler->getHandler()),
             ];
         }, $versionHandlers);
     }
