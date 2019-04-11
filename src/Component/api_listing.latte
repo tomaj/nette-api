@@ -1,5 +1,5 @@
 <div class="api-listing">
-    <div n:foreach="$handlers as $version => $versionHandlers" class="listing-verions listing-version-{$version}">
+    <div n:foreach="$apis as $version => $versionApis" class="listing-verions listing-version-{$version}">
         <h3>Version {$version}</h3>
 
         <div class="table-responsive">
@@ -13,13 +13,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr n:foreach="$versionHandlers as $handler">
-                        <td><span class="label label-default">{$handler['endpoint']->getMethod()}</span></td>
+                    <tr n:foreach="$versionApis as $api">
+                        <td><span class="label label-default">{$api->getEndpoint()->getMethod()}</span></td>
                         <td>
-                            <a href="{link Select! $handler['endpoint']->getMethod(), $handler['endpoint']->getVersion(), $handler['endpoint']->getPackage(), $handler['endpoint']->getApiAction()}"><b>/{$handler['endpoint']->getUrl()}</b></a>
+                            <a href="{link Select! $api->getEndpoint()->getMethod(), $api->getEndpoint()->getVersion(), $api->getEndpoint()->getPackage(), $api->getEndpoint()->getApiAction()}"><b>/{$api->getEndpoint()->getUrl()}</b></a>
                         </td>
-                        <td>{get_class($handler['handler'])}</td>
-                        <td>{get_class($handler['authorization'])}</td>
+                        <td>{get_class($api->getHandler())}</td>
+                        <td>{get_class($api->getAuthorization())}</td>
                     </tr>
                 </tbody>
             </table>

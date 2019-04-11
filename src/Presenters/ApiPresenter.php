@@ -10,6 +10,7 @@ use Nette\Http\Response;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Response\JsonApiResponse;
@@ -73,9 +74,9 @@ class ApiPresenter extends Presenter
 
         $this->sendCorsHeaders();
 
-        $hand = $this->getHandler();
-        $handler = $hand['handler'];
-        $authorization = $hand['authorization'];
+        $api = $this->getApi();
+        $handler = $api->getHandler();
+        $authorization = $api->getAuthorization();
 
         if ($this->checkAuth($authorization) === false) {
             return;
@@ -111,13 +112,13 @@ class ApiPresenter extends Presenter
     }
 
     /**
-     * Get handler information triplet (endpoint, handler, authorization)
+     * Get handler settings (endpoint, handler, authorization)
      *
-     * @return array
+     * @return Api
      */
-    private function getHandler()
+    private function getApi()
     {
-        return $this->apiDecider->getApiHandler(
+        return $this->apiDecider->getApi(
             $this->getRequest()->getMethod(),
             $this->params['version'],
             $this->params['package'],

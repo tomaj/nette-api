@@ -23,7 +23,7 @@ class ApiPresenterTest extends TestCase
     public function testSimpleResponse()
     {
         $apiDecider = new ApiDecider();
-        $apiDecider->addApiHandler(new EndpointIdentifier('GET', 1, 'test', 'api'), new AlwaysOkHandler(), new NoAuthorization());
+        $apiDecider->addApi(new EndpointIdentifier('GET', 1, 'test', 'api'), new AlwaysOkHandler(), new NoAuthorization());
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
@@ -41,7 +41,7 @@ class ApiPresenterTest extends TestCase
     public function testWithAuthorization()
     {
         $apiDecider = new ApiDecider();
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('GET', 1, 'test', 'api'),
             new AlwaysOkHandler(),
             new BearerTokenAuthorization(new StaticBearerTokenRepository([]), new IpDetector())
@@ -61,7 +61,7 @@ class ApiPresenterTest extends TestCase
     public function testWithParams()
     {
         $apiDecider = new ApiDecider();
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('GET', 1, 'test', 'api'),
             new EchoHandler(),
             new NoAuthorization()

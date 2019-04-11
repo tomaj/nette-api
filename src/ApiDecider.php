@@ -11,14 +11,10 @@ use Tomaj\NetteApi\Handlers\DefaultHandler;
 
 class ApiDecider
 {
-    /**
-     * @var ApiHandlerInterface[]
-     */
-    private $handlers = [];
+    /** @var Api[] */
+    private $apis = [];
 
-    /**
-     * @var ApiHandlerInterface
-     */
+    /** @var ApiHandlerInterface|null */
     private $globalPreflightHandler = null;
 
     /**
@@ -30,30 +26,22 @@ class ApiDecider
      * @param string   $package
      * @param string   $apiAction
      *
-     * @return array
+     * @return Api
      */
-    public function getApiHandler($method, $version, $package, $apiAction = '')
+    public function getApi(string $method, int $version, string $package, ?string $apiAction = null)
     {
-        foreach ($this->handlers as $handler) {
-            $identifier = $handler['endpoint'];
+        foreach ($this->apis as $api) {
+            $identifier = $api->getEndpoint();
             if ($method == $identifier->getMethod() && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
                 $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
-                $handler['handler']->setEndpointIdentifier($endpointIdentifier);
-                return $handler;
+                $api->getHandler()->setEndpointIdentifier($endpointIdentifier);
+                return $api;
             }
             if ($method == 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
-                return [
-                    'endpoint' => new EndpointIdentifier('OPTION', $version, $package, $apiAction),
-                    'authorization' => new NoAuthorization(),
-                    'handler' => $this->globalPreflightHandler,
-                ];
+                return new Api(new EndpointIdentifier('OPTION', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
             }
         }
-        return [
-            'endpoint' => new EndpointIdentifier($method, $version, $package, $apiAction),
-            'authorization' => new NoAuthorization(),
-            'handler' => new DefaultHandler()
-        ];
+        return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
     }
 
     public function enableGlobalPreflight(ApiHandlerInterface $corsHandler = null)
@@ -65,31 +53,34 @@ class ApiDecider
     }
 
     /**
-     * Register new api handler
-     *
-     * @param EndpointInterface         $endpointIdentifier
-     * @param ApiHandlerInterface       $handler
-     * @param ApiAuthorizationInterface $apiAuthorization
-     *
-     * @return $this
+     * @deprecated use addApi instead
      */
     public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization)
     {
-        $this->handlers[] = [
-            'endpoint' => $endpointIdentifier,
-            'handler' => $handler,
-            'authorization' => $apiAuthorization,
-        ];
+        return $this->addApi($endpointIdentifier, $handler, $apiAuthorization);
+    }
+
+    /**
+     * Register new api handler
+     *
+     * @param EndpointInterface $endpointIdentifier
+     * @param ApiHandlerInterface $handler
+     * @param ApiAuthorizationInterface $apiAuthorization
+     * @return self
+     */
+    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization): self
+    {
+        $this->apis[] = new Api($endpointIdentifier, $handler, $apiAuthorization);
         return $this;
     }
 
     /**
-     * Get all registered handlers
+     * Get all registered apis
      *
-     * @return Handlers\ApiHandlerInterface[]
+     * @return Api[]
      */
-    public function getHandlers()
+    public function getApis(): array
     {
-        return $this->handlers;
+        return $this->apis;
     }
 }

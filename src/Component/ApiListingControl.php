@@ -7,14 +7,14 @@ use Nette\ComponentModel\IContainer;
 use Tomaj\NetteApi\ApiDecider;
 use Closure;
 use Exception;
+use Tomaj\NetteApi\Api;
 
 class ApiListingControl extends Control
 {
-    /**
-     * @var ApiDecider
-     */
+    /** @var ApiDecider */
     private $apiDecider;
 
+    /** @var Closure|null */
     private $clickCallback;
 
     public function __construct(IContainer $parent, $name, ApiDecider $apiDecider)
@@ -29,8 +29,8 @@ class ApiListingControl extends Control
 
     public function render()
     {
-        $handlers = $this->apiDecider->getHandlers();
-        $this->getTemplate()->add('handlers', $this->sortHandlers($handlers));
+        $apis = $this->apiDecider->getApis();
+        $this->getTemplate()->add('apis', $this->groupApis($apis));
         $this->getTemplate()->setFile(__DIR__ . '/api_listing.latte');
         $this->getTemplate()->render();
     }
@@ -44,11 +44,15 @@ class ApiListingControl extends Control
         $this->clickCallback->__invoke($method, $version, $package, $apiAction);
     }
 
-    private function sortHandlers($handlers)
+    /**
+     * @param Api[] $handlers
+     * @return array
+     */
+    private function groupApis($handlers)
     {
         $versionHandlers = [];
         foreach ($handlers as $handler) {
-            $endPoint = $handler['endpoint'];
+            $endPoint = $handler->getEndpoint();
             if (!isset($versionHandlers[$endPoint->getVersion()])) {
                 $versionHandlers[$endPoint->getVersion()] = [];
             }
