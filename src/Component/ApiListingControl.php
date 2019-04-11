@@ -29,8 +29,8 @@ class ApiListingControl extends Control
 
     public function render()
     {
-        $handlers = $this->apiDecider->getHandlers();
-        $this->getTemplate()->add('handlers', $this->sortHandlers($handlers));
+        $apis = $this->apiDecider->getApis();
+        $this->getTemplate()->add('apis', $this->groupApis($apis));
         $this->getTemplate()->setFile(__DIR__ . '/api_listing.latte');
         $this->getTemplate()->render();
     }
@@ -46,9 +46,9 @@ class ApiListingControl extends Control
 
     /**
      * @param Api[] $handlers
-     * @return Api[]
+     * @return array
      */
-    private function sortHandlers($handlers)
+    private function groupApis($handlers)
     {
         $versionHandlers = [];
         foreach ($handlers as $handler) {

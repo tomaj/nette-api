@@ -22,19 +22,19 @@ class ApiListingHandlerTest extends TestCase
         $apiLink = new ApiLink($linkGenerator);
 
         $apiDecider = new ApiDecider();
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('POST', 2, 'comments', 'list'),
             new AlwaysOkHandler(),
             new NoAuthorization()
         );
 
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('GET', 2, 'endpoints'),
             new ApiListingHandler($apiDecider, $apiLink),
             new NoAuthorization()
         );
 
-        $result = $apiDecider->getApiHandler('GET', 2, 'endpoints');
+        $result = $apiDecider->getApi('GET', 2, 'endpoints');
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);
@@ -49,19 +49,19 @@ class ApiListingHandlerTest extends TestCase
         $apiLink = new ApiLink($linkGenerator);
 
         $apiDecider = new ApiDecider();
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('POST', 1, 'comments', 'list'),
             new EchoHandler(),
             new NoAuthorization()
         );
 
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('GET', 1, 'endpoints'),
             new ApiListingHandler($apiDecider, $apiLink),
             new NoAuthorization()
         );
 
-        $result = $apiDecider->getApiHandler('GET', 1, 'endpoints');
+        $result = $apiDecider->getApi('GET', 1, 'endpoints');
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);

@@ -74,9 +74,9 @@ class ApiPresenter extends Presenter
 
         $this->sendCorsHeaders();
 
-        $hand = $this->getHandler();
-        $handler = $hand->getHandler();
-        $authorization = $hand->getAuthorization();
+        $api = $this->getApi();
+        $handler = $api->getHandler();
+        $authorization = $api->getAuthorization();
 
         if ($this->checkAuth($authorization) === false) {
             return;
@@ -116,9 +116,9 @@ class ApiPresenter extends Presenter
      *
      * @return Api
      */
-    private function getHandler()
+    private function getApi()
     {
-        return $this->apiDecider->getApiHandler(
+        return $this->apiDecider->getApi(
             $this->getRequest()->getMethod(),
             $this->params['version'],
             $this->params['package'],
