@@ -70,4 +70,13 @@ new ApiListingControl($apiDecider)
 Some parameters were strictly typed:
 - second parameter in `JsonApiResponse::__construct` (`$payload` formerly known as `$data`) is now `array`
 - fifth parameter in `JsonApiResponse::__construct` (`$expiration`) is now `DateTimeInteface` or `null`
-- fourth parameter in `InputParam::__construc` (`$availableValues`) is now `array` or `null`
+- fourth parameter in `InputParam::__construct` (`$availableValues`) is now `array` or `null`
+
+### Changed events
+Registration of event onClick in ApiListingControl.
+Use:
+```
+$apiListing->onClick[] = function ($method, $version, $package, $apiAction) {
+    ...
+};
+```

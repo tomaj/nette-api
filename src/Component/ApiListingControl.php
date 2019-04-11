@@ -4,8 +4,6 @@ namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
 use Tomaj\NetteApi\ApiDecider;
-use Closure;
-use Exception;
 use Tomaj\NetteApi\Api;
 
 class ApiListingControl extends Control
@@ -13,17 +11,11 @@ class ApiListingControl extends Control
     /** @var ApiDecider */
     private $apiDecider;
 
-    /** @var Closure|null */
-    private $clickCallback;
+    public $onClick = [];
 
     public function __construct(ApiDecider $apiDecider)
     {
         $this->apiDecider = $apiDecider;
-    }
-
-    public function onClick(Closure $callback): void
-    {
-        $this->clickCallback = $callback;
     }
 
     public function render(): void
@@ -34,13 +26,9 @@ class ApiListingControl extends Control
         $this->getTemplate()->render();
     }
 
-    public function handleSelect(string $method, int $version, string $package, ?string $apiAction = null)
+    public function handleSelect(string $method, int $version, string $package, ?string $apiAction = null): void
     {
-        if (!$this->clickCallback) {
-            throw new Exception('You have to set onClick callback to component!');
-        }
-
-        $this->clickCallback->__invoke($method, $version, $package, $apiAction);
+        $this->onClick($method, $version, $package, $apiAction);
     }
 
     /**

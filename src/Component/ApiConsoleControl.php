@@ -10,27 +10,27 @@ use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
-use Tomaj\NetteApi\EndpointIdentifier;
+use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
 use Tomaj\NetteApi\Params\InputParam;
 
 class ApiConsoleControl extends Control
 {
+    private $request;
+
     private $endpoint;
 
     private $handler;
 
     private $authorization;
 
-    private $request;
-
-    public function __construct(IRequest $request, EndpointIdentifier $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
+    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
     {
+        $this->request = $request;
         $this->endpoint = $endpoint;
         $this->handler = $handler;
         $this->authorization = $authorization;
-        $this->request = $request;
     }
 
     public function render(): void
