@@ -3,74 +3,91 @@
 namespace Tomaj\NetteApi\Response;
 
 use DateTimeInterface;
-use Nette;
-use Nette\Application\Responses\JsonResponse;
+use Nette\Http\IRequest;
+use Nette\Http\IResponse;
+use Nette\SmartObject;
+use Nette\Utils\Json;
 
-class JsonApiResponse extends JsonResponse
+class JsonApiResponse implements ResponseInterface
 {
-    /**
-     * @var integer
-     */
+    use SmartObject;
+
+    /** @var integer */
     private $code;
 
-    /**
-     * @var string
-     */
+    /** @var mixed */
+    private $payload;
+
+    /** @var string */
+    private $contentType;
+
+    /** @var string */
     private $charset;
 
-    /**
-     * @var string|int|bool|DateTimeInterface
-     */
+    /** @var bool|DateTimeInterface|int|string */
     private $expiration;
 
     /**
-     * Create JsonApiResponse
-     * This class only wrap JsonResponse from Nette and add possibility
-     * to setup response code and automaticaly set content type
+     * This class is only copy of JsonResponse from Nette with added possibility
+     * to setup response code, content type, charset and expiration
      *
      * @param integer $code
      * @param mixed $data
      * @param string $contentType
      * @param string $charset
-     * @param string|int|bool|DateTimeInterface $expiration
+     * @param bool|DateTimeInterface|int|string $expiration
      */
-    public function __construct($code, $data, $contentType = 'application/json', $charset = 'utf-8', $expiration = false)
+    public function __construct($code, $payload, $contentType = 'application/json', $charset = 'utf-8', $expiration = false)
     {
-        parent::__construct($data, $contentType);
-        $this->charset = $charset;
         $this->code = $code;
+        $this->payload = $payload;
+        $this->contentType = $contentType ?: 'application/json';
+        $this->charset = $charset;
         $this->expiration = $expiration;
     }
 
     /**
-     * Return api response http code
-     *
-     * @return integer
+     * {@inheritdoc}
      */
-    public function getCode()
+    public function getCode(): int
     {
         return $this->code;
     }
 
     /**
-     * Return encoding charset for http response
-     *
-     * @return string
+     * @return mixed
      */
-    public function getCharset()
+    public function getPayload()
+    {
+        return $this->payload;
+    }
+
+    public function getContentType(): string
+    {
+        return $this->contentType;
+    }
+
+    public function getCharset(): string
     {
         return $this->charset;
     }
 
     /**
-     * Sends response to output.
-     * @return void
+     * @return bool|DateTimeInterface|int|string
      */
-    public function send(Nette\Http\IRequest $httpRequest, Nette\Http\IResponse $httpResponse)
+    public function getExpiration()
     {
-        $httpResponse->setContentType($this->getContentType(), $this->charset);
-        $httpResponse->setExpiration($this->expiration);
-        $result = Nette\Utils\Json::encode($this->getPayload());
+        return $this->expiration;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function send(IRequest $httpRequest, IResponse $httpResponse): void
+    {
+        $httpResponse->setContentType($this->getContentType(), $this->getCharset());
+        $httpResponse->setExpiration($this->getExpiration());
+        $result = Json::encode($this->getPayload());
         $httpResponse->setHeader('Content-Length', strlen($result));
         echo $result;
     }

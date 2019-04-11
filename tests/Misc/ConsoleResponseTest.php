@@ -2,10 +2,10 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\ConsoleResponse;
 
-class ConsoleResponseTest extends PHPUnit_Framework_TestCase
+class ConsoleResponseTest extends TestCase
 {
     public function testLogRequest()
     {

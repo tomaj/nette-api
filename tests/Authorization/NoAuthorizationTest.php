@@ -2,10 +2,10 @@
 
 namespace Tomaj\NetteApi\Test\Handler;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 
-class NoAuthorizationTest extends PHPUnit_Framework_TestCase
+class NoAuthorizationTest extends TestCase
 {
     public function testResponse()
     {

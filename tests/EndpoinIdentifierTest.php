@@ -2,10 +2,10 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\EndpointIdentifier;
 
-class EndpointIdentifierTest extends PHPUnit_Framework_TestCase
+class EndpointIdentifierTest extends TestCase
 {
     public function testValidation()
     {

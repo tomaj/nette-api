@@ -2,10 +2,10 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\IpDetector;
 
-class IpDetectorTest extends PHPUnit_Framework_TestCase
+class IpDetectorTest extends TestCase
 {
     public function testValidation()
     {

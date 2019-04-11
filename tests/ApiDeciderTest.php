@@ -2,37 +2,29 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
-use Nette\Application\LinkGenerator;
-use Nette\Application\Routers\SimpleRouter;
-use Nette\Http\Url;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
-use Tomaj\NetteApi\Link\ApiLink;
+use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
+use Tomaj\NetteApi\Handlers\DefaultHandler;
 
-class ApiDeciderTest extends PHPUnit_Framework_TestCase
+class ApiDeciderTest extends TestCase
 {
     public function testDefaultHandlerWithNoRegisteredHandlers()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
-
-        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider = new ApiDecider();
         $result = $apiDecider->getApiHandler('POST', 1, 'article', 'list');
 
-        $this->assertInstanceOf('Tomaj\NetteApi\EndpointIdentifier', $result['endpoint']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Authorization\NoAuthorization', $result['authorization']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Handlers\DefaultHandler', $result['handler']);
+        $this->assertInstanceOf(EndpointIdentifier::class, $result['endpoint']);
+        $this->assertInstanceOf(NoAuthorization::class, $result['authorization']);
+        $this->assertInstanceOf(DefaultHandler::class, $result['handler']);
     }
 
     public function testFindRightHandler()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
-
-        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider = new ApiDecider();
         $apiDecider->addApiHandler(
             new EndpointIdentifier('POST', 2, 'comments', 'list'),
             new AlwaysOkHandler(),
@@ -41,9 +33,9 @@ class ApiDeciderTest extends PHPUnit_Framework_TestCase
 
         $result = $apiDecider->getApiHandler('POST', 2, 'comments', 'list');
 
-        $this->assertInstanceOf('Tomaj\NetteApi\EndpointIdentifier', $result['endpoint']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Authorization\NoAuthorization', $result['authorization']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Handlers\AlwaysOkHandler', $result['handler']);
+        $this->assertInstanceOf(EndpointIdentifier::class, $result['endpoint']);
+        $this->assertInstanceOf(NoAuthorization::class, $result['authorization']);
+        $this->assertInstanceOf(AlwaysOkHandler::class, $result['handler']);
 
         $this->assertEquals('POST', $result['endpoint']->getMethod());
         $this->assertEquals(2, $result['endpoint']->getVersion());
@@ -53,10 +45,7 @@ class ApiDeciderTest extends PHPUnit_Framework_TestCase
 
     public function testGetHandlers()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
-
-        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider = new ApiDecider();
 
         $this->assertEquals(0, count($apiDecider->getHandlers()));
 
@@ -71,10 +60,7 @@ class ApiDeciderTest extends PHPUnit_Framework_TestCase
 
     public function testGlobalPreflight()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
-
-        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider = new ApiDecider();
         $apiDecider->enableGlobalPreflight();
 
         $this->assertEquals(0, count($apiDecider->getHandlers()));
@@ -88,6 +74,6 @@ class ApiDeciderTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(1, count($apiDecider->getHandlers()));
 
         $handler = $apiDecider->getApiHandler('OPTIONS', 2, 'comments', 'list');
-        $this->assertInstanceOf('Tomaj\NetteApi\Handlers\CorsPreflightHandler', $handler['handler']);
+        $this->assertInstanceOf(CorsPreflightHandler::class, $handler['handler']);
     }
 }
