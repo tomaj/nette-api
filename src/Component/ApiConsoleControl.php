@@ -13,7 +13,6 @@ use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
-use Tomaj\NetteApi\Params\InputParam;
 
 class ApiConsoleControl extends Control
 {
@@ -36,6 +35,7 @@ class ApiConsoleControl extends Control
     public function render(): void
     {
         $this->getTemplate()->setFile(__DIR__ . '/console.latte');
+        $this->getTemplate()->add('handler', $this->handler);
         $this->getTemplate()->render();
     }
 
@@ -66,7 +66,7 @@ class ApiConsoleControl extends Control
 
         if ($this->authorization instanceof BearerTokenAuthorization) {
             $form->addText('token', 'Token')
-                ->setAttribute('placeholder', 'Enter token');
+                ->setHtmlAttribute('placeholder', 'Enter token');
         } elseif ($this->authorization instanceof NoAuthorization) {
             $form->addText('authorization', 'Authorization')
                 ->setDisabled(true);
@@ -76,45 +76,11 @@ class ApiConsoleControl extends Control
         $form->addCheckbox('send_session_id', 'Send session id cookie');
 
         $params = $this->handler->params();
-        $jsonField = null;
-        $jsonParams = [];
         foreach ($params as $param) {
-            $count = $param->isMulti() ? 5 : 1;
-            for ($i = 0; $i < $count; $i++) {
-                $key = $param->getKey();
-                if ($param->isMulti()) {
-                    $key = $key . '___' . $i;
-                }
-
-                if ($param->getAvailableValues() && is_array($param->getAvailableValues())) {
-                    $c = $form->addSelect($key, $this->getParamLabel($param), array_combine($param->getAvailableValues(), $param->getAvailableValues()));
-                    if (!$param->isRequired()) {
-                        $c->setPrompt('Select ' . $this->getLabel($param));
-                    }
-                } elseif ($param->getAvailableValues() && is_string($param->getAvailableValues())) {
-                    $c = $form->addText($key, $this->getParamLabel($param))->setDisabled(true);
-                    $defaults[$key] = $param->getAvailableValues();
-                } elseif ($param->getType() == InputParam::TYPE_FILE) {
-                    $c = $form->addUpload($key, $this->getParamLabel($param));
-                } elseif ($param->getType() == InputParam::TYPE_POST_RAW) {
-                    $c = $form->addTextArea('post_raw', $this->getParamLabel($param))
-                        ->setAttribute('rows', 10);
-                } elseif ($param->getType() == InputParam::TYPE_POST_JSON_KEY) {
-                    if ($jsonField === null) {
-                        $jsonField = $form->addTextArea('post_raw', 'JSON')
-                            ->setOption('description', 'Empty string means "key is required", null means "key is optional"');
-                    }
-                    $jsonParams[$key] = $param->isRequired() ? '' : null;
-                } else {
-                    $c = $form->addText($key, $this->getParamLabel($param));
-                }
-            }
-        }
-        if ($jsonField !== null && $jsonParams) {
-            $jsonField->setDefaultValue(json_encode($jsonParams, JSON_PRETTY_PRINT));
+            $param->updateConsoleForm($form);
         }
 
-        $form->addSubmit('send', 'Otestuj')
+        $form->addSubmit('send', 'Try api')
             ->getControlPrototype()
             ->setName('button')
             ->setHtml('<i class="fa fa-cloud-upload"></i> Try api');
@@ -123,21 +89,6 @@ class ApiConsoleControl extends Control
 
         $form->onSuccess[] = array($this, 'formSucceeded');
         return $form;
-    }
-
-    private function getLabel(InputParam $param): string
-    {
-        return ucfirst(str_replace('_', ' ', $param->getKey()));
-    }
-
-    private function getParamLabel(InputParam $param): string
-    {
-        $title = $this->getLabel($param);
-        if ($param->isRequired()) {
-            $title .= ' *';
-        }
-        $title .= ' (' . $param->getType() . ')';
-        return $title;
     }
 
     public function formSucceeded(Form $form, ArrayHash $values): void

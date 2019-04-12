@@ -1,5 +1,13 @@
 <div class="api-listing">
     <div n:foreach="$apis as $version => $versionApis" class="listing-verions listing-version-{$version}">
+        {php $showSummary = false}
+        {foreach $versionApis as $api}
+            {if $api->getHandler()->summary()}
+                {php $showSummary = true}
+                {breakIf true}
+            {/if}
+        {/foreach}
+
         <h3>Version {$version}</h3>
 
         <div class="table-responsive">
@@ -9,6 +17,7 @@
                         <th>Method</th>
                         <th>Url</th>
                         <th>Handler</th>
+                        <th n:if="$showSummary">Summary</th>
                         <th>Authorization</th>
                     </tr>
                 </thead>
@@ -16,9 +25,12 @@
                     <tr n:foreach="$versionApis as $api">
                         <td><span class="label label-default">{$api->getEndpoint()->getMethod()}</span></td>
                         <td>
-                            <a href="{link Select! $api->getEndpoint()->getMethod(), $api->getEndpoint()->getVersion(), $api->getEndpoint()->getPackage(), $api->getEndpoint()->getApiAction()}"><b>/{$api->getEndpoint()->getUrl()}</b></a>
+                            <s n:tag-if="$api->getHandler()->deprecated()" title="Deprecated">
+                                <a href="{link Select! $api->getEndpoint()->getMethod(), $api->getEndpoint()->getVersion(), $api->getEndpoint()->getPackage(), $api->getEndpoint()->getApiAction()}"><b>/{$api->getEndpoint()->getUrl()}</b></a>
+                            </s>
                         </td>
                         <td>{get_class($api->getHandler())}</td>
+                        <td n:if="$showSummary">{$api->getHandler()->summary()}</td>
                         <td>{get_class($api->getAuthorization())}</td>
                     </tr>
                 </tbody>

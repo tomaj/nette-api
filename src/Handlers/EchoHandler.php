@@ -2,7 +2,7 @@
 
 namespace Tomaj\NetteApi\Handlers;
 
-use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
 
@@ -14,8 +14,8 @@ class EchoHandler extends BaseHandler
     public function params(): array
     {
         return [
-            new InputParam(InputParam::TYPE_GET, 'status', InputParam::REQUIRED, ['ok', 'error']),
-            new InputParam(InputParam::TYPE_GET, 'message'),
+            (new GetInputParam('status'))->setRequired()->setAvailableValues(['ok', 'error']),
+            new GetInputParam('message'),
         ];
     }
 

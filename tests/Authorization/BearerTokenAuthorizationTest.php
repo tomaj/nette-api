@@ -99,4 +99,18 @@ class BearerTokenAuthorizationTest extends TestCase
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
     }
+
+    public function testTokenWithDisabledAccess()
+    {
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
+        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => null]);
+
+        $ipDetector = new StaticIpDetector('5.6.2.1');
+        $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
+        $this->assertFalse($bearerTokenAuthorization->authorized());
+
+        $ipDetector = new StaticIpDetector('5.6.2.2');
+        $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
+        $this->assertFalse($bearerTokenAuthorization->authorized());
+    }
 }

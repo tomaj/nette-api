@@ -55,9 +55,9 @@ services:
   - Tomaj\NetteApi\Misc\IpDetector
   apiDecider:
     factory: Tomaj\NetteApi\ApiDecider
-      setup:
-        - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\NoAuthorization())
-        - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
+    setup:
+      - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\NoAuthorization())
+      - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
 ```
 
 As you can see in example, you can register as many endpoints as you want with different configurations. Nette-Api supports API versioning from the beginning.
@@ -179,8 +179,8 @@ Example with user detail:
 namespace App\MyApi\v1\Handlers;
 
 use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Response\ResponseInterface;
 
 class UsersDetailHandler extends Basehandler
@@ -196,7 +196,7 @@ class UsersDetailHandler extends Basehandler
     public function params(): array
     {
         return [
-            new InputParam(InputParam::TYPE_GET, 'id', InputParam::REQUIRED),
+            (new GetInputParam('id'))->setRequired(),
         ];
     }
 
@@ -224,12 +224,12 @@ This is table with support input types:
 
 | Input type      | Example
 | ----------      | -------
-| POST            | `new InputParam(InputParam::TYPE_POST, 'key')`
-| GET             | `new InputParam(InputParam::TYPE_GET, 'key')`
-| FILE            | `new InputParam(InputParam::TYPE_FILE, 'key')`
-| COOKIE          | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
-| RAW POST        | `new InputParam(InputParam::TYPE_POST_RAW, 'key')`
-| JSON            | `new InputParam(InputParam::TYPE_POST_JSON_KEY, 'key')`
+| POST            | `new PostInputParam('key')`
+| GET             | `new GetInputParam('key')`
+| FILE            | `new FileInputParam('key')`
+| COOKIE          | `new CookieInputParam('key')`
+| RAW POST        | `new RawInputParam('key')`
+| JSON            | `new JsonInputParam('key', '{"type": "object"}')`
 
 
 ## Security

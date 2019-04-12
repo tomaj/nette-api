@@ -3,18 +3,29 @@
 namespace Tomaj\NetteApi\Test\Params;
 
 use PHPUnit\Framework\TestCase;
+use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Params\ParamsProcessor;
-use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\PostInputParam;
+use Tomaj\NetteApi\Params\PutInputParam;
 
 class ParamsProcessorTest extends TestCase
 {
     public function testError()
     {
         $processor = new ParamsProcessor([
-            new InputParam(InputParam::TYPE_POST, 'mykey1', InputParam::REQUIRED),
+            (new PostInputParam('mykey1'))->setRequired(),
         ]);
 
-        $this->assertEquals("Invalid value for mykey1", $processor->isError());
+        $this->assertTrue($processor->isError());
+        $this->assertEquals(['mykey1' => ['Field is required']], $processor->getErrors());
+
+        $_GET['mykey2'] = 'x';
+        $processor = new ParamsProcessor([
+            (new GetInputParam('mykey2'))->setRequired()->setAvailableValues(['a', 'b', 'c']),
+        ]);
+
+        $this->assertTrue($processor->isError());
+        $this->assertEquals(['mykey2' => ['Field contains not available value(s)']], $processor->getErrors());
     }
 
     public function testPass()
@@ -24,12 +35,13 @@ class ParamsProcessorTest extends TestCase
         $_POST['mykey3'] = 'asd';
 
         $processor = new ParamsProcessor([
-            new InputParam(InputParam::TYPE_POST, 'mykey1', InputParam::REQUIRED),
-            new InputParam(InputParam::TYPE_GET, 'mykey2', InputParam::REQUIRED),
-            new InputParam(InputParam::TYPE_POST, 'mykey3', InputParam::OPTIONAL),
+            (new PostInputParam('mykey1'))->setRequired(),
+            (new GetInputParam('mykey2'))->setRequired(),
+            new PostInputParam('mykey3'),
         ]);
 
         $this->assertFalse($processor->isError());
+        $this->assertEquals([], $processor->getErrors());
 
         $this->assertEquals($processor->getValues(), [
             'mykey1' => 'hello',
@@ -41,9 +53,9 @@ class ParamsProcessorTest extends TestCase
     public function testOptionalDefaultValue()
     {
         $processor = new ParamsProcessor([
-            new InputParam(InputParam::TYPE_POST, 'mykey10', InputParam::OPTIONAL),
-            new InputParam(InputParam::TYPE_GET, 'mykey20', InputParam::OPTIONAL),
-            new InputParam(InputParam::TYPE_PUT, 'mykey30', InputParam::OPTIONAL),
+            new PostInputParam('mykey10'),
+            new GetInputParam('mykey20'),
+            new PutInputParam('mykey30'),
         ]);
 
         $this->assertEquals($processor->getValues(), [

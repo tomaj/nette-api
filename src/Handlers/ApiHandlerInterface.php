@@ -3,17 +3,41 @@
 namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\EndpointInterface;
-use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\ParamInterface;
 use Tomaj\NetteApi\Response\ResponseInterface;
 
 interface ApiHandlerInterface
 {
     /**
+     * Summary of handler - short description of handler
+     * @return string
+     */
+    public function summary(): string;
+
+    /**
+     * Description of handler
+     * @return string
+     */
+    public function description(): string;
+
+    /**
      * Returns available parameters that handler need
      *
-     * @return InputParam[]
+     * @return ParamInterface[]
      */
     public function params(): array;
+
+    /**
+     * Returns list of tags for handler
+     * @return array
+     */
+    public function tags(): array;
+
+    /**
+     * Marks handler as deprecated
+     * @return bool
+     */
+    public function deprecated(): bool;
 
     /**
      * Main handle method that will be executed when api
