@@ -21,10 +21,21 @@ class ConsoleRequest
     {
         list($postFields, $getFields, $cookieFields, $rawPost, $putFields) = $this->processValues($values);
 
-        $postFields = array_merge($postFields, $additionalValues['postFields'] ?? []);
-        $getFields = array_merge($getFields, $additionalValues['getFields'] ?? []);
-        $cookieFields = array_merge($cookieFields, $additionalValues['cookieFields'] ?? []);
-        $putFields = array_merge($putFields, $additionalValues['putFields'] ?? []);
+        if (isset($additionalValues['postFields'])) {
+            $postFields = array_merge($postFields, $additionalValues['postFields']);
+        }
+
+        if (isset($additionalValues['getFields'])) {
+            $getFields = array_merge($postFields, $additionalValues['getFields']);
+        }
+
+        if (isset($additionalValues['cookieFields'])) {
+            $cookieFields = array_merge($postFields, $additionalValues['cookieFields']);
+        }
+
+        if (isset($additionalValues['putFields'])) {
+            $putFields = array_merge($putFields, $additionalValues['putFields']);
+        }
 
         $postFields = $this->normalizeValues($postFields);
         $getFields = $this->normalizeValues($getFields);
@@ -58,12 +69,18 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_HEADER, true);
-
-        if (count($postFields) || $rawPost || $putRawPost !== null) {
+        if (count($postFields)) {
             curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, count($postFields) ? $postFields : ($rawPost ?: $putRawPost));
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $postFields);
         }
-
+        if ($rawPost) {
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $rawPost);
+        }
+        if ($putRawPost) {
+            curl_setopt($curl, CURLOPT_POST, true);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $putRawPost);
+        }
         if (count($cookieFields)) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {

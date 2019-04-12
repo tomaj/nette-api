@@ -49,7 +49,12 @@ class JsonInputParam extends InputParam
         $this->schemaValidator->validate($value, json_decode($this->schema));
 
         foreach ($this->schemaValidator->getErrors() as $error) {
-            $this->errors[] = $error['message'];
+            $errorMessage = '';
+            if ($error['property']) {
+                $errorMessage .= '[Property ' . $error['property'] . '] ';
+            }
+            $errorMessage .= $error['message'];
+            $this->errors[] = $errorMessage;
         }
 
         return $this->schemaValidator->isValid();

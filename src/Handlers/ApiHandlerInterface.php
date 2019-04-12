@@ -3,6 +3,7 @@
 namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\EndpointInterface;
+use Tomaj\NetteApi\Output\OutputInterface;
 use Tomaj\NetteApi\Params\ParamInterface;
 use Tomaj\NetteApi\Response\ResponseInterface;
 
@@ -58,4 +59,11 @@ interface ApiHandlerInterface
      * @return void
      */
     public function setEndpointIdentifier(EndpointInterface $endpoint): void;
+
+    /**
+     * List of possible outputs
+     *
+     * @return OutputInterface[]
+     */
+    public function outputs(): array;
 }
