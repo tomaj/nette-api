@@ -178,7 +178,7 @@ namespace App\MyApi\v1\Handlers;
 
 use Tomaj\NetteApi\Handlers\BaseHandler;
 use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\GetInputParam;
 
 class UsersDetailHandler extends Basehandler
 {
@@ -193,7 +193,7 @@ class UsersDetailHandler extends Basehandler
     public function params()
     {
         return [
-            new InputParam(InputParam::TYPE_GET, 'id', InputParam::REQUIRED),
+            (new GetInputParam('id'))->setRequired(),
         ];
     }
 
@@ -221,12 +221,12 @@ This is table with support input types:
 
 | Input type      | Example
 | ----------      | -------
-| POST            | `new InputParam(InputParam::TYPE_POST, 'key')`
-| GET             | `new InputParam(InputParam::TYPE_GET, 'key')`
-| FILE            | `new InputParam(InputParam::TYPE_FILE, 'key')`
-| COOKIE          | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
-| RAW POST        | `new InputParam(InputParam::TYPE_POST_RAW, 'key')`
-| JSON            | `new InputParam(InputParam::TYPE_POST_JSON_KEY, 'key')`
+| POST            | `new PostInputParam('key')`
+| GET             | `new GetInputParam('key')`
+| FILE            | `new FileInputParam('key')`
+| COOKIE          | `new CookieInputParam('key')`
+| RAW POST        | `new RawInputParam('key')`
+| JSON            | `new JsonInputParam('key', '{"type": "object"}')`
 
 
 ## Security
