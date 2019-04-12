@@ -40,7 +40,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
     public function authorized(): bool
     {
         $token = $this->readAuthorizationToken();
-        if (!$token) {
+        if ($token === null) {
             return false;
         }
 
@@ -73,7 +73,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
      *   '127.0.0.1'          - accessible from single IP
      *   '127.0.0.1,127.0.02' - accessible from multiple IP, separator could be new line or space
      *   '127.0.0.1/32'       - accessible from ip range
-     *   false                - disabled access
+     *   null                 - disabled access
      *
      * @return boolean
      */
