@@ -58,9 +58,12 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_HEADER, true);
+
         if (count($postFields) || $rawPost || $putRawPost !== null) {
+            curl_setopt($curl, CURLOPT_POST, true);
             curl_setopt($curl, CURLOPT_POSTFIELDS, count($postFields) ? $postFields : ($rawPost ?: $putRawPost));
         }
+
         if (count($cookieFields)) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
