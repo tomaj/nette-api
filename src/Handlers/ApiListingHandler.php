@@ -54,7 +54,7 @@ class ApiListingHandler extends BaseHandler
     private function getApiList(int $version): array
     {
         $versionApis = array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
-            return $version == $api->getEndpoint()->getVersion();
+            return $version === $api->getEndpoint()->getVersion();
         });
 
         return array_map(function (Api $api) {

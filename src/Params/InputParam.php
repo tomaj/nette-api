@@ -191,11 +191,11 @@ abstract class InputParam implements ParamInterface
     public function isValid(): bool
     {
         $value = $this->getValue();
-        if ($this->required === self::OPTIONAL && ($value === null || $value == '')) {
+        if ($this->required === self::OPTIONAL && ($value === null || $value === '')) {
             return true;
         }
 
-        if ($this->required && ($value === null || $value == '')) {
+        if ($this->required && ($value === null || $value === '')) {
             $this->errors[] = 'Field is required';
             return false;
         }

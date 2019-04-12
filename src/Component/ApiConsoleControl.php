@@ -53,7 +53,7 @@ class ApiConsoleControl extends Control
             $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
         }
         $port = '';
-        if ($uri->scheme == 'http' && $uri->port != 80) {
+        if ($uri->scheme === 'http' && $uri->port !== 80) {
             $port = ':' . $uri->port;
         }
         $url = $scheme . '://' . $uri->host . $port . '/api/' . $this->endpoint->getUrl();
