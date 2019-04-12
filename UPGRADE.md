@@ -2,6 +2,35 @@
 
 ## Upgrade from 1.x to 2.0.0
 
+### Splitted InputParam to multiple subclasses
+InputParam is now abstract class and all types have their own class. Also InputParam is more like Nette Form inputs with fluent API
+
+Examples of replacements:
+
+Requred get input with available values:
+
+Old:
+```php
+new InputParam(InputParam::TYPE_GET, 'status', InputParam::REQUIRED, ['ok', 'error'])
+```
+
+New:
+```php
+(new GetInputParam('status'))->setRequired()->setAvailableValues(['ok', 'error'])
+```
+
+Multiple optional file input:
+
+Old:
+```php
+new InputParam(InputParam::TYPE_FILE, 'myfile', InputParam::OPTIONAL, null, true)
+```
+
+New:
+```php
+(new FileInputParam('myfile'))->setMulti()
+```
+
 ### Removed support for old PHP versions
 New version not supported PHP versions 5.6 and 7.0 and also hhvm. Please use it with newer versions of PHP (>7.1)
 
@@ -62,7 +91,7 @@ BaseHandler now have few final methods:
 
 ### Removed params
 Parameters $parent and $name have been removed from ApiListingControl. New usage is:
-```
+```php
 new ApiListingControl($apiDecider)
 ```
 
@@ -75,7 +104,7 @@ Some parameters were strictly typed:
 ### Changed events
 Registration of event onClick in ApiListingControl.
 Use:
-```
+```php
 $apiListing->onClick[] = function ($method, $version, $package, $apiAction) {
     ...
 };

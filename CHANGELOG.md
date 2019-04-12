@@ -8,9 +8,14 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Update nette libs to version 3.0.0 (BC break)
 * Added typehints (BC break)
-* Splitted InputParam to multiple subclasses
+* Splitted InputParam to multiple subclasses (BC break)
+* Removed type TYPE_POST_JSON_KEY (BC break)
 * Pretty JSON output in API console - without escaping unicode and slashes
 * Replaced handler information array triplet (endpoint, handler, authorization) with Api
+
+#### Added
+
+* Added type JsonInputParam with scheme as replacement for type TYPE_POST_JSON_KEY
 
 #### Removed
 
