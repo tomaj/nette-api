@@ -9,7 +9,7 @@ class FileInputParam extends InputParam
 {
     protected $type = self::TYPE_FILE;
 
-    public function addFormInput(Form $form, string $key): BaseControl
+    protected function addFormInput(Form $form, string $key): BaseControl
     {
         return $form->addUpload($key, $this->getParamLabel());
     }

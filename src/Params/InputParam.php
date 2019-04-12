@@ -95,7 +95,7 @@ abstract class InputParam implements ParamInterface
         }
     }
 
-    public function addFormInput(Form $form, string $key): BaseControl
+    protected function addFormInput(Form $form, string $key): BaseControl
     {
         if ($this->getAvailableValues()) {
             $select = $form->addSelect($key, $this->getParamLabel(), array_combine($this->getAvailableValues(), $this->getAvailableValues()))

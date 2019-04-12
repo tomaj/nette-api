@@ -56,9 +56,10 @@ class JsonInputParam extends InputParam
         return $this->schemaValidator->isValid();
     }
 
-    public function addFormInput(Form $form, string $key): BaseControl
+    protected function addFormInput(Form $form, string $key): BaseControl
     {
         return $form->addTextArea('post_raw', $this->getParamLabel())
+            ->setHtmlAttribute('rows', 10)
             ->setOption('description', Html::el()->setHtml(
                 '<div id="show_schema_link"><a href="#" onclick="document.getElementById(\'json_schema\').style.display = \'block\'; document.getElementById(\'show_schema_link\').style.display = \'none\'; return false;">Show schema</a></div>
                             <div id="json_schema" style="display: none;">

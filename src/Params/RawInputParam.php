@@ -20,7 +20,7 @@ class RawInputParam extends InputParam
         return file_get_contents("php://input");
     }
 
-    public function addFormInput(Form $form, string $key): BaseControl
+    protected function addFormInput(Form $form, string $key): BaseControl
     {
         return $form->addTextArea('post_raw', $this->getParamLabel())
             ->setHtmlAttribute('rows', 10);
