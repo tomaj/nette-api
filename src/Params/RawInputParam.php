@@ -17,7 +17,7 @@ class RawInputParam extends InputParam
 
     public function getValue()
     {
-        return file_get_contents("php://input");
+        return file_get_contents("php://input") ?: $this->default;
     }
 
     protected function addFormInput(Form $form, string $key): BaseControl

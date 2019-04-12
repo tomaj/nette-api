@@ -35,15 +35,47 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    public function summary(): string
+    {
+        return '';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function description(): string
+    {
+        return '';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function params(): array
     {
         return [];
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function tags(): array
+    {
+        return [];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function deprecated(): bool
+    {
+        return false;
+    }
+
     protected function getFractal(): Manager
     {
         if (!$this->fractal) {
-            throw new InvalidStateException("Fractal manager isnt initialized. Did you call parent::__construct() in your handler constructor?");
+            throw new InvalidStateException("Fractal manager isn't initialized. Did you call parent::__construct() in your handler constructor?");
         }
         return $this->fractal;
     }

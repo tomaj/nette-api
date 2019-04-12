@@ -35,6 +35,7 @@ class ApiConsoleControl extends Control
     public function render(): void
     {
         $this->getTemplate()->setFile(__DIR__ . '/console.latte');
+        $this->getTemplate()->add('handler', $this->handler);
         $this->getTemplate()->render();
     }
 

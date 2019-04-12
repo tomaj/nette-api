@@ -19,7 +19,7 @@ class FileInputParam extends InputParam
         if (isset($_FILES[$this->key])) {
             return $this->isMulti() ? $this->processMultiFileUploads($_FILES[$this->key]) : $_FILES[$this->key];
         }
-        return null;
+        return $this->default;
     }
 
     private function processMultiFileUploads($files)

@@ -9,6 +9,6 @@ class PutInputParam extends InputParam
     public function getValue()
     {
         parse_str(file_get_contents("php://input"), $params);
-        return $params[$this->key] ?? null;
+        return $params[$this->key] ?? $this->default;
     }
 }

@@ -1,5 +1,10 @@
-
 <h2>Api Web Console</h2>
+
+<div n:if="$handler->description() || $handler->deprecated() || $handler->tags()">
+    <span n:if="$handler->deprecated()" class="btn btn-sm btn-danger">API is deprecated</span>
+    <span n:foreach="$handler->tags() as $tag" class="btn btn-sm btn-primary">{$tag}</span>
+    <p n:if="$handler->description()">{$handler->description()}</p>
+</div>
 
 {ifset $response}
     <div class="row">

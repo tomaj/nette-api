@@ -11,6 +11,7 @@ class CookieInputParam extends InputParam
         if (!filter_has_var(INPUT_COOKIE, $this->key) && isset($_COOKIE[$this->key])) {
             return $_COOKIE[$this->key];
         }
-        return filter_input(INPUT_COOKIE, $this->key);
+        $value = filter_input(INPUT_COOKIE, $this->key);
+        return $value !== null ? $value : $this->default;
     }
 }

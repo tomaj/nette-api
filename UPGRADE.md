@@ -76,6 +76,9 @@ Add typehints to methods:
 - `getApiAction(): ?string`
 - `getUrl(): string`
 
+### Changed behavior
+API handler tripplet (array of endpoint, handler, authorization) has been changed to class `Api` which has methods `getEndpoint()`, `getHandler()` and `getAuthorization()`.
+
 ### Renamed methods
 Few methods have been renamed, please use their new versions:
 - `ApiDecider::addApiHandler()` -> `ApiDecider::addApi()`
@@ -109,3 +112,8 @@ $apiListing->onClick[] = function ($method, $version, $package, $apiAction) {
     ...
 };
 ```
+
+### Features
+With new version of Nette API you can:
+- add description for your API handlers, also you can mark some handlers as deprecated and add tags for them.
+- add description, default value and example for all your input params
