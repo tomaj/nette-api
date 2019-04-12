@@ -42,6 +42,16 @@ class InputParamTest extends TestCase
         $this->assertFalse($inputParam->isValid());
         $this->assertNull($inputParam->getValue());
         $this->assertEquals(['Syntax error'], $inputParam->getErrors());
+
+        $inputParam = (new JsonInputParam('json', '{"type": "object"}'))->setDefault('{}');
+        $this->assertTrue($inputParam->isValid());
+        $this->assertEquals([], $inputParam->getValue());
+        $this->assertEquals([], $inputParam->getErrors());
+
+        $inputParam = (new JsonInputParam('json', '{"type": "string"}'))->setDefault('{"hello": "world"}');
+        $this->assertFalse($inputParam->isValid());
+        $this->assertEquals(['hello' => 'world'], $inputParam->getValue());
+        $this->assertEquals(['Object value found, but a string is required'], $inputParam->getErrors());
     }
 
     public function testVariableAccess()
@@ -65,9 +75,11 @@ class InputParamTest extends TestCase
     {
         $inputParam = (new GetInputParam('mykey'))->setRequired();
         $this->assertNull($inputParam->getValue());
+        $this->assertEquals('', $inputParam->getDescription());
 
-        $inputParam = (new GetInputParam('mykey'))->setMulti();
+        $inputParam = (new GetInputParam('mykey'))->setMulti()->setDescription('mykey description');
         $this->assertNull($inputParam->getValue());
+        $this->assertEquals('mykey description', $inputParam->getDescription());
 
         $_GET['mykey'] = 'asd';
         $inputParam = (new GetInputParam('mykey'))->setRequired();

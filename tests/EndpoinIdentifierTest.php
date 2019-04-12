@@ -20,7 +20,7 @@ class EndpointIdentifierTest extends TestCase
 
     public function testSimpleUrl()
     {
-        $endpoint = new EndpointIdentifier('get', 2, 'main');
+        $endpoint = new EndpointIdentifier('get', 2, 'main', '');
         $this->assertNull($endpoint->getApiAction());
         $this->assertEquals('GET', $endpoint->getMethod());
     }

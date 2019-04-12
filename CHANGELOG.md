@@ -18,6 +18,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Added type JsonInputParam with scheme as replacement for type TYPE_POST_JSON_KEY
 * Detailed error for wrong input if debugger is enabled
+* Added summary (short description), description, tags and deprecated flag for API handlers
+* Added description, default value and example for input params
 
 #### Removed
 

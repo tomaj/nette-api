@@ -20,6 +20,20 @@ interface ParamInterface
 
     public function isMulti(): bool;
 
+    public function getDescription(): string;
+
+    /**
+     * default value
+     * @return mixed
+     */
+    public function getDefault();
+
+    /**
+     * example value
+     * @return mixed
+     */
+    public function getExample();
+
     public function getValue();
 
     public function updateConsoleForm(Form $form): void;
