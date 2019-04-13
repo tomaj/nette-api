@@ -56,14 +56,6 @@ class ApiDecider
     }
 
     /**
-     * @deprecated use addApi instead
-     */
-    public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization)
-    {
-        return $this->addApi($endpointIdentifier, $handler, $apiAuthorization);
-    }
-
-    /**
      * Register new api handler
      *
      * @param EndpointInterface $endpointIdentifier
