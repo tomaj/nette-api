@@ -4,6 +4,7 @@ namespace Tomaj\NetteApi\Test\Params;
 
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Output\JsonOutput;
+use Tomaj\NetteApi\OutputValidator\OutputValidatorResult;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\TextApiResponse;
 
@@ -14,8 +15,10 @@ class JsonOutputTest extends TestCase
         $output = new JsonOutput(200, '{"type": "object"}');
         $response = new JsonApiResponse(200, ['hello' => 'world']);
 
-        $this->assertTrue($output->validate($response));
-        $this->assertEquals([], $output->getErrors());
+        $outputValidatorResult = $output->validate($response);
+        $this->assertInstanceOf(OutputValidatorResult::class, $outputValidatorResult);
+        $this->assertTrue($outputValidatorResult->isOk());
+        $this->assertEquals([], $outputValidatorResult->getErrors());
     }
 
     public function testWrongOutputSchema()
@@ -23,14 +26,19 @@ class JsonOutputTest extends TestCase
         $output = new JsonOutput(200, '{"type": "object"}');
         $response = new JsonApiResponse(200, ['hello', 'world']);
 
-        $this->assertFalse($output->validate($response));
-        $this->assertEquals(['Array value found, but an object is required'], $output->getErrors());
+        $outputValidatorResult = $output->validate($response);
+        $this->assertInstanceOf(OutputValidatorResult::class, $outputValidatorResult);
+        $this->assertFalse($outputValidatorResult->isOk());
+        $this->assertEquals(['Array value found, but an object is required'], $outputValidatorResult->getErrors());
+
 
         $output = new JsonOutput(200, '{"type": "string"}');
         $response = new JsonApiResponse(200, ['hello' => 'world']);
 
-        $this->assertFalse($output->validate($response));
-        $this->assertEquals(['Object value found, but a string is required'], $output->getErrors());
+        $outputValidatorResult = $output->validate($response);
+        $this->assertInstanceOf(OutputValidatorResult::class, $outputValidatorResult);
+        $this->assertFalse($outputValidatorResult->isOk());
+        $this->assertEquals(['Object value found, but a string is required'], $outputValidatorResult->getErrors());
 
         $schema = [
             'type' => 'object',
@@ -45,8 +53,10 @@ class JsonOutputTest extends TestCase
         $output = new JsonOutput(200, json_encode($schema));
         $response = new JsonApiResponse(200, ['hello' => 'space']);
 
-        $this->assertFalse($output->validate($response));
-        $this->assertEquals(['[Property hello] Does not have a value in the enumeration ["world","europe"]'], $output->getErrors());
+        $outputValidatorResult = $output->validate($response);
+        $this->assertInstanceOf(OutputValidatorResult::class, $outputValidatorResult);
+        $this->assertFalse($outputValidatorResult->isOk());
+        $this->assertEquals(['[Property hello] Does not have a value in the enumeration ["world","europe"]'], $outputValidatorResult->getErrors());
     }
 
     public function testWrongResponseCode()
@@ -54,8 +64,10 @@ class JsonOutputTest extends TestCase
         $output = new JsonOutput(200, '{"type": "object"}');
         $response = new JsonApiResponse(404, ['error' => ' not found']);
 
-        $this->assertFalse($output->validate($response));
-        $this->assertEquals(['Response code doesn\'t match'], $output->getErrors());
+        $outputValidatorResult = $output->validate($response);
+        $this->assertInstanceOf(OutputValidatorResult::class, $outputValidatorResult);
+        $this->assertFalse($outputValidatorResult->isOk());
+        $this->assertEquals(['Response code doesn\'t match'], $outputValidatorResult->getErrors());
     }
 
     public function testValidateOtherResponseType()
@@ -63,7 +75,9 @@ class JsonOutputTest extends TestCase
         $output = new JsonOutput(200, '{"type": "object"}');
         $response = new TextApiResponse(200, 'hello world');
 
-        $this->assertFalse($output->validate($response));
-        $this->assertEquals([], $output->getErrors());
+        $outputValidatorResult = $output->validate($response);
+        $this->assertInstanceOf(OutputValidatorResult::class, $outputValidatorResult);
+        $this->assertFalse($outputValidatorResult->isOk());
+        $this->assertEquals([], $outputValidatorResult->getErrors());
     }
 }

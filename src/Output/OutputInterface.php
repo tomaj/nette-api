@@ -2,11 +2,11 @@
 
 namespace Tomaj\NetteApi\Output;
 
+use Tomaj\NetteApi\OutputValidator\OutputValidatorResult;
 use Tomaj\NetteApi\Response\ResponseInterface;
 
 interface OutputInterface
 {
-    public function validate(ResponseInterface $response): bool;
+    public function validate(ResponseInterface $response): OutputValidatorResult;
 
-    public function getErrors(): array;
 }
