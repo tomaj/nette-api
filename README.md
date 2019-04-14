@@ -12,7 +12,7 @@
 
 ## Why Nette-Api
 
-This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement you custom business logic. Library provide authorization, validation and formatting services for you API.
+This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement your custom business logic. Library provides authorization, validation and formatting services for you API.
 
 ## Installation
 
@@ -21,7 +21,7 @@ This library requires PHP 7.1 or later.
 Recommended installation method is via Composer:
 
 ```bash
-$ composer require tomaj/nette-api
+composer require tomaj/nette-api
 ```
 
 Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
@@ -33,7 +33,7 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 
 ## How Nette-API works
 
-First you have register library presenter for routing. In *config.neon* just add this line:
+First, you have to register library presenter for routing. In *config.neon* just add this line:
 
 ```neon
 application:
@@ -47,7 +47,7 @@ And add route to you RouterFactory:
 $router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default');
 ```
 
-After that you need only register your api handlers to *apiDecider* [ApiDecider](src/ApiDecider.php) and register [ApiLink](src/Link/ApiLink.php) and [Tomaj\NetteApi\Misc\IpDetector](src/Misc/IpDetector.php). This can be done also with *config.neon*:
+After that you need only register your API handlers to *apiDecider* [ApiDecider](src/ApiDecider.php), register [ApiLink](src/Link/ApiLink.php) and [Tomaj\NetteApi\Misc\IpDetector](src/Misc/IpDetector.php). This can be done also with *config.neon*:
 
 ```neon
 services:
@@ -67,13 +67,13 @@ This example will prepare these API calls:
 2. `http://yourapp/api/v1/users/send-email`  - available via POST
 
 
-Core of the Nette-Api are handlers. For this example you need implement 2 classes:
+Core of the Nette-Api are handlers. For this example you need to implement two classes:
 
 1. App\MyApi\v1\Handlers\UsersListingHandler
 2. App\MyApi\v1\Handlers\SendEmailHandler
 
-These handlers implement interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extends your handlers from [BaseHandler](src/Handlers/BaseHandler.php). 
-When someone reach your API this handlers will be triggered and *handle()* method will be called.
+These handlers implement interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extend your handlers from [BaseHandler](src/Handlers/BaseHandler.php). 
+When someone reach your API these handlers will be triggered and *handle()* method will be called.
 
 ```php
 namespace App\MyApi\v1\Handlers;
@@ -108,13 +108,13 @@ This simple handler is using *UsersRepository* that was created by Nette Contain
 ## Advanced use (with Fractal)
 
 Nette-Api provides integration with [Fractal][] library for formatting API responses.
-If you want to use it, you have to extend your handler from *[BaseHandler](src/Handlers/BaseHandler.php)* and your Fractal instance will be accessible be `$this->getFractal()`.
+If you want to use it, you have to extend your handler from *[BaseHandler](src/Handlers/BaseHandler.php)* and your Fractal instance will be accessible by `$this->getFractal()`.
 
-Main advantage from Fractal is separation your api "view" (like transformation data to json object or xml or anything...). Also you can include transformations in other transformations to include other objects to others. 
+Main advantage of Fractal is separation of your API "view" (like transformation data to json object or xml or anything...). Also you can include transformations in other transformations to include other objects to others. 
 
 Example with fractal:
 
-1. You will need Formater
+1. You will need Transformer
 
 ```php
 namespace App\MyApi\v1\Transformers;
@@ -165,13 +165,13 @@ class UsersListingHandler extends Basehandler
 }
 ```
 
-I have to recommend to take a look at [Fractal][] library. There are much more information about transformers, serialisers, paginations etc. It is really nice library.
+We recommend to take a look at [Fractal][] library. There are much more information about transformers, serializers, paginations etc. It is really nice library.
 
 [Fractal]: http://fractal.thephpleague.com/
 
 ## Endpoint inputs
 
-Each handler can describe which input is required. It could be GET or POST parameters, also COOKIES, raw post json or file uploads. You have to implement method `params()` where you have to return array with params. This params are used in api console to generate right form.
+Each handler can describe which input is required. It could be GET or POST parameters, also COOKIES, raw post, JSON or file uploads. You have to implement method `params()` where you have to return array with params. These params are used in API console to generate form.
 
 Example with user detail:
 
@@ -217,17 +217,17 @@ class UsersDetailHandler extends Basehandler
 
 ## Input Types
 
-Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES or RAW POST data.
+Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES, RAW POST data or JSON.
 All input types are available via test console.
 
-This is table with support input types:
+This is table with supported input types:
 
 | Input type      | Example
 | ----------      | -------
-| POST            | `new PostInputParam('key')`
 | GET             | `new GetInputParam('key')`
-| FILE            | `new FileInputParam('key')`
+| POST            | `new PostInputParam('key')`
 | COOKIE          | `new CookieInputParam('key')`
+| FILE            | `new FileInputParam('key')`
 | RAW POST        | `new RawInputParam('key')`
 | JSON            | `new JsonInputParam('key', '{"type": "object"}')`
 
@@ -267,9 +267,9 @@ For more examples see [JSON schema web page](http://json-schema.org). Keep in mi
 
 ## Security
 
-Protecting your api is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApi()* method in *config.neon*.
+Protecting your API is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApi()* method in *config.neon*.
 
-For simple use, if you want to use Bearer token authorisation with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
+For simple use, if you want to use Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
 
 ```neon
 services:
@@ -326,7 +326,7 @@ services:
 
 ## Logging
 
-It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all api requests.
+It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all API requests.
 
 ## CORS Security
 

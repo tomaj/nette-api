@@ -3,12 +3,11 @@
 namespace Tomaj\NetteApi\Params;
 
 use Nette\Application\UI\Form;
+use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 interface ParamInterface
 {
-    public function isValid(): bool;
-
-    public function getErrors(): array;
+    public function validate(): ValidationResultInterface;
 
     public function getType(): string;
 

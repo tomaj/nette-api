@@ -140,9 +140,9 @@ class ConsoleRequest
                 if ($param->isMulti()) {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
                         $postFields[$key][] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_PUT) {
+                    } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key][] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_COOKIE) {
+                    } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key][] = $valueData;
                     } else {
                         $getFields[$key][] = $valueData;
@@ -150,9 +150,9 @@ class ConsoleRequest
                 } else {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
                         $postFields[$key] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_PUT) {
+                    } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_COOKIE) {
+                    } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key] = $valueData;
                     } else {
                         $getFields[$key] = $valueData;
@@ -175,7 +175,7 @@ class ConsoleRequest
      */
     private function processParam(ParamInterface $param, string $key, $value): ?string
     {
-        if ($param->getKey() == $key) {
+        if ($param->getKey() === $key) {
             $valueData = $value;
 
             if ($param->getType() === InputParam::TYPE_FILE) {
@@ -202,7 +202,7 @@ class ConsoleRequest
             if (is_array($value)) {
                 $counter = 0;
                 foreach ($value as $innerValue) {
-                    if ($innerValue != null) {
+                    if ($innerValue !== null) {
                         $result[$key . "[".$counter++."]"] = $innerValue;
                     }
                 }

@@ -158,7 +158,7 @@ class ApiPresenter extends Presenter
             $headers = getallheaders();
         } else {
             foreach ($_SERVER as $name => $value) {
-                if (substr($name, 0, 5) == 'HTTP_') {
+                if (substr($name, 0, 5) === 'HTTP_') {
                     $key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
                     $headers[$key] = $value;
                 }
@@ -186,7 +186,7 @@ class ApiPresenter extends Presenter
     {
         $this->getHttpResponse()->addHeader('Access-Control-Allow-Methods', 'POST, DELETE, PUT, GET, OPTIONS');
 
-        if ($this->corsHeader == 'auto') {
+        if ($this->corsHeader === 'auto') {
             $domain = $this->getRequestDomain();
             if ($domain !== null) {
                 $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $domain);
@@ -195,12 +195,12 @@ class ApiPresenter extends Presenter
             return;
         }
 
-        if ($this->corsHeader == '*') {
+        if ($this->corsHeader === '*') {
             $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', '*');
             return;
         }
 
-        if ($this->corsHeader != 'off') {
+        if ($this->corsHeader !== 'off') {
             $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $this->corsHeader);
         }
     }

@@ -6,19 +6,18 @@ use Exception;
 use JsonSchema\Validator;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
+use Tomaj\NetteApi\ValidationResult\ValidationResult;
+use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 class JsonInputParam extends InputParam
 {
     protected $type = self::TYPE_POST_JSON;
-
-    private $schemaValidator;
 
     private $schema;
 
     public function __construct(string $key, string $schema)
     {
         parent::__construct($key);
-        $this->schemaValidator = new Validator();
         $this->schema = $schema;
     }
 
@@ -33,31 +32,35 @@ class JsonInputParam extends InputParam
         return json_decode($input, true);
     }
 
-    public function isValid(): bool
+    public function validate(): ValidationResultInterface
     {
+        $schemaValidator = new Validator();
         $value = $this->getValue();
         if (json_last_error()) {
-            $this->errors[] = json_last_error_msg();
-            return false;
+            return new ValidationResult(ValidationResult::STATUS_ERROR, [json_last_error_msg()]);
         }
 
         if (!$value && $this->isRequired() === self::OPTIONAL) {
-            return true;
+            return new ValidationResult(ValidationResult::STATUS_OK);
         }
 
         $value = json_decode(json_encode($value));
-        $this->schemaValidator->validate($value, json_decode($this->schema));
+        $schemaValidator->validate($value, json_decode($this->schema));
 
-        foreach ($this->schemaValidator->getErrors() as $error) {
+        if ($schemaValidator->isValid()) {
+            return new ValidationResult(ValidationResult::STATUS_OK);
+        }
+
+        $errors = [];
+        foreach ($schemaValidator->getErrors() as $error) {
             $errorMessage = '';
             if ($error['property']) {
                 $errorMessage .= '[Property ' . $error['property'] . '] ';
             }
             $errorMessage .= $error['message'];
-            $this->errors[] = $errorMessage;
+            $errors[] = $errorMessage;
         }
-
-        return $this->schemaValidator->isValid();
+        return new ValidationResult(ValidationResult::STATUS_ERROR, $errors);
     }
 
     protected function addFormInput(Form $form, string $key): BaseControl

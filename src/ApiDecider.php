@@ -30,15 +30,18 @@ class ApiDecider
      */
     public function getApi(string $method, int $version, string $package, ?string $apiAction = null)
     {
+        $method = strtoupper($method);
+        $apiAction = $apiAction === '' ? null : $apiAction;
+
         foreach ($this->apis as $api) {
             $identifier = $api->getEndpoint();
-            if ($method == $identifier->getMethod() && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
+            if ($method === $identifier->getMethod() && $identifier->getVersion() === $version && $identifier->getPackage() === $package && $identifier->getApiAction() === $apiAction) {
                 $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
                 $api->getHandler()->setEndpointIdentifier($endpointIdentifier);
                 return $api;
             }
-            if ($method == 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() == $version && $identifier->getPackage() == $package && $identifier->getApiAction() == $apiAction) {
-                return new Api(new EndpointIdentifier('OPTION', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
+            if ($method === 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() === $version && $identifier->getPackage() === $package && $identifier->getApiAction() === $apiAction) {
+                return new Api(new EndpointIdentifier('OPTIONS', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
             }
         }
         return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
@@ -50,14 +53,6 @@ class ApiDecider
             $corsHandler = new CorsPreflightHandler(new Response());
         }
         $this->globalPreflightHandler = $corsHandler;
-    }
-
-    /**
-     * @deprecated use addApi instead
-     */
-    public function addApiHandler(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization)
-    {
-        return $this->addApi($endpointIdentifier, $handler, $apiAuthorization);
     }
 
     /**

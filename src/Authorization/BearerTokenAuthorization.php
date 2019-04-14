@@ -90,7 +90,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         $ipWhiteList = str_replace([',', ' ', "\n"], '#', $ipRestrictions);
         $ipWhiteList = explode('#', $ipWhiteList);
         foreach ($ipWhiteList as $whiteIp) {
-            if ($whiteIp == $ip) {
+            if ($whiteIp === $ip) {
                 return true;
             }
             if (strpos($whiteIp, '/') !== false) {
@@ -115,7 +115,7 @@ class BearerTokenAuthorization implements ApiAuthorizationInterface
         $ipDecimal = ip2long($ip);
         $wildcard_decimal = pow(2, (32 - (int)$netmask)) - 1;
         $netmask_decimal = ~ $wildcard_decimal;
-        return (($ipDecimal & $netmask_decimal) == ($range_decimal & $netmask_decimal));
+        return (($ipDecimal & $netmask_decimal) === ($range_decimal & $netmask_decimal));
     }
 
     /**

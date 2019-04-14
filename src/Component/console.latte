@@ -19,7 +19,7 @@
                     <b>POST FIELDS:</b>
                     <pre>{foreach $response->getPostFields() as $key => $field}
                         {spaceless}
-                        {if is_object($field) && get_class($field) == 'CURLFile'}
+                        {if is_object($field) && get_class($field) === 'CURLFile'}
                             {$key}=@{$field->getFilename()} ({$field->getMimeType()}) [{$field->getPostFilename()}] (file)
                         {else}
                             {$key}={$field}
