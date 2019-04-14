@@ -81,12 +81,12 @@ class ApiPresenter extends Presenter
             $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
             $outputValidatorErrors = [];
             foreach ($handler->outputs() as $output) {
-                $outputValidatorResult = $output->validate($response);
-                if ($outputValidatorResult->isOk()) {
+                $validationResult = $output->validate($response);
+                if ($validationResult->isOk()) {
                     $outputValid = true;
                     break;
                 }
-                $outputValidatorErrors[] = $outputValidatorResult->getErrors();
+                $outputValidatorErrors[] = $validationResult->getErrors();
             }
             if (!$outputValid) {
                 $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
