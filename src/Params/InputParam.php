@@ -5,7 +5,8 @@ namespace Tomaj\NetteApi\Params;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
 use Nette\Utils\Html;
-use Tracy\Debugger;
+use Tomaj\NetteApi\ValidationResult\ValidationResult;
+use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 abstract class InputParam implements ParamInterface
 {
@@ -43,8 +44,6 @@ abstract class InputParam implements ParamInterface
 
     /** @var mixed */
     protected $example;
-
-    protected $errors = [];
 
     public function __construct(string $key)
     {
@@ -188,33 +187,24 @@ abstract class InputParam implements ParamInterface
     /**
      * Check if actual value from environment is valid
      */
-    public function isValid(): bool
+    public function validate(): ValidationResultInterface
     {
         $value = $this->getValue();
         if ($this->required === self::OPTIONAL && ($value === null || $value === '')) {
-            return true;
+            return new ValidationResult(ValidationResult::STATUS_OK);
         }
 
         if ($this->required && ($value === null || $value === '')) {
-            $this->errors[] = 'Field is required';
-            return false;
+            return new ValidationResult(ValidationResult::STATUS_ERROR, ['Field is required']);
         }
 
         if ($this->availableValues !== null) {
-            if (is_array($this->availableValues)) {
-                $result = empty(array_diff(($this->isMulti() ? $value : [$value]), $this->availableValues));
-                if ($result === false) {
-                    $this->errors[] = 'Field contains not available value(s)';
-                }
-                return $result;
+            $result = empty(array_diff(($this->isMulti() ? $value : [$value]), $this->availableValues));
+            if ($result === false) {
+                return new ValidationResult(ValidationResult::STATUS_ERROR, ['Field contains not available value(s)']);
             }
         }
 
-        return true;
-    }
-
-    public function getErrors(): array
-    {
-        return $this->errors;
+        return new ValidationResult(ValidationResult::STATUS_OK);
     }
 }

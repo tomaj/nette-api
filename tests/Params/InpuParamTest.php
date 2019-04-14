@@ -18,20 +18,20 @@ class InputParamTest extends TestCase
     {
         $inputParam = (new PostInputParam('mykey1'))->setRequired();
         $_POST['mykey1'] = 'hello';
-        $this->assertTrue($inputParam->isValid());
+        $this->assertTrue($inputParam->validate()->isOk());
         $this->assertEquals('hello', $inputParam->getValue());
         unset($_POST['mykey1']);
 
         $inputParam = new PostInputParam('mykey2');
-        $this->assertTrue($inputParam->isValid());
+        $this->assertTrue($inputParam->validate()->isOk());
         $this->assertNull($inputParam->getValue());
 
         $inputParam = (new PostInputParam('mykey3'))->setRequired()->setAvailableValues(['a', 'b']);
         $_POST['mykey3'] = 'hello';
-        $this->assertFalse($inputParam->isValid());
+        $this->assertFalse($inputParam->validate()->isOk());
         $this->assertEquals('hello', $inputParam->getValue());
         $_POST['mykey3'] = 'a';
-        $this->assertTrue($inputParam->isValid());
+        $this->assertTrue($inputParam->validate()->isOk());
         $this->assertEquals('a', $inputParam->getValue());
         unset($_POST['mykey3']);
 
@@ -39,19 +39,19 @@ class InputParamTest extends TestCase
         $this->assertNull($inputParam->getValue());
 
         $inputParam = new JsonInputParam('json', '{}');
-        $this->assertFalse($inputParam->isValid());
+        $this->assertFalse($inputParam->validate()->isOk());
         $this->assertNull($inputParam->getValue());
-        $this->assertEquals(['Syntax error'], $inputParam->getErrors());
+        $this->assertEquals(['Syntax error'], $inputParam->validate()->getErrors());
 
         $inputParam = (new JsonInputParam('json', '{"type": "object"}'))->setDefault('{}');
-        $this->assertTrue($inputParam->isValid());
+        $this->assertTrue($inputParam->validate()->isOk());
         $this->assertEquals([], $inputParam->getValue());
-        $this->assertEquals([], $inputParam->getErrors());
+        $this->assertEquals([], $inputParam->validate()->getErrors());
 
         $inputParam = (new JsonInputParam('json', '{"type": "string"}'))->setDefault('{"hello": "world"}');
-        $this->assertFalse($inputParam->isValid());
+        $this->assertFalse($inputParam->validate()->isOk());
         $this->assertEquals(['hello' => 'world'], $inputParam->getValue());
-        $this->assertEquals(['Object value found, but a string is required'], $inputParam->getErrors());
+        $this->assertEquals(['Object value found, but a string is required'], $inputParam->validate()->getErrors());
     }
 
     public function testVariableAccess()
@@ -68,7 +68,7 @@ class InputParamTest extends TestCase
     {
         $inputParam = (new FileInputParam('myfile'))->setRequired();
         $this->assertNull($inputParam->getValue());
-        $this->assertFalse($inputParam->isValid());
+        $this->assertFalse($inputParam->validate()->isOk());
     }
 
     public function testGetInputType()
@@ -145,10 +145,10 @@ class InputParamTest extends TestCase
     {
         $_GET['dsgerg'] = 'asfsaf';
         $inputParam = (new GetInputParam('dsgerg'))->setRequired()->setAvailableValues(['vgdgr']);
-        $this->assertFalse($inputParam->isValid());
+        $this->assertFalse($inputParam->validate()->isOk());
 
         $_GET['dsgerg'] = 'vgdgr';
-        $this->assertTrue($inputParam->isValid());
+        $this->assertTrue($inputParam->validate()->isOk());
     }
 
     public function testRawPostData()
