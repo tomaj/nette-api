@@ -2,7 +2,9 @@
 
 namespace Tomaj\NetteApi\Test\Handler;
 
+use League\Fractal\Resource\Collection;
 use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Output\JsonOutput;
 use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
@@ -43,8 +45,15 @@ class TestHandler extends BaseHandler
     public function handle(array $params): ResponseInterface
     {
         if (isset($params['use_fractal']) && $params['use_fractal'] === true) {
-            $this->getFractal()->createData([])->toArray();
+            $this->getFractal()->createData(new Collection([]))->toArray();
         }
         return new JsonApiResponse(200, ['hello' => 'world']);
+    }
+
+    public function outputs(): array
+    {
+        return [
+            new JsonOutput(200, '{"type": "object"}'),
+        ];
     }
 }

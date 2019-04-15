@@ -17,6 +17,8 @@ use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
+use Tomaj\NetteApi\Test\Handler\TestHandler;
+use Tracy\Debugger;
 
 class ApiPresenterTest extends TestCase
 {
@@ -75,6 +77,32 @@ class ApiPresenterTest extends TestCase
         $result = $presenter->run($request);
         
         $this->assertEquals(['status' => 'error', 'message' => 'wrong input'], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
+
+        Debugger::enable(true);
+        $result = $presenter->run($request);
+        $this->assertEquals(['status' => 'error', 'message' => 'wrong input', 'detail' => ['status' => ['Field is required']]], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
+        Debugger::enable(false);
+    }
+
+    public function testWithOutputs()
+    {
+        $apiDecider = new ApiDecider();
+        $apiDecider->addApi(
+            new EndpointIdentifier('GET', 1, 'test', 'api'),
+            new TestHandler(),
+            new NoAuthorization()
+        );
+
+        $presenter = new ApiPresenter();
+        $presenter->apiDecider = $apiDecider;
+        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
+
+        $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
+        $result = $presenter->run($request);
+
+        $this->assertEquals(['hello' => 'world'], $result->getPayload());
         $this->assertEquals('application/json', $result->getContentType());
     }
 }

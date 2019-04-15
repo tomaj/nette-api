@@ -21,6 +21,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Detailed error for wrong input if debugger is enabled
 * Added summary (short description), description, tags and deprecated flag for API handlers
 * Added description, default value and example for input params
+* Added output validator
 
 #### Removed
 

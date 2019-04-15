@@ -232,6 +232,39 @@ This is table with supported input types:
 | JSON            | `new JsonInputParam('key', '{"type": "object"}')`
 
 
+## Outputs
+
+By implementing method outputs for your handlers you can specify list of possible outputs (e.g. output schemas) and those will be validated before response is sent to user. If no outputs are set, response is sent to user without validating.
+
+Usage example:
+```php
+public function outputs(): array
+{
+    $schema = [
+        'type' => 'object',
+        'properties' => [
+            'name' => [
+                'type' => 'string',
+            ],
+            'surname' => [
+                'type' => 'string',
+            ],
+            'sex' => [
+                'type' => 'string',
+                'enum' => ['M', 'F'],
+            ],
+        ],
+        'required' => ['name', 'surname'],
+        'additionalProperties' => false,
+    ];
+    return [
+        new JsonOutput(200, json_encode($schema)),
+    ];
+}
+```
+For more examples see [JSON schema web page](http://json-schema.org). Keep in mind that nette api uses [justinrainbow/json-schema](https://github.com/justinrainbow/json-schema/tree/master/dist/schema) for validating schemas and this package supports only json schema draft 03 and 04.
+
+
 ## Security
 
 Protecting your API is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApi()* method in *config.neon*.
