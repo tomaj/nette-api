@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;

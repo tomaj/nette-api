@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Test\Handler;
 
 use PHPUnit\Framework\TestCase;

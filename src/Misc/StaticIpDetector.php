@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Misc;
 
 class StaticIpDetector implements IpDetectorInterface
