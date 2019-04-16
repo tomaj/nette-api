@@ -13,4 +13,6 @@ interface EndpointInterface
     public function getApiAction(): ?string;
 
     public function getUrl(): string;
+
+    public function equals(EndpointInterface $endpoint): bool;
 }

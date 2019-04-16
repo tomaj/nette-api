@@ -47,4 +47,12 @@ class EndpointIdentifier implements EndpointInterface
     {
         return "v{$this->version}/{$this->package}/{$this->apiAction}";
     }
+
+    public function equals(EndpointInterface $endpoint): bool
+    {
+        return $this->getMethod() === $endpoint->getMethod() &&
+            $this->getVersion() === $endpoint->getVersion() &&
+            $this->getPackage() === $endpoint->getPackage() &&
+            $this->getApiAction() === $endpoint->getApiAction();
+    }
 }

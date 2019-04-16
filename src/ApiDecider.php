@@ -35,11 +35,12 @@ class ApiDecider
 
         foreach ($this->apis as $api) {
             $identifier = $api->getEndpoint();
-            if ($method === $identifier->getMethod() && $identifier->getVersion() === $version && $identifier->getPackage() === $package && $identifier->getApiAction() === $apiAction) {
-                $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
+            $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
+            if ($identifier->equals($endpointIdentifier)) {
                 $api->getHandler()->setEndpointIdentifier($endpointIdentifier);
                 return $api;
             }
+            
             if ($method === 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() === $version && $identifier->getPackage() === $package && $identifier->getApiAction() === $apiAction) {
                 return new Api(new EndpointIdentifier('OPTIONS', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
             }
