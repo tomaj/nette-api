@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Params;
 
 use Exception;
@@ -29,6 +31,9 @@ class JsonInputParam extends InputParam
     public function getValue()
     {
         $input = file_get_contents("php://input") ?: $this->default;
+        if ($input === null) {
+            $input = '';
+        }
         return json_decode($input, true);
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Authorization;
 
 use Tomaj\NetteApi\Misc\BearerTokenRepositoryInterface;

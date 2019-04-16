@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Handlers;
 
 use Tomaj\NetteApi\ApiDecider;

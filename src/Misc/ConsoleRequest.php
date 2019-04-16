@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Misc;
 
 use Nette\Http\FileUpload;
@@ -92,6 +94,10 @@ class ConsoleRequest
         $response = curl_exec($curl);
         $elapsed = intval((microtime(true) - $startTime) * 1000);
 
+        if ($response === false) {
+            $response = '';
+        }
+
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
         $responseHeaders = substr($response, 0, $headerSize);
         $responseBody = substr($response, $headerSize);
@@ -120,7 +126,7 @@ class ConsoleRequest
         $params = $this->handler->params();
 
         $postFields = [];
-        $rawPost = isset($values['post_raw']) ? $values['post_raw'] : false;
+        $rawPost = isset($values['post_raw']) ? $values['post_raw'] : null;
         $getFields = [];
         $putFields = [];
         $cookieFields = [];
