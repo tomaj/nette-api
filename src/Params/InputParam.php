@@ -2,9 +2,11 @@
 
 namespace Tomaj\NetteApi\Params;
 
+use Exception;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
 use Nette\Utils\Html;
+use Tomaj\NetteApi\Validation\JsonSchemaValidator;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
@@ -45,9 +47,32 @@ abstract class InputParam implements ParamInterface
     /** @var mixed */
     protected $example;
 
-    public function __construct(string $key)
+    /** @var array */
+    protected $schema;
+
+    protected $internalType = 'string';
+
+    public function __construct(string $key, string $schema = '{"type": "string"}')
     {
         $this->key = $key;
+        $this->schema = json_decode($schema, true);
+
+        $internalType = $this->schema['type'] ?? 'string';
+        $this->schema['type'] = $internalType;
+        if ($internalType === 'array') {
+            $internalType = $this->schema['items']['type'] ?? 'string';
+        }
+        $this->internalType = $internalType;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
     }
 
     public function setRequired(): self
@@ -56,36 +81,28 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
-    public function setAvailableValues(array $availableValues): self
-    {
-        $this->availableValues = $availableValues;
-        return $this;
-    }
-
-    public function setMulti(): self
-    {
-        $this->multi = true;
-        return $this;
-    }
-
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    public function getKey(): string
-    {
-        return $this->key;
-    }
-
     public function isRequired(): bool
     {
         return $this->required;
     }
 
+    public function setAvailableValues(array $availableValues): self
+    {
+        $this->availableValues = $availableValues;
+        $this->schema['enum'] = $availableValues;
+        return $this;
+    }
+
     public function getAvailableValues(): ?array
     {
         return $this->availableValues;
+    }
+
+    public function setMulti(): self
+    {
+        $this->multi = true;
+        $this->schema['type'] = 'array';
+        return $this;
     }
 
     public function isMulti(): bool
@@ -140,9 +157,31 @@ abstract class InputParam implements ParamInterface
         return $this->example;
     }
 
+    /**
+     * @return mixed
+     * @throws Exception if cast failed
+     */
+    final public function value()
+    {
+        return $this->castValue($this->getValue());
+    }
+
+    /**
+     * @return mixed
+     */
+    abstract protected function getValue();
+
+    public function getSchema(): string
+    {
+        if (!$this->isRequired()) {
+            $this->schema['type'] = is_array($this->schema['type']) ? $this->schema['type'] + ['null'] : [$this->schema['type'], 'null'];
+        }
+        return json_encode($this->schema);
+    }
+
     public function updateConsoleForm(Form $form): void
     {
-        $count = $this->isMulti() ? 5 : 1;  // TODO moznost nastavit kolko inputov sa ma vygenerovat v konzole, default moze byt 5
+        $count = $this->isMulti() ? 5 : 1;
         for ($i = 0; $i < $count; $i++) {
             $key = $this->getKey();
             if ($this->isMulti()) {
@@ -189,22 +228,61 @@ abstract class InputParam implements ParamInterface
      */
     public function validate(): ValidationResultInterface
     {
-        $value = $this->getValue();
-        if ($this->required === self::OPTIONAL && ($value === null || $value === '')) {
-            return new ValidationResult(ValidationResult::STATUS_OK);
+        try {
+            $value = $this->value();
+        } catch (Exception $e) {
+            return new ValidationResult(ValidationResult::STATUS_ERROR, [$e->getMessage()]);
         }
 
-        if ($this->required && ($value === null || $value === '')) {
-            return new ValidationResult(ValidationResult::STATUS_ERROR, ['Field is required']);
+        $schemaValidator = new JsonSchemaValidator();
+        return $schemaValidator->validate($value, $this->getSchema());
+    }
+
+    /**
+     * @param mixed $value
+     * @return mixed
+     * @throws Exception if cast failed
+     */
+    protected function castValue($value)
+    {
+        if ($value === '' || $value === null) {
+            return null;
+        }
+        if (is_array($value)) {
+            $newValue = array_filter(array_map(function ($item) {
+                return $this->castValue($item);
+            }, $value), function ($item) {
+                return $item !== null;
+            });
+        } elseif ($this->internalType === 'boolean') {
+            $newValue = (bool)$value;
+            $this->checkCast($value, $newValue);
+        } elseif ($this->internalType === 'integer') {
+            $newValue = (int)$value;
+            $this->checkCast($value, $newValue);
+        } else {
+            $newValue = $value;
         }
 
-        if ($this->availableValues !== null) {
-            $result = empty(array_diff(($this->isMulti() ? $value : [$value]), $this->availableValues));
-            if ($result === false) {
-                return new ValidationResult(ValidationResult::STATUS_ERROR, ['Field contains not available value(s)']);
-            }
+        return $newValue;
+    }
+
+    /**
+     * checks if casted value is the same as original value
+     *
+     * @param mixed $originalValue
+     * @param mixed $newValue
+     * @throws Exception if new value doesn't match original value
+     */
+    private function checkCast($originalValue, $newValue)
+    {
+        if ($this->internalType === 'boolean') {
+            $originalValue = (int)$originalValue;
+            $newValue = (int)$newValue;
         }
 
-        return new ValidationResult(ValidationResult::STATUS_OK);
+        if ((string)$originalValue !== (string)$newValue) {
+            throw new Exception('Cast of ' . $originalValue . ' to ' . $this->internalType . ' failed');
+        }
     }
 }

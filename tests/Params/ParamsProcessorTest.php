@@ -17,7 +17,7 @@ class ParamsProcessorTest extends TestCase
         ]);
 
         $this->assertTrue($processor->isError());
-        $this->assertEquals(['mykey1' => ['Field is required']], $processor->getErrors());
+        $this->assertEquals(['mykey1' => ['NULL value found, but a string is required']], $processor->getErrors());
 
         $_GET['mykey2'] = 'x';
         $processor = new ParamsProcessor([
@@ -25,7 +25,7 @@ class ParamsProcessorTest extends TestCase
         ]);
 
         $this->assertTrue($processor->isError());
-        $this->assertEquals(['mykey2' => ['Field contains not available value(s)']], $processor->getErrors());
+        $this->assertEquals(['mykey2' => ['Does not have a value in the enumeration ["a","b","c"]']], $processor->getErrors());
     }
 
     public function testPass()

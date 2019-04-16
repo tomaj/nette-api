@@ -81,7 +81,7 @@ class ApiPresenterTest extends TestCase
 
         Debugger::enable(true);
         $result = $presenter->run($request);
-        $this->assertEquals(['status' => 'error', 'message' => 'wrong input', 'detail' => ['status' => ['Field is required']]], $result->getPayload());
+        $this->assertEquals(['status' => 'error', 'message' => 'wrong input', 'detail' => ['status' => ['NULL value found, but a string is required', 'Does not have a value in the enumeration ["ok","error"]']]], $result->getPayload());
         $this->assertEquals('application/json', $result->getContentType());
         Debugger::enable(false);
     }

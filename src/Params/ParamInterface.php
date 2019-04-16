@@ -33,7 +33,10 @@ interface ParamInterface
      */
     public function getExample();
 
-    public function getValue();
+    /**
+     * @return mixed
+     */
+    public function value();
 
     public function updateConsoleForm(Form $form): void;
 }

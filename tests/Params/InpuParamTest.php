@@ -4,6 +4,7 @@ namespace Tomaj\NetteApi\Test\Params;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Tomaj\NetteApi\Params\CookieInputParam;
 use Tomaj\NetteApi\Params\FileInputParam;
 use Tomaj\NetteApi\Params\GetInputParam;
@@ -19,38 +20,47 @@ class InputParamTest extends TestCase
         $inputParam = (new PostInputParam('mykey1'))->setRequired();
         $_POST['mykey1'] = 'hello';
         $this->assertTrue($inputParam->validate()->isOk());
-        $this->assertEquals('hello', $inputParam->getValue());
+        $this->assertEquals('hello', $inputParam->value());
         unset($_POST['mykey1']);
 
         $inputParam = new PostInputParam('mykey2');
+        $this->assertNull($inputParam->value());
+        $this->assertEmpty($inputParam->validate()->getErrors());
         $this->assertTrue($inputParam->validate()->isOk());
-        $this->assertNull($inputParam->getValue());
 
         $inputParam = (new PostInputParam('mykey3'))->setRequired()->setAvailableValues(['a', 'b']);
         $_POST['mykey3'] = 'hello';
+        $this->assertEquals('hello', $inputParam->value());
         $this->assertFalse($inputParam->validate()->isOk());
-        $this->assertEquals('hello', $inputParam->getValue());
         $_POST['mykey3'] = 'a';
         $this->assertTrue($inputParam->validate()->isOk());
-        $this->assertEquals('a', $inputParam->getValue());
+        $this->assertEquals('a', $inputParam->value());
         unset($_POST['mykey3']);
 
         $inputParam = new GetInputParam('asdsd');
-        $this->assertNull($inputParam->getValue());
+        $this->assertNull($inputParam->value());
 
         $inputParam = new JsonInputParam('json', '{}');
         $this->assertFalse($inputParam->validate()->isOk());
-        $this->assertNull($inputParam->getValue());
         $this->assertEquals(['Syntax error'], $inputParam->validate()->getErrors());
 
         $inputParam = (new JsonInputParam('json', '{"type": "object"}'))->setDefault('{}');
         $this->assertTrue($inputParam->validate()->isOk());
-        $this->assertEquals([], $inputParam->getValue());
+        $this->assertInstanceOf(stdClass::class, $inputParam->value());
         $this->assertEquals([], $inputParam->validate()->getErrors());
 
         $inputParam = (new JsonInputParam('json', '{"type": "string"}'))->setDefault('{"hello": "world"}');
         $this->assertFalse($inputParam->validate()->isOk());
-        $this->assertEquals(['hello' => 'world'], $inputParam->getValue());
+        $object = new stdClass();
+        $object->hello = 'world';
+        $this->assertEquals($object, $inputParam->value());
+        $this->assertEquals(['Object value found, but a string or a null is required'], $inputParam->validate()->getErrors());
+
+        $inputParam = (new JsonInputParam('json', '{"type": "string"}'))->setRequired()->setDefault('{"hello": "world"}');
+        $this->assertFalse($inputParam->validate()->isOk());
+        $object = new stdClass();
+        $object->hello = 'world';
+        $this->assertEquals($object, $inputParam->value());
         $this->assertEquals(['Object value found, but a string is required'], $inputParam->validate()->getErrors());
     }
 
@@ -67,43 +77,43 @@ class InputParamTest extends TestCase
     public function testNotFoundFileType()
     {
         $inputParam = (new FileInputParam('myfile'))->setRequired();
-        $this->assertNull($inputParam->getValue());
+        $this->assertNull($inputParam->value());
         $this->assertFalse($inputParam->validate()->isOk());
     }
 
     public function testGetInputType()
     {
         $inputParam = (new GetInputParam('mykey'))->setRequired();
-        $this->assertNull($inputParam->getValue());
+        $this->assertNull($inputParam->value());
         $this->assertEquals('', $inputParam->getDescription());
 
         $inputParam = (new GetInputParam('mykey'))->setMulti()->setDescription('mykey description');
-        $this->assertNull($inputParam->getValue());
+        $this->assertNull($inputParam->value());
         $this->assertEquals('mykey description', $inputParam->getDescription());
 
         $_GET['mykey'] = 'asd';
         $inputParam = (new GetInputParam('mykey'))->setRequired();
-        $this->assertEquals('asd', $inputParam->getValue());
+        $this->assertEquals('asd', $inputParam->value());
     }
 
     public function testPostInputType()
     {
         $inputParam = (new PostInputParam('mykey'))->setRequired();
-        $this->assertNull($inputParam->getValue());
+        $this->assertNull($inputParam->value());
 
         $inputParam = (new PostInputParam('mykey'))->setMulti();
-        $this->assertNull($inputParam->getValue());
+        $this->assertNull($inputParam->value());
 
         $_POST['mykey'] = 'asd';
         $inputParam = (new PostInputParam('mykey'))->setRequired();
-        $this->assertEquals('asd', $inputParam->getValue());
+        $this->assertEquals('asd', $inputParam->value());
     }
 
     public function testFileInputType()
     {
         $_FILES['myfile'] = 'hello';
         $inputParam = (new FileInputParam('myfile'))->setRequired();
-        $this->assertEquals('hello', $inputParam->getValue());
+        $this->assertEquals('hello', $inputParam->value());
     }
 
     public function testMultiFileInput()
@@ -116,7 +126,7 @@ class InputParamTest extends TestCase
         ];
 
         $inputParam = (new FileInputParam('myfile'))->setRequired()->setMulti();
-        $value = $inputParam->getValue();
+        $value = $inputParam->value();
 
         $this->assertCount(2, $value);
 
@@ -134,11 +144,11 @@ class InputParamTest extends TestCase
     public function testCookiesValues()
     {
         $inputParam = (new CookieInputParam('mykey'))->setRequired();
-        $this->assertNull($inputParam->getValue());
+        $this->assertNull($inputParam->value());
 
         $_COOKIE['mykey'] = 'asd';
         $inputParam = (new CookieInputParam('mykey'))->setRequired();
-        $this->assertEquals('asd', $inputParam->getValue());
+        $this->assertEquals('asd', $inputParam->value());
     }
 
     public function testStaticAvailableValues()
@@ -154,13 +164,13 @@ class InputParamTest extends TestCase
     public function testRawPostData()
     {
         $inputParam = new RawInputParam('raw_post');
-        $this->assertEquals('', $inputParam->getValue());
+        $this->assertEquals('', $inputParam->value());
     }
 
     public function testPutData()
     {
         $inputParam = new PutInputParam('put');
-        $this->assertEquals('', $inputParam->getValue());
+        $this->assertEquals('', $inputParam->value());
     }
 
     public function testSetMultiOnJsonInputParam()
