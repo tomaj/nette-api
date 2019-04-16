@@ -24,3 +24,9 @@ tools:
         timeout: 600
         runs: 3
 
+build:
+    nodes:
+        analysis:
+            tests:
+                override:
+                    - php-scrutinizer-run
