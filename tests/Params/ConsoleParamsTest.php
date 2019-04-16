@@ -2,17 +2,14 @@
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use Exception;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
 use PHPUnit\Framework\TestCase;
-use Tomaj\NetteApi\Params\CookieInputParam;
 use Tomaj\NetteApi\Params\FileInputParam;
 use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Params\JsonInputParam;
 use Tomaj\NetteApi\Params\ParamInterface;
 use Tomaj\NetteApi\Params\PostInputParam;
-use Tomaj\NetteApi\Params\PutInputParam;
 use Tomaj\NetteApi\Params\RawInputParam;
 
 class ConsoleParamsTest extends TestCase
