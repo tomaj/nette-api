@@ -177,9 +177,9 @@ class ApiPresenter extends Presenter
             $code,
             $this->getRequest()->getMethod(),
             $requestHeaders,
-            filter_input(INPUT_SERVER, 'REQUEST_URI'),
-            $ipDetector->getRequestIp(),
-            filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
+            (string) filter_input(INPUT_SERVER, 'REQUEST_URI'),
+            $ipDetector ? $ipDetector->getRequestIp() : '',
+            (string) filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
             (int) ($elapsed) * 1000
         );
     }
