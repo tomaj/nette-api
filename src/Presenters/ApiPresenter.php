@@ -121,7 +121,7 @@ class ApiPresenter extends Presenter
     {
         return $this->apiDecider->getApi(
             $this->getRequest()->getMethod(),
-            $this->params['version'],
+            (int) $this->params['version'],
             $this->params['package'],
             $this->params['apiAction']
         );

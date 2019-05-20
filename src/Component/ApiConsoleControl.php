@@ -100,7 +100,7 @@ class ApiConsoleControl extends Control
     {
         $url = $values['api_url'];
 
-        $token = false;
+        $token = null;
         if (isset($values['token'])) {
             $token = $values['token'];
             unset($values['token']);
