@@ -6,6 +6,7 @@ namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
+use Nette\Bridges\ApplicationLatte\Template;
 use Nette\Http\IRequest;
 use Nette\Utils\ArrayHash;
 use Tomaj\Form\Renderer\BootstrapRenderer;
@@ -36,9 +37,11 @@ class ApiConsoleControl extends Control
 
     public function render(): void
     {
-        $this->getTemplate()->setFile(__DIR__ . '/console.latte');
-        $this->getTemplate()->add('handler', $this->handler);
-        $this->getTemplate()->render();
+        /** @var Template $template */
+        $template = $this->getTemplate();
+        $template->setFile(__DIR__ . '/console.latte');
+        $template->add('handler', $this->handler);
+        $template->render();
     }
 
     protected function createComponentConsoleForm(): Form
@@ -115,7 +118,9 @@ class ApiConsoleControl extends Control
         $consoleRequest = new ConsoleRequest($this->handler);
         $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);
 
-        $this->getTemplate()->add('response', $result);
+        /** @var Template $template */
+        $template = $this->getTemplate();
+        $template->add('response', $result);
 
         if ($this->getPresenter()->isAjax()) {
             $this->getPresenter()->redrawControl();

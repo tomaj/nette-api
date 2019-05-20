@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Params;
 
 use Exception;
-use JsonSchema\Validator;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
+use Tomaj\NetteApi\Validation\JsonSchemaValidator;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
@@ -39,7 +39,6 @@ class JsonInputParam extends InputParam
 
     public function validate(): ValidationResultInterface
     {
-        $schemaValidator = new Validator();
         $value = $this->getValue();
         if (json_last_error()) {
             return new ValidationResult(ValidationResult::STATUS_ERROR, [json_last_error_msg()]);
@@ -50,22 +49,8 @@ class JsonInputParam extends InputParam
         }
 
         $value = json_decode(json_encode($value));
-        $schemaValidator->validate($value, json_decode($this->schema));
-
-        if ($schemaValidator->isValid()) {
-            return new ValidationResult(ValidationResult::STATUS_OK);
-        }
-
-        $errors = [];
-        foreach ($schemaValidator->getErrors() as $error) {
-            $errorMessage = '';
-            if ($error['property']) {
-                $errorMessage .= '[Property ' . $error['property'] . '] ';
-            }
-            $errorMessage .= $error['message'];
-            $errors[] = $errorMessage;
-        }
-        return new ValidationResult(ValidationResult::STATUS_ERROR, $errors);
+        $schemaValidator = new JsonSchemaValidator();
+        return $schemaValidator->validate($value, $this->schema);
     }
 
     protected function addFormInput(Form $form, string $key): BaseControl

@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
+use Nette\Bridges\ApplicationLatte\Template;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Api;
 
+/**
+ * @method void onClick(string $method, int $version, string $package, ?string $apiAction)
+ */
 class ApiListingControl extends Control
 {
     /** @var ApiDecider */
@@ -23,9 +27,12 @@ class ApiListingControl extends Control
     public function render(): void
     {
         $apis = $this->apiDecider->getApis();
-        $this->getTemplate()->add('apis', $this->groupApis($apis));
-        $this->getTemplate()->setFile(__DIR__ . '/api_listing.latte');
-        $this->getTemplate()->render();
+
+        /** @var Template $template */
+        $template = $this->getTemplate();
+        $template->add('apis', $this->groupApis($apis));
+        $template->setFile(__DIR__ . '/api_listing.latte');
+        $template->render();
     }
 
     public function handleSelect(string $method, int $version, string $package, ?string $apiAction = null): void
