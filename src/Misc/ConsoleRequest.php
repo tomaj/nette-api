@@ -1,57 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Misc;
 
+use Nette\Http\FileUpload;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\ParamInterface;
 
 class ConsoleRequest
 {
-    /**
-     * @var ApiHandlerInterface
-     */
+    /** @var ApiHandlerInterface */
     private $handler;
 
-    /**
-     * Create ConsoleRequest
-     *
-     * @param ApiHandlerInterface $handler
-     */
     public function __construct(ApiHandlerInterface $handler)
     {
         $this->handler = $handler;
     }
 
-    /**
-     * Make request to API url
-     *
-     * @param string $url
-     * @param string $method
-     * @param array $values
-     * @param array $additionalValues
-     * @param string|null $token
-     *
-     * @return ConsoleResponse
-     */
-    public function makeRequest($url, $method, array $values, array $additionalValues = [], $token = null)
+    public function makeRequest(string $url, string $method, array $values, array $additionalValues = [], ?string $token = null): ConsoleResponse
     {
         list($postFields, $getFields, $cookieFields, $rawPost, $putFields) = $this->processValues($values);
 
-        if (isset($additionalValues['postFields'])) {
-            $postFields = array_merge($postFields, $additionalValues['postFields']);
-        }
-
-        if (isset($additionalValues['getFields'])) {
-            $getFields = array_merge($postFields, $additionalValues['getFields']);
-        }
-
-        if (isset($additionalValues['cookieFields'])) {
-            $cookieFields = array_merge($postFields, $additionalValues['cookieFields']);
-        }
-
-        if (isset($additionalValues['putFields'])) {
-            $putFields = array_merge($putFields, $additionalValues['putFields']);
-        }
+        $postFields = array_merge($postFields, $additionalValues['postFields'] ?? []);
+        $getFields = array_merge($getFields, $additionalValues['getFields'] ?? []);
+        $cookieFields = array_merge($cookieFields, $additionalValues['cookieFields'] ?? []);
+        $putFields = array_merge($putFields, $additionalValues['putFields'] ?? []);
 
         $postFields = $this->normalizeValues($postFields);
         $getFields = $this->normalizeValues($getFields);
@@ -85,18 +60,12 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_VERBOSE, false);
         curl_setopt($curl, CURLOPT_TIMEOUT, 10);
         curl_setopt($curl, CURLOPT_HEADER, true);
-        if (count($postFields)) {
+
+        if (count($postFields) || $rawPost || $putRawPost !== null) {
             curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $postFields);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, count($postFields) ? $postFields : ($rawPost ?: $putRawPost));
         }
-        if ($rawPost) {
-            curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $rawPost);
-        }
-        if ($putRawPost) {
-            curl_setopt($curl, CURLOPT_POST, true);
-            curl_setopt($curl, CURLOPT_POSTFIELDS, $putRawPost);
-        }
+
         if (count($cookieFields)) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
@@ -125,6 +94,10 @@ class ConsoleRequest
         $response = curl_exec($curl);
         $elapsed = intval((microtime(true) - $startTime) * 1000);
 
+        if ($response === false) {
+            $response = '';
+        }
+
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
         $responseHeaders = substr($response, 0, $headerSize);
         $responseBody = substr($response, $headerSize);
@@ -148,12 +121,12 @@ class ConsoleRequest
      *
      * @return array
      */
-    private function processValues(array $values)
+    private function processValues(array $values): array
     {
         $params = $this->handler->params();
 
         $postFields = [];
-        $rawPost = isset($values['post_raw']) ? $values['post_raw'] : false;
+        $rawPost = isset($values['post_raw']) ? $values['post_raw'] : null;
         $getFields = [];
         $putFields = [];
         $cookieFields = [];
@@ -173,9 +146,9 @@ class ConsoleRequest
                 if ($param->isMulti()) {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
                         $postFields[$key][] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_PUT) {
+                    } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key][] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_COOKIE) {
+                    } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key][] = $valueData;
                     } else {
                         $getFields[$key][] = $valueData;
@@ -183,9 +156,9 @@ class ConsoleRequest
                 } else {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
                         $postFields[$key] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_PUT) {
+                    } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key] = $valueData;
-                    } elseif ($param->getType() == InputParam::TYPE_COOKIE) {
+                    } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key] = $valueData;
                     } else {
                         $getFields[$key] = $valueData;
@@ -200,31 +173,27 @@ class ConsoleRequest
     /**
      * Process one param and returns value
      *
-     * @param InputParam  $param   input param
-     * @param string      $key     param key
-     * @param string      $value   actual value from request
+     * @param ParamInterface  $param   input param
+     * @param string          $key     param key
+     * @param mixed           $value   actual value from request
      *
-     * @return string
+     * @return string|null
      */
-    private function processParam(InputParam $param, $key, $value)
+    private function processParam(ParamInterface $param, string $key, $value): ?string
     {
-        if ($param->getKey() == $key) {
+        if ($param->getKey() === $key) {
             $valueData = $value;
 
-            if ($param->getType() == InputParam::TYPE_FILE) {
-                if ($value->isOk()) {
-                    $valueData = curl_file_create($value->getTemporaryFile(), $value->getContentType(), $value->getName());
+            if ($param->getType() === InputParam::TYPE_FILE) {
+                /** @var FileUpload $file */
+                $file = $value;
+                if ($file->isOk()) {
+                    $valueData = curl_file_create($file->getTemporaryFile(), $file->getContentType(), $file->getName());
                 } else {
                     $valueData = false;
                 }
-            }
-
-            if ($param->getType() == InputParam::TYPE_POST_RAW) {
-                if (isset($HTTP_RAW_POST_DATA)) {
-                    $valueData = $HTTP_RAW_POST_DATA;
-                } else {
-                    $valueData = file_get_contents('php://input');
-                }
+            } elseif ($param->getType() === InputParam::TYPE_POST_RAW) {
+                $valueData = file_get_contents('php://input');
             }
 
             return $valueData;
@@ -232,20 +201,14 @@ class ConsoleRequest
         return null;
     }
 
-    /**
-     * Normalize values array.
-     *
-     * @param $values
-     * @return array
-     */
-    private function normalizeValues($values)
+    private function normalizeValues(array $values): array
     {
         $result = [];
         foreach ($values as $key => $value) {
             if (is_array($value)) {
                 $counter = 0;
                 foreach ($value as $innerValue) {
-                    if ($innerValue != null) {
+                    if ($innerValue !== null) {
                         $result[$key . "[".$counter++."]"] = $innerValue;
                     }
                 }

@@ -1,15 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Link;
 
 use Nette\Application\LinkGenerator;
-use Tomaj\NetteApi\EndpointIdentifier;
+use Nette\Application\UI\InvalidLinkException;
+use Tomaj\NetteApi\EndpointInterface;
 
 class ApiLink
 {
-    /**
-     * @var LinkGenerator
-     */
+    /** @var LinkGenerator */
     private $linkGenerator;
 
     /**
@@ -25,12 +26,13 @@ class ApiLink
     /**
      * Create link to specified api endpoint
      *
-     * @param EndpointIdentifier  $endpoint
+     * @param EndpointInterface  $endpoint
      * @param array               $params
      *
      * @return string
+     * @throws InvalidLinkException
      */
-    public function link(EndpointIdentifier $endpoint, $params = [])
+    public function link(EndpointInterface $endpoint, $params = [])
     {
         $params = array_merge([
             'version' => $endpoint->getVersion(),

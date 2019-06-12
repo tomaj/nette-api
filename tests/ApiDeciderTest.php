@@ -1,93 +1,81 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
-use Nette\Application\LinkGenerator;
-use Nette\Application\Routers\SimpleRouter;
-use Nette\Http\Url;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
-use Tomaj\NetteApi\Link\ApiLink;
+use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
+use Tomaj\NetteApi\Handlers\DefaultHandler;
 
-class ApiDeciderTest extends PHPUnit_Framework_TestCase
+class ApiDeciderTest extends TestCase
 {
     public function testDefaultHandlerWithNoRegisteredHandlers()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
+        $apiDecider = new ApiDecider();
+        $result = $apiDecider->getApi('POST', 1, 'article', 'list');
 
-        $apiDecider = new ApiDecider($apiLink);
-        $result = $apiDecider->getApiHandler('POST', 1, 'article', 'list');
-
-        $this->assertInstanceOf('Tomaj\NetteApi\EndpointIdentifier', $result['endpoint']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Authorization\NoAuthorization', $result['authorization']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Handlers\DefaultHandler', $result['handler']);
+        $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
+        $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
+        $this->assertInstanceOf(DefaultHandler::class, $result->getHandler());
     }
 
     public function testFindRightHandler()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
-
-        $apiDecider = new ApiDecider($apiLink);
-        $apiDecider->addApiHandler(
+        $apiDecider = new ApiDecider();
+        $apiDecider->addApi(
             new EndpointIdentifier('POST', 2, 'comments', 'list'),
             new AlwaysOkHandler(),
             new NoAuthorization()
         );
 
-        $result = $apiDecider->getApiHandler('POST', 2, 'comments', 'list');
+        $result = $apiDecider->getApi('POST', 2, 'comments', 'list');
 
-        $this->assertInstanceOf('Tomaj\NetteApi\EndpointIdentifier', $result['endpoint']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Authorization\NoAuthorization', $result['authorization']);
-        $this->assertInstanceOf('Tomaj\NetteApi\Handlers\AlwaysOkHandler', $result['handler']);
+        $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
+        $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
+        $this->assertInstanceOf(AlwaysOkHandler::class, $result->getHandler());
 
-        $this->assertEquals('POST', $result['endpoint']->getMethod());
-        $this->assertEquals(2, $result['endpoint']->getVersion());
-        $this->assertEquals('comments', $result['endpoint']->getPackage());
-        $this->assertEquals('list', $result['endpoint']->getApiAction());
+        $this->assertEquals('POST', $result->getEndpoint()->getMethod());
+        $this->assertEquals(2, $result->getEndpoint()->getVersion());
+        $this->assertEquals('comments', $result->getEndpoint()->getPackage());
+        $this->assertEquals('list', $result->getEndpoint()->getApiAction());
     }
 
     public function testGetHandlers()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
+        $apiDecider = new ApiDecider();
 
-        $apiDecider = new ApiDecider($apiLink);
+        $this->assertEquals(0, count($apiDecider->getApis()));
 
-        $this->assertEquals(0, count($apiDecider->getHandlers()));
-
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('POST', 2, 'comments', 'list'),
             new AlwaysOkHandler(),
             new NoAuthorization()
         );
 
-        $this->assertEquals(1, count($apiDecider->getHandlers()));
+        $this->assertEquals(1, count($apiDecider->getApis()));
     }
 
     public function testGlobalPreflight()
     {
-        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new Url('http://test/'));
-        $apiLink = new ApiLink($linkGenerator);
-
-        $apiDecider = new ApiDecider($apiLink);
+        $apiDecider = new ApiDecider();
         $apiDecider->enableGlobalPreflight();
 
-        $this->assertEquals(0, count($apiDecider->getHandlers()));
+        $this->assertEquals(0, count($apiDecider->getApis()));
 
-        $apiDecider->addApiHandler(
+        $apiDecider->addApi(
             new EndpointIdentifier('POST', 2, 'comments', 'list'),
             new AlwaysOkHandler(),
             new NoAuthorization()
         );
 
-        $this->assertEquals(1, count($apiDecider->getHandlers()));
+        $this->assertEquals(1, count($apiDecider->getApis()));
 
-        $handler = $apiDecider->getApiHandler('OPTIONS', 2, 'comments', 'list');
-        $this->assertInstanceOf('Tomaj\NetteApi\Handlers\CorsPreflightHandler', $handler['handler']);
+        $handler = $apiDecider->getApi('OPTIONS', 2, 'comments', 'list');
+        $this->assertInstanceOf(CorsPreflightHandler::class, $handler->getHandler());
     }
 }

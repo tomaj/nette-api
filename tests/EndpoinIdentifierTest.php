@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\EndpointIdentifier;
 
-class EndpointIdentifierTest extends PHPUnit_Framework_TestCase
+class EndpointIdentifierTest extends TestCase
 {
     public function testValidation()
     {
@@ -20,7 +22,7 @@ class EndpointIdentifierTest extends PHPUnit_Framework_TestCase
 
     public function testSimpleUrl()
     {
-        $endpoint = new EndpointIdentifier('get', 2, 'main');
+        $endpoint = new EndpointIdentifier('get', 2, 'main', '');
         $this->assertNull($endpoint->getApiAction());
         $this->assertEquals('GET', $endpoint->getMethod());
     }

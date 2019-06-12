@@ -1,28 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Logger;
 
 interface ApiLoggerInterface
 {
-    /**
-     * Log processed api request
-     *
-     * @param integer   $responseCode
-     * @param string    $requestMethod
-     * @param string    $requestHeader
-     * @param string    $requestUri
-     * @param string    $requestIp
-     * @param string    $requestAgent
-     * @param integer   $responseTime
-     * @return boolean
-     */
     public function log(
-        $responseCode,
-        $requestMethod,
-        $requestHeader,
-        $requestUri,
-        $requestIp,
-        $requestAgent,
-        $responseTime
-    );
+        int $responseCode,
+        string $requestMethod,
+        string $requestHeader,
+        string $requestUri,
+        string $requestIp,
+        string $requestAgent,
+        int $responseTime
+    ): bool;
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Misc;
 
 class ConsoleResponse
@@ -32,18 +34,7 @@ class ConsoleResponse
 
     private $errorMessage;
 
-    /**
-     * ConsoleResponse constructor.
-     *
-     * @param string  $url
-     * @param string  $method
-     * @param array   $postFields
-     * @param array   $getFields
-     * @param array   $cookieFields
-     * @param array   $headers
-     * @param string|boolean $rawPost
-     */
-    public function __construct($url, $method, array $postFields = [], array $getFields = [], $cookieFields = [], array $headers = [], $rawPost = false)
+    public function __construct(string $url, string $method, array $postFields = [], array $getFields = [], array $cookieFields = [], array $headers = [], ?string $rawPost = null)
     {
         $this->url = $url;
         $this->method = $method;
@@ -54,17 +45,7 @@ class ConsoleResponse
         $this->rawPost = $rawPost;
     }
 
-    /**
-     * Log response from request
-     *
-     * @param $responseCode
-     * @param $responseBody
-     * @param $responseHeaders
-     * @param $responseTime
-     *
-     * @return voiud
-     */
-    public function logRequest($responseCode, $responseBody, $responseHeaders, $responseTime)
+    public function logRequest(int $responseCode, string $responseBody, string $responseHeaders, int $responseTime): void
     {
         $this->responseCode = $responseCode;
         $this->responseBody = $responseBody;
@@ -72,7 +53,7 @@ class ConsoleResponse
         $this->responseTime = $responseTime;
     }
 
-    public function logError($errorNumber, $errorMessage, $responseTime)
+    public function logError(int $errorNumber, string $errorMessage, int $responseTime): void
     {
         $this->isError = true;
         $this->errorNumber = $errorNumber;
@@ -80,66 +61,57 @@ class ConsoleResponse
         $this->responseTime = $responseTime;
     }
 
-    public function getPostFields()
-    {
-        return $this->postFields;
-    }
-
-    public function getRawPost()
-    {
-        return $this->rawPost;
-    }
-
-    public function getGetFields()
-    {
-        return $this->getFields;
-    }
-
-    public function getCookieFields()
-    {
-        return $this->cookieFields;
-    }
-
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->url;
     }
 
-    public function getMethod()
+    public function getMethod(): string
     {
         return $this->method;
     }
 
-    public function getHeaders()
+    public function getPostFields(): array
+    {
+        return $this->postFields;
+    }
+
+    public function getRawPost(): ?string
+    {
+        return $this->rawPost;
+    }
+
+    public function getGetFields(): array
+    {
+        return $this->getFields;
+    }
+
+    public function getCookieFields(): array
+    {
+        return $this->cookieFields;
+    }
+
+    public function getHeaders(): array
     {
         return $this->headers;
     }
 
-    public function isError()
+    public function isError(): bool
     {
         return $this->isError;
     }
 
-    /**
-     * @return integer
-     */
-    public function getResponseCode()
+    public function getResponseCode(): ?int
     {
         return $this->responseCode;
     }
 
-    /**
-     * @return string
-     */
-    public function getResponseBody()
+    public function getResponseBody(): string
     {
         return $this->responseBody;
     }
 
-    /**
-     * @return string
-     */
-    public function getFormattedJsonBody()
+    public function getFormattedJsonBody(): string
     {
         $body = $this->responseBody;
         $decoded = json_decode($body);
@@ -149,31 +121,22 @@ class ConsoleResponse
         return $body;
     }
 
-    public function getResponseHeaders()
+    public function getResponseHeaders(): string
     {
         return $this->responseHeaders;
     }
 
-    /**
-     * @return integer
-     */
-    public function getResponseTime()
+    public function getResponseTime(): int
     {
         return $this->responseTime;
     }
 
-    /**
-     * @return integer
-     */
-    public function getErrorNumber()
+    public function getErrorNumber(): int
     {
         return $this->errorNumber;
     }
 
-    /**
-     * @return string
-     */
-    public function getErrorMessage()
+    public function getErrorMessage(): string
     {
         return $this->errorMessage;
     }

@@ -11,21 +11,23 @@
         }
     ],
     "require": {
-        "php": ">= 5.6.0",
+        "php": ">= 7.1.0",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-session": "*",
         "ext-filter": "*",
-        "nette/application": "^2.3.12",
-        "nette/http": "^2.0",
-        "tracy/tracy": "^2.0",
+        "nette/application": "^3.0",
+        "nette/http": "^3.0",
+        "tracy/tracy": "^2.6",
         "league/fractal": "^0.17.0",
-        "tomaj/nette-bootstrap-form": "^1.1"
+        "tomaj/nette-bootstrap-form": "^2.0",
+        "justinrainbow/json-schema": "^5.2"
     },
     "require-dev": {
-        "nette/di": "^2.0",
-        "phpunit/phpunit": "^5.3",
-        "squizlabs/php_codesniffer": "^3.0"
+        "nette/di": "^3.0",
+        "latte/latte": "^2.4",
+        "phpunit/phpunit": ">7.0",
+        "squizlabs/php_codesniffer": "^3.2"
     },
     "autoload": {
         "psr-4": {

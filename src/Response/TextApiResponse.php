@@ -1,37 +1,51 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Response;
 
-use Nette\Application\Responses\TextResponse;
+use Nette\Application\UI\ITemplate;
+use Nette\Http\IRequest;
+use Nette\Http\IResponse;
+use Nette\SmartObject;
 
-class TextApiResponse extends TextResponse
+class TextApiResponse implements ResponseInterface
 {
-    /**
-     * @var integer
-     */
+    use SmartObject;
+
+    /** @var int */
     private $code;
 
+    /** @var mixed */
+    private $data;
+
     /**
-     * Create TextApiResponse
-     * This class only wrap JsonResponse from Nette and add possibility
-     * to setup response code and automaticaly set content type
-     *
-     * @param integer $code
+     * @param int $code
      * @param mixed $data
      */
-    public function __construct($code, $data)
+    public function __construct(int $code, $data)
     {
-        parent::__construct($data);
         $this->code = $code;
+        $this->data = $data;
     }
 
     /**
-     * Return api response http code
-     *
-     * @return integer
+     * {@inheritdoc}
      */
-    public function getCode()
+    public function getCode(): int
     {
         return $this->code;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function send(IRequest $httpRequest, IResponse $httpResponse): void
+    {
+        if ($this->data instanceof ITemplate) {
+            $this->data->render();
+        } else {
+            echo $this->data;
+        }
     }
 }

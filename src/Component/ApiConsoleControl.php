@@ -1,45 +1,50 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
-use Nette\Http\Request;
+use Nette\Bridges\ApplicationLatte\Template;
+use Nette\Http\IRequest;
+use Nette\Utils\ArrayHash;
 use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
-use Tomaj\NetteApi\EndpointIdentifier;
+use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
-use Tomaj\NetteApi\Params\InputParam;
 
 class ApiConsoleControl extends Control
 {
+    private $request;
+
     private $endpoint;
 
     private $handler;
 
     private $authorization;
 
-    private $request;
-
-    public function __construct(Request $request, EndpointIdentifier $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
+    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
     {
-        parent::__construct();
+        $this->request = $request;
         $this->endpoint = $endpoint;
         $this->handler = $handler;
         $this->authorization = $authorization;
-        $this->request = $request;
     }
 
-    public function render()
+    public function render(): void
     {
-        $this->getTemplate()->setFile(__DIR__ . '/console.latte');
-        $this->getTemplate()->render();
+        /** @var Template $template */
+        $template = $this->getTemplate();
+        $template->setFile(__DIR__ . '/console.latte');
+        $template->add('handler', $this->handler);
+        $template->render();
     }
 
-    protected function createComponentConsoleForm()
+    protected function createComponentConsoleForm(): Form
     {
         $form = new Form();
 
@@ -53,7 +58,7 @@ class ApiConsoleControl extends Control
             $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
         }
         $port = '';
-        if ($uri->scheme == 'http' && $uri->port != 80) {
+        if ($uri->scheme === 'http' && $uri->port !== 80) {
             $port = ':' . $uri->port;
         }
         $url = $scheme . '://' . $uri->host . $port . '/api/' . $this->endpoint->getUrl();
@@ -66,7 +71,7 @@ class ApiConsoleControl extends Control
 
         if ($this->authorization instanceof BearerTokenAuthorization) {
             $form->addText('token', 'Token')
-                ->setAttribute('placeholder', 'Enter token');
+                ->setHtmlAttribute('placeholder', 'Enter token');
         } elseif ($this->authorization instanceof NoAuthorization) {
             $form->addText('authorization', 'Authorization')
                 ->setDisabled(true);
@@ -76,45 +81,11 @@ class ApiConsoleControl extends Control
         $form->addCheckbox('send_session_id', 'Send session id cookie');
 
         $params = $this->handler->params();
-        $jsonField = null;
-        $jsonParams = [];
         foreach ($params as $param) {
-            $count = $param->isMulti() ? 5 : 1;
-            for ($i = 0; $i < $count; $i++) {
-                $key = $param->getKey();
-                if ($param->isMulti()) {
-                    $key = $key . '___' . $i;
-                }
-
-                if ($param->getAvailableValues() && is_array($param->getAvailableValues())) {
-                    $c = $form->addSelect($key, $this->getParamLabel($param), array_combine($param->getAvailableValues(), $param->getAvailableValues()));
-                    if (!$param->isRequired()) {
-                        $c->setPrompt('Select ' . $this->getLabel($param));
-                    }
-                } elseif ($param->getAvailableValues() && is_string($param->getAvailableValues())) {
-                    $c = $form->addText($key, $this->getParamLabel($param))->setDisabled(true);
-                    $defaults[$key] = $param->getAvailableValues();
-                } elseif ($param->getType() == InputParam::TYPE_FILE) {
-                    $c = $form->addUpload($key, $this->getParamLabel($param));
-                } elseif ($param->getType() == InputParam::TYPE_POST_RAW) {
-                    $c = $form->addTextArea('post_raw', $this->getParamLabel($param))
-                        ->setAttribute('rows', 10);
-                } elseif ($param->getType() == InputParam::TYPE_POST_JSON_KEY) {
-                    if ($jsonField === null) {
-                        $jsonField = $form->addTextArea('post_raw', 'JSON')
-                            ->setOption('description', 'Empty string means "key is required", null means "key is optional"');
-                    }
-                    $jsonParams[$key] = $param->isRequired() ? '' : null;
-                } else {
-                    $c = $form->addText($key, $this->getParamLabel($param));
-                }
-            }
-        }
-        if ($jsonField !== null && $jsonParams) {
-            $jsonField->setDefaultValue(json_encode($jsonParams, JSON_PRETTY_PRINT));
+            $param->updateConsoleForm($form);
         }
 
-        $form->addSubmit('send', 'Otestuj')
+        $form->addSubmit('send', 'Try api')
             ->getControlPrototype()
             ->setName('button')
             ->setHtml('<i class="fa fa-cloud-upload"></i> Try api');
@@ -125,26 +96,11 @@ class ApiConsoleControl extends Control
         return $form;
     }
 
-    private function getLabel(InputParam $param)
-    {
-        return ucfirst(str_replace('_', ' ', $param->getKey()));
-    }
-
-    private function getParamLabel(InputParam $param)
-    {
-        $title = $this->getLabel($param);
-        if ($param->isRequired()) {
-            $title .= ' *';
-        }
-        $title .= ' (' . $param->getType() . ')';
-        return $title;
-    }
-
-    public function formSucceeded($form, $values)
+    public function formSucceeded(Form $form, ArrayHash $values): void
     {
         $url = $values['api_url'];
 
-        $token = false;
+        $token = null;
         if (isset($values['token'])) {
             $token = $values['token'];
             unset($values['token']);
@@ -162,7 +118,9 @@ class ApiConsoleControl extends Control
         $consoleRequest = new ConsoleRequest($this->handler);
         $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);
 
-        $this->getTemplate()->add('response', $result);
+        /** @var Template $template */
+        $template = $this->getTemplate();
+        $template->add('response', $result);
 
         if ($this->getPresenter()->isAjax()) {
             $this->getPresenter()->redrawControl();

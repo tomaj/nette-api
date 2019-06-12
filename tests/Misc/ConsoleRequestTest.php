@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
 use Tomaj\NetteApi\Handlers\EchoHandler;
 
-class ConsoleRequestTest extends PHPUnit_Framework_TestCase
+class ConsoleRequestTest extends TestCase
 {
     public function testLogRequest()
     {

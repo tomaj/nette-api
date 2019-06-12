@@ -6,14 +6,33 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 #### Changed
 
+* Updated nette libs to version 3.0.0 (BC break)
+* Added typehints (BC break)
+* Splitted InputParam to multiple subclasses (BC break)
+* Removed type TYPE_POST_JSON_KEY (BC break)
+* Wrong input now returns code 400 instead of 500 (BC break if somebody checks return code)
+* Replaced handler information array triplet (endpoint, handler, authorization) with class Api (BC break for API console usage)
+* Renamed some methods from ApiDecider (BC break)
 * Pretty JSON output in API console - without escaping unicode and slashes
+
+#### Added
+
+* Added type JsonInputParam with scheme as replacement for type TYPE_POST_JSON_KEY
+* Detailed error for wrong input if debugger is enabled
+* Added summary (short description), description, tags and deprecated flag for API handlers
+* Added description, default value and example for input params
+* Added output validator
+
+#### Removed
+
+* Removed support for PHP 5.6, 7.0 and hhvm (BC Break)
+* Removed deprecated class ApiResponse (BC Break)
 
 ## 1.15.0 - 2019-03-13
 
 #### Added
 
 * Added possibility to set own scope to Manager
-
 * Added JSON validation - if JSON is invalid, throw "wrong input" error instead of setting params to null
 
 ## 1.14.0 - 2018-08-02

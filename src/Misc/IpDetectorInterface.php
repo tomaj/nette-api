@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Misc;
 
 interface IpDetectorInterface
@@ -9,5 +11,5 @@ interface IpDetectorInterface
      *
      * @return string
      */
-    public function getRequestIp();
+    public function getRequestIp(): string;
 }

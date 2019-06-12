@@ -12,16 +12,16 @@
 
 ## Why Nette-Api
 
-This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement you custom business logic. Library provide authorisation, validation and formatting services for you api.
+This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement your custom business logic. Library provides authorization, validation and formatting services for you API.
 
 ## Installation
 
-This library requires PHP 5.4 or later. It works also on PHP 7.0.
+This library requires PHP 7.1 or later.
 
 Recommended installation method is via Composer:
 
-``` bash
-$ composer require tomaj/nette-api
+```bash
+composer require tomaj/nette-api
 ```
 
 Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
@@ -33,9 +33,9 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 
 ## How Nette-API works
 
-First you have register library presenter for routing. In *config.neon* just add this line:
+First, you have to register library presenter for routing. In *config.neon* just add this line:
 
-``` yaml
+```neon
 application:
   mapping:
     Api: Tomaj\NetteApi\Presenters\*Presenter
@@ -43,43 +43,44 @@ application:
 
 And add route to you RouterFactory:
 
-``` php
+```php
 $router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default');
 ```
 
-After that you need only register your api handlers to *apiDecider* [ApiDecider](src/ApiDecider.php) and register [ApiLink](src/Link/ApiLink.php) and [Tomaj\NetteApi\Misc\IpDetector](src/Misc/IpDetector.php). This can be done also with *config.neon*:
+After that you need only register your API handlers to *apiDecider* [ApiDecider](src/ApiDecider.php), register [ApiLink](src/Link/ApiLink.php) and [Tomaj\NetteApi\Misc\IpDetector](src/Misc/IpDetector.php). This can be done also with *config.neon*:
 
-``` yaml
+```neon
 services:
   - Tomaj\NetteApi\Link\ApiLink
   - Tomaj\NetteApi\Misc\IpDetector
   apiDecider:
-    class: Tomaj\NetteApi\ApiDecider
-      setup:
-        - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\NoAuthorization())
-        - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
+    factory: Tomaj\NetteApi\ApiDecider
+    setup:
+      - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\NoAuthorization())
+      - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
 ```
 
-As you can see in example, you can register as many endpoints as you want with different configurations. Nette-Api support api versioning from the beginning.
-This example will prepare this api calls:
+As you can see in example, you can register as many endpoints as you want with different configurations. Nette-Api supports API versioning from the beginning.
+This example will prepare these API calls:
 
 1. `http://yourapp/api/v1/users` - available via GET
 2. `http://yourapp/api/v1/users/send-email`  - available via POST
 
 
-Core of the Nette-Api is handlers. For this example you need implement 2 classes:
+Core of the Nette-Api are handlers. For this example you need to implement two classes:
 
 1. App\MyApi\v1\Handlers\UsersListingHandler
 2. App\MyApi\v1\Handlers\SendEmailHandler
 
-This handlers implements interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extends your handler from [BaseHandler](src/Handlers/BaseHandler.php). 
-When someone reach your api this handlers will be triggered and *handle()* method will be called.
+These handlers implement interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extend your handlers from [BaseHandler](src/Handlers/BaseHandler.php). 
+When someone reach your API these handlers will be triggered and *handle()* method will be called.
 
-``` php
+```php
 namespace App\MyApi\v1\Handlers;
 
 use Tomaj\NetteApi\Handlers\BaseHandler;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 class UsersListingHandler extends Basehandler
 {
@@ -91,7 +92,7 @@ class UsersListingHandler extends Basehandler
         $this->userRepository = $userRepository;
     }
 
-    public function handle($params)
+    public function handle(array $params): ResponseInterface
     {
         $users = [];
         foreach ($this->userRepository->all() as $user) {
@@ -107,15 +108,15 @@ This simple handler is using *UsersRepository* that was created by Nette Contain
 ## Advanced use (with Fractal)
 
 Nette-Api provides integration with [Fractal][] library for formatting API responses.
-If you want to use it, you have to extend your handler from *[BaseHandler](src/Handlers/BaseHandler.php)* and your Fractal instance will be accessible be `$this->getFractal()`.
+If you want to use it, you have to extend your handler from *[BaseHandler](src/Handlers/BaseHandler.php)* and your Fractal instance will be accessible by `$this->getFractal()`.
 
-Main advantage from Fractal is separation your api "view" (like transformation data to json object or xml or anything...). Also you can include transformations in other transformations to include other objects to others. 
+Main advantage of Fractal is separation of your API "view" (like transformation data to json object or xml or anything...). Also you can include transformations in other transformations to include other objects to others. 
 
 Example with fractal:
 
-1. You will need Formater
+1. You will need Transformer
 
-``` php
+```php
 namespace App\MyApi\v1\Transformers;
 
 use League\Fractal\TransformerAbstract;
@@ -135,11 +136,12 @@ class UserTransformer extends TransformerAbstract
 
 2. And this will be your handler:
 
-``` php
+```php
 namespace App\MyApi\v1\Handlers;
 
 use Tomaj\NetteApi\Handlers\BaseHandler;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 class UsersListingHandler extends Basehandler
 {
@@ -151,7 +153,7 @@ class UsersListingHandler extends Basehandler
         $this->userTransformer = $userTransformer;
     }
 
-    public function handle($params)
+    public function handle(array $params): ResponseInterface
     {
         $users = $this->useRepository->all(); 
 
@@ -163,22 +165,23 @@ class UsersListingHandler extends Basehandler
 }
 ```
 
-I have to recommend to take a look at [Fractal][] library. There are much more information about transformers, serialisers, paginations etc. It is really nice library.
+We recommend to take a look at [Fractal][] library. There are much more information about transformers, serializers, paginations etc. It is really nice library.
 
 [Fractal]: http://fractal.thephpleague.com/
 
 ## Endpoint inputs
 
-Each handler can describe which input is required. It could be GET or POST parameters, also COOKIES, raw post json or file uploads. You have to implement method `params()` where you have to return array with params. This params are used in api console to generate right form.
+Each handler can describe which input is required. It could be GET or POST parameters, also COOKIES, raw post, JSON or file uploads. You have to implement method `params()` where you have to return array with params. These params are used in API console to generate form.
 
 Example with user detail:
 
-``` php
+```php
 namespace App\MyApi\v1\Handlers;
 
 use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 class UsersDetailHandler extends Basehandler
 {
@@ -190,14 +193,14 @@ class UsersDetailHandler extends Basehandler
         $this->userRepository = $userRepository;
     }
 
-    public function params()
+    public function params(): array
     {
         return [
-            new InputParam(InputParam::TYPE_GET, 'id', InputParam::REQUIRED),
+            (new GetInputParam('id'))->setRequired(),
         ];
     }
 
-    public function handle($params)
+    public function handle(array $params): ResponseInterface
     {
         $user = $this->userRepository->find($params['id']);
         if (!$user) {
@@ -214,35 +217,68 @@ class UsersDetailHandler extends Basehandler
 
 ## Input Types
 
-Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES or RAW POST data.
+Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES, RAW POST data or JSON.
 All input types are available via test console.
 
-This is table with support input types:
+This is table with supported input types:
 
 | Input type      | Example
 | ----------      | -------
-| POST            | `new InputParam(InputParam::TYPE_POST, 'key')`
-| GET             | `new InputParam(InputParam::TYPE_GET, 'key')`
-| FILE            | `new InputParam(InputParam::TYPE_FILE, 'key')`
-| COOKIE          | `new InputParam(InputParam::TYPE_COOKIE, 'key')`
-| RAW POST        | `new InputParam(InputParam::TYPE_POST_RAW, 'key')`
-| JSON            | `new InputParam(InputParam::TYPE_POST_JSON_KEY, 'key')`
+| GET             | `new GetInputParam('key')`
+| POST            | `new PostInputParam('key')`
+| COOKIE          | `new CookieInputParam('key')`
+| FILE            | `new FileInputParam('key')`
+| RAW POST        | `new RawInputParam('key')`
+| JSON            | `new JsonInputParam('key', '{"type": "object"}')`
+
+
+## Outputs
+
+By implementing method outputs for your handlers you can specify list of possible outputs (e.g. output schemas) and those will be validated before response is sent to user. If no outputs are set, response is sent to user without validating.
+
+Usage example:
+```php
+public function outputs(): array
+{
+    $schema = [
+        'type' => 'object',
+        'properties' => [
+            'name' => [
+                'type' => 'string',
+            ],
+            'surname' => [
+                'type' => 'string',
+            ],
+            'sex' => [
+                'type' => 'string',
+                'enum' => ['M', 'F'],
+            ],
+        ],
+        'required' => ['name', 'surname'],
+        'additionalProperties' => false,
+    ];
+    return [
+        new JsonOutput(200, json_encode($schema)),
+    ];
+}
+```
+For more examples see [JSON schema web page](http://json-schema.org). Keep in mind that nette api uses [justinrainbow/json-schema](https://github.com/justinrainbow/json-schema/tree/master/dist/schema) for validating schemas and this package supports only json schema draft 03 and 04.
 
 
 ## Security
 
-Protecting your api is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApiHandler()* method in *config.neon*.
+Protecting your API is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApi()* method in *config.neon*.
 
-For simple use, if you want to use Bearer token authorisation with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
+For simple use, if you want to use Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
 
-``` yaml
+```neon
 services:
     staticBearer: Tomaj\NetteApi\Misc\StaticBearerTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
 
     apiDecider:
-        class: Tomaj\NetteApi\ApiDecider
+        factory: Tomaj\NetteApi\ApiDecider
         setup:
-            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticBearer))
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticBearer))
 
 ```
 
@@ -255,7 +291,7 @@ In Nette-Api if you would like to specify IP restrictions for tokens you can use
 |`127.0.0.1`                | accessible from single IP
 |`127.0.0.1,127.0.02`       | accessible from multiple IP, separator could be new line or space
 |`127.0.0.1/32`             | accessible from ip range
-|*false*                    | token is disabled, cannot access 
+|*null*                     | token is disabled, cannot access 
 
 
 But it is very easy to implement your own Authorisation for API.
@@ -267,30 +303,30 @@ Nette-api is ready for this situation and you can choose if you want to enable p
 
 Globally enabled - every api endpoint will be available for preflight OPTIONS call:
 
-``` neon
+```neon
 services:
     apiDecider:
-        class: Tomaj\NetteApi\ApiDecider
+        factory: Tomaj\NetteApi\ApiDecider
         setup:
             - enableGlobalPreflight()
-            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
 ```
 
 Or you can register custom OPTIONS endpoints:
 
-``` neon
+```neon
 services:
     apiDecider:
-        class: Tomaj\NetteApi\ApiDecider
+        factory: Tomaj\NetteApi\ApiDecider
         setup:
-            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('OPTIONS', 1, 'users'), \Tomaj\NetteApi\Handlers\CorsPreflightHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
-            - addApiHandler(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('OPTIONS', 1, 'users'), \Tomaj\NetteApi\Handlers\CorsPreflightHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
             
 ```
 
 ## Logging
 
-It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all api requests.
+It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all API requests.
 
 ## CORS Security
 
@@ -303,10 +339,10 @@ If you need to iteract with your API with Javascript you will need to send corre
 
 You can set this property in config.neon if you register [ApiPresenter](src/Presenters/ApiPresenter.php):
 
-``` neon
+```neon
 services:
   -
-    class: Tomaj\NetteApi\Presenters\ApiPresenter
+    factory: Tomaj\NetteApi\Presenters\ApiPresenter
     setup:
       - setCorsHeader('auto')
 ```
@@ -323,7 +359,7 @@ All components generate bootstrap html and can be styled with bootstrap css:
 
 You have to create components in your controller:
 
-``` php
+```php
 use Nette\Application\UI\Presenter;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Component\ApiConsoleControl;
@@ -333,29 +369,41 @@ class MyPresenter extends Presenter
 {
     private $apiDecider;
 
+    private $method;
+    
+    private $version;
+    
+    private $package;
+    
+    private $apiAction;
+
     public function __construct(ApiDecider $apiDecider)
     {
         parent::__construct();
         $this->apiDecider = $apiDecider;
     }
 
-    public function renderShow($method, $version, $package, $apiAction)
+    public function renderShow(string $method, int $version, string $package, ?string $apiAction = null): void
     {
+        $this->method = $method;
+        $this->version = $version;
+        $this->package = $package;
+        $this->apiAction = $apiAction;
     }
 
-    protected function createComponentApiListing()
+    protected function createComponentApiListing(): ApiListingControl
     {
-        $apiListing = new ApiListingControl($this, 'apiListingControl', $this->apiDecider);
-        $apiListing->onClick(function ($method, $version, $package, $apiAction) {
+        $apiListing = new ApiListingControl($this->apiDecider);
+        $apiListing->onClick[] = function ($method, $version, $package, $apiAction) {
             $this->redirect('show', $method, $version, $package, $apiAction);
-        });
+        };
         return $apiListing;
     }
 
     protected function createComponentApiConsole()
     {
-        $api = $this->apiDecider->getApiHandler($this->params['method'], $this->params['version'], $this->params['package'], isset($this->params['apiAction']) ? $this->params['apiAction'] : null);
-        $apiConsole = new ApiConsoleControl($this->getHttpRequest(), $api['endpoint'], $api['handler'], $api['authorization']);
+        $api = $this->apiDecider->getApiHandler($this->method, $this->version, $this->package, $this->apiAction);
+        $apiConsole = new ApiConsoleControl($this->getHttpRequest(), $api->getEndpoint(), $api->getHandler(), $api->getAuthorization());
         return $apiConsole;
     }
 }
@@ -377,7 +425,7 @@ Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recen
 
 ## Testing
 
-``` bash
+```bash
 $ composer test
 ```
 

@@ -1,55 +1,54 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
-use Nette\ComponentModel\IContainer;
+use Nette\Bridges\ApplicationLatte\Template;
 use Tomaj\NetteApi\ApiDecider;
-use Closure;
-use Exception;
+use Tomaj\NetteApi\Api;
 
+/**
+ * @method void onClick(string $method, int $version, string $package, ?string $apiAction)
+ */
 class ApiListingControl extends Control
 {
-    /**
-     * @var ApiDecider
-     */
+    /** @var ApiDecider */
     private $apiDecider;
 
-    private $clickCallback;
+    public $onClick = [];
 
-    public function __construct(IContainer $parent, $name, ApiDecider $apiDecider)
+    public function __construct(ApiDecider $apiDecider)
     {
-        parent::__construct();
         $this->apiDecider = $apiDecider;
     }
 
-    public function onClick(Closure $callback)
+    public function render(): void
     {
-        $this->clickCallback = $callback;
+        $apis = $this->apiDecider->getApis();
+
+        /** @var Template $template */
+        $template = $this->getTemplate();
+        $template->add('apis', $this->groupApis($apis));
+        $template->setFile(__DIR__ . '/api_listing.latte');
+        $template->render();
     }
 
-    public function render()
+    public function handleSelect(string $method, int $version, string $package, ?string $apiAction = null): void
     {
-        $handlers = $this->apiDecider->getHandlers();
-        $this->getTemplate()->add('handlers', $this->sortHandlers($handlers));
-        $this->getTemplate()->setFile(__DIR__ . '/api_listing.latte');
-        $this->getTemplate()->render();
+        $this->onClick($method, $version, $package, $apiAction);
     }
 
-    public function handleSelect($method, $version, $package, $apiAction)
-    {
-        if (!$this->clickCallback) {
-            throw new Exception('You have to set onClick callback to component!');
-        }
-
-        $this->clickCallback->__invoke($method, $version, $package, $apiAction);
-    }
-
-    private function sortHandlers($handlers)
+    /**
+     * @param Api[] $handlers
+     * @return array
+     */
+    private function groupApis(array $handlers): array
     {
         $versionHandlers = [];
         foreach ($handlers as $handler) {
-            $endPoint = $handler['endpoint'];
+            $endPoint = $handler->getEndpoint();
             if (!isset($versionHandlers[$endPoint->getVersion()])) {
                 $versionHandlers[$endPoint->getVersion()] = [];
             }

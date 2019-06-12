@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Handlers;
 
 use Nette\Http\Response;
 use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 
 class CorsPreflightHandler extends BaseHandler
 {
@@ -25,7 +28,7 @@ class CorsPreflightHandler extends BaseHandler
         $this->headers = $headers;
     }
 
-    public function handle($params)
+    public function handle(array $params): ResponseInterface
     {
         foreach ($this->headers as $name => $values) {
             $values = is_array($values) ? $values : [$values];

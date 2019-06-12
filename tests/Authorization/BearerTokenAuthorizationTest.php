@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Test\Handler;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
 
-class BearerTokenAuthorizationTest extends PHPUnit_Framework_TestCase
+class BearerTokenAuthorizationTest extends TestCase
 {
     public function testAuthorizedToken()
     {
@@ -95,6 +97,20 @@ class BearerTokenAuthorizationTest extends PHPUnit_Framework_TestCase
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertTrue($bearerTokenAuthorization->authorized());
         
+        $ipDetector = new StaticIpDetector('5.6.2.2');
+        $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
+        $this->assertFalse($bearerTokenAuthorization->authorized());
+    }
+
+    public function testTokenWithDisabledAccess()
+    {
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
+        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => null]);
+
+        $ipDetector = new StaticIpDetector('5.6.2.1');
+        $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
+        $this->assertFalse($bearerTokenAuthorization->authorized());
+
         $ipDetector = new StaticIpDetector('5.6.2.2');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());

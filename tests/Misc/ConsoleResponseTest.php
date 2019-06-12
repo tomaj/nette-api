@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\ConsoleResponse;
 
-class ConsoleResponseTest extends PHPUnit_Framework_TestCase
+class ConsoleResponseTest extends TestCase
 {
     public function testLogRequest()
     {
@@ -27,10 +29,10 @@ class ConsoleResponseTest extends PHPUnit_Framework_TestCase
         $this->assertNull($response->getResponseCode());
         $this->assertFalse($response->isError());
 
-        $response->logRequest(202, 'asdsafsdgdsg', 'responseheadersd', 145);
-        $this->assertEquals('asdsafsdgdsg', $response->getResponseBody());
+        $response->logRequest(202, '{"aaa": "bbb"}', 'responseheadersd', 145);
+        $this->assertEquals('{"aaa": "bbb"}', $response->getResponseBody());
         $this->assertEquals('responseheadersd', $response->getResponseHeaders());
-        $this->assertEquals('asdsafsdgdsg', $response->getFormattedJsonBody());
+        $this->assertEquals("{\n    \"aaa\": \"bbb\"\n}", $response->getFormattedJsonBody());
         $this->assertEquals(145, $response->getResponseTime());
         $this->assertFalse($response->isError());
         $this->assertEquals(202, $response->getResponseCode());

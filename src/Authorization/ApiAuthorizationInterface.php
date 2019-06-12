@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Authorization;
 
 interface ApiAuthorizationInterface
@@ -9,13 +11,13 @@ interface ApiAuthorizationInterface
      *
      * @return boolean
      */
-    public function authorized();
+    public function authorized(): bool;
 
     /**
      * If authorization deny acces, this method should provide additional information
      * abount cause of restriction.
      *
-     * @return string|boolean
+     * @return string|null
      */
-    public function getErrorMessage();
+    public function getErrorMessage(): ?string;
 }

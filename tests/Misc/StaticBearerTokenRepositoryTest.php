@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Test\Params;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
 
-class StaticBearerTokenRepositoryTest extends PHPUnit_Framework_TestCase
+class StaticBearerTokenRepositoryTest extends TestCase
 {
     public function testValidation()
     {
@@ -23,6 +25,6 @@ class StaticBearerTokenRepositoryTest extends PHPUnit_Framework_TestCase
         $repository = new StaticBearerTokenRepository([
             'mytoken' => '*',
         ]);
-        $this->assertFalse($repository->ipRestrictions('mytoken2'));
+        $this->assertNull($repository->ipRestrictions('mytoken2'));
     }
 }
