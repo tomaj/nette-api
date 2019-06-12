@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.0.0 - 2019-06-12
+
 #### Changed
 
 * Updated nette libs to version 3.0.0 (BC break)
