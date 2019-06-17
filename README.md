@@ -33,7 +33,7 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 
 ## How Nette-API works
 
-First you have register library presenter for routing. In *config.neon* just add this line:
+First you have register library presenter for routing. In *config.neon* just add these lines:
 
 ``` yaml
 application:
@@ -169,7 +169,7 @@ I have to recommend to take a look at [Fractal][] library. There are much more i
 
 ## ApiLink Macro
 
-First you have to register macro. In *config.neon* just add this lines:
+First you have to register macro. In *config.neon* just add these lines:
 
 ``` yaml
 latte:
@@ -180,8 +180,7 @@ latte:
 Usage in latte files:
 
 ```
-{php $params = ['title' => 'My title', 'data-foo' => 'bar']}
-{apiLink $version, $package, $apiAction, $params}
+{apiLink $method, $version, $package, $apiAction, ['title' => 'My title', 'data-foo' => 'bar']}
 ```
 
 ## Endpoint inputs

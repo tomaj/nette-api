@@ -2,50 +2,56 @@
 
 namespace Tomaj\NetteApi\Link;
 
-use Efabrica\Cms\Core\Macro\PageLink;
 use Latte\Compiler;
 use Latte\MacroNode;
 use Latte\Macros\MacroSet;
 use Latte\PhpWriter;
-use Tomaj\NetteApi\EndpointIdentifier;
+use Nette\Application\UI\InvalidLinkException;
+use Tracy\Debugger;
 
 /**
  * Usage in latte:
- * {php $params = ['title' => 'My title', 'data-foo' => 'bar']}
- * {apiLink $version, $package, $apiAction, $params}
+ * {apiLink $method, $version, $package, $apiAction, ['title' => 'My title', 'data-foo' => 'bar']}
  */
 class ApiLinkMacro extends MacroSet
 {
     public static function install(Compiler $compiler)
     {
         $macroSet = new static($compiler);
-        $macroSet->addMacro('apiLink', [ApiLinkMacro::class, 'start']);
+        $macroSet->addMacro('apiLink', [self::class, 'start']);
     }
 
     public static function start(MacroNode $node, PhpWriter $writer)
     {
-        $args = array_map('trim', explode(',', $node->args, 3));
+        $args = array_map('trim', explode(',', $node->args, 5));
+
+        if (count($args) < 3) {
+            $message = "Invalid link destination, too few arguments.";
+            if (Debugger::isEnabled()) {
+                throw new InvalidLinkException($message);
+            }
+            Debugger::log($message, Debugger::EXCEPTION);
+            return '';
+        }
+
         $arguments = [
-            'version' => $args[0] ?? 'null',
-            'package' => $args[1] ?? 'null',
-            'action' => $args[2] ?? 'null',
-            'params' => $args[3] ?? '[]',
+            'method' => self::addQuotes($args[0]),
+            'version' => $args[1],
+            'package' => self::addQuotes($args[2]),
+            'action' => isset($args[3]) ? self::addQuotes($args[3]) : 'null',
+            'params' => $args[4] ?? '[]',
         ];
 
-        return $writer->write('echo \Tomaj\NetteApi\Link\ApiLinkMacro::createLink($_presenter->context->getByType("' .
-            ApiLink::class . '"), ' .
-            $arguments['version']  . ', ' .
-            $arguments['package'] . ', ' .
-            $arguments['action'] . ', ' .
-            $arguments['params'] . ')');
+        return $writer->write('echo ($_presenter->context->getByType("' . ApiLink::class . '"))' .
+            '->link((new Tomaj\NetteApi\EndpointIdentifier(' .
+                $arguments['method']  . ', ' .
+                $arguments['version']  . ', ' .
+                $arguments['package'] . ', ' .
+                $arguments['action'] . ')), ' . $arguments['params'] . ')');
     }
 
-    /**
-     * @internal
-     */
-    public static function createLink(ApiLink $apiLink, $version, $package, $apiAction = '', $params = [])
+    private static function addQuotes($string)
     {
-        $endpoint = new EndpointIdentifier('GET', $version, $package, $apiAction);
-        return $apiLink->link($endpoint, $params);
+        return '"' . trim($string, "'\"") . '"';
     }
 }
