@@ -19,7 +19,7 @@ class ApiLinkMacro extends MacroSet
     public static function install(Compiler $compiler)
     {
         $macroSet = new static($compiler);
-        $macroSet->addMacro('apiLink',[ApiLinkMacro::class, 'start']);
+        $macroSet->addMacro('apiLink', [ApiLinkMacro::class, 'start']);
     }
 
     public static function start(MacroNode $node, PhpWriter $writer)
