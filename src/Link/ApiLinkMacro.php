@@ -9,11 +9,11 @@ use Latte\Macros\MacroSet;
 use Latte\PhpWriter;
 use Tomaj\NetteApi\EndpointIdentifier;
 
-///**
-// * Usage in latte:
-// * {php $params = ['title' => 'My title', 'data-foo' => 'bar']}
-// * {apiLink $version, $package, $apiAction, $params}
-// */
+/**
+ * Usage in latte:
+ * {php $params = ['title' => 'My title', 'data-foo' => 'bar']}
+ * {apiLink $version, $package, $apiAction, $params}
+ */
 class ApiLinkMacro extends MacroSet
 {
     public static function install(Compiler $compiler)
