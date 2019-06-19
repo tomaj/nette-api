@@ -6,6 +6,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 #### Added
 
+## 1.16.0 - 2019-06-19
+
 * Added ApiLink Macro
 
 ## 1.15.0 - 2019-03-13
