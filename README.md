@@ -33,7 +33,7 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 
 ## How Nette-API works
 
-First you have register library presenter for routing. In *config.neon* just add this line:
+First you have register library presenter for routing. In *config.neon* just add these lines:
 
 ``` yaml
 application:
@@ -166,6 +166,22 @@ class UsersListingHandler extends Basehandler
 I have to recommend to take a look at [Fractal][] library. There are much more information about transformers, serialisers, paginations etc. It is really nice library.
 
 [Fractal]: http://fractal.thephpleague.com/
+
+## ApiLink Macro
+
+First you have to register macro. In *config.neon* just add these lines:
+
+``` yaml
+latte:
+    macros:
+        - Tomaj\NetteApi\Link\ApiLinkMacro
+```
+
+Usage in latte files:
+
+```
+{apiLink $method, $version, $package, $apiAction, ['title' => 'My title', 'data-foo' => 'bar']}
+```
 
 ## Endpoint inputs
 
