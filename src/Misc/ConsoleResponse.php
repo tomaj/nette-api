@@ -121,7 +121,7 @@ class ConsoleResponse
         return $body;
     }
 
-    public function getResponseHeaders(): string
+    public function getResponseHeaders(): ?string
     {
         return $this->responseHeaders;
     }
