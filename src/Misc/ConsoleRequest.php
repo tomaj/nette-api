@@ -177,9 +177,9 @@ class ConsoleRequest
      * @param string          $key     param key
      * @param mixed           $value   actual value from request
      *
-     * @return string|null
+     * @return mixed
      */
-    private function processParam(ParamInterface $param, string $key, $value): ?string
+    private function processParam(ParamInterface $param, string $key, $value)
     {
         if ($param->getKey() === $key) {
             $valueData = $value;

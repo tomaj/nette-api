@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Fixed
+
+* Fixed return types for ConsoleRequest::processParam() and ConsoleResponse::getResponseHeaders()
+
 ## 2.0.0 - 2019-06-12
 
 #### Changed
