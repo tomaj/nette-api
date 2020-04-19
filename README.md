@@ -12,7 +12,7 @@
 
 ## Why Nette-Api
 
-This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement your custom business logic. Library provides authorization, validation and formatting services for you API.
+This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement your custom business logic. Library provides authorization, validation, rate limit and formatting services for you API.
 
 ## Installation
 
@@ -295,6 +295,45 @@ In Nette-Api if you would like to specify IP restrictions for tokens you can use
 
 
 But it is very easy to implement your own Authorisation for API.
+
+## Rate limit
+
+This library provides simple interface for API rate limit. All you need to do is implement this interface like in example below:
+
+```php
+
+use Nette\Application\Responses\TextResponse;
+use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\RateLimit\RateLimitResponse;
+
+class MyRateLimit implements RateLimitInterface
+{
+    public function check(): ?RateLimitResponse
+    {
+        // do some logic here
+
+        // example outputs:
+        
+        return null;    // no rate limit
+
+        return new RateLimitResponse(60, 50);   // remains 50 of 60 hits
+    
+        return new RateLimitResponse(60, 0, 120);   // remains 0 of 60 hits, retry after 120 seconds
+
+        return new RateLimitResponse(60, 0, 120, new TextResponse('My custom error message'));  // remains 0 of 60 hits, retry after 120 seconds, with custom TextResponse (default is Json response, see ApiPresenter::checkRateLimit())
+    }
+}
+```
+
+Then you have to register API to ApiDecider with Rate Limit
+
+```neon
+services:
+    apiDecider:
+        factory: Tomaj\NetteApi\ApiDecider
+        setup:
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticBearer), MyRateLimit())
+```
 
 ## Javascript ajax calls (CORS - preflight OPTIONS calls)
 

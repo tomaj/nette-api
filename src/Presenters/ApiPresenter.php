@@ -16,6 +16,7 @@ use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
+use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
 
@@ -68,8 +69,13 @@ class ApiPresenter extends Presenter
         $api = $this->getApi();
         $handler = $api->getHandler();
         $authorization = $api->getAuthorization();
+        $rateLimit = $api->getRateLimit();
 
         if ($this->checkAuth($authorization) === false) {
+            return;
+        }
+
+        if ($this->checkRateLimit($rateLimit) === false) {
             return;
         }
 
@@ -132,6 +138,30 @@ class ApiPresenter extends Presenter
         if (!$authorization->authorized()) {
             $this->getHttpResponse()->setCode(Response::S403_FORBIDDEN);
             $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]));
+            return false;
+        }
+        return true;
+    }
+
+    private function checkRateLimit(RateLimitInterface $rateLimit): bool
+    {
+        $rateLimitResponse = $rateLimit->check();
+        if (!$rateLimitResponse) {
+            return true;
+        }
+
+        $limit = $rateLimitResponse->getLimit();
+        $remaining = $rateLimitResponse->getRemaining();
+        $retryAfter = $rateLimitResponse->getRetryAfter();
+
+        $this->getHttpResponse()->addHeader('X-RateLimit-Limit', (string)$limit);
+        $this->getHttpResponse()->addHeader('X-RateLimit-Remaining', (string)$remaining);
+
+        if ($remaining === 0) {
+            $this->getHttpResponse()->setCode(Response::S429_TOO_MANY_REQUESTS);
+            $this->getHttpResponse()->addHeader('Retry-After', (string)$retryAfter);
+            $response = $rateLimitResponse->getErrorResponse() ?: new JsonResponse(['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
+            $this->sendResponse($response);
             return false;
         }
         return true;

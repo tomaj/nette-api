@@ -4,6 +4,12 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Added API rate limit 
+
+## 2.0.1 - 2020-03-24
+
 #### Fixed
 
 * Fixed return types for ConsoleRequest::processParam() and ConsoleResponse::getResponseHeaders()

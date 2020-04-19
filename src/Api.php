@@ -6,6 +6,8 @@ namespace Tomaj\NetteApi;
 
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\RateLimit\NoRateLimit;
+use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class Api
 {
@@ -15,11 +17,18 @@ class Api
 
     private $authorization;
 
-    public function __construct(EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
-    {
+    private $rateLimit;
+
+    public function __construct(
+        EndpointInterface $endpoint,
+        ApiHandlerInterface $handler,
+        ApiAuthorizationInterface $authorization,
+        ?RateLimitInterface $rateLimit = null
+    ) {
         $this->endpoint = $endpoint;
         $this->handler = $handler;
         $this->authorization = $authorization;
+        $this->rateLimit = $rateLimit ?: new NoRateLimit();
     }
 
     public function getEndpoint(): EndpointInterface
@@ -35,5 +44,10 @@ class Api
     public function getAuthorization(): ApiAuthorizationInterface
     {
         return $this->authorization;
+    }
+
+    public function getRateLimit(): RateLimitInterface
+    {
+        return $this->rateLimit;
     }
 }
