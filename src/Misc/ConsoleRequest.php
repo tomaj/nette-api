@@ -58,7 +58,7 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_VERBOSE, false);
-        curl_setopt($curl, CURLOPT_TIMEOUT, $additionalValues['timeout']);
+        curl_setopt($curl, CURLOPT_TIMEOUT, $additionalValues['timeout'] ?? 30);
         curl_setopt($curl, CURLOPT_HEADER, true);
 
         if (count($postFields) || $rawPost || $putRawPost !== null) {
