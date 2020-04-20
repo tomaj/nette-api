@@ -4,6 +4,16 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Added custom headers to API console
+* Added field for timeout to API console
+
+#### Fixed
+
+* Fixed sending empty string in multi params
+* UrlEncoding values sending through get param inputs
+
 #### Fixed
 
 * Fixed return types for ConsoleRequest::processParam() and ConsoleResponse::getResponseHeaders()

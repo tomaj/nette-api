@@ -58,7 +58,7 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_VERBOSE, false);
-        curl_setopt($curl, CURLOPT_TIMEOUT, 10);
+        curl_setopt($curl, CURLOPT_TIMEOUT, $additionalValues['timeout']);
         curl_setopt($curl, CURLOPT_HEADER, true);
 
         if (count($postFields) || $rawPost || $putRawPost !== null) {
@@ -66,18 +66,18 @@ class ConsoleRequest
             curl_setopt($curl, CURLOPT_POSTFIELDS, count($postFields) ? $postFields : ($rawPost ?: $putRawPost));
         }
 
+        $headers = $additionalValues['headers'] ?? [];
         if (count($cookieFields)) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
                 $parts[] = "$key=$value";
             }
-            curl_setopt($curl, CURLOPT_HTTPHEADER, ["Cookie: " . implode('&', $parts)]);
+            $headers[] = "Cookie: " . implode('&', $parts);
         }
-
-        curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-        $headers = [];
         if ($token !== null && $token !== false) {
-            $headers = ['Authorization: Bearer ' . $token];
+            $headers[] = 'Authorization: Bearer ' . $token;
+        }
+        if (count($headers)) {
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
 
@@ -151,7 +151,7 @@ class ConsoleRequest
                     } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key][] = $valueData;
                     } else {
-                        $getFields[$key][] = $valueData;
+                        $getFields[$key][] = urlencode($valueData);
                     }
                 } else {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
@@ -161,7 +161,7 @@ class ConsoleRequest
                     } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key] = $valueData;
                     } else {
-                        $getFields[$key] = $valueData;
+                        $getFields[$key] = urlencode($valueData);
                     }
                 }
             }
@@ -205,15 +205,15 @@ class ConsoleRequest
     {
         $result = [];
         foreach ($values as $key => $value) {
-            if (is_array($value)) {
-                $counter = 0;
-                foreach ($value as $innerValue) {
-                    if ($innerValue !== null) {
-                        $result[$key . "[".$counter++."]"] = $innerValue;
-                    }
-                }
-            } else {
+            if (!is_array($value)) {
                 $result[$key] = $value;
+                continue;
+            }
+
+            foreach ($value as $innerKey => $innerValue) {
+                if ($innerValue !== '' && $innerValue !== null) {
+                    $result[$key . "[" . $innerKey . "]"] = $innerValue;
+                }
             }
         }
         return $result;
