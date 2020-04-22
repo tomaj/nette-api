@@ -7,6 +7,13 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 #### Added
 
 * Added API rate limit 
+* Added custom headers to API console
+* Added field for timeout to API console
+
+#### Fixed
+
+* Fixed sending empty string in multi params
+* UrlEncoding values sending through get param inputs
 
 ## 2.0.1 - 2020-03-24
 

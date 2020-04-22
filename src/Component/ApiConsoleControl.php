@@ -9,6 +9,7 @@ use Nette\Application\UI\Form;
 use Nette\Bridges\ApplicationLatte\Template;
 use Nette\Http\IRequest;
 use Nette\Utils\ArrayHash;
+use Nette\Utils\Html;
 use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
@@ -80,6 +81,12 @@ class ApiConsoleControl extends Control
 
         $form->addCheckbox('send_session_id', 'Send session id cookie');
 
+        $form->addTextArea('custom_headers', 'Custom headers')
+            ->setOption('description', Html::el()->setHtml('Each header on new line. For example: <code>User-agent: Mozilla/5.0</code>'));
+
+        $form->addText('timeout', 'Timeout')
+            ->setDefaultValue(30);
+
         $params = $this->handler->params();
         foreach ($params as $param) {
             $param->updateConsoleForm($form);
@@ -114,6 +121,12 @@ class ApiConsoleControl extends Control
             $additionalValues['cookieFields'][session_name()] = session_id();
             session_write_close();
         }
+
+        if (isset($values['custom_headers']) && $values['custom_headers']) {
+            $additionalValues['headers'] = array_filter(array_map('trim', explode("\n", $values['custom_headers'])));
+        }
+
+        $additionalValues['timeout'] = $values['timeout'];
 
         $consoleRequest = new ConsoleRequest($this->handler);
         $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);
