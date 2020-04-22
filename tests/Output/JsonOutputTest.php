@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tomaj\NetteApi\Test\Params;
+namespace Tomaj\NetteApi\Test\Output;
 
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Output\JsonOutput;
