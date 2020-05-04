@@ -21,7 +21,7 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
 
-class ApiPresenter implements IPresenter
+final class ApiPresenter implements IPresenter
 {
     /** @var ApiDecider @inject */
     public $apiDecider;
@@ -145,7 +145,6 @@ class ApiPresenter implements IPresenter
         if (!$authorization->authorized()) {
             $this->response->setCode(Response::S403_FORBIDDEN);
             return new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]);
-
         }
         return null;
     }
