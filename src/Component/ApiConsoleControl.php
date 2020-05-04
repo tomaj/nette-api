@@ -16,6 +16,7 @@ use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
 
 class ApiConsoleControl extends Control
@@ -28,12 +29,15 @@ class ApiConsoleControl extends Control
 
     private $authorization;
 
-    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization)
+    private $apiLink;
+
+    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ApiLink $apiLink = null)
     {
         $this->request = $request;
         $this->endpoint = $endpoint;
         $this->handler = $handler;
         $this->authorization = $authorization;
+        $this->apiLink = $apiLink;
     }
 
     public function render(): void
@@ -52,17 +56,21 @@ class ApiConsoleControl extends Control
         $defaults = [];
 
         $form->setRenderer(new BootstrapRenderer());
-
-        $uri = $this->request->getUrl();
-        $scheme = $uri->scheme;
-        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
-            $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+        
+        if ($this->apiLink) {
+            $url = $this->apiLink->link($this->endpoint);
+        } else {
+            $uri = $this->request->getUrl();
+            $scheme = $uri->scheme;
+            if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+                $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
+            }
+            $port = '';
+            if ($uri->scheme === 'http' && $uri->port !== 80) {
+                $port = ':' . $uri->port;
+            }
+            $url = $scheme . '://' . $uri->host . $port . '/api/' . $this->endpoint->getUrl();
         }
-        $port = '';
-        if ($uri->scheme === 'http' && $uri->port !== 80) {
-            $port = ':' . $uri->port;
-        }
-        $url = $scheme . '://' . $uri->host . $port . '/api/' . $this->endpoint->getUrl();
 
         $form->addText('api_url', 'Api Url');
         $defaults['api_url'] = $url;

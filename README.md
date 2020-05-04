@@ -403,10 +403,13 @@ use Nette\Application\UI\Presenter;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Component\ApiConsoleControl;
 use Tomaj\NetteApi\Component\ApiListingControl;
+use Tomaj\NetteApi\Link\ApiLink;
 
 class MyPresenter extends Presenter
 {
     private $apiDecider;
+
+    private $apiLink;
 
     private $method;
     
@@ -416,10 +419,11 @@ class MyPresenter extends Presenter
     
     private $apiAction;
 
-    public function __construct(ApiDecider $apiDecider)
+    public function __construct(ApiDecider $apiDecider, ApiLink $apiLink = null)
     {
         parent::__construct();
         $this->apiDecider = $apiDecider;
+        $this->apiLink = $apiLink;
     }
 
     public function renderShow(string $method, int $version, string $package, ?string $apiAction = null): void
@@ -441,8 +445,8 @@ class MyPresenter extends Presenter
 
     protected function createComponentApiConsole()
     {
-        $api = $this->apiDecider->getApiHandler($this->method, $this->version, $this->package, $this->apiAction);
-        $apiConsole = new ApiConsoleControl($this->getHttpRequest(), $api->getEndpoint(), $api->getHandler(), $api->getAuthorization());
+        $api = $this->apiDecider->getApi($this->method, $this->version, $this->package, $this->apiAction);
+        $apiConsole = new ApiConsoleControl($this->getHttpRequest(), $api->getEndpoint(), $api->getHandler(), $api->getAuthorization(), $this->apiLink);
         return $apiConsole;
     }
 }
