@@ -14,6 +14,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Fixed sending empty string in multi params
 * UrlEncoding values sending through get param inputs
+* Fixed static url part `/api/` in console
 
 ## 2.0.1 - 2020-03-24
 
