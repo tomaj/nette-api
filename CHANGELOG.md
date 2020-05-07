@@ -9,6 +9,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Added API rate limit 
 * Added custom headers to API console
 * Added field for timeout to API console
+* OpenAPI handler
 
 #### Fixed
 
