@@ -10,15 +10,13 @@ use Tomaj\NetteApi\Validation\JsonSchemaValidator;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
-class JsonOutput implements OutputInterface
+class JsonOutput extends AbstractOutput
 {
-    private $code;
-
     private $schema;
 
-    public function __construct(int $code, $schema)
+    public function __construct(int $code, string $schema, string $description = '')
     {
-        $this->code = $code;
+        parent::__construct($code, $description);
         $this->schema = $schema;
     }
 
@@ -35,5 +33,10 @@ class JsonOutput implements OutputInterface
 
         $schemaValidator = new JsonSchemaValidator();
         return $schemaValidator->validate($value, $this->schema);
+    }
+
+    public function getSchema(): string
+    {
+        return $this->schema;
     }
 }
