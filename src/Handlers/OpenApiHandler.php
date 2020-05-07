@@ -16,6 +16,7 @@ use Tomaj\NetteApi\Output\RedirectOutput;
 use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Params\JsonInputParam;
+use Tomaj\NetteApi\Params\RawInputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
 use Tomaj\NetteApi\Response\TextApiResponse;
@@ -93,7 +94,8 @@ class OpenApiHandler extends BaseHandler
         $data = [
             'openapi' => '3.0.0',
             'info' => [
-                'version' => $version,
+                'version' => (string)$version,
+                'title' => 'Nette API',
             ],
             'servers' => [
                 [
@@ -160,7 +162,7 @@ class OpenApiHandler extends BaseHandler
             $data['components']['schemas'] = array_merge($this->definitions, $data['components']['schemas']);
         }
 
-        $data = array_merge_recursive($this->initData, $data);
+        $data = array_replace_recursive($data, $this->initData);
 
         if ($params['format'] === 'yaml') {
             return new TextApiResponse(IResponse::S200_OK, Yaml::dump($data, PHP_INT_MAX, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE));
@@ -283,11 +285,11 @@ class OpenApiHandler extends BaseHandler
         return $list;
     }
 
-    private function getBasePath($handlers, $baseUrl)
+    private function getBasePath(array $apis, string $baseUrl): string
     {
-        $basePath = null;
-        foreach ($handlers as $handler) {
-            $basePath = $this->getLongestCommonSubstring($basePath, $this->apiLink->link($handler['endpoint']));
+        $basePath = '';
+        foreach ($apis as $handler) {
+            $basePath = $this->getLongestCommonSubstring($basePath, $this->apiLink->link($handler->getEndpoint()));
         }
         return rtrim(str_replace($baseUrl, '', $basePath), '/');
     }
@@ -370,6 +372,19 @@ class OpenApiHandler extends BaseHandler
                     'content' => [
                         'application/json' => [
                             'schema' => $this->transformSchema($schema),
+                        ],
+                    ],
+                ];
+            }
+            if ($param instanceof RawInputParam) {
+                return [
+                    'description' => $param->getDescription(),
+                    'required' => $param->isRequired(),
+                    'content' => [
+                        'text/plain' => [
+                            'schema' => [
+                                'type' => 'string',
+                            ],
                         ],
                     ],
                 ];
