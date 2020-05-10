@@ -10,12 +10,14 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Added custom headers to API console
 * Added field for timeout to API console
 * OpenAPI handler
+* Information about RESTful urls
 
 #### Fixed
 
 * Fixed sending empty string in multi params
 * UrlEncoding values sending through get param inputs
 * Fixed static url part `/api/` in console
+* Fixed generating urls in console for RESTful urls using ApiLink and EndpointInterface
 
 ## 2.0.1 - 2020-03-24
 
