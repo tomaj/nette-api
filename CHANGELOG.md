@@ -4,6 +4,12 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.1.0 - 2020-05-12
+
+#### Changed
+
+* Rewritten ApiPresenter
+
 #### Added
 
 * Added API rate limit 
