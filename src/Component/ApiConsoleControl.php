@@ -56,7 +56,7 @@ class ApiConsoleControl extends Control
         $defaults = [];
 
         $form->setRenderer(new BootstrapRenderer());
-        
+
         if ($this->apiLink) {
             $url = $this->apiLink->link($this->endpoint);
         } else {
@@ -136,7 +136,7 @@ class ApiConsoleControl extends Control
 
         $additionalValues['timeout'] = $values['timeout'];
 
-        $consoleRequest = new ConsoleRequest($this->handler);
+        $consoleRequest = new ConsoleRequest($this->handler, $this->endpoint, $this->apiLink);
         $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);
 
         /** @var Template $template */

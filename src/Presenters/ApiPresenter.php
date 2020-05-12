@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Presenters;
 
-use Exception;
 use Nette\Application\IPresenter;
 use Nette\Application\IResponse;
 use Nette\Application\Request;
 use Nette\Application\Responses\JsonResponse;
 use Nette\DI\Container;
 use Nette\Http\Response;
+use Throwable;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
@@ -104,14 +104,14 @@ final class ApiPresenter implements IPresenter
                 $outputValidatorErrors[] = $validationResult->getErrors();
             }
             if (!$outputValid) {
-                $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
+                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
             }
             $code = $response->getCode();
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
             if (Debugger::isEnabled()) {
-                $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
+                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
             } else {
-                $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error']);
+                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
             }
             $code = $response->getCode();
             Debugger::log($exception, Debugger::EXCEPTION);
