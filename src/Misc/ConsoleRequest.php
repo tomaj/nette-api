@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Misc;
 
 use Nette\Http\FileUpload;
+use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Params\ParamInterface;
 
@@ -14,9 +16,17 @@ class ConsoleRequest
     /** @var ApiHandlerInterface */
     private $handler;
 
-    public function __construct(ApiHandlerInterface $handler)
+    /** @var EndpointInterface|null */
+    private $endpoint;
+
+    /** @var ApiLink|null */
+    private $apiLink;
+
+    public function __construct(ApiHandlerInterface $handler, ?EndpointInterface $endpoint = null, ?ApiLink $apiLink = null)
     {
         $this->handler = $handler;
+        $this->endpoint = $endpoint;
+        $this->apiLink = $apiLink;
     }
 
     public function makeRequest(string $url, string $method, array $values, array $additionalValues = [], ?string $token = null): ConsoleResponse
@@ -32,7 +42,9 @@ class ConsoleRequest
         $getFields = $this->normalizeValues($getFields);
         $putFields = $this->normalizeValues($putFields);
 
-        if (count($getFields)) {
+        if ($this->endpoint && $this->apiLink) {
+            $url = $this->apiLink->link($this->endpoint, $getFields);
+        } elseif (count($getFields)) {
             $parts = [];
             foreach ($getFields as $key => $value) {
                 $parts[] = "$key=$value";

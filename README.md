@@ -47,6 +47,20 @@ And add route to you RouterFactory:
 $router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default');
 ```
 
+If you want to use RESTful urls you will need another route:
+```php
+$router[] = new Route('api/v<version>/<package>/<id>', [
+    'presenter' => 'Api:Api',
+    'action' => 'default',
+    'id' => [
+        Route::FILTER_IN => function ($id) {
+            $_GET['id'] = $id;
+            return $id;
+        }
+    ],
+]);
+```
+
 After that you need only register your API handlers to *apiDecider* [ApiDecider](src/ApiDecider.php), register [ApiLink](src/Link/ApiLink.php) and [Tomaj\NetteApi\Misc\IpDetector](src/Misc/IpDetector.php). This can be done also with *config.neon*:
 
 ```neon
@@ -73,7 +87,7 @@ Core of the Nette-Api are handlers. For this example you need to implement two c
 2. App\MyApi\v1\Handlers\SendEmailHandler
 
 These handlers implement interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extend your handlers from [BaseHandler](src/Handlers/BaseHandler.php). 
-When someone reach your API these handlers will be triggered and *handle()* method will be called.
+When someone reach your API, these handlers will be triggered and *handle()* method will be called.
 
 ```php
 namespace App\MyApi\v1\Handlers;
