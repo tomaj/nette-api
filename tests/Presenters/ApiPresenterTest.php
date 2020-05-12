@@ -31,7 +31,8 @@ class ApiPresenterTest extends TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
+        $presenter->response = new HttpResponse();
+        $presenter->context = new Container();
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -53,7 +54,8 @@ class ApiPresenterTest extends TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
+        $presenter->response = new HttpResponse();
+        $presenter->context = new Container();
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -73,11 +75,12 @@ class ApiPresenterTest extends TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
+        $presenter->response = new HttpResponse();
+        $presenter->context = new Container();
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
-        
+
         $this->assertEquals(['status' => 'error', 'message' => 'wrong input'], $result->getPayload());
         $this->assertEquals('application/json', $result->getContentType());
 
@@ -99,7 +102,8 @@ class ApiPresenterTest extends TestCase
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
-        $presenter->injectPrimary(new Container(), null, null, new HttpRequest(new UrlScript()), new HttpResponse());
+        $presenter->response = new HttpResponse();
+        $presenter->context = new Container();
 
         $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);

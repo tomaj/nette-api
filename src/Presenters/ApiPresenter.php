@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Presenters;
 
 use Exception;
+use Nette\Application\IPresenter;
+use Nette\Application\IResponse;
+use Nette\Application\Request;
 use Nette\Application\Responses\JsonResponse;
-use Nette\Application\UI\Presenter;
 use Nette\DI\Container;
 use Nette\Http\Response;
+use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
-use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
-use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
@@ -20,13 +21,16 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
 
-/**
- * @property-read Container $context
- */
-class ApiPresenter extends Presenter
+final class ApiPresenter implements IPresenter
 {
     /** @var ApiDecider @inject */
     public $apiDecider;
+
+    /** @var Response @inject */
+    public $response;
+
+    /** @var Container @inject */
+    public $context;
 
     /**
      * CORS header settings
@@ -42,12 +46,6 @@ class ApiPresenter extends Presenter
      */
     protected $corsHeader = '*';
 
-    public function startup(): void
-    {
-        parent::startup();
-        $this->autoCanonicalize = false;
-    }
-
     /**
      * Set cors header
      *
@@ -60,29 +58,38 @@ class ApiPresenter extends Presenter
         $this->corsHeader = $corsHeader;
     }
 
-    public function renderDefault(): void
+    public function run(Request $request): IResponse
     {
         $start = microtime(true);
 
         $this->sendCorsHeaders();
 
-        $api = $this->getApi();
+        $api = $this->getApi($request);
         $handler = $api->getHandler();
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
 
-        if ($this->checkAuth($authorization) === false) {
-            return;
+        $authResponse = $this->checkAuth($authorization);
+        if ($authResponse !== null) {
+            return $authResponse;
         }
 
-        if ($this->checkRateLimit($rateLimit) === false) {
-            return;
+        $rateLimitResponse = $this->checkRateLimit($rateLimit);
+        if ($rateLimitResponse !== null) {
+            return $rateLimitResponse;
         }
 
-        $params = $this->processInputParams($handler);
-        if ($params === null) {
-            return;
+        $paramsProcessor = new ParamsProcessor($handler->params());
+        if ($paramsProcessor->isError()) {
+            $this->response->setCode(Response::S400_BAD_REQUEST);
+            if (Debugger::isEnabled()) {
+                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input', 'detail' => $paramsProcessor->getErrors()]);
+            } else {
+                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input']);
+            }
+            return $response;
         }
+        $params = $paramsProcessor->getValues();
 
         try {
             $response = $handler->handle($params);
@@ -115,75 +122,56 @@ class ApiPresenter extends Presenter
         if ($this->context->findByType(ApiLoggerInterface::class)) {
             /** @var ApiLoggerInterface $apiLogger */
             $apiLogger = $this->context->getByType(ApiLoggerInterface::class);
-            $this->logRequest($apiLogger, $code, $end - $start);
+            $this->logRequest($request, $apiLogger, $code, $end - $start);
         }
 
         // output to nette
-        $this->getHttpResponse()->setCode($code);
-        $this->sendResponse($response);
+        $this->response->setCode($code);
+        return $response;
     }
 
-    private function getApi(): Api
+    private function getApi(Request $request): Api
     {
         return $this->apiDecider->getApi(
-            $this->getRequest()->getMethod(),
-            (int) $this->params['version'],
-            $this->params['package'],
-            $this->params['apiAction']
+            $request->getMethod(),
+            (int) $request->getParameter('version'),
+            $request->getParameter('package'),
+            $request->getParameter('apiAction')
         );
     }
 
-    private function checkAuth(ApiAuthorizationInterface $authorization): bool
+    private function checkAuth(ApiAuthorizationInterface $authorization): ?IResponse
     {
         if (!$authorization->authorized()) {
-            $this->getHttpResponse()->setCode(Response::S403_FORBIDDEN);
-            $this->sendResponse(new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]));
-            return false;
+            $this->response->setCode(Response::S403_FORBIDDEN);
+            return new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]);
         }
-        return true;
+        return null;
     }
 
-    private function checkRateLimit(RateLimitInterface $rateLimit): bool
+    private function checkRateLimit(RateLimitInterface $rateLimit): ?IResponse
     {
         $rateLimitResponse = $rateLimit->check();
         if (!$rateLimitResponse) {
-            return true;
+            return null;
         }
 
         $limit = $rateLimitResponse->getLimit();
         $remaining = $rateLimitResponse->getRemaining();
         $retryAfter = $rateLimitResponse->getRetryAfter();
 
-        $this->getHttpResponse()->addHeader('X-RateLimit-Limit', (string)$limit);
-        $this->getHttpResponse()->addHeader('X-RateLimit-Remaining', (string)$remaining);
+        $this->response->addHeader('X-RateLimit-Limit', (string)$limit);
+        $this->response->addHeader('X-RateLimit-Remaining', (string)$remaining);
 
         if ($remaining === 0) {
-            $this->getHttpResponse()->setCode(Response::S429_TOO_MANY_REQUESTS);
-            $this->getHttpResponse()->addHeader('Retry-After', (string)$retryAfter);
-            $response = $rateLimitResponse->getErrorResponse() ?: new JsonResponse(['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
-            $this->sendResponse($response);
-            return false;
+            $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
+            $this->response->addHeader('Retry-After', (string)$retryAfter);
+            return $rateLimitResponse->getErrorResponse() ?: new JsonResponse(['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
         }
-        return true;
+        return null;
     }
 
-    private function processInputParams(ApiHandlerInterface $handler): ?array
-    {
-        $paramsProcessor = new ParamsProcessor($handler->params());
-        if ($paramsProcessor->isError()) {
-            $this->getHttpResponse()->setCode(Response::S400_BAD_REQUEST);
-            if (Debugger::isEnabled()) {
-                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input', 'detail' => $paramsProcessor->getErrors()]);
-            } else {
-                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input']);
-            }
-            $this->sendResponse($response);
-            return null;
-        }
-        return $paramsProcessor->getValues();
-    }
-
-    private function logRequest(ApiLoggerInterface $logger, int $code, float $elapsed): void
+    private function logRequest(Request $request, ApiLoggerInterface $logger, int $code, float $elapsed): void
     {
         $headers = [];
         if (function_exists('getallheaders')) {
@@ -205,7 +193,7 @@ class ApiPresenter extends Presenter
         $ipDetector = $this->context->getByType(IpDetectorInterface::class);
         $logger->log(
             $code,
-            $this->getRequest()->getMethod(),
+            $request->getMethod(),
             $requestHeaders,
             (string) filter_input(INPUT_SERVER, 'REQUEST_URI'),
             $ipDetector ? $ipDetector->getRequestIp() : '',
@@ -216,24 +204,24 @@ class ApiPresenter extends Presenter
 
     protected function sendCorsHeaders(): void
     {
-        $this->getHttpResponse()->addHeader('Access-Control-Allow-Methods', 'POST, DELETE, PUT, GET, OPTIONS');
+        $this->response->addHeader('Access-Control-Allow-Methods', 'POST, DELETE, PUT, GET, OPTIONS');
 
         if ($this->corsHeader === 'auto') {
             $domain = $this->getRequestDomain();
             if ($domain !== null) {
-                $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $domain);
-                $this->getHttpResponse()->addHeader('Access-Control-Allow-Credentials', 'true');
+                $this->response->addHeader('Access-Control-Allow-Origin', $domain);
+                $this->response->addHeader('Access-Control-Allow-Credentials', 'true');
             }
             return;
         }
 
         if ($this->corsHeader === '*') {
-            $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', '*');
+            $this->response->addHeader('Access-Control-Allow-Origin', '*');
             return;
         }
 
         if ($this->corsHeader !== 'off') {
-            $this->getHttpResponse()->addHeader('Access-Control-Allow-Origin', $this->corsHeader);
+            $this->response->addHeader('Access-Control-Allow-Origin', $this->corsHeader);
         }
     }
 
