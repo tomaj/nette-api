@@ -27,7 +27,7 @@ class ApiLinkMacro extends MacroSet
 
         if (count($args) < 3) {
             $message = "Invalid link destination, too few arguments.";
-            if (Debugger::isEnabled()) {
+            if (!Debugger::$productionMode) {
                 throw new InvalidLinkException($message);
             }
             Debugger::log($message, Debugger::EXCEPTION);

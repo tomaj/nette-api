@@ -90,7 +90,7 @@ class ApiPresenter extends Presenter
             $response = $handler->handle($params);
             $code = $response->getCode();
         } catch (Exception $exception) {
-            if (Debugger::isEnabled()) {
+            if (!Debugger::$productionMode) {
                 $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
             } else {
                 $response = new JsonApiResponse(500, ['status' => 'error', 'message' => 'Internal server error']);
