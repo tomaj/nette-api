@@ -281,9 +281,21 @@ For more examples see [JSON schema web page](http://json-schema.org). Keep in mi
 
 ## Security
 
-Protecting your API is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) and add it as third argument to *addApi()* method in *config.neon*.
+Protecting your API is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) or use prepared implementations and add it as third argument to *addApi()* method in *config.neon*.
 
-For simple use, if you want to use Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
+### Basic authentication
+Basic authentication is a simple authentication scheme built into the HTTP protocol. It contains username and password. You can define as many pairs of usernames and passwords as you want. But just one password for each username.
+
+```neon
+services:
+    apiDecider:
+        factory: Tomaj\NetteApi\ApiDecider
+        setup:
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BasicBasicAuthentication(['first-user': 'first-password', 'second-user': 'second-password']))
+```
+
+### Bearer token authentication
+For simple use of Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
 
 ```neon
 services:
@@ -293,7 +305,6 @@ services:
         factory: Tomaj\NetteApi\ApiDecider
         setup:
             - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticBearer))
-
 ```
 
 With this registration you will have api `/api/v1/users` that will be accessible from anywhere with Authorisation HTTP header `Bearer dasfoihwet90hidsg` or from *127.0.0.1* with `Bearer asfoihweiohgwegi`.

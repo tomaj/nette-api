@@ -9,6 +9,7 @@ use Nette\Http\Request;
 use Symfony\Component\Yaml\Yaml;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Output\JsonOutput;
@@ -104,6 +105,10 @@ class OpenApiHandler extends BaseHandler
             ],
             'components' => [
                 'securitySchemes' => [
+                    'Basic' => [
+                        'type' => 'http',
+                        'scheme' => 'basic',
+                    ],
                     'Bearer' => [
                         'type' => 'http',
                         'scheme' => 'bearer',
@@ -276,6 +281,12 @@ class OpenApiHandler extends BaseHandler
                 $settings['security'] = [
                     [
                         'Bearer' => [],
+                    ],
+                ];
+            } elseif ($api->getAuthorization() instanceof BasicAuthentication) {
+                $settings['security'] = [
+                    [
+                        'Basic' => [],
                     ],
                 ];
             }
