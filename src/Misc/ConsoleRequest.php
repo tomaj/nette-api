@@ -93,6 +93,12 @@ class ConsoleRequest
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
 
+        $basicAuthUsername = $values['basic_authentication_username'] ?? null;
+        $basicAuthPassword = $values['basic_authentication_password'] ?? null;
+        if ($basicAuthUsername && $basicAuthPassword) {
+            curl_setopt($curl, CURLOPT_USERPWD, "$basicAuthUsername:$basicAuthPassword");
+        }
+
         $consoleResponse = new ConsoleResponse(
             $url,
             $method,

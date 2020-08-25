@@ -12,6 +12,7 @@ use Nette\Utils\ArrayHash;
 use Nette\Utils\Html;
 use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointInterface;
@@ -81,6 +82,9 @@ class ApiConsoleControl extends Control
         if ($this->authorization instanceof BearerTokenAuthorization) {
             $form->addText('token', 'Token')
                 ->setHtmlAttribute('placeholder', 'Enter token');
+        } elseif ($this->authorization instanceof BasicAuthentication) {
+            $form->addText('basic_authentication_username', 'Username');
+            $form->addText('basic_authentication_password', 'Password');
         } elseif ($this->authorization instanceof NoAuthorization) {
             $form->addText('authorization', 'Authorization')
                 ->setDisabled(true);
