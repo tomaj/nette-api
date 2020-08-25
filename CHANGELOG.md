@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Changed
+
+* Detailed error message enabled only for non production mode
+
 #### Added
 
 ## 1.16.0 - 2019-06-19
