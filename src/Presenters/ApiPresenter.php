@@ -82,7 +82,7 @@ final class ApiPresenter implements IPresenter
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
             $this->response->setCode(Response::S400_BAD_REQUEST);
-            if (Debugger::isEnabled()) {
+            if (!Debugger::$productionMode) {
                 $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input', 'detail' => $paramsProcessor->getErrors()]);
             } else {
                 $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input']);
@@ -108,7 +108,7 @@ final class ApiPresenter implements IPresenter
             }
             $code = $response->getCode();
         } catch (Throwable $exception) {
-            if (Debugger::isEnabled()) {
+            if (!Debugger::$productionMode) {
                 $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
             } else {
                 $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);

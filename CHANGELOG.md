@@ -61,6 +61,18 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Removed support for PHP 5.6, 7.0 and hhvm (BC Break)
 * Removed deprecated class ApiResponse (BC Break)
 
+## 1.17.0 - 2020-08-27
+
+#### Changed
+
+* Detailed error message enabled only for non production mode
+
+## 1.16.0 - 2019-06-19
+
+#### Added
+
+* Added ApiLink Macro
+
 ## 1.15.0 - 2019-03-13
 
 #### Added
