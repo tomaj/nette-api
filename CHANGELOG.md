@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.2.0 - 2020-08-27
+
 #### Added
 
 * Added Basic authentication
