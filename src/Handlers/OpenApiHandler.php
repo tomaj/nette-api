@@ -181,7 +181,7 @@ class OpenApiHandler extends BaseHandler
                             ],
                             'message' => [
                                 'type' => 'string',
-                                'enum' => ['Authorization header HTTP_Authorization is not set', 'Authorization header contains invalid structure', 'Authorization header doesn\'t contains bearer token', 'API key is not set'],
+                                'enum' => ['Authorization header HTTP_Authorization is not set', 'Authorization header contains invalid structure', 'Authorization header doesn\'t contain bearer token', 'API key is not set'],
                             ],
                         ],
                         'required' => ['status', 'message'],

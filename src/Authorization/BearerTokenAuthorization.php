@@ -38,7 +38,7 @@ class BearerTokenAuthorization extends TokenAuthorization
             return null;
         }
         if (strtolower($parts[0]) !== 'bearer') {
-            $this->errorMessage = 'Authorization header doesn\'t contains bearer token';
+            $this->errorMessage = 'Authorization header doesn\'t contain bearer token';
             return null;
         }
         return $parts[1];
