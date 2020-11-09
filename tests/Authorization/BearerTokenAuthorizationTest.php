@@ -47,7 +47,7 @@ class BearerTokenAuthorizationTest extends TestCase
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
-        $this->assertEquals('Authorization header doesn\'t contains bearer token', $bearerTokenAuthorization->getErrorMessage());
+        $this->assertEquals('Authorization header doesn\'t contain bearer token', $bearerTokenAuthorization->getErrorMessage());
     }
 
     public function testNoAuthorizationHeader()
