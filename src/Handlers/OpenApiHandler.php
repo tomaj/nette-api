@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Handlers;
 
 use InvalidArgumentException;
@@ -11,6 +13,9 @@ use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
+use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Output\JsonOutput;
 use Tomaj\NetteApi\Output\RedirectOutput;
@@ -92,6 +97,53 @@ class OpenApiHandler extends BaseHandler
         $baseUrl = $scheme . '://' . $host;
         $basePath = $this->getBasePath($apis, $baseUrl);
 
+        $securitySchemes = [];
+
+        foreach ($apis as $api) {
+            $authorization = $api->getAuthorization();
+            if ($authorization instanceof BasicAuthentication) {
+                $securitySchemes['Basic'] = [
+                    'type' => 'http',
+                    'scheme' => 'basic',
+                ];
+                continue;
+            }
+            if ($authorization instanceof BearerTokenAuthorization) {
+                $securitySchemes['Bearer'] = [
+                    'type' => 'http',
+                    'scheme' => 'bearer',
+                ];
+                continue;
+            }
+            if ($authorization instanceof QueryApiKeyAuthentication) {
+                $queryParamName = $authorization->getQueryParamName();
+                $securitySchemes[$this->normalizeSecuritySchemeName('query', $queryParamName)] = [
+                    'type' => 'apiKey',
+                    'in' => 'query',
+                    'name' => $queryParamName,
+                ];
+                continue;
+            }
+            if ($authorization instanceof HeaderApiKeyAuthentication) {
+                $headerName = $authorization->getHeaderName();
+                $securitySchemes[$this->normalizeSecuritySchemeName('header', $headerName)] = [
+                    'type' => 'apiKey',
+                    'in' => 'header',
+                    'name' => $headerName,
+                ];
+                continue;
+            }
+            if ($authorization instanceof CookieApiKeyAuthentication) {
+                $cookieName = $authorization->getCookieName();
+                $securitySchemes[$this->normalizeSecuritySchemeName('cookie', $cookieName)] = [
+                    'type' => 'apiKey',
+                    'in' => 'cookie',
+                    'name' => $cookieName,
+                ];
+                continue;
+            }
+        }
+
         $data = [
             'openapi' => '3.0.0',
             'info' => [
@@ -104,16 +156,7 @@ class OpenApiHandler extends BaseHandler
                 ],
             ],
             'components' => [
-                'securitySchemes' => [
-                    'Basic' => [
-                        'type' => 'http',
-                        'scheme' => 'basic',
-                    ],
-                    'Bearer' => [
-                        'type' => 'http',
-                        'scheme' => 'bearer',
-                    ],
-                ],
+                'securitySchemes' => $securitySchemes,
                 'schemas' => [
                     'ErrorWrongInput' => [
                         'type' => 'object',
@@ -138,7 +181,7 @@ class OpenApiHandler extends BaseHandler
                             ],
                             'message' => [
                                 'type' => 'string',
-                                'enum' => ['Authorization header HTTP_Authorization is not set', 'Authorization header contains invalid structure'],
+                                'enum' => ['Authorization header HTTP_Authorization is not set', 'Authorization header contains invalid structure', 'Authorization header doesn\'t contains bearer token', 'API key is not set'],
                             ],
                         ],
                         'required' => ['status', 'message'],
@@ -162,6 +205,10 @@ class OpenApiHandler extends BaseHandler
 
             'paths' => $this->getPaths($apis, $baseUrl, $basePath),
         ];
+
+        if (!$securitySchemes) {
+            unset($data['components']['securitySchemes']);
+        }
 
         if (!empty($this->definitions)) {
             $data['components']['schemas'] = array_merge($this->definitions, $data['components']['schemas']);
@@ -277,16 +324,35 @@ class OpenApiHandler extends BaseHandler
                 $settings['requestBody'] = $requestBody;
             }
 
-            if ($api->getAuthorization() instanceof BearerTokenAuthorization) {
+            $authorization = $api->getAuthorization();
+            if ($authorization instanceof BearerTokenAuthorization) {
                 $settings['security'] = [
                     [
                         'Bearer' => [],
                     ],
                 ];
-            } elseif ($api->getAuthorization() instanceof BasicAuthentication) {
+            } elseif ($authorization instanceof BasicAuthentication) {
                 $settings['security'] = [
                     [
                         'Basic' => [],
+                    ],
+                ];
+            } elseif ($authorization instanceof QueryApiKeyAuthentication) {
+                $settings['security'] = [
+                    [
+                        $this->normalizeSecuritySchemeName('query', $authorization->getQueryParamName()) => [],
+                    ],
+                ];
+            } elseif ($authorization instanceof HeaderApiKeyAuthentication) {
+                $settings['security'] = [
+                    [
+                        $this->normalizeSecuritySchemeName('header', $authorization->getHeaderName()) => [],
+                    ],
+                ];
+            } elseif ($authorization instanceof CookieApiKeyAuthentication) {
+                $settings['security'] = [
+                    [
+                        $this->normalizeSecuritySchemeName('cookie', $authorization->getCookieName()) => [],
                     ],
                 ];
             }
@@ -494,5 +560,10 @@ class OpenApiHandler extends BaseHandler
             throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it or use existing one.');
         }
         $this->definitions[$name] = $definition;
+    }
+
+    private function normalizeSecuritySchemeName(string $type, string $name): string
+    {
+        return 'api_key__' . $type . '__' . strtolower(str_replace('-', '_', $name));
     }
 }

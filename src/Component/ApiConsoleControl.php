@@ -14,7 +14,10 @@ use Tomaj\Form\Renderer\BootstrapRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
+use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
+use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Link\ApiLink;
@@ -83,8 +86,19 @@ class ApiConsoleControl extends Control
             $form->addText('token', 'Token')
                 ->setHtmlAttribute('placeholder', 'Enter token');
         } elseif ($this->authorization instanceof BasicAuthentication) {
-            $form->addText('basic_authentication_username', 'Username');
-            $form->addText('basic_authentication_password', 'Password');
+            $form->addText('basic_authentication_username', 'Username')
+                ->setHtmlAttribute('placeholder', 'Enter basic authentication username');
+            $form->addText('basic_authentication_password', 'Password')
+                ->setHtmlAttribute('placeholder', 'Enter basic authentication password');
+        } elseif ($this->authorization instanceof QueryApiKeyAuthentication) {
+            $form->addText($this->authorization->getQueryParamName(), 'API key')
+                ->setHtmlAttribute('placeholder', 'Enter API key');
+        } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
+            $form->addText('header_api_key', 'API key')
+                ->setHtmlAttribute('placeholder', 'Enter API key');
+        } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
+            $form->addText('cookie_api_key', 'API key')
+                ->setHtmlAttribute('placeholder', 'Enter API key');
         } elseif ($this->authorization instanceof NoAuthorization) {
             $form->addText('authorization', 'Authorization')
                 ->setDisabled(true);
@@ -139,6 +153,17 @@ class ApiConsoleControl extends Control
         }
 
         $additionalValues['timeout'] = $values['timeout'];
+
+        if ($this->authorization instanceof QueryApiKeyAuthentication) {
+            $queryParamName = $this->authorization->getQueryParamName();
+            $additionalValues['getFields'][$queryParamName] = $values[$queryParamName] ?? null;
+        } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
+            $headerName = $this->authorization->getHeaderName();
+            $additionalValues['headers'][] = $headerName . ':' . $values['header_api_key'] ?? null;
+        } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
+            $cookieName = $this->authorization->getCookieName();
+            $additionalValues['cookieFields'][$cookieName] = $values['cookie_api_key'] ?? null;
+        }
 
         $consoleRequest = new ConsoleRequest($this->handler, $this->endpoint, $this->apiLink);
         $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);

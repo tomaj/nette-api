@@ -295,11 +295,11 @@ services:
 ```
 
 ### Bearer token authentication
-For simple use of Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
+For simple use of Bearer token authorization with few tokens, you can use [StaticTokenRepository](src/Misc/StaticTokenRepository.php) (Tomaj\NetteApi\Misc\StaticTokenRepository).
 
 ```neon
 services:
-    staticBearer: Tomaj\NetteApi\Misc\StaticBearerTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
+    staticBearer: Tomaj\NetteApi\Misc\StaticTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
 
     apiDecider:
         factory: Tomaj\NetteApi\ApiDecider
@@ -320,6 +320,21 @@ In Nette-Api if you would like to specify IP restrictions for tokens you can use
 
 
 But it is very easy to implement your own Authorisation for API.
+
+### API keys
+You can also use API keys for authorization. An API key is a token that a client provides when making API calls. The key can be sent in the query string, header or cookie. See examples below:
+
+```neon
+services:
+    staticBearer: Tomaj\NetteApi\Misc\StaticTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
+
+    apiDecider:
+        factory: Tomaj\NetteApi\ApiDecider
+        setup:
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'query'), Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication('api_key'))
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'header'), Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-API-KEY'))
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'cookie'), Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication('api_key'))
+```
 
 ## Rate limit
 
