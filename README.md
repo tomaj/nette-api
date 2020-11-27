@@ -183,6 +183,23 @@ We recommend to take a look at [Fractal][] library. There are much more informat
 
 [Fractal]: http://fractal.thephpleague.com/
 
+
+## ApiLink Macro
+
+First you have to register macro. In *config.neon* just add these lines:
+
+``` yaml
+latte:
+    macros:
+        - Tomaj\NetteApi\Link\ApiLinkMacro
+```
+
+Usage in latte files:
+
+```
+{apiLink $method, $version, $package, $apiAction, ['title' => 'My title', 'data-foo' => 'bar']}
+```
+
 ## Endpoint inputs
 
 Each handler can describe which input is required. It could be GET or POST parameters, also COOKIES, raw post, JSON or file uploads. You have to implement method `params()` where you have to return array with params. These params are used in API console to generate form.
