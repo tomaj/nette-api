@@ -42,7 +42,7 @@ class ApiLinkMacro extends MacroSet
             'params' => $args[4] ?? '[]',
         ];
 
-        return $writer->write('echo ($_presenter->context->getByType("' . ApiLink::class . '"))' .
+        return $writer->write('echo ($presenter->context->getByType("' . ApiLink::class . '"))' .
             '->link((new Tomaj\NetteApi\EndpointIdentifier(' .
                 $arguments['method']  . ', ' .
                 $arguments['version']  . ', ' .
