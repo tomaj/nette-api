@@ -4,6 +4,18 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Added API key authentication (query, header, cookie) - see https://swagger.io/docs/specification/authentication/api-keys/
+
+* Added missing strict_types declarations
+
+#### Fixed
+
+* Open API handler warnings about unused security schemes
+
+* ApiPresenter detailed error unit test
+
 ## 2.2.0 - 2020-08-27
 
 #### Added

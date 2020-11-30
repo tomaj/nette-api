@@ -6,7 +6,7 @@ namespace Tomaj\NetteApi\Test\Handler;
 
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
-use Tomaj\NetteApi\Misc\StaticBearerTokenRepository;
+use Tomaj\NetteApi\Misc\StaticTokenRepository;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
 
 class BearerTokenAuthorizationTest extends TestCase
@@ -14,7 +14,7 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testAuthorizedToken()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertTrue($bearerTokenAuthorization->authorized());
@@ -23,7 +23,7 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testUnarizedToken()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer asflkhwetiohegedgfsdgwe';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
@@ -33,7 +33,7 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testWrongAuthorizationFormat()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'B asflkhwetiohegedgfsdgwe asd';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
@@ -43,17 +43,17 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testWrongBearerAuthorizationFormat()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bdsdsdssd asflkhwetiohegedgfsdgwe';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
-        $this->assertEquals('Authorization header doesn\'t contains bearer token', $bearerTokenAuthorization->getErrorMessage());
+        $this->assertEquals('Authorization header doesn\'t contain bearer token', $bearerTokenAuthorization->getErrorMessage());
     }
 
     public function testNoAuthorizationHeader()
     {
         unset($_SERVER['HTTP_AUTHORIZATION']);
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
@@ -63,7 +63,7 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testIpRestrictionWithValidIp()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '34.24.126.44']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '34.24.126.44']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertTrue($bearerTokenAuthorization->authorized());
@@ -72,7 +72,7 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testIpRestrictionWithoutValidIp()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '34.24.126.45']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '34.24.126.45']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
@@ -82,7 +82,7 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testIpInRange()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '192.168.0.0/24']);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '192.168.0.0/24']);
         $ipDetector = new StaticIpDetector('192.168.0.33');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertTrue($bearerTokenAuthorization->authorized());
@@ -91,12 +91,12 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testTokenWithMultipleIps()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => '124.23.12.42,5.6.2.1']);
-        
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '124.23.12.42,5.6.2.1']);
+
         $ipDetector = new StaticIpDetector('5.6.2.1');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertTrue($bearerTokenAuthorization->authorized());
-        
+
         $ipDetector = new StaticIpDetector('5.6.2.2');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
@@ -105,7 +105,7 @@ class BearerTokenAuthorizationTest extends TestCase
     public function testTokenWithDisabledAccess()
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
-        $bearerTokenRepository = new StaticBearerTokenRepository(['sad0f98uwegoihweg09i4hergy' => null]);
+        $bearerTokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => null]);
 
         $ipDetector = new StaticIpDetector('5.6.2.1');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);

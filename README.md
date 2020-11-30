@@ -312,16 +312,16 @@ services:
 ```
 
 ### Bearer token authentication
-For simple use of Bearer token authorization with few tokens, you can use [StaticBearerTokenRepository](src/Misc/StaticBearerTokenRepository.php) (Tomaj\NetteApi\Misc\StaticBearerTokenRepository).
+For simple use of Bearer token authorization with few tokens, you can use [StaticTokenRepository](src/Misc/StaticTokenRepository.php) (Tomaj\NetteApi\Misc\StaticTokenRepository).
 
 ```neon
 services:
-    staticBearer: Tomaj\NetteApi\Misc\StaticBearerTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
+    staticTokenRepository: Tomaj\NetteApi\Misc\StaticTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
 
     apiDecider:
         factory: Tomaj\NetteApi\ApiDecider
         setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticBearer))
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticTokenRepository))
 ```
 
 With this registration you will have api `/api/v1/users` that will be accessible from anywhere with Authorisation HTTP header `Bearer dasfoihwet90hidsg` or from *127.0.0.1* with `Bearer asfoihweiohgwegi`.
@@ -337,6 +337,21 @@ In Nette-Api if you would like to specify IP restrictions for tokens you can use
 
 
 But it is very easy to implement your own Authorisation for API.
+
+### API keys
+You can also use API keys for authorization. An API key is a token that a client provides when making API calls. The key can be sent in the query string, header or cookie. See examples below:
+
+```neon
+services:
+    staticTokenRepository: Tomaj\NetteApi\Misc\StaticTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
+
+    apiDecider:
+        factory: Tomaj\NetteApi\ApiDecider
+        setup:
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'query'), Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication('api_key', @staticTokenRepository))
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'header'), Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-API-KEY', @staticTokenRepository))
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'cookie'), Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication('api_key', @staticTokenRepository))
+```
 
 ## Rate limit
 
@@ -374,7 +389,7 @@ services:
     apiDecider:
         factory: Tomaj\NetteApi\ApiDecider
         setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticBearer), MyRateLimit())
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticTokenRepository), MyRateLimit())
 ```
 
 ## Javascript ajax calls (CORS - preflight OPTIONS calls)

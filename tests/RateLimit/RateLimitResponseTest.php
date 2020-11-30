@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace RateLimit;
 
 use Nette\Application\Responses\TextResponse;

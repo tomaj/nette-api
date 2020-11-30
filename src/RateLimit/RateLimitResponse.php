@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\RateLimit;
 
 use Nette\Application\IResponse;

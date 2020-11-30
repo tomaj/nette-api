@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Output;
 
 use Nette\Application\Responses\RedirectResponse;
