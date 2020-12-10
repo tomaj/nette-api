@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Changed
+
+* Form in API console is rendered with BootstrapVerticalRenderer instead of BootstrapRenderer (labels are over fields instead of left side)
+
 #### Added
 
 * Added API key authentication (query, header, cookie) - see https://swagger.io/docs/specification/authentication/api-keys/

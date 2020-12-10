@@ -10,7 +10,7 @@ use Nette\Bridges\ApplicationLatte\Template;
 use Nette\Http\IRequest;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\Html;
-use Tomaj\Form\Renderer\BootstrapRenderer;
+use Tomaj\Form\Renderer\BootstrapVerticalRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
@@ -59,7 +59,7 @@ class ApiConsoleControl extends Control
 
         $defaults = [];
 
-        $form->setRenderer(new BootstrapRenderer());
+        $form->setRenderer(new BootstrapVerticalRenderer());
 
         if ($this->apiLink) {
             $url = $this->apiLink->link($this->endpoint);
