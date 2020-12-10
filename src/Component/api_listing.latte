@@ -4,8 +4,8 @@
         {foreach $versionApis as $api}
             {if $api->getHandler()->summary()}
                 {php $showSummary = true}
-                {breakIf true}
             {/if}
+            {breakIf $api->getHandler()->summary()}
         {/foreach}
 
         <h3>Version {$version}</h3>

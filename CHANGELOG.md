@@ -16,6 +16,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * ApiPresenter detailed error unit test
 
+* Compatibility with latte 2.9.0
+
 ## 2.2.0 - 2020-08-27
 
 #### Added
