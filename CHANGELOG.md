@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.3.0 - 2021-01-20
+
 #### Changed
 
 * Form in API console is rendered with BootstrapVerticalRenderer instead of BootstrapRenderer (labels are over fields instead of left side)
