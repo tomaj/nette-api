@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.3.1 - 2021-04-13
+
 #### Fixed
 
 * Added RateLimit to ApiDecider::addApi
