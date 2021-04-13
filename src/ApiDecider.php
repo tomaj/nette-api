@@ -10,6 +10,7 @@ use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
+use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class ApiDecider
 {
@@ -63,11 +64,12 @@ class ApiDecider
      * @param EndpointInterface $endpointIdentifier
      * @param ApiHandlerInterface $handler
      * @param ApiAuthorizationInterface $apiAuthorization
+     * @param RateLimitInterface|null $rateLimit
      * @return self
      */
-    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization): self
+    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization, RateLimitInterface $rateLimit = null): self
     {
-        $this->apis[] = new Api($endpointIdentifier, $handler, $apiAuthorization);
+        $this->apis[] = new Api($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
     }
 
