@@ -64,7 +64,7 @@ class ApiDecider
      * @param EndpointInterface $endpointIdentifier
      * @param ApiHandlerInterface $handler
      * @param ApiAuthorizationInterface $apiAuthorization
-     * @param RateLimitInterface $rateLimit
+     * @param RateLimitInterface|null $rateLimit
      * @return self
      */
     public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization, RateLimitInterface $rateLimit = null): self
