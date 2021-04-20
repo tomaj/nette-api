@@ -7,6 +7,7 @@ namespace Tomaj\NetteApi\Component;
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
 use Nette\Bridges\ApplicationLatte\Template;
+use Nette\Forms\IFormRenderer;
 use Nette\Http\IRequest;
 use Nette\Utils\ArrayHash;
 use Nette\Utils\Html;
@@ -35,6 +36,10 @@ class ApiConsoleControl extends Control
 
     private $apiLink;
 
+    private $formRenderer;
+
+    private $templateFilePath;
+
     public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ApiLink $apiLink = null)
     {
         $this->request = $request;
@@ -48,7 +53,7 @@ class ApiConsoleControl extends Control
     {
         /** @var Template $template */
         $template = $this->getTemplate();
-        $template->setFile(__DIR__ . '/console.latte');
+        $template->setFile($this->getTemplateFilePath());
         $template->add('handler', $this->handler);
         $template->render();
     }
@@ -59,7 +64,7 @@ class ApiConsoleControl extends Control
 
         $defaults = [];
 
-        $form->setRenderer(new BootstrapVerticalRenderer());
+        $form->setRenderer($this->getFormRenderer());
 
         if ($this->apiLink) {
             $url = $this->apiLink->link($this->endpoint);
@@ -175,5 +180,25 @@ class ApiConsoleControl extends Control
         if ($this->getPresenter()->isAjax()) {
             $this->getPresenter()->redrawControl();
         }
+    }
+
+    public function setFormRenderer(IFormRenderer $formRenderer): void
+    {
+        $this->formRenderer = $formRenderer;
+    }
+
+    private function getFormRenderer(): IFormRenderer
+    {
+        return $this->formRenderer ?: new BootstrapVerticalRenderer();
+    }
+
+    public function setTemplateFilePath(string $templateFilePath): void
+    {
+        $this->templateFilePath = $templateFilePath;
+    }
+
+    private function getTemplateFilePath(): string
+    {
+        return $this->templateFilePath ?: __DIR__ . '/console.latte';
     }
 }

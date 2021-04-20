@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* User can set own form renderer and template file path for API console
+
 ## 2.3.1 - 2021-04-13
 
 #### Fixed
