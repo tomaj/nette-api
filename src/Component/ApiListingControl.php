@@ -19,6 +19,8 @@ class ApiListingControl extends Control
 
     public $onClick = [];
 
+    private $templateFilePath;
+
     public function __construct(ApiDecider $apiDecider)
     {
         $this->apiDecider = $apiDecider;
@@ -31,7 +33,7 @@ class ApiListingControl extends Control
         /** @var Template $template */
         $template = $this->getTemplate();
         $template->add('apis', $this->groupApis($apis));
-        $template->setFile(__DIR__ . '/api_listing.latte');
+        $template->setFile($this->getTemplateFilePath());
         $template->render();
     }
 
@@ -55,5 +57,15 @@ class ApiListingControl extends Control
             $versionHandlers[$endPoint->getVersion()][] = $handler;
         }
         return $versionHandlers;
+    }
+
+    public function setTemplateFilePath(string $templateFilePath): void
+    {
+        $this->templateFilePath = $templateFilePath;
+    }
+
+    private function getTemplateFilePath(): string
+    {
+        return $this->templateFilePath ?: __DIR__ . '/api_listing.latte';
     }
 }
