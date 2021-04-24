@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.4.0 - 2021-04-24
+
 #### Added
 
 * User can set own form renderer for API console and own template file(s) for API console and for API listing
