@@ -11,6 +11,14 @@ class CorsPreflightHandler extends BaseHandler
 
     private $headers = [];
 
+    private $type;
+
+    /**
+     * CorsPreflightHandler constructor.
+     * @param Response $response
+     * @param array|string[][] $headers
+     * @param string $type available values: xml, json, text
+     */
     public function __construct(
         Response $response,
         array $headers = [
@@ -18,7 +26,8 @@ class CorsPreflightHandler extends BaseHandler
                 'Authorization',
                 'X-Requested-With',
             ],
-        ]
+        ],
+        $type = 'json'
     ) {
         parent::__construct();
         $this->response = $response;
@@ -33,6 +42,14 @@ class CorsPreflightHandler extends BaseHandler
                 $this->response->addHeader($name, $value);
             }
         }
-        return new JsonApiResponse(Response::S200_OK, []);
+        switch($this->type) {
+            case 'xml':
+                return new XmlApiResponse(Response::S200_OK, '');
+            case 'text':
+                return new TextApiResponse(Response::S200_OK, '');
+            case 'json':
+            default:
+                return new JsonApiResponse(Response::S200_OK, []);
+        }
     }
 }
