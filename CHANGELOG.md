@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Added additonal data for API handlers
+
 ## 2.4.0 - 2021-04-24
 
 #### Added

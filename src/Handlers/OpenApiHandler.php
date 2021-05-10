@@ -310,6 +310,10 @@ class OpenApiHandler extends BaseHandler
                 'tags' => $handler->tags(),
             ];
 
+            foreach ($handler->additionalData() as $additionalDataKey => $additionalDataValue) {
+                $settings['x-' . $additionalDataKey] = $additionalDataValue;
+            }
+
             if ($handler->deprecated()) {
                 $settings['deprecated'] = true;
             }
