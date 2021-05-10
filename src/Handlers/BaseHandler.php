@@ -82,6 +82,11 @@ abstract class BaseHandler implements ApiHandlerInterface
         return [];
     }
 
+    public function additionalData(): array
+    {
+        return [];
+    }
+
     protected function getFractal(): Manager
     {
         if (!$this->fractal) {

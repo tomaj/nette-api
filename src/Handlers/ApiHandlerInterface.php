@@ -68,4 +68,11 @@ interface ApiHandlerInterface
      * @return OutputInterface[]
      */
     public function outputs(): array;
+
+    /**
+     * List of additional information for handler
+     *
+     * @return array<string, int|string|bool|array>
+     */
+    public function additionalData(): array;
 }
