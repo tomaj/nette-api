@@ -32,6 +32,7 @@ class CorsPreflightHandler extends BaseHandler
         parent::__construct();
         $this->response = $response;
         $this->headers = $headers;
+        $this->type = $type;
     }
 
     public function handle($params)
@@ -42,7 +43,7 @@ class CorsPreflightHandler extends BaseHandler
                 $this->response->addHeader($name, $value);
             }
         }
-        switch($this->type) {
+        switch ($this->type) {
             case 'xml':
                 return new XmlApiResponse(Response::S200_OK, '');
             case 'text':
