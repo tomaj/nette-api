@@ -171,7 +171,7 @@ class ApiConsoleControl extends Control
         }
 
         $consoleRequest = new ConsoleRequest($this->handler, $this->endpoint, $this->apiLink);
-        $result = $consoleRequest->makeRequest($url, $method, (array) $values, $additionalValues, $token);
+        $result = $consoleRequest->makeRequest($url, $method, $this->filterFormValues((array) $values), $additionalValues, $token);
 
         /** @var Template $template */
         $template = $this->getTemplate();
@@ -200,5 +200,17 @@ class ApiConsoleControl extends Control
     private function getTemplateFilePath(): string
     {
         return $this->templateFilePath ?: __DIR__ . '/console.latte';
+    }
+
+    private function filterFormValues(array $values): array
+    {
+        foreach ($this->handler->params() as $param) {
+            $key = $param->getKey();
+            if ($values['do_not_send_empty_value_for_' . $key] === true && $values[$key] === '') {
+                unset($values[$key]);
+            }
+            unset($values['do_not_send_empty_value_for_' . $key]);
+        }
+        return $values;
     }
 }

@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Fixed
+
+* Empty console input fixed by adding checkbox for each parameter
+
 ## 2.4.0 - 2021-04-24
 
 #### Added

@@ -160,6 +160,7 @@ abstract class InputParam implements ParamInterface
                 $input->setDefaultValue($default);
             }
         }
+        $form->addCheckbox('do_not_send_empty_value_for_' . $this->getKey(), 'Do not send empty value for ' . $this->getLabel());
     }
 
     protected function addFormInput(Form $form, string $key): BaseControl

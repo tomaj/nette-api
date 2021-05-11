@@ -63,6 +63,7 @@ class ConsoleParamsTest extends TestCase
         $totalCount = 0;
         foreach ($inputParams as $inputParam) {
             $totalCount += $inputParam->isMulti() ? 5 : 1;
+            $totalCount++;  // each input param has one "do_not_send_empty_value" checkbox added
             $inputParam->updateConsoleForm($form);
         }
 
