@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Added additonal data for API handlers
+
 #### Fixed
 
 * Empty console input fixed by adding checkbox for each parameter
