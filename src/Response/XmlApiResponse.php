@@ -2,6 +2,7 @@
 
 namespace Tomaj\NetteApi\Response;
 
+use DateTimeInterface;
 use Nette\Application\IResponse as ApplicationIResponse;
 use Nette\Http\IRequest;
 use Nette\Http\IResponse;
