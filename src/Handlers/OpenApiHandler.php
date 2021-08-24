@@ -398,7 +398,7 @@ class OpenApiHandler extends BaseHandler
     {
         $parameters = [];
         foreach ($handler->params() as $param) {
-            if ($param->getType() !== InputParam::TYPE_GET) {
+            if ($param->getType() !== InputParam::TYPE_GET && $param->getType() !== InputParam::TYPE_COOKIE) {
                 continue;
             }
 
@@ -432,11 +432,12 @@ class OpenApiHandler extends BaseHandler
 
     private function createRequestBody(ApiHandlerInterface $handler)
     {
-        $postParams = [
+        $requestBody = [
             'properties' => [],
             'required' => [],
         ];
-        $postParamsExample = [];
+        $filesInBody = false;
+        $requestBodyExample = [];
         foreach ($handler->params() as $param) {
             if ($param instanceof JsonInputParam) {
                 $schema = json_decode($param->getSchema(), true);
@@ -478,33 +479,50 @@ class OpenApiHandler extends BaseHandler
                     $property['enum'] = $param->getAvailableValues();
                 }
 
-                $postParams['properties'][$param->getKey() . ($param->isMulti() ? '[]' : '')] = $property;
+                $requestBody['properties'][$param->getKey() . ($param->isMulti() ? '[]' : '')] = $property;
                 if ($param->isRequired()) {
-                    $postParams['required'][] = $param->getKey() . ($param->isMulti() ? '[]' : '');
+                    $requestBody['required'][] = $param->getKey() . ($param->isMulti() ? '[]' : '');
                 }
 
                 if ($param->getExample() || $param->getDefault()) {
-                    $postParamsExample[$param->getKey()] = $param->getExample() ?: $param->getDefault();
+                    $requestBodyExample[$param->getKey()] = $param->getExample() ?: $param->getDefault();
+                }
+            } elseif ($param->getType() === InputParam::TYPE_FILE) {
+                $filesInBody = true;
+                $property = [
+                    'type' => $param->isMulti() ? 'array' : 'string',
+                    'description' => $param->getDescription(),
+                ];
+                if ($param->isMulti()) {
+                    $property['items'] = ['type' => 'string', 'format' => 'binary'];
+                } else {
+                    $property['format'] = 'binary';
+                }
+
+                $requestBody['properties'][$param->getKey() . ($param->isMulti() ? '[]' : '')] = $property;
+                if ($param->isRequired()) {
+                    $requestBody['required'][] = $param->getKey() . ($param->isMulti() ? '[]' : '');
                 }
             }
         }
 
-        if (!empty($postParams['properties'])) {
-            $postParamsSchema = [
+        if (!empty($requestBody['properties'])) {
+            $requestBodySchema = [
                 'type' => 'object',
-                'properties' => $postParams['properties'],
-                'required' => $postParams['required'],
+                'properties' => $requestBody['properties'],
+                'required' => $requestBody['required'],
             ];
 
-            if ($postParamsExample) {
-                $postParamsSchema['example'] = $postParamsExample;
+            if ($requestBodyExample) {
+                $requestBodySchema['example'] = $requestBodyExample;
             }
 
+            $contentType = $filesInBody ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
             return [
                 'required' => true,
                 'content' => [
-                    'application/x-www-form-urlencoded' => [
-                        'schema' => $postParamsSchema,
+                    $contentType => [
+                        'schema' => $requestBodySchema,
                     ],
                 ],
             ];
