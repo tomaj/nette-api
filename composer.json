@@ -40,6 +40,9 @@
             "Tomaj\\NetteApi\\Test\\": "tests"
         }
     },
+    "replace": {
+        "phpspec/prophecy": "*"
+    },
     "scripts": {
         "test": "phpunit"
     }
