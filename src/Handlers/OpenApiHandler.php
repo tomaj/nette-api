@@ -15,6 +15,7 @@ use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Output\JsonOutput;
@@ -249,7 +250,7 @@ class OpenApiHandler extends BaseHandler
                     $responses[$output->getCode()] = [
                         'description' => $output->getDescription(),
                         'content' => [
-                            'application/json' => [
+                            'application/json; charset=utf-8' => [
                                 'schema' => $schema,
                             ],
                         ]
@@ -271,39 +272,6 @@ class OpenApiHandler extends BaseHandler
                 }
             }
 
-            $responses[IResponse::S400_BAD_REQUEST] = [
-                'description' => 'Bad request',
-                'content' => [
-                    'application/json' => [
-                        'schema' => [
-                            '$ref' => '#/components/schemas/ErrorWrongInput',
-                        ],
-                    ]
-                ],
-            ];
-
-            $responses[IResponse::S403_FORBIDDEN] = [
-                'description' => 'Operation forbidden',
-                'content' => [
-                    'application/json' => [
-                        'schema' => [
-                            '$ref' => '#/components/schemas/ErrorForbidden',
-                        ],
-                    ],
-                ],
-            ];
-
-            $responses[IResponse::S500_INTERNAL_SERVER_ERROR] = [
-                'description' => 'Internal server error',
-                'content' => [
-                    'application/json' => [
-                        'schema' => [
-                            '$ref' => '#/components/schemas/InternalServerError',
-                        ],
-                    ],
-                ],
-            ];
-
             $settings = [
                 'summary' => $handler->summary(),
                 'description' => $handler->description(),
@@ -315,16 +283,55 @@ class OpenApiHandler extends BaseHandler
             }
 
             $parameters = $this->createParamsList($handler);
+            $requestBody = $this->createRequestBody($handler);
+
+            if (!empty($parameters) || !empty($requestBody)) {
+                $responses[IResponse::S400_BAD_REQUEST] = [
+                    'description' => 'Bad request',
+                    'content' => [
+                        'application/json; charset=utf-8' => [
+                            'schema' => [
+                                '$ref' => '#/components/schemas/ErrorWrongInput',
+                            ],
+                        ]
+                    ],
+                ];
+            }
+
+            $authorization = $api->getAuthorization();
+
+            if (!$authorization instanceof NoAuthorization) {
+                $responses[IResponse::S403_FORBIDDEN] = [
+                    'description' => 'Operation forbidden',
+                    'content' => [
+                        'application/json; charset=utf-8' => [
+                            'schema' => [
+                                '$ref' => '#/components/schemas/ErrorForbidden',
+                            ],
+                        ],
+                    ],
+                ];
+            }
+
+            $responses[IResponse::S500_INTERNAL_SERVER_ERROR] = [
+                'description' => 'Internal server error',
+                'content' => [
+                    'application/json; charset=utf-8' => [
+                        'schema' => [
+                            '$ref' => '#/components/schemas/InternalServerError',
+                        ],
+                    ],
+                ],
+            ];
+
             if (!empty($parameters)) {
                 $settings['parameters'] = $parameters;
             }
 
-            $requestBody = $this->createRequestBody($handler);
             if (!empty($requestBody)) {
                 $settings['requestBody'] = $requestBody;
             }
 
-            $authorization = $api->getAuthorization();
             if ($authorization instanceof BearerTokenAuthorization) {
                 $settings['security'] = [
                     [
@@ -402,10 +409,6 @@ class OpenApiHandler extends BaseHandler
                 continue;
             }
 
-            $schema = [
-                'type' => $param->isMulti() ? 'array' : 'string',
-            ];
-
             $parameter = [
                 'name' => $param->getKey() . ($param->isMulti() ? '[]' : ''),
                 'in' => $this->createIn($param->getType()),
@@ -413,17 +416,20 @@ class OpenApiHandler extends BaseHandler
                 'description' => $param->getDescription(),
             ];
 
+            $schema = [
+                'type' => $param->isMulti() ? 'array' : 'string',
+            ];
             if ($param->isMulti()) {
                 $schema['items'] = ['type' => 'string'];
             }
             if ($param->getAvailableValues()) {
                 $schema['enum'] = $param->getAvailableValues();
             }
-            if ($param->getExample() || $param->getDefault()) {
-                $schema['example'] = $param->getExample() ?: $param->getDefault();
-            }
-
             $parameter['schema'] = $schema;
+
+            if ($param->getExample() || $param->getDefault()) {
+                $parameter['example'] = $param->getExample() ?: $param->getDefault();
+            }
 
             $parameters[] = $parameter;
         }
