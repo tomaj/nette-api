@@ -8,6 +8,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Empty console input fixed by adding checkbox for each parameter
 
+* Handling wrong input for Get and Post InputParam 
+
 ## 2.4.0 - 2021-04-24
 
 #### Added

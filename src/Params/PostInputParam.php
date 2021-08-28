@@ -14,6 +14,6 @@ class PostInputParam extends InputParam
             return $_POST[$this->key];
         }
         $value = $this->isMulti() ? filter_input(INPUT_POST, $this->key, FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) : filter_input(INPUT_POST, $this->key);
-        return $value !== null ? $value : $this->default;
+        return $value !== null && $value !== false ? $value : $this->default;
     }
 }

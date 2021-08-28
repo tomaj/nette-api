@@ -14,6 +14,6 @@ class GetInputParam extends InputParam
             return $_GET[$this->key];
         }
         $value = $this->isMulti() ? filter_input(INPUT_GET, $this->key, FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) : filter_input(INPUT_GET, $this->key);
-        return $value !== null ? $value : $this->default;
+        return $value !== null && $value !== false ? $value : $this->default;
     }
 }
