@@ -20,9 +20,9 @@ class XmlApiResponse implements ApplicationIResponse
     private $response = null;
 
     /**
-     * @var string|int|bool|DateTimeInterface
+     * @var DateTimeInterface|null
      */
-    private $expiration;
+    private $expiration = null;
 
     /**
      * Create XmlApiResponse
@@ -31,9 +31,9 @@ class XmlApiResponse implements ApplicationIResponse
      *
      * @param integer $code
      * @param string $data
-     * @param string|int|bool|DateTimeInterface $expiration
+     * @param DateTimeInterface|null $expiration
      */
-    public function __construct($code, $data, $expiration = false)
+    public function __construct($code, $data, $expiration = null)
     {
         $this->code = $code;
         $this->response = $data;
