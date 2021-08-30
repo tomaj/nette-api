@@ -2,6 +2,7 @@
 
 namespace Tomaj\NetteApi\Response;
 
+use DateTimeInterface;
 use Nette\Application\IResponse as ApplicationIResponse;
 use Nette\Http\IRequest;
 use Nette\Http\IResponse;
@@ -19,17 +20,24 @@ class XmlApiResponse implements ApplicationIResponse
     private $response = null;
 
     /**
+     * @var DateTimeInterface|null
+     */
+    private $expiration = null;
+
+    /**
      * Create XmlApiResponse
      * This class only wrap JsonResponse from Nette and add possibility
      * to setup response code and automaticaly set content type
      *
      * @param integer $code
      * @param string $data
+     * @param DateTimeInterface|null $expiration
      */
-    public function __construct($code, $data)
+    public function __construct($code, $data, $expiration = null)
     {
         $this->code = $code;
         $this->response = $data;
+        $this->expiration = $expiration;
     }
 
     /**
@@ -48,7 +56,7 @@ class XmlApiResponse implements ApplicationIResponse
     public function send(IRequest $httpRequest, IResponse $httpResponse)
     {
         $httpResponse->setContentType('text/xml');
-        $httpResponse->setExpiration(false);
+        $httpResponse->setExpiration($this->expiration);
         $httpResponse->setCode($this->getCode());
         $httpResponse->setHeader('Content-Length', strlen($this->response));
 
