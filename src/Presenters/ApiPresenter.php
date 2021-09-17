@@ -16,6 +16,7 @@ use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
+use Tomaj\NetteApi\Output\OutputInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
@@ -96,6 +97,10 @@ final class ApiPresenter implements IPresenter
             $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
             $outputValidatorErrors = [];
             foreach ($handler->outputs() as $output) {
+                if (!$output instanceof OutputInterface) {
+                    $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
+                    continue;
+                }
                 $validationResult = $output->validate($response);
                 if ($validationResult->isOk()) {
                     $outputValid = true;
