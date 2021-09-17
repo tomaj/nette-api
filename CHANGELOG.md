@@ -7,10 +7,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 #### Fixed
 
 * Empty console input fixed by adding checkbox for each parameter
-
 * Handling wrong input for Get and Post InputParam
-
 * File and cookie parameters in Open API handler
+* Correct error shown when putting non-OutputInterface into ApiHandlerInterface::outputs()
 
 ## 2.4.0 - 2021-04-24
 
