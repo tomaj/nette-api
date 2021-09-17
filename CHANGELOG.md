@@ -6,6 +6,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 #### Fixed
 
+## 2.5.0 - 2021-09-17
+
 * Empty console input fixed by adding checkbox for each parameter
 * Handling wrong input for Get and Post InputParam
 * File and cookie parameters in Open API handler
