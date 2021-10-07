@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Authorization;
 
-use Tomaj\NetteApi\Misc\BearerTokenRepositoryInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
