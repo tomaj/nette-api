@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Authorization;
 
-use Tomaj\NetteApi\Misc\BearerTokenRepositoryInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
+use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
 class BearerTokenAuthorization extends TokenAuthorization
 {
    /**
      * BearerTokenAuthorization constructor.
      *
-     * @param BearerTokenRepositoryInterface $tokenRepository
-     * @param IpDetectorInterface            $ipDetector
+     * @param TokenRepositoryInterface $tokenRepository
+     * @param IpDetectorInterface      $ipDetector
      */
-    public function __construct(BearerTokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
+    public function __construct(TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         parent::__construct($tokenRepository, $ipDetector);
     }
