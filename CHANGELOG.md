@@ -4,9 +4,15 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
-#### Fixed
+## 2.6.0 - 2021-10-08
+
+### Updated
+
+* Use relaxed TokenRepositoryInterface in BearerTokenAuthorization ([more info here](https://github.com/tomaj/nette-api/pull/112))
 
 ## 2.5.0 - 2021-09-17
+
+#### Fixed
 
 * Empty console input fixed by adding checkbox for each parameter
 * Handling wrong input for Get and Post InputParam
