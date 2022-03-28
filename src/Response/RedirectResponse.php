@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Response;
 
-use Nette\Application\IResponse;
+use Nette\Http\IResponse;
 use Nette\Http\IRequest;
 use Nette\SmartObject;
 
