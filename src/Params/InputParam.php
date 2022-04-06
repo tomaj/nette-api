@@ -60,6 +60,9 @@ abstract class InputParam implements ParamInterface
 
     public function setAvailableValues(array $availableValues): self
     {
+        if ($availableValues === array_values($availableValues)) {
+            $availableValues = array_combine($availableValues, $availableValues);
+        }
         $this->availableValues = $availableValues;
         return $this;
     }
@@ -166,7 +169,7 @@ abstract class InputParam implements ParamInterface
     protected function addFormInput(Form $form, string $key): BaseControl
     {
         if ($this->getAvailableValues()) {
-            return $form->addSelect($key, $this->getParamLabel(), array_combine($this->getAvailableValues(), $this->getAvailableValues()))
+            return $form->addSelect($key, $this->getParamLabel(), $this->getAvailableValues())
                 ->setPrompt('Select ' . $this->getLabel());
         }
         return $form->addText($key, $this->getParamLabel());
@@ -201,8 +204,8 @@ abstract class InputParam implements ParamInterface
             return new ValidationResult(ValidationResult::STATUS_ERROR, ['Field is required']);
         }
 
-        if ($this->availableValues !== null) {
-            $result = empty(array_diff(($this->isMulti() ? $value : [$value]), $this->availableValues));
+        if ($this->getAvailableValues() !== null) {
+            $result = empty(array_diff(($this->isMulti() ? $value : [$value]), array_keys($this->getAvailableValues())));
             if ($result === false) {
                 return new ValidationResult(ValidationResult::STATUS_ERROR, ['Field contains not available value(s)']);
             }

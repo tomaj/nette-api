@@ -169,7 +169,7 @@ class ConsoleRequest
                     } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key][] = $valueData;
                     } else {
-                        $getFields[$key][] = urlencode($valueData);
+                        $getFields[$key][] = urlencode((string)$valueData);
                     }
                 } else {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
@@ -179,7 +179,7 @@ class ConsoleRequest
                     } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key] = $valueData;
                     } else {
-                        $getFields[$key] = urlencode($valueData);
+                        $getFields[$key] = urlencode((string)$valueData);
                     }
                 }
             }

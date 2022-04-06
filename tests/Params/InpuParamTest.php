@@ -63,7 +63,7 @@ class InputParamTest extends TestCase
         $this->assertEquals('GET', $inputParam->getType());
         $this->assertEquals('mykey4', $inputParam->getKey());
         $this->assertEquals(true, $inputParam->isRequired());
-        $this->assertEquals(['c', 'asdsadsad'], $inputParam->getAvailableValues());
+        $this->assertEquals(['c' => 'c', 'asdsadsad' => 'asdsadsad'], $inputParam->getAvailableValues());
     }
 
     public function testNotFoundFileType()
@@ -147,6 +147,19 @@ class InputParamTest extends TestCase
     {
         $_GET['dsgerg'] = 'asfsaf';
         $inputParam = (new GetInputParam('dsgerg'))->setRequired()->setAvailableValues(['vgdgr']);
+        $this->assertFalse($inputParam->validate()->isOk());
+
+        $_GET['dsgerg'] = 'vgdgr';
+        $this->assertTrue($inputParam->validate()->isOk());
+    }
+
+    public function testStaticAvailableValuesWithSpecialKeys()
+    {
+        $_GET['dsgerg'] = 'asfsaf';
+        $inputParam = (new GetInputParam('dsgerg'))->setRequired()->setAvailableValues(['vgdgr' => 'VGDGR']);
+        $this->assertFalse($inputParam->validate()->isOk());
+
+        $_GET['dsgerg'] = 'VGDGR';
         $this->assertFalse($inputParam->validate()->isOk());
 
         $_GET['dsgerg'] = 'vgdgr';

@@ -413,7 +413,6 @@ class OpenApiHandler extends BaseHandler
                 'name' => $param->getKey() . ($param->isMulti() ? '[]' : ''),
                 'in' => $this->createIn($param->getType()),
                 'required' => $param->isRequired(),
-                'description' => $param->getDescription(),
             ];
 
             $schema = [
@@ -422,10 +421,23 @@ class OpenApiHandler extends BaseHandler
             if ($param->isMulti()) {
                 $schema['items'] = ['type' => 'string'];
             }
-            if ($param->getAvailableValues()) {
-                $schema['enum'] = $param->getAvailableValues();
+            $descriptionParts = [];
+            if ($param->getDescription()) {
+                $descriptionParts[] = $param->getDescription();
+            }
+            $availableValues = $param->getAvailableValues();
+            if ($availableValues) {
+                $schema['enum'] = array_keys($availableValues);
+                if (array_keys($availableValues) !== array_values($availableValues)) {
+                    foreach ($availableValues as $availableKey => $availableValue) {
+                        $descriptionParts[] = ' * `' . $availableKey . '` - ' . $availableValue;
+                    }
+                }
             }
             $parameter['schema'] = $schema;
+            if ($descriptionParts !== []) {
+                $parameter['description'] = implode("\n", $descriptionParts);
+            }
 
             if ($param->getExample() || $param->getDefault()) {
                 $parameter['example'] = $param->getExample() ?: $param->getDefault();
@@ -476,13 +488,26 @@ class OpenApiHandler extends BaseHandler
             if ($param->getType() === InputParam::TYPE_POST) {
                 $property = [
                     'type' => $param->isMulti() ? 'array' : 'string',
-                    'description' => $param->getDescription(),
                 ];
                 if ($param->isMulti()) {
                     $property['items'] = ['type' => 'string'];
                 }
-                if ($param->getAvailableValues()) {
-                    $property['enum'] = $param->getAvailableValues();
+                $descriptionParts = [];
+                if ($param->getDescription()) {
+                    $descriptionParts[] = $param->getDescription();
+                }
+                $availableValues = $param->getAvailableValues();
+                if ($availableValues) {
+                    $property['enum'] = array_keys($availableValues);
+                    if (array_keys($availableValues) !== array_values($availableValues)) {
+                        foreach ($availableValues as $availableKey => $availableValue) {
+                            $descriptionParts[] = ' * `' . $availableKey . '` - ' . $availableValue;
+                        }
+                    }
+                }
+
+                if ($descriptionParts !== []) {
+                    $property['description'] = implode("\n", $descriptionParts);
                 }
 
                 $requestBody['properties'][$param->getKey() . ($param->isMulti() ? '[]' : '')] = $property;
@@ -516,8 +541,11 @@ class OpenApiHandler extends BaseHandler
             $requestBodySchema = [
                 'type' => 'object',
                 'properties' => $requestBody['properties'],
-                'required' => $requestBody['required'],
             ];
+
+            if ($requestBody['required'] !== []) {
+                $requestBodySchema['required'] = $requestBody['required'];
+            }
 
             if ($requestBodyExample) {
                 $requestBodySchema['example'] = $requestBodyExample;

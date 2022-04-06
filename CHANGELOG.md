@@ -4,6 +4,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+
+### Added
+
+* Available values now can have description in Console and OpenApiHandler. Just use associative array - keys are available values, values are their description
+
 ## 2.6.0 - 2021-10-08
 
 ### Updated
