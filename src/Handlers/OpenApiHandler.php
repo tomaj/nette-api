@@ -593,9 +593,12 @@ class OpenApiHandler extends BaseHandler
         return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES)), true);
     }
 
-    private function transformTypes(array &$schema)
+    private function transformTypes(array &$schema, ?string $parent = null)
     {
         foreach ($schema as $key => &$value) {
+            if ($parent === 'properties') {
+                continue;
+            }
             if ($key === 'type' && is_array($value)) {
                 if (count($value) === 2 && in_array('null', $value)) {
                     unset($value[array_search('null', $value)]);
@@ -605,7 +608,7 @@ class OpenApiHandler extends BaseHandler
                     throw new InvalidArgumentException('Type cannot be array and if so, one element have to be "null"');
                 }
             } elseif (is_array($value)) {
-                $this->transformTypes($value);
+                $this->transformTypes($value, $key);
             }
         }
     }
