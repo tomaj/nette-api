@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Output;
 
-use Nette\Application\Responses\RedirectResponse;
+use Tomaj\NetteApi\Response\RedirectResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;

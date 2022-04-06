@@ -4,6 +4,15 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Added
+
+* RedirectResponse which implements ResponseInterface
+
+### Fixed
+
+* Yaml format for OpenApiHandler is available only if symfony/yaml is installed
+* RedirectOutput use new RedirectResponse
+
 ## 2.6.0 - 2021-10-08
 
 ### Updated
