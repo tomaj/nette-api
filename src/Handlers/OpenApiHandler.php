@@ -65,8 +65,12 @@ class OpenApiHandler extends BaseHandler
 
     public function params(): array
     {
+        $availableFormats = ['json'];
+        if (class_exists(Yaml::class)) {
+            $availableFormats[] = 'yaml';
+        }
         return [
-            (new GetInputParam('format'))->setAvailableValues(['json', 'yaml'])->setDescription('Response format'),
+            (new GetInputParam('format'))->setAvailableValues($availableFormats)->setDescription('Response format'),
         ];
     }
 
