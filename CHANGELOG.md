@@ -14,6 +14,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Yaml format for OpenApiHandler is available only if symfony/yaml is installed
 * RedirectOutput use new RedirectResponse
+* Property with name `type` is now available in json schema
 
 ## 2.6.0 - 2021-10-08
 
