@@ -16,6 +16,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * RedirectOutput use new RedirectResponse
 * Property with name `type` is now available in json schema
 
+#### Changed
+
+* ApiLinkMacro now uses latte filter to avoid use presenter context (BC break)
+
 ## 2.6.0 - 2021-10-08
 
 ### Updated
