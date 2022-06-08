@@ -44,12 +44,11 @@ class ApiLinkMacro extends MacroSet
             'params' => $args[4] ?? '[]',
         ];
 
-        return $writer->write('echo ($presenter->context->getByType("' . ApiLink::class . '"))' .
-            '->link((new Tomaj\NetteApi\EndpointIdentifier(' .
-                $arguments['method']  . ', ' .
-                $arguments['version']  . ', ' .
-                $arguments['package'] . ', ' .
-                $arguments['action'] . ')), ' . $arguments['params'] . ')');
+        return $writer->write('echo ($this->filters->apiLink)((new Tomaj\NetteApi\EndpointIdentifier(' .
+            $arguments['method']  . ', ' .
+            $arguments['version']  . ', ' .
+            $arguments['package'] . ', ' .
+            $arguments['action'] . ')), ' . $arguments['params'] . ')');
     }
 
     private static function addQuotes($string)

@@ -185,9 +185,14 @@ We recommend to take a look at [Fractal][] library. There are much more informat
 
 ## ApiLink Macro
 
-First you have to register macro. In *config.neon* just add these lines:
+First you have to register filter helper and than macro. In *config.neon* just add these lines:
 
 ``` yaml
+services:
+    apiLink: Tomaj\NetteApi\Link\ApiLink()
+    latte.latteFactory:
+        setup:
+            - addFilter(apiLink, [@apiLink, link])
 latte:
     macros:
         - Tomaj\NetteApi\Link\ApiLinkMacro
