@@ -4,9 +4,17 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.8.0 - 2022-06-15
+
+#### Changed
+
+* ApiLinkMacro now uses latte filter to avoid use presenter context (BC break in nette/application 3.1)
+
 #### Fixed
 
 * BaseUrl in OpenApiHandler
+
+## 2.7.0 - 2022-04-07
 
 ### Added
 
@@ -18,10 +26,6 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Yaml format for OpenApiHandler is available only if symfony/yaml is installed
 * RedirectOutput use new RedirectResponse
 * Property with name `type` is now available in json schema
-
-#### Changed
-
-* ApiLinkMacro now uses latte filter to avoid use presenter context (BC break)
 
 ## 2.6.0 - 2021-10-08
 
