@@ -98,8 +98,7 @@ class OpenApiHandler extends BaseHandler
         $version = $this->getEndpoint()->getVersion();
         $apis = $this->getApis($version);
         $scheme = $this->request->getUrl()->getScheme();
-        $host = $this->request->getUrl()->getHost();
-        $baseUrl = $scheme . '://' . $host;
+        $baseUrl = $this->request->getUrl()->getHostUrl();
         $basePath = $this->getBasePath($apis, $baseUrl);
 
         $securitySchemes = [];
@@ -157,7 +156,7 @@ class OpenApiHandler extends BaseHandler
             ],
             'servers' => [
                 [
-                    'url' => $scheme . '://' . $host . $basePath,
+                    'url' => $baseUrl . $basePath,
                 ],
             ],
             'components' => [
