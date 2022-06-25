@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Fixed
+
+* Missing expiration params in XmlApiResponse
+
 ## 2.8.0 - 2022-06-15
 
 #### Changed

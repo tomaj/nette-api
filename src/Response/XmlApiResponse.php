@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Response;
 
+use DateTimeInterface;
 use Nette\Http\IRequest;
 use Nette\Http\IResponse;
 use Nette\SmartObject;
@@ -18,10 +19,14 @@ class XmlApiResponse implements ResponseInterface
     /** @var string */
     private $response = null;
 
-    public function __construct(int $code, string $data)
+    /** @var DateTimeInterface|null */
+    private $expiration;
+
+    public function __construct(int $code, string $data, ?DateTimeInterface $expiration = null)
     {
         $this->code = $code;
         $this->response = $data;
+        $this->expiration = $expiration;
     }
 
     /**
@@ -32,13 +37,18 @@ class XmlApiResponse implements ResponseInterface
         return $this->code;
     }
 
+    public function getExpiration(): ?DateTimeInterface
+    {
+        return $this->expiration;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType('text/xml');
-        $httpResponse->setExpiration(null);
+        $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
         $httpResponse->setHeader('Content-Length', (string) strlen($this->response));
 
         echo $this->response;
