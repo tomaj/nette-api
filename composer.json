@@ -19,7 +19,7 @@
         "nette/application": "^3.0",
         "nette/http": "^3.0",
         "tracy/tracy": "^2.6",
-        "league/fractal": "^0.17.0",
+        "league/fractal": "^0.17.0 || ^0.20.1",
         "tomaj/nette-bootstrap-form": "^2.0",
         "justinrainbow/json-schema": "^5.2"
     },
