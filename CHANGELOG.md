@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* PHP 8.1 support (`league/fractal` 0.20.1)
+
 #### Fixed
 
 * Missing expiration params in XmlApiResponse
