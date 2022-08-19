@@ -488,7 +488,7 @@ class OpenApiHandler extends BaseHandler
                     ],
                 ];
             }
-            if ($param->getType() === InputParam::TYPE_POST) {
+            if ($param->getType() === InputParam::TYPE_POST || $param->getType() === InputParam::TYPE_PUT) {
                 $property = [
                     'type' => $param->isMulti() ? 'array' : 'string',
                 ];
