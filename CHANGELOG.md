@@ -11,6 +11,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 #### Fixed
 
 * Missing expiration params in XmlApiResponse
+* Missing body request for PUT methost
 
 ## 2.8.0 - 2022-06-15
 
