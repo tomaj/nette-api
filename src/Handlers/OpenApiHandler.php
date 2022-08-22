@@ -476,14 +476,18 @@ class OpenApiHandler extends BaseHandler
                 ];
             }
             if ($param instanceof RawInputParam) {
+                $schema = [
+                    'type' => 'string',
+                ];
+                if ($param->getExample()) {
+                    $schema['example'] = $param->getExample();
+                }
                 return [
                     'description' => $param->getDescription(),
                     'required' => $param->isRequired(),
                     'content' => [
                         'text/plain' => [
-                            'schema' => [
-                                'type' => 'string',
-                            ],
+                            'schema' => $schema,
                         ],
                     ],
                 ];
