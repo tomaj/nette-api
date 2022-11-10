@@ -4,6 +4,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+
+## 2.9.0 - 2022-11-10
+
 #### Added
 
 * Support for generating examples for RawInputParam by OpenApiHandler
