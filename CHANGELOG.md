@@ -8,6 +8,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 * Support for generating examples for RawInputParam by OpenApiHandler
 * PHP 8.1 support (`league/fractal` 0.20.1)
+* PHP 8.2 support
 
 #### Fixed
 
