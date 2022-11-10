@@ -109,7 +109,10 @@ final class ApiPresenter implements IPresenter
                 $outputValidatorErrors[] = $validationResult->getErrors();
             }
             if (!$outputValid) {
-                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
+                Debugger::log($outputValidatorErrors, Debugger::ERROR);
+                if (!Debugger::$productionMode) {
+                    $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
+                }
             }
             $code = $response->getCode();
         } catch (Throwable $exception) {
