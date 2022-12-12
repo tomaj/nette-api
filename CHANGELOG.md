@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Render body of response if there is a debug message: Tracy Debug Bar
+
 
 ## 2.9.0 - 2022-11-10
 
