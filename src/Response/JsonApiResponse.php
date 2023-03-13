@@ -26,9 +26,12 @@ class JsonApiResponse implements ResponseInterface
     /** @var string */
     private $charset;
 
-    /** @var DateTimeInterface|null */
+    /** @var DateTimeInterface|null|false */
     private $expiration;
 
+    /**
+     * @param DateTimeInterface|null|false $expiration
+     */
     public function __construct(int $code, array $payload, string $contentType = 'application/json', string $charset = 'utf-8', ?DateTimeInterface $expiration = null)
     {
         $this->code = $code;
@@ -72,7 +75,9 @@ class JsonApiResponse implements ResponseInterface
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType($this->getContentType(), $this->getCharset());
-        $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
+        if ($this->expiration !== false) {
+            $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
+        }
         $result = Json::encode($this->getPayload());
         $httpResponse->setHeader('Content-Length', (string) strlen($result));
         echo $result;
