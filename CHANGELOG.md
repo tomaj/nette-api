@@ -6,6 +6,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 #### Added
 
+* Allow to set expiration to false in JsonApiResponse and XmlApiResponse
 * Render body of response if there is a debug message: Tracy Debug Bar
 
 
