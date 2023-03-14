@@ -52,7 +52,7 @@ class ConsoleRequest
 
             $parsedUrl = parse_url($url);
 
-            $url = $url . isset($parsedUrl['query']) ? '&' : '?' . implode('&', $parts);
+            $url = $url . (isset($parsedUrl['query']) ? '&' : '?') . implode('&', $parts);
         }
 
         $putRawPost = null;
