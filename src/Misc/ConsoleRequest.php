@@ -51,12 +51,8 @@ class ConsoleRequest
             }
 
             $parsedUrl = parse_url($url);
-            if (!isset($parsedUrl['query'])) {
-                $separator = '?';
-            } else {
-                $separator = '&';
-            }
-            $url = $url . $separator . implode('&', $parts);
+
+            $url = $url . isset($parsedUrl['query']) ? '&' : '?' . implode('&', $parts);
         }
 
         $putRawPost = null;
