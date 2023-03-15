@@ -19,10 +19,13 @@ class XmlApiResponse implements ResponseInterface
     /** @var string */
     private $response = null;
 
-    /** @var DateTimeInterface|null */
+    /** @var DateTimeInterface|null|false */
     private $expiration;
 
-    public function __construct(int $code, string $data, ?DateTimeInterface $expiration = null)
+    /**
+     * @param DateTimeInterface|null|false $expiration
+     */
+    public function __construct(int $code, string $data, $expiration = null)
     {
         $this->code = $code;
         $this->response = $data;
@@ -48,7 +51,9 @@ class XmlApiResponse implements ResponseInterface
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType('text/xml');
-        $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
+        if ($this->expiration !== false) {
+            $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
+        }
         $httpResponse->setHeader('Content-Length', (string) strlen($this->response));
 
         echo $this->response;
