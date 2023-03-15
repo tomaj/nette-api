@@ -25,7 +25,7 @@ class XmlApiResponse implements ResponseInterface
     /**
      * @param DateTimeInterface|null|false $expiration
      */
-    public function __construct(int $code, string $data, ?DateTimeInterface $expiration = null)
+    public function __construct(int $code, string $data, $expiration = null)
     {
         $this->code = $code;
         $this->response = $data;

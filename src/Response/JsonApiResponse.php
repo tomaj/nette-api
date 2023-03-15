@@ -32,7 +32,7 @@ class JsonApiResponse implements ResponseInterface
     /**
      * @param DateTimeInterface|null|false $expiration
      */
-    public function __construct(int $code, array $payload, string $contentType = 'application/json', string $charset = 'utf-8', ?DateTimeInterface $expiration = null)
+    public function __construct(int $code, array $payload, string $contentType = 'application/json', string $charset = 'utf-8', $expiration = null)
     {
         $this->code = $code;
         $this->payload = $payload;
