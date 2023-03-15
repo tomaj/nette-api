@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Fixed
+
+* Fixed request url separator if url already contain some param
+
 #### Added
 
 * Render body of response if there is a debug message: Tracy Debug Bar

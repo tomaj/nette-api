@@ -49,7 +49,10 @@ class ConsoleRequest
             foreach ($getFields as $key => $value) {
                 $parts[] = "$key=$value";
             }
-            $url = $url . '?' . implode('&', $parts);
+
+            $parsedUrl = parse_url($url);
+
+            $url = $url . (isset($parsedUrl['query']) ? '&' : '?') . implode('&', $parts);
         }
 
         $putRawPost = null;
