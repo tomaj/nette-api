@@ -18,6 +18,7 @@ use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\Link\ApiLink;
+use Tomaj\NetteApi\Misc\OpenApiTransform;
 use Tomaj\NetteApi\Output\JsonOutput;
 use Tomaj\NetteApi\Output\RedirectOutput;
 use Tomaj\NetteApi\Params\GetInputParam;
@@ -585,7 +586,7 @@ class OpenApiHandler extends BaseHandler
 
     private function transformSchema(array $schema)
     {
-        $this->transformTypes($schema);
+        OpenApiTransform::transformTypes($schema);
 
         if (isset($schema['definitions'])) {
             foreach ($schema['definitions'] as $name => $definition) {
@@ -594,26 +595,6 @@ class OpenApiHandler extends BaseHandler
             unset($schema['definitions']);
         }
         return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES)), true);
-    }
-
-    private function transformTypes(array &$schema, ?string $parent = null)
-    {
-        foreach ($schema as $key => &$value) {
-            if ($parent === 'properties') {
-                continue;
-            }
-            if ($key === 'type' && is_array($value)) {
-                if (count($value) === 2 && in_array('null', $value)) {
-                    unset($value[array_search('null', $value)]);
-                    $value = implode(',', $value);
-                    $schema['nullable'] = true;
-                } else {
-                    throw new InvalidArgumentException('Type cannot be array and if so, one element have to be "null"');
-                }
-            } elseif (is_array($value)) {
-                $this->transformTypes($value, $key);
-            }
-        }
     }
 
     private function addDefinition($name, $definition)
