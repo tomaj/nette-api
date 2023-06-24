@@ -114,8 +114,8 @@ class ConsoleResponse
     public function getFormattedJsonBody(): string
     {
         $body = $this->responseBody;
-        if ($body === null){
-            $body = '{}';
+        if ($body === null) {
+            return '';
         }
         $decoded = json_decode($body);
         if ($decoded) {
