@@ -13,9 +13,11 @@ use Latte\Compiler\Tag;
 
 final class ApiLinkNode extends StatementNode
 {
-    public ArrayNode $endpointArgs;
+    /** @var ArrayNode $endpointArgs */
+    public $endpointArgs;
 
-    public ArrayNode $endpointParams;
+    /** @var ArrayNode $endpointParams */
+    public $endpointParams;
 
     public static function create(Tag $tag): ?static
     {

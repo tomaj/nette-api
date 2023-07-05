@@ -7,7 +7,6 @@ namespace Tomaj\NetteApi\Link;
 use Latte\Compiler\Tag;
 use Latte\Compiler\TemplateParser;
 use Latte\Extension;
-use Tomaj\NetteApi\EndpointIdentifier;
 
 final class ApiLinkExtension extends Extension
 {
