@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Link;
 
-use Latte\Compiler\Tag;
-use Latte\Compiler\TemplateParser;
 use Latte\Extension;
 
 final class ApiLinkExtension extends Extension
