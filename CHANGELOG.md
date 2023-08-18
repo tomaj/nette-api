@@ -4,6 +4,14 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.10.1
+
+#### Fixed
+
+* Fix *null* `$body` for php 8.0
+
+## 2.10.0 
+
 #### Fixed
 
 * Fixed request url separator if url already contain some param
