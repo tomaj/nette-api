@@ -9,6 +9,12 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Support for latte/latte ^3.0 (Added Latte extension for ApiLink)
 * Support for symfony/yaml ^5.0 and ^6.0
 
+## 2.10.1
+
+### Fixed
+
+* Fix *null* `$body` for php 8.0
+
 ## 2.10.0 - 2023-03-21
 
 ### Added
