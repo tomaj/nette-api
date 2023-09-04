@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Response;
 
 use DateTimeInterface;
+use JsonSerializable;
 use Nette\Http\IRequest;
 use Nette\Http\IResponse;
 use Nette\SmartObject;
@@ -17,7 +18,7 @@ class JsonApiResponse implements ResponseInterface
     /** @var integer */
     private $code;
 
-    /** @var array */
+    /** @var array|JsonSerializable */
     private $payload;
 
     /** @var string */
@@ -30,9 +31,10 @@ class JsonApiResponse implements ResponseInterface
     private $expiration;
 
     /**
+     * @param array|JsonSerializable $payload
      * @param DateTimeInterface|null|false $expiration
      */
-    public function __construct(int $code, array $payload, string $contentType = 'application/json', string $charset = 'utf-8', $expiration = null)
+    public function __construct(int $code, $payload, string $contentType = 'application/json', string $charset = 'utf-8', $expiration = null)
     {
         $this->code = $code;
         $this->payload = $payload;
@@ -49,7 +51,10 @@ class JsonApiResponse implements ResponseInterface
         return $this->code;
     }
 
-    public function getPayload(): array
+    /**
+     * @return array|JsonSerializable
+     */
+    public function getPayload()
     {
         return $this->payload;
     }
