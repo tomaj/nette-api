@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+
+* Support for JsonSerializable payload in JsonApiResponse
+
 ## 2.10.1
 
 #### Fixed
