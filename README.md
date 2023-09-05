@@ -183,20 +183,34 @@ We recommend to take a look at [Fractal][] library. There are much more informat
 [Fractal]: http://fractal.thephpleague.com/
 
 
-## ApiLink Macro
+## ApiLink in latte
 
-First you have to register filter helper and than macro. In *config.neon* just add these lines:
+First, you have to register filter in *config.neon*:
 
-``` yaml
+```neon
 services:
     apiLink: Tomaj\NetteApi\Link\ApiLink()
     latte.latteFactory:
         setup:
             - addFilter(apiLink, [@apiLink, link])
+
+```
+**Note**: Name of filter has to be `apiLink`, because it is used in macro / extension.
+
+For latte < 3.0 register latte macro:
+```neon
 latte:
     macros:
         - Tomaj\NetteApi\Link\ApiLinkMacro
 ```
+
+For latte >= 3.0 register latte extension:
+```neon
+latte:
+    extensions:
+        - Tomaj\NetteApi\Link\ApiLinkExtension
+```
+
 
 Usage in latte files:
 

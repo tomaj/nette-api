@@ -4,53 +4,54 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
-#### Added
+### Added
 
+* Support for symfony/yaml ^5.0 and ^6.0
 * Support for JsonSerializable payload in JsonApiResponse
+* Support for latte/latte ^3.0 (Added Latte extension for ApiLink)
 
 ## 2.10.1
 
-#### Fixed
+### Fixed
 
 * Fix *null* `$body` for php 8.0
 
-## 2.10.0 
+## 2.10.0 - 2023-03-21
 
-#### Fixed
-
-* Fixed request url separator if url already contain some param
-
-#### Added
+### Added
 
 * Allow to set expiration to false in JsonApiResponse and XmlApiResponse
 * Render body of response if there is a debug message: Tracy Debug Bar
 
+### Fixed
+
+* Fixed request url separator if url already contain some param
 
 ## 2.9.0 - 2022-11-10
 
-#### Added
+### Added
 
 * Support for generating examples for RawInputParam by OpenApiHandler
 * PHP 8.1 support (`league/fractal` 0.20.1)
 * PHP 8.2 support
 * Support for `league/fractal` ~0.17 (Possible BC if you use Fractal classes, you have to update typehints)
 
-#### Changed
+### Changed
 
 * If output doesn't match any output schema, error is just logged and output is returned in production mode
 
-#### Fixed
+### Fixed
 
 * Missing expiration params in XmlApiResponse
 * Missing body request for PUT methost
 
 ## 2.8.0 - 2022-06-15
 
-#### Changed
+### Changed
 
 * ApiLinkMacro now uses latte filter to avoid use presenter context (BC break in nette/application 3.1)
 
-#### Fixed
+### Fixed
 
 * BaseUrl in OpenApiHandler
 
@@ -75,7 +76,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## 2.5.0 - 2021-09-17
 
-#### Fixed
+### Fixed
 
 * Empty console input fixed by adding checkbox for each parameter
 * Handling wrong input for Get and Post InputParam
@@ -84,29 +85,29 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## 2.4.0 - 2021-04-24
 
-#### Added
+### Added
 
 * User can set own form renderer for API console and own template file(s) for API console and for API listing
 
 ## 2.3.1 - 2021-04-13
 
-#### Fixed
+### Fixed
 
 * Added RateLimit to ApiDecider::addApi
 
 ## 2.3.0 - 2021-01-20
 
-#### Changed
+### Changed
 
 * Form in API console is rendered with BootstrapVerticalRenderer instead of BootstrapRenderer (labels are over fields instead of left side)
 
-#### Added
+### Added
 
 * Added API key authentication (query, header, cookie) - see https://swagger.io/docs/specification/authentication/api-keys/
 
 * Added missing strict_types declarations
 
-#### Fixed
+### Fixed
 
 * Open API handler warnings about unused security schemes
 
@@ -116,17 +117,17 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## 2.2.0 - 2020-08-27
 
-#### Added
+### Added
 
 * Added Basic authentication
 
 ## 2.1.0 - 2020-05-12
 
-#### Changed
+### Changed
 
 * Rewritten ApiPresenter
 
-#### Added
+### Added
 
 * Added API rate limit 
 * Added custom headers to API console
@@ -134,7 +135,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * OpenAPI handler
 * Information about RESTful urls
 
-#### Fixed
+### Fixed
 
 * Fixed sending empty string in multi params
 * UrlEncoding values sending through get param inputs
@@ -143,13 +144,13 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## 2.0.1 - 2020-03-24
 
-#### Fixed
+### Fixed
 
 * Fixed return types for ConsoleRequest::processParam() and ConsoleResponse::getResponseHeaders()
 
 ## 2.0.0 - 2019-06-12
 
-#### Changed
+### Changed
 
 * Updated nette libs to version 3.0.0 (BC break)
 * Added typehints (BC break)
@@ -160,7 +161,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Renamed some methods from ApiDecider (BC break)
 * Pretty JSON output in API console - without escaping unicode and slashes
 
-#### Added
+### Added
 
 * Added type JsonInputParam with scheme as replacement for type TYPE_POST_JSON_KEY
 * Detailed error for wrong input if debugger is enabled
@@ -168,26 +169,26 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Added description, default value and example for input params
 * Added output validator
 
-#### Removed
+### Removed
 
 * Removed support for PHP 5.6, 7.0 and hhvm (BC Break)
 * Removed deprecated class ApiResponse (BC Break)
 
 ## 1.17.0 - 2020-08-27
 
-#### Changed
+### Changed
 
 * Detailed error message enabled only for non production mode
 
 ## 1.16.0 - 2019-06-19
 
-#### Added
+### Added
 
 * Added ApiLink Macro
 
 ## 1.15.0 - 2019-03-13
 
-#### Added
+### Added
 
 * Added possibility to set own scope to Manager
 * Added JSON validation - if JSON is invalid, throw "wrong input" error instead of setting params to null
