@@ -6,8 +6,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ### Added
 
-* Support for latte/latte ^3.0 (Added Latte extension for ApiLink)
 * Support for symfony/yaml ^5.0 and ^6.0
+* Support for JsonSerializable payload in JsonApiResponse
+* Support for latte/latte ^3.0 (Added Latte extension for ApiLink)
 
 ## 2.10.1
 
