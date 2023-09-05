@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.11.0
+
 ### Added
 
 * Support for symfony/yaml ^5.0 and ^6.0
