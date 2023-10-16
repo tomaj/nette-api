@@ -22,9 +22,11 @@ class ParamsProcessor
     public function isError(): bool
     {
         foreach ($this->params as $param) {
-            $validationResult = $param->validate();
-            if (!$validationResult->isOk()) {
-                $this->errors[$param->getKey()] = $validationResult->getErrors();
+            if($param->isRequired() || !empty($param->getValue())){
+                $validationResult = $param->validate();
+                if (!$validationResult->isOk()) {
+                    $this->errors[$param->getKey()] = $validationResult->getErrors();
+                }
             }
         }
         return !empty($this->errors);
