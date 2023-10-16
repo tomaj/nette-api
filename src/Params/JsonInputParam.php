@@ -40,6 +40,11 @@ class JsonInputParam extends InputParam
     public function validate(): ValidationResultInterface
     {
         $value = $this->getValue();
+
+        if ($this->required === self::OPTIONAL && ($value === null || $value === '')) {
+            return new ValidationResult(ValidationResult::STATUS_OK);
+        }
+
         if (json_last_error()) {
             return new ValidationResult(ValidationResult::STATUS_ERROR, [json_last_error_msg()]);
         }
