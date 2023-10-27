@@ -20,6 +20,22 @@ class ApiDecider
     /** @var ApiHandlerInterface|null */
     private $globalPreflightHandler = null;
 
+    /** @var BaseHandler */
+    private $defaultHandler;
+
+    /** @var ApiAuthorizationInterface */
+    private $authorizationForDefaultHandler;
+
+    /**
+     * @param BaseHandler|null $defaultHandler Default handler that will be called on unknown api endpoint
+     * @param ApiAuthorizationInterface|null $authorizationForDefaultHandler Authorization for default handler
+     */
+    public function __construct(?BaseHandler $defaultHandler = null, ?ApiAuthorizationInterface $authorizationForDefaultHandler = null)
+    {
+        $this->defaultHandler = $defaultHandler ?: new DefaultHandler();
+        $this->authorizationForDefaultHandler = $authorizationForDefaultHandler ?: new NoAuthorization();
+    }
+
     /**
      * Get api handler that match input method, version, package and apiAction.
      * If decider cannot find handler for given handler, returns defaults.
@@ -47,7 +63,7 @@ class ApiDecider
                 return new Api(new EndpointIdentifier('OPTIONS', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
             }
         }
-        return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
+        return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), $this->defaultHandler, $this->authorizationForDefaultHandler);
     }
 
     public function enableGlobalPreflight(ApiHandlerInterface $corsHandler = null)
