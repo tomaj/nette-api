@@ -17,6 +17,8 @@ class JsonInputParam extends InputParam
 
     private $schema;
 
+    private $rawInput;
+
     public function __construct(string $key, string $schema)
     {
         parent::__construct($key);
@@ -30,7 +32,7 @@ class JsonInputParam extends InputParam
 
     public function getValue()
     {
-        $input = file_get_contents("php://input") ?: $this->default;
+        $input = $this->rawInput = file_get_contents("php://input") ?: $this->default;
         if ($input === null) {
             $input = '';
         }
@@ -40,7 +42,11 @@ class JsonInputParam extends InputParam
     public function validate(): ValidationResultInterface
     {
         $value = $this->getValue();
-        if (json_last_error()) {
+        if (empty($this->rawInput) && $this->isRequired() === self::REQUIRED) {
+            return new ValidationResult(ValidationResult::STATUS_ERROR, ['missing data']);
+        }
+
+        if (!empty($this->rawInput) && json_last_error()) {
             return new ValidationResult(ValidationResult::STATUS_ERROR, [json_last_error_msg()]);
         }
 
