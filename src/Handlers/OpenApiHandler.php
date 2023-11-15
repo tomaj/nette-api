@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Handlers;
 
 use InvalidArgumentException;
+use League\Fractal\TransformerAbstract;
 use Nette\Application\UI\InvalidLinkException;
 use Nette\Http\IResponse;
 use Nette\Http\Request;
+use ReflectionClass;
 use Symfony\Component\Yaml\Yaml;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
@@ -40,6 +42,9 @@ class OpenApiHandler extends BaseHandler
     /** @var Request */
     private $request;
 
+    /** @var TransformerAbstract[]  */
+    private array $transformers;
+
     private $initData = [];
 
     private $definitions = [];
@@ -49,18 +54,21 @@ class OpenApiHandler extends BaseHandler
      * @param ApiDecider $apiDecider
      * @param ApiLink $apiLink
      * @param Request $request
+     * @param TransformerAbstract[] $transformers
      * @param array $initData - structured data for initialization response
      */
     public function __construct(
         ApiDecider $apiDecider,
         ApiLink $apiLink,
         Request $request,
+        array $transformers = [],
         array $initData = []
     ) {
         parent::__construct();
         $this->apiDecider = $apiDecider;
         $this->apiLink = $apiLink;
         $this->request = $request;
+        $this->transformers = $transformers;
         $this->initData = $initData;
     }
 
@@ -219,6 +227,8 @@ class OpenApiHandler extends BaseHandler
             $data['components']['schemas'] = array_merge($this->definitions, $data['components']['schemas']);
         }
 
+        $this->linkTransformerSchemas($data);
+
         $data = array_replace_recursive($data, $this->initData);
 
         if ($params['format'] === 'yaml') {
@@ -257,7 +267,7 @@ class OpenApiHandler extends BaseHandler
                             'application/json; charset=utf-8' => [
                                 'schema' => $schema,
                             ],
-                        ]
+                        ],
                     ];
                 }
 
@@ -269,9 +279,9 @@ class OpenApiHandler extends BaseHandler
                                 'description' => $output->getDescription(),
                                 'schema' => [
                                     'type' => 'string',
-                                ]
+                                ],
                             ],
-                        ]
+                        ],
                     ];
                 }
             }
@@ -297,7 +307,7 @@ class OpenApiHandler extends BaseHandler
                             'schema' => [
                                 '$ref' => '#/components/schemas/ErrorWrongInput',
                             ],
-                        ]
+                        ],
                     ],
                 ];
             }
@@ -608,5 +618,28 @@ class OpenApiHandler extends BaseHandler
     private function normalizeSecuritySchemeName(string $type, string $name): string
     {
         return 'api_key__' . $type . '__' . strtolower(str_replace('-', '_', $name));
+    }
+
+    private function linkTransformerSchemas(&$data)
+    {
+        $processedRefs = [];
+        foreach ($this->transformers as $transformer) {
+            if (!method_exists($transformer, 'schema')) {
+                continue;
+            }
+            $stringForReplace = json_encode($this->transformSchema($transformer->schema()));
+            if (in_array(md5($stringForReplace), $processedRefs)) {
+                continue;
+            }
+            $jsonData = str_replace($stringForReplace, '', json_encode($data));
+            $componentName = (new ReflectionClass($transformer))->getShortName();
+            if (strlen($componentName) > 11 && substr($componentName, -11) === 'Transformer') {
+                $componentName = substr($componentName, 0, -11);
+            }
+            $data['components']['schemas'][$componentName] = $this->transformSchema($transformer->schema());
+            $processedRefs[] = md5($stringForReplace);
+
+            $data['paths'] = json_decode(str_replace($stringForReplace, '{"$ref": "#/components/schemas/' . $componentName . '"}', json_encode($data['paths'])), true);
+        }
     }
 }
