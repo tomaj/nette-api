@@ -13,7 +13,8 @@ use Tomaj\NetteApi\Response\ResponseInterface;
 
 class TransformerTestHandler extends BaseHandler
 {
-    private TransformerAbstract $transformer;
+    /** @var TransformerAbstract */
+    private $transformer;
 
     public function __construct(TransformerAbstract $transformer)
     {
