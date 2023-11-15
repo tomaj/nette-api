@@ -43,7 +43,7 @@ class OpenApiHandler extends BaseHandler
     private $request;
 
     /** @var TransformerAbstract[]  */
-    private array $transformers;
+    private $transformers = [];
 
     private $initData = [];
 
@@ -631,7 +631,6 @@ class OpenApiHandler extends BaseHandler
             if (in_array(md5($stringForReplace), $processedRefs)) {
                 continue;
             }
-            $jsonData = str_replace($stringForReplace, '', json_encode($data));
             $componentName = (new ReflectionClass($transformer))->getShortName();
             if (strlen($componentName) > 11 && substr($componentName, -11) === 'Transformer') {
                 $componentName = substr($componentName, 0, -11);
