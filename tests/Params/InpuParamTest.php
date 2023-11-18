@@ -41,9 +41,14 @@ class InputParamTest extends TestCase
         $this->assertNull($inputParam->getValue());
 
         $inputParam = new JsonInputParam('json', '{}');
+        $this->assertTrue($inputParam->validate()->isOk());
+        $this->assertNull($inputParam->getValue());
+        $this->assertEquals([], $inputParam->validate()->getErrors());
+
+        $inputParam = (new JsonInputParam('json', '{}'))->setRequired();
         $this->assertFalse($inputParam->validate()->isOk());
         $this->assertNull($inputParam->getValue());
-        $this->assertEquals(['Syntax error'], $inputParam->validate()->getErrors());
+        $this->assertEquals(['missing data'], $inputParam->validate()->getErrors());
 
         $inputParam = (new JsonInputParam('json', '{"type": "object"}'))->setDefault('{}');
         $this->assertTrue($inputParam->validate()->isOk());
