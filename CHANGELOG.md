@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Added
+
+* Support for automatic generation open-api schema references by transformers
+
 ## 2.11.0
 
 ### Added
