@@ -72,8 +72,8 @@
                     {if strpos($response->getFormattedJsonBody(), '<!-- Tracy Debug Bar -->')}
                         <b>Rendered body:</b><br><iframe width="100%" onload="this.style.height = Math.max(400, this.contentWindow.document.documentElement.scrollHeight) + 'px'" srcdoc="{$response->getFormattedJsonBody()}"></iframe>
                     {/if}
-                    <b>Body:</b><button class="btn btn-secondary btn-sm" onclick="copyToClipboard('.copy-content')">Copy content</button>
-                    <pre>{$response->getFormattedJsonBody()}</pre>
+                    <b>Body:</b> <button class="btn btn-info btn-sm" onclick="copyToClipboard('.copy-content')">Copy content</button>
+                    <pre class="copy-content">{$response->getFormattedJsonBody()}</pre>
                 {/if}
             </p>
 
