@@ -72,7 +72,8 @@
                     {if strpos($response->getFormattedJsonBody(), '<!-- Tracy Debug Bar -->')}
                         <b>Rendered body:</b><br><iframe width="100%" onload="this.style.height = Math.max(400, this.contentWindow.document.documentElement.scrollHeight) + 'px'" srcdoc="{$response->getFormattedJsonBody()}"></iframe>
                     {/if}
-                    <b>Body:</b><pre>{$response->getFormattedJsonBody()}</pre>
+                    <b>Body:</b><button class="btn btn-secondary btn-sm" onclick="copyToClipboard('.copy-content')">Copy content</button>
+                    <pre>{$response->getFormattedJsonBody()}</pre>
                 {/if}
             </p>
 
@@ -86,3 +87,36 @@
         {control consoleForm}
     </div>
 </div>
+
+<script>
+    function copyToClipboard(target) {
+        const btn = event.target;
+        let text = document.body.querySelector(target).innerText;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+        } else {
+            fallbackCopyTextToClipboard(text);
+
+        }
+        changeTextTemporarily(btn);
+
+    }
+    function fallbackCopyTextToClipboard(text) {
+        const textArea = Object.assign(document.createElement('textarea'), {
+            value: text, style: 'position:fixed;top:0;left:0;'
+        });
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+    }
+
+    function changeTextTemporarily(buttonElement) {
+        const originalText = buttonElement.innerText;
+        buttonElement.innerText = 'Copied!';
+        setTimeout(() => {
+            buttonElement.innerText = originalText;
+        }, 2000);
+    }
+</script>
