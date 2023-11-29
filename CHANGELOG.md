@@ -4,6 +4,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+* Button to copy `Body` content in api console
+
 #### Fixed
 
 * Fixed request url separator if url already contain some param
