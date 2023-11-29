@@ -2,7 +2,7 @@
 
 <div n:if="$handler->description() || $handler->deprecated() || $handler->tags()">
     <span n:if="$handler->deprecated()" class="btn btn-sm btn-danger">API is deprecated</span>
-    <span n:foreach="$handler->tags() as $tag" class="btn btn-sm btn-primary">{$tag}</span>
+    <span n:foreach="$handler->tags() as $tag" class="label label-info">{$tag}</span>
     <p n:if="$handler->description()">{$handler->description()}</p>
 </div>
 
@@ -16,41 +16,41 @@
             </p>
             <p>
                 {if $response->getPostFields()}
-                    <b>POST FIELDS:</b>
-                    <pre>{foreach $response->getPostFields() as $key => $field}
+                <b>POST FIELDS:</b>
+            <pre>{foreach $response->getPostFields() as $key => $field}
                         {spaceless}
-                        {if is_object($field) && get_class($field) === 'CURLFile'}
-                            {$key}=@{$field->getFilename()} ({$field->getMimeType()}) [{$field->getPostFilename()}] (file)
-                        {else}
-                            {$key}={$field}
-                        {/if}
-                        {/spaceless}
+                    {if is_object($field) && get_class($field) === 'CURLFile'}
+                        {$key}=@{$field->getFilename()} ({$field->getMimeType()}) [{$field->getPostFilename()}] (file)
+                    {else}
+                        {$key}={$field}
+                    {/if}
+                {/spaceless}
                     {/foreach}</pre>
-                {/if}
+            {/if}
                 {if $response->getRawPost()}
-                    <b>RAW POST</b>
-                    <pre>{$response->getRawPost()}</pre>
-                {/if}
+                <b>RAW POST</b>
+                <pre>{$response->getRawPost()}</pre>
+            {/if}
                 {if $response->getGetFields()}
-                    <b>GET:</b>
-                    <pre>{foreach $response->getGetFields() as $key => $field}
+                <b>GET:</b>
+                <pre>{foreach $response->getGetFields() as $key => $field}
                          {spaceless}
-                             {$key}={$field}
-                         {/spaceless}
+                        {$key}={$field}
+                    {/spaceless}
                     {/foreach}</pre>
-                {/if}
+            {/if}
                 {if $response->getCookieFields()}
-                    <b>COOKIES:</b>
-                    <pre>{foreach $response->getCookieFields() as $key => $value}
+                <b>COOKIES:</b>
+                <pre>{foreach $response->getCookieFields() as $key => $value}
                         {spaceless}
                         {$key}={$value}
-                        {/spaceless}
+                    {/spaceless}
                     {/foreach}</pre>
-                {/if}
+            {/if}
                 {if $response->getHeaders()}
-                    <b>HEADERS:</b>
-                    <pre>{implode("\n", $response->getHeaders())|noescape}</pre>
-                {/if}
+                <b>HEADERS:</b>
+                <pre>{implode("\n", $response->getHeaders())|noescape}</pre>
+            {/if}
             </p>
 
             <hr>
@@ -72,7 +72,14 @@
                     {if strpos($response->getFormattedJsonBody(), '<!-- Tracy Debug Bar -->')}
                         <b>Rendered body:</b><br><iframe width="100%" onload="this.style.height = Math.max(400, this.contentWindow.document.documentElement.scrollHeight) + 'px'" srcdoc="{$response->getFormattedJsonBody()}"></iframe>
                     {/if}
-                    <b>Body:</b> <button class="btn btn-info btn-sm" onclick="copyToClipboard('.copy-content')">Copy content</button>
+                    <table style="margin-bottom: 10px; width: 100%;">
+                        <tbody>
+                        <tr>
+                            <td valign="bottom"><b>Body:</b></td>
+                            <td><button class="btn btn-info btn-sm pull-right" onclick="copyToClipboard('.copy-content')">Copy content</button></td>
+                        </tr>
+                        </tbody>
+                    </table>
                     <pre class="copy-content">{$response->getFormattedJsonBody()}</pre>
                 {/if}
             </p>
@@ -96,7 +103,6 @@
             navigator.clipboard.writeText(text);
         } else {
             fallbackCopyTextToClipboard(text);
-
         }
         changeTextTemporarily(btn);
 
