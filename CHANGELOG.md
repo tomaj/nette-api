@@ -8,8 +8,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 #### Added
 * Button to copy `Body` content in api console
 
-#### Fixed
-=======
+#### Changed
+* Handler tag wrapper has changed class from `btn` to `label`
+
 ## 2.11.0
 
 
