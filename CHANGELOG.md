@@ -11,6 +11,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 #### Changed
 * Handler tag wrapper has changed class from `btn` to `label`
 
+### Fixed
+* Allowed equal definitions in different handlers in OpenAPIHandler
+
 ## 2.11.0
 
 
