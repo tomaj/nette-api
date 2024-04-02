@@ -248,33 +248,6 @@ class OpenApiHandler extends BaseHandler
             $handler = $api->getHandler();
             $path = str_replace([$baseUrl, $basePath], '', $this->apiLink->link($api->getEndpoint()));
             $responses = [];
-            foreach ($handler->outputs() as $output) {
-                if ($output instanceof JsonOutput) {
-                    $schema = $this->transformSchema(json_decode($output->getSchema(), true));
-                    $responses[$output->getCode()] = [
-                        'description' => $output->getDescription(),
-                        'content' => [
-                            'application/json; charset=utf-8' => [
-                                'schema' => $schema,
-                            ],
-                        ]
-                    ];
-                }
-
-                if ($output instanceof RedirectOutput) {
-                    $responses[$output->getCode()] = [
-                        'description' => 'Redirect',
-                        'headers' => [
-                            'Location' => [
-                                'description' => $output->getDescription(),
-                                'schema' => [
-                                    'type' => 'string',
-                                ]
-                            ],
-                        ]
-                    ];
-                }
-            }
 
             $settings = [
                 'summary' => $handler->summary(),
@@ -327,6 +300,46 @@ class OpenApiHandler extends BaseHandler
                     ],
                 ],
             ];
+
+            foreach ($handler->outputs() as $output) {
+                if ($output instanceof JsonOutput) {
+                    $schema = $this->transformSchema(json_decode($output->getSchema(), true));
+                    if (!isset($responses[$output->getCode()])) {
+                        $responses[$output->getCode()] = [
+                            'description' => $output->getDescription(),
+                            'content' => [
+                                'application/json; charset=utf-8' => [
+                                    'schema' => $schema,
+                                ],
+                            ]
+                        ];
+                    } else {
+                        if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
+                            $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
+                            unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
+                            $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
+                                'oneOf' => [],
+                            ];
+                            $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $tmp;
+                        }
+                        $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $schema;
+                    }
+                }
+
+                if ($output instanceof RedirectOutput) {
+                    $responses[$output->getCode()] = [
+                        'description' => 'Redirect',
+                        'headers' => [
+                            'Location' => [
+                                'description' => $output->getDescription(),
+                                'schema' => [
+                                    'type' => 'string',
+                                ]
+                            ],
+                        ]
+                    ];
+                }
+            }
 
             if (!empty($parameters)) {
                 $settings['parameters'] = $parameters;
