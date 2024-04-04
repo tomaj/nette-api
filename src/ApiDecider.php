@@ -11,6 +11,7 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 
 class ApiDecider
 {
@@ -50,7 +51,7 @@ class ApiDecider
         return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
     }
 
-    public function enableGlobalPreflight(ApiHandlerInterface $corsHandler = null)
+    public function enableGlobalPreflight(CorsPreflightHandlerInterface $corsHandler = null)
     {
         if (!$corsHandler) {
             $corsHandler = new CorsPreflightHandler(new Response());

@@ -8,7 +8,7 @@ use Nette\Http\Response;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
 
-class CorsPreflightHandler extends BaseHandler
+class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerInterface
 {
     private $response;
 
