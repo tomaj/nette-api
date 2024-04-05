@@ -316,7 +316,7 @@ class OpenApiHandler extends BaseHandler
                         if (!empty($output->getAdditionalExamples())) {  //Multiple examples processing
                             $examples = array_merge(
                                 ["default" => is_array($output->getExample())? $output->getExample() : json_decode($output->getExample(), true)],
-                                $output->getAdditionalExamples(),
+                                $output->getAdditionalExamples()
                             );
                             $examples = $this->transformSchema($examples);
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'] = $examples;
