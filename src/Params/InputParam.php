@@ -44,8 +44,8 @@ abstract class InputParam implements ParamInterface
     /** @var mixed */
     protected $default;
 
-    /** @var mixed */
-    protected $example;
+    /** @var array */
+    protected $examples = [];
 
     public function __construct(string $key)
     {
@@ -128,21 +128,48 @@ abstract class InputParam implements ParamInterface
     }
 
     /**
-     * @param mixed $example
-     * @return self
+     * Add example, can be used multiple times to add many examples
+     * @param string $name Example name
+     * @param mixed $example Example
+     * @return Self
      */
-    public function setExample($example): self
+    public function addExample(string $name, $example): self
     {
-        $this->example = $example;
+        $this->examples[$name] = $example;
         return $this;
     }
 
     /**
+     * Set default example
+     * @param mixed $example
+     * @return self
+     * @deprecated Use addExample instead
+     */
+    public function setExample($example): self
+    {
+        $this->examples["default"] = $example;
+        return $this;
+    }
+
+    /**
+     * Returns first example
      * @return mixed
      */
     public function getExample()
     {
-        return $this->example;
+        if (empty($this->examples)) {
+            return null;
+        }
+        return reset($this->examples);
+    }
+
+    /**
+     * Returns all examples
+     * @return array
+     */
+    public function getExamples(): array
+    {
+        return $this->examples;
     }
 
     public function updateConsoleForm(Form $form): void

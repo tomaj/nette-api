@@ -313,17 +313,16 @@ class OpenApiHandler extends BaseHandler
                                 ],
                             ]
                         ];
-                        if (!empty($output->getAdditionalExamples())) {  //Multiple examples processing
-                            $examples = array_merge(
-                                ["default" => is_array($output->getExample())? $output->getExample() : json_decode($output->getExample(), true)],
-                                $output->getAdditionalExamples()
-                            );
-                            $examples = $this->transformSchema($examples);
-                            $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'] = $examples;
-                        } elseif (!empty($output->getExample())) { //One example processing
-                            $example = $output->getExample();
-                            $example = $this->transformSchema(is_array($example)? $example : json_decode($example, true));
-                            $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
+                        if (!empty($examples = $output->getExamples())) {
+                            if (count($examples) === 1) {
+                                $example = is_array($output->getExample())? $output->getExample() : json_decode($output->getExample(), true);
+                                $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
+                            } else {
+                                foreach ($examples as $exampleKey => $example) {
+                                    $example = is_array($example)? $example : json_decode($example, true);
+                                    $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'][$exampleKey] = $example;
+                                }
+                            }
                         }
                     } else {
                         if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
@@ -488,17 +487,14 @@ class OpenApiHandler extends BaseHandler
         foreach ($handler->params() as $param) {
             if ($param instanceof JsonInputParam) {
                 $schema = json_decode($param->getSchema(), true);
-                if (!empty($param->getAdditionalExamples())) {  //Multiple examples processing
-                    $examples = array_merge(
-                        ["default" => is_array($param->getExample())? $param->getExample() : json_decode($param->getExample(), true)],
-                        $param->getAdditionalExamples()
-                    );
-                    $examples = $this->transformSchema($examples);
-                    $schema['examples'] = $examples;
-                } elseif (!empty($param->getExample())) { //One example processing
-                    $example = $param->getExample();
-                    $example = $this->transformSchema(is_array($example)? $example : json_decode($example, true));
-                    $schema['example'] = $example;
+                if (!empty($examples = $param->getExamples())) {
+                    if (count($examples) === 1) {
+                        $schema['example'] = is_array($param->getExample())? $param->getExample() : json_decode($param->getExample(), true);
+                    } else {
+                        foreach ($examples as $exampleKey => $example) {
+                            $schema['examples'][$exampleKey] = is_array($example)? $example : json_decode($example, true);
+                        }
+                    }
                 }
                 return [
                     'description' => $param->getDescription(),
@@ -514,8 +510,14 @@ class OpenApiHandler extends BaseHandler
                 $schema = [
                     'type' => 'string',
                 ];
-                if ($param->getExample()) {
-                    $schema['example'] = $param->getExample();
+                if (!empty($examples = $param->getExamples())) {
+                    if (count($examples) === 1) {
+                        $schema['example'] = is_array($param->getExample())? $param->getExample() : json_decode($param->getExample(), true);
+                    } else {
+                        foreach ($examples as $exampleKey => $example) {
+                            $schema['examples'][$exampleKey] = is_array($example)? $example : json_decode($example, true);
+                        }
+                    }
                 }
                 return [
                     'description' => $param->getDescription(),
