@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+#### Added
+* CorsPreflightHandlerInterface - resolve multiple service registered handler error
 
 #### Added
 * Button to copy `Body` content in api console
