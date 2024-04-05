@@ -17,10 +17,7 @@ class JsonOutput extends AbstractOutput
     /** @var mixed */
     private $example;
 
-    /** @var array 
-     * 
-     * 
-    */
+    /** @var array */
     private $additionalExamples = [];
 
     public function __construct(int $code, string $schema, string $description = '')
@@ -67,8 +64,8 @@ class JsonOutput extends AbstractOutput
     }
 
     /**
-     * Set multiple examples for request. This is useful for testing. 
-     * Associative names will be used as example name. 
+     * Set multiple examples for request. This is useful for testing.
+     * Associative names will be used as example name.
      * [
      *  "A" => [ "param1" => "value1", "param2" => "value2" ],
      *  "B" => [ "param1" => "value3", "param2" => "value4" ]
@@ -94,7 +91,7 @@ class JsonOutput extends AbstractOutput
      * Get additional examples
      * @return array
      */
-    public function getAdditionalExamples(): array  
+    public function getAdditionalExamples(): array
     {
         return $this->additionalExamples;
     }

@@ -320,8 +320,7 @@ class OpenApiHandler extends BaseHandler
                             );
                             $examples = $this->transformSchema($examples);
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'] = $examples;
-                        }
-                        else if (!empty($output->getExample())) { //One example processing
+                        } elseif (!empty($output->getExample())) { //One example processing
                             $example = $output->getExample();
                             $example = $this->transformSchema(is_array($example)? $example : json_decode($example, true));
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
@@ -496,8 +495,7 @@ class OpenApiHandler extends BaseHandler
                     );
                     $examples = $this->transformSchema($examples);
                     $schema['examples'] = $examples;
-                }
-                else if (!empty($param->getExample())) { //One example processing
+                } elseif (!empty($param->getExample())) { //One example processing
                     $example = $param->getExample();
                     $example = $this->transformSchema(is_array($example)? $example : json_decode($example, true));
                     $schema['example'] = $example;

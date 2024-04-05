@@ -68,8 +68,8 @@ class JsonInputParam extends InputParam
     }
 
     /**
-     * Set multiple examples for request. This is useful for testing. 
-     * Associative names will be used as example name. 
+     * Set multiple examples for request. This is useful for testing.
+     * Associative names will be used as example name.
      * [
      *  "A" => [ "param1" => "value1", "param2" => "value2" ],
      *  "B" => [ "param1" => "value3", "param2" => "value4" ]
@@ -95,7 +95,7 @@ class JsonInputParam extends InputParam
      * Get additional examples
      * @return array
      */
-    public function getAdditionalExamples(): array  
+    public function getAdditionalExamples(): array
     {
         return $this->additionalExamples;
     }
@@ -118,14 +118,14 @@ class JsonInputParam extends InputParam
             $this->description .= <<< HTML
                 <div>
                     Select Example:&nbsp; 
-HTML;              
+HTML;
             foreach ($fullSchema['examples'] as $exampleKey => $exampleValue) {
                 $example = htmlentities(json_encode($exampleValue, JSON_PRETTY_PRINT));
                 $this->description .= <<< HTML
                 <div class="btn btn-sm" data-example="{$example}" onClick="setExample(this)" >
                     {$exampleKey}
                 </div>
-HTML;                
+HTML;
             }
             $this->description .= <<< HTML
                 <script>
