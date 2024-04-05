@@ -109,7 +109,7 @@ class JsonInputParam extends InputParam
                 ["default" => is_array($this->getExample())? $this->getExample() : json_decode($this->getExample(), true)],
                 $this->getAdditionalExamples(),
             );
-        } else {
+        } elseif (!empty($this->getExample())) {
             $fullSchema['example'] = is_array($this->getExample())? $this->getExample() : json_decode($this->getExample(), true);
         }
 
