@@ -512,11 +512,9 @@ class OpenApiHandler extends BaseHandler
                 ];
                 if (!empty($examples = $param->getExamples())) {
                     if (count($examples) === 1) {
-                        $schema['example'] = is_array($param->getExample())? $param->getExample() : json_decode($param->getExample(), true);
+                        $schema['example'] = $param->getExample();
                     } else {
-                        foreach ($examples as $exampleKey => $example) {
-                            $schema['examples'][$exampleKey] = is_array($example)? $example : json_decode($example, true);
-                        }
+                        $schema['examples'] = $examples;
                     }
                 }
                 return [
