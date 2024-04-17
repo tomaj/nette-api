@@ -11,10 +11,12 @@ use Nette\Http\Request;
 use Symfony\Component\Yaml\Yaml;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\MultiAuthorizator;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\Link\ApiLink;
@@ -106,46 +108,13 @@ class OpenApiHandler extends BaseHandler
 
         foreach ($apis as $api) {
             $authorization = $api->getAuthorization();
-            if ($authorization instanceof BasicAuthentication) {
-                $securitySchemes['Basic'] = [
-                    'type' => 'http',
-                    'scheme' => 'basic',
-                ];
-                continue;
-            }
-            if ($authorization instanceof BearerTokenAuthorization) {
-                $securitySchemes['Bearer'] = [
-                    'type' => 'http',
-                    'scheme' => 'bearer',
-                ];
-                continue;
-            }
-            if ($authorization instanceof QueryApiKeyAuthentication) {
-                $queryParamName = $authorization->getQueryParamName();
-                $securitySchemes[$this->normalizeSecuritySchemeName('query', $queryParamName)] = [
-                    'type' => 'apiKey',
-                    'in' => 'query',
-                    'name' => $queryParamName,
-                ];
-                continue;
-            }
-            if ($authorization instanceof HeaderApiKeyAuthentication) {
-                $headerName = $authorization->getHeaderName();
-                $securitySchemes[$this->normalizeSecuritySchemeName('header', $headerName)] = [
-                    'type' => 'apiKey',
-                    'in' => 'header',
-                    'name' => $headerName,
-                ];
-                continue;
-            }
-            if ($authorization instanceof CookieApiKeyAuthentication) {
-                $cookieName = $authorization->getCookieName();
-                $securitySchemes[$this->normalizeSecuritySchemeName('cookie', $cookieName)] = [
-                    'type' => 'apiKey',
-                    'in' => 'cookie',
-                    'name' => $cookieName,
-                ];
-                continue;
+
+            if ($authorization instanceof MultiAuthorizator) {
+                foreach ($this->authorization->getAuthorizators() as $tmpAuthorization) {
+                    $this->addSecuritySchema($tmpAuthorization, $securitySchemes);
+                }
+            } else {
+                $this->addSecuritySchema($authorization, $securitySchemes);
             }
         }
 
@@ -584,6 +553,42 @@ class OpenApiHandler extends BaseHandler
         }
 
         return null;
+    }
+
+    private function addSecuritySchema(ApiAuthorizationInterface $authorization, &$securitySchemes): void
+    {
+        if ($authorization instanceof BasicAuthentication) {
+            $securitySchemes['Basic'] = [
+                'type' => 'http',
+                'scheme' => 'basic',
+            ];
+        } elseif ($authorization instanceof BearerTokenAuthorization) {
+            $securitySchemes['Bearer'] = [
+                'type' => 'http',
+                'scheme' => 'bearer',
+            ];
+        } elseif ($authorization instanceof QueryApiKeyAuthentication) {
+            $queryParamName = $authorization->getQueryParamName();
+            $securitySchemes[$this->normalizeSecuritySchemeName('query', $queryParamName)] = [
+                'type' => 'apiKey',
+                'in' => 'query',
+                'name' => $queryParamName,
+            ];
+        } elseif ($authorization instanceof HeaderApiKeyAuthentication) {
+            $headerName = $authorization->getHeaderName();
+            $securitySchemes[$this->normalizeSecuritySchemeName('header', $headerName)] = [
+                'type' => 'apiKey',
+                'in' => 'header',
+                'name' => $headerName,
+            ];
+        } elseif ($authorization instanceof CookieApiKeyAuthentication) {
+            $cookieName = $authorization->getCookieName();
+            $securitySchemes[$this->normalizeSecuritySchemeName('cookie', $cookieName)] = [
+                'type' => 'apiKey',
+                'in' => 'cookie',
+                'name' => $cookieName,
+            ];
+        }
     }
 
     private function createIn($type)

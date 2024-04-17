@@ -17,6 +17,7 @@ use Tomaj\NetteApi\Authorization\BasicAuthentication;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\MultiAuthorizator;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\EndpointInterface;
@@ -87,27 +88,12 @@ class ApiConsoleControl extends Control
         $form->addText('api_method', 'Method');
         $defaults['api_method'] = $this->endpoint->getMethod();
 
-        if ($this->authorization instanceof BearerTokenAuthorization) {
-            $form->addText('token', 'Token')
-                ->setHtmlAttribute('placeholder', 'Enter token');
-        } elseif ($this->authorization instanceof BasicAuthentication) {
-            $form->addText('basic_authentication_username', 'Username')
-                ->setHtmlAttribute('placeholder', 'Enter basic authentication username');
-            $form->addText('basic_authentication_password', 'Password')
-                ->setHtmlAttribute('placeholder', 'Enter basic authentication password');
-        } elseif ($this->authorization instanceof QueryApiKeyAuthentication) {
-            $form->addText($this->authorization->getQueryParamName(), 'API key')
-                ->setHtmlAttribute('placeholder', 'Enter API key');
-        } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
-            $form->addText('header_api_key', 'API key')
-                ->setHtmlAttribute('placeholder', 'Enter API key');
-        } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
-            $form->addText('cookie_api_key', 'API key')
-                ->setHtmlAttribute('placeholder', 'Enter API key');
-        } elseif ($this->authorization instanceof NoAuthorization) {
-            $form->addText('authorization', 'Authorization')
-                ->setDisabled(true);
-            $defaults['authorization'] = 'No authorization - global access';
+        if ($this->authorization instanceof MultiAuthorizator) {
+            foreach ($this->authorization->getAuthorizators() as $authorization) {
+                $this->addFormularItems($form, $authorization, $defaults);
+            }
+        } else {
+            $this->addFormularItems($form, $this->authorization, $defaults);
         }
 
         $form->addCheckbox('send_session_id', 'Send session id cookie');
@@ -159,15 +145,12 @@ class ApiConsoleControl extends Control
 
         $additionalValues['timeout'] = $values['timeout'];
 
-        if ($this->authorization instanceof QueryApiKeyAuthentication) {
-            $queryParamName = $this->authorization->getQueryParamName();
-            $additionalValues['getFields'][$queryParamName] = $values[$queryParamName] ?? null;
-        } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
-            $headerName = $this->authorization->getHeaderName();
-            $additionalValues['headers'][] = $headerName . ':' . $values['header_api_key'] ?? null;
-        } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
-            $cookieName = $this->authorization->getCookieName();
-            $additionalValues['cookieFields'][$cookieName] = $values['cookie_api_key'] ?? null;
+        if ($this->authorization instanceof MultiAuthorizator) {
+            foreach ($this->authorization->getAuthorizators() as $authorization) {
+                $this->addAdditionalValues($authorization, $additionalValues);
+            }
+        } else {
+            $this->addAdditionalValues($authorization, $additionalValues);
         }
 
         $consoleRequest = new ConsoleRequest($this->handler, $this->endpoint, $this->apiLink);
@@ -212,5 +195,45 @@ class ApiConsoleControl extends Control
             unset($values['do_not_send_empty_value_for_' . $key]);
         }
         return $values;
+    }
+
+    private function addFormularItems(Form $form, ApiAuthorizationInterface $authorization, &$defaults): void
+    {
+        if ($authorization instanceof BearerTokenAuthorization) {
+            $form->addText('token', 'Token')
+                ->setHtmlAttribute('placeholder', 'Enter token');
+        } elseif ($authorization instanceof BasicAuthentication) {
+            $form->addText('basic_authentication_username', 'Username')
+                ->setHtmlAttribute('placeholder', 'Enter basic authentication username');
+            $form->addText('basic_authentication_password', 'Password')
+                ->setHtmlAttribute('placeholder', 'Enter basic authentication password');
+        } elseif ($authorization instanceof QueryApiKeyAuthentication) {
+            $form->addText($this->authorization->getQueryParamName(), 'API key')
+                ->setHtmlAttribute('placeholder', 'Enter API key');
+        } elseif ($authorization instanceof HeaderApiKeyAuthentication) {
+            $form->addText('header_api_key', 'API key')
+                ->setHtmlAttribute('placeholder', 'Enter API key');
+        } elseif ($authorization instanceof CookieApiKeyAuthentication) {
+            $form->addText('cookie_api_key', 'API key')
+                ->setHtmlAttribute('placeholder', 'Enter API key');
+        } elseif ($authorization instanceof NoAuthorization) {
+            $form->addText('authorization', 'Authorization')
+                ->setDisabled(true);
+            $defaults['authorization'] = 'No authorization - global access';
+        }
+    }
+
+    private function addAdditionalValues(ApiAuthorizationInterface $authorization, &$additionalValues): void
+    {
+        if ($this->authorization instanceof QueryApiKeyAuthentication) {
+            $queryParamName = $this->authorization->getQueryParamName();
+            $additionalValues['getFields'][$queryParamName] = $values[$queryParamName] ?? null;
+        } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
+            $headerName = $this->authorization->getHeaderName();
+            $additionalValues['headers'][] = $headerName . ':' . $values['header_api_key'] ?? null;
+        } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
+            $cookieName = $this->authorization->getCookieName();
+            $additionalValues['cookieFields'][$cookieName] = $values['cookie_api_key'] ?? null;
+        }
     }
 }
