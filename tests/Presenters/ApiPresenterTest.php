@@ -27,14 +27,14 @@ class ApiPresenterTest extends TestCase
     public function testSimpleResponse()
     {
         $apiDecider = new ApiDecider();
-        $apiDecider->addApi(new EndpointIdentifier('GET', 1, 'test', 'api'), new AlwaysOkHandler(), new NoAuthorization());
+        $apiDecider->addApi(new EndpointIdentifier('GET', '1', 'test', 'api'), new AlwaysOkHandler(), new NoAuthorization());
 
         $presenter = new ApiPresenter();
         $presenter->apiDecider = $apiDecider;
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
 
-        $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
+        $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
         $this->assertEquals(200, $result->getCode());
@@ -47,7 +47,7 @@ class ApiPresenterTest extends TestCase
     {
         $apiDecider = new ApiDecider();
         $apiDecider->addApi(
-            new EndpointIdentifier('GET', 1, 'test', 'api'),
+            new EndpointIdentifier('GET', '1', 'test', 'api'),
             new AlwaysOkHandler(),
             new BearerTokenAuthorization(new StaticTokenRepository([]), new IpDetector())
         );
@@ -57,7 +57,7 @@ class ApiPresenterTest extends TestCase
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
 
-        $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
+        $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
         $this->assertEquals(['status' => 'error', 'message' => 'Authorization header HTTP_Authorization is not set'], $result->getPayload());
@@ -68,7 +68,7 @@ class ApiPresenterTest extends TestCase
     {
         $apiDecider = new ApiDecider();
         $apiDecider->addApi(
-            new EndpointIdentifier('GET', 1, 'test', 'api'),
+            new EndpointIdentifier('GET', '1', 'test', 'api'),
             new EchoHandler(),
             new NoAuthorization()
         );
@@ -80,7 +80,7 @@ class ApiPresenterTest extends TestCase
 
         Debugger::$productionMode = Debugger::PRODUCTION;
 
-        $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
+        $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
         $this->assertEquals(['status' => 'error', 'message' => 'wrong input'], $result->getPayload());
@@ -97,7 +97,7 @@ class ApiPresenterTest extends TestCase
     {
         $apiDecider = new ApiDecider();
         $apiDecider->addApi(
-            new EndpointIdentifier('GET', 1, 'test', 'api'),
+            new EndpointIdentifier('GET', '1', 'test', 'api'),
             new TestHandler(),
             new NoAuthorization()
         );
@@ -107,7 +107,7 @@ class ApiPresenterTest extends TestCase
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
 
-        $request = new Request('Api:Api:default', 'GET', ['version' => 1, 'package' => 'test', 'apiAction' => 'api']);
+        $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
         $this->assertEquals(['hello' => 'world'], $result->getPayload());

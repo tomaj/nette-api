@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+#### Changed
+* [BC] Support for semantic versioning api. Need retype version from `int` to `string`.
 
 #### Added
 * CorsPreflightHandlerInterface - resolve multiple service registered handler error

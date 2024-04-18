@@ -227,7 +227,7 @@ class OpenApiHandler extends BaseHandler
         return new JsonApiResponse(IResponse::S200_OK, $data);
     }
 
-    private function getApis(int $version): array
+    private function getApis(string $version): array
     {
         return array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
             return $version === $api->getEndpoint()->getVersion();

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi;
 
+use InvalidArgumentException;
+
 class EndpointIdentifier implements EndpointInterface
 {
     private $method;
@@ -14,9 +16,12 @@ class EndpointIdentifier implements EndpointInterface
 
     private $apiAction;
 
-    public function __construct(string $method, int $version, string $package, ?string $apiAction = null)
+    public function __construct(string $method, string $version, string $package, ?string $apiAction = null)
     {
         $this->method = strtoupper($method);
+        if ($this->checkVersionFormat($version) === false) {
+            throw new InvalidArgumentException('Version must have semantic numbering. For example "1", "1.1", "0.13.2" etc.');
+        }
         $this->version = $version;
         $this->package = $package;
         $this->apiAction = $apiAction;
@@ -27,7 +32,7 @@ class EndpointIdentifier implements EndpointInterface
         return $this->method;
     }
 
-    public function getVersion(): int
+    public function getVersion(): string
     {
         return $this->version;
     }
@@ -49,4 +54,10 @@ class EndpointIdentifier implements EndpointInterface
     {
         return "v{$this->version}/{$this->package}/{$this->apiAction}";
     }
+
+    private function checkVersionFormat(string $version): bool
+    {
+        return (preg_match('/^(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){0,2}$/', $version) === 1);
+    }
+
 }

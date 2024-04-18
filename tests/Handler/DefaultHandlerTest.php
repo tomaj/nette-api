@@ -29,7 +29,7 @@ class DefaultHandlerTest extends TestCase
         $defaultHandler = new DefaultHandler();
         $this->assertNull($defaultHandler->getEndpoint());
 
-        $endpointIdentifier = new EndpointIdentifier('POST', 1, 'article', 'detail');
+        $endpointIdentifier = new EndpointIdentifier('POST', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
         $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
@@ -62,7 +62,7 @@ class DefaultHandlerTest extends TestCase
         $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $defaultHandler->setupLinkGenerator($linkGenerator);
 
-        $endpointIdentifier = new EndpointIdentifier('POST', 1, 'article', 'detail');
+        $endpointIdentifier = new EndpointIdentifier('POST', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
 
         $this->assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));

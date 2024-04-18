@@ -26,13 +26,13 @@ class ApiDecider
      * If decider cannot find handler for given handler, returns defaults.
      *
      * @param string   $method
-     * @param integer  $version
+     * @param string   $version
      * @param string   $package
      * @param string   $apiAction
      *
      * @return Api
      */
-    public function getApi(string $method, int $version, string $package, ?string $apiAction = null)
+    public function getApi(string $method, string $version, string $package, ?string $apiAction = null)
     {
         $method = strtoupper($method);
         $apiAction = $apiAction === '' ? null : $apiAction;

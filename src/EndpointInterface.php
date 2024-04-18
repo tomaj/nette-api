@@ -8,7 +8,7 @@ interface EndpointInterface
 {
     public function getMethod(): string;
 
-    public function getVersion(): int;
+    public function getVersion(): string;
 
     public function getPackage(): string;
 
