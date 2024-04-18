@@ -36,11 +36,18 @@ class EndpointIdentifierTest extends TestCase
 
     public function testSupportedVersions()
     {
-        new EndpointIdentifier('GET', '0', 'core', 'show');
-        new EndpointIdentifier('GET', '1', 'core', 'show');
-        new EndpointIdentifier('GET', '1.0', 'core', 'show');
-        new EndpointIdentifier('GET', '1.1', 'core', 'show');
-        new EndpointIdentifier('GET', '1.33', 'core', 'show');
+        $endpoint = new EndpointIdentifier('GET', '0', 'core', 'show');
+        $this->assertEquals('v0/core/show', $endpoint->getUrl());
+        $endpoint = new EndpointIdentifier('GET', '1', 'core', 'show');
+        $this->assertEquals('v1/core/show', $endpoint->getUrl());
+        $endpoint = new EndpointIdentifier('GET', '1.0', 'core', 'show');
+        $this->assertEquals('v1.0/core/show', $endpoint->getUrl());
+        $endpoint = new EndpointIdentifier('GET', '1.1', 'core', 'show');
+        $this->assertEquals('v1.1/core/show', $endpoint->getUrl());
+        $endpoint = new EndpointIdentifier('GET', '1.33', 'core', 'show');
+        $this->assertEquals('v1.33/core/show', $endpoint->getUrl());
+        $endpoint = new EndpointIdentifier('GET', '1.33-dev', 'core', 'show');
+        $this->assertEquals('v1.33-dev/core/show', $endpoint->getUrl());
         $endpoint = new EndpointIdentifier('GET', '0.33.43', 'core', 'show');
         $this->assertEquals('v0.33.43/core/show', $endpoint->getUrl());
     }
@@ -48,6 +55,6 @@ class EndpointIdentifierTest extends TestCase
     public function testFailVersion()
     {
         $this->expectException(InvalidArgumentException::class);
-        new EndpointIdentifier('GET', 'test', 'core', 'show');
+        new EndpointIdentifier('GET', '1.0/dev', 'core', 'show');
     }
 }
