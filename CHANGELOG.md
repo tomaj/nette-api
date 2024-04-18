@@ -4,7 +4,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 #### Changed
-* DefaultHandler response code 404 instead 400
+* [BC] DefaultHandler response code 404 instead 400
 
 #### Added
 * CorsPreflightHandlerInterface - resolve multiple service registered handler error
