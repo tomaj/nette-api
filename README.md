@@ -371,6 +371,14 @@ services:
             - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'cookie'), Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication('api_key', @staticTokenRepository))
 ```
 
+### Multiple authentication
+You can use multiple types of authorization of API.
+
+```neon
+services:
+    - Tomaj\NetteApi\Authorization\MultiAuthorizator([@Tomaj\NetteApi\Authorization\BearerTokenAuthorization, @Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication])
+```
+
 ## Rate limit
 
 This library provides simple interface for API rate limit. All you need to do is implement this interface like in example below:
