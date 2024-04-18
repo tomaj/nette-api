@@ -59,5 +59,4 @@ class EndpointIdentifier implements EndpointInterface
     {
         return (preg_match('/^(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){0,2}$/', $version) === 1);
     }
-
 }
