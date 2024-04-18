@@ -110,7 +110,7 @@ class OpenApiHandler extends BaseHandler
             $authorization = $api->getAuthorization();
 
             if ($authorization instanceof MultiAuthorizator) {
-                foreach ($this->authorization->getAuthorizators() as $tmpAuthorization) {
+                foreach ($authorization->getAuthorizators() as $tmpAuthorization) {
                     $this->addSecuritySchema($tmpAuthorization, $securitySchemes);
                 }
             } else {

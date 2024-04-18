@@ -147,10 +147,10 @@ class ApiConsoleControl extends Control
 
         if ($this->authorization instanceof MultiAuthorizator) {
             foreach ($this->authorization->getAuthorizators() as $authorization) {
-                $this->addAdditionalValues($authorization, $additionalValues);
+                $this->addAdditionalValues($authorization, $values, $additionalValues);
             }
         } else {
-            $this->addAdditionalValues($authorization, $additionalValues);
+            $this->addAdditionalValues($this->authorization, $values, $additionalValues);
         }
 
         $consoleRequest = new ConsoleRequest($this->handler, $this->endpoint, $this->apiLink);
@@ -208,7 +208,7 @@ class ApiConsoleControl extends Control
             $form->addText('basic_authentication_password', 'Password')
                 ->setHtmlAttribute('placeholder', 'Enter basic authentication password');
         } elseif ($authorization instanceof QueryApiKeyAuthentication) {
-            $form->addText($this->authorization->getQueryParamName(), 'API key')
+            $form->addText($authorization->getQueryParamName(), 'API key')
                 ->setHtmlAttribute('placeholder', 'Enter API key');
         } elseif ($authorization instanceof HeaderApiKeyAuthentication) {
             $form->addText('header_api_key', 'API key')
@@ -223,16 +223,16 @@ class ApiConsoleControl extends Control
         }
     }
 
-    private function addAdditionalValues(ApiAuthorizationInterface $authorization, &$additionalValues): void
+    private function addAdditionalValues(ApiAuthorizationInterface $authorization, ArrayHash $values, &$additionalValues): void
     {
-        if ($this->authorization instanceof QueryApiKeyAuthentication) {
-            $queryParamName = $this->authorization->getQueryParamName();
+        if ($authorization instanceof QueryApiKeyAuthentication) {
+            $queryParamName = $authorization->getQueryParamName();
             $additionalValues['getFields'][$queryParamName] = $values[$queryParamName] ?? null;
-        } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
-            $headerName = $this->authorization->getHeaderName();
+        } elseif ($authorization instanceof HeaderApiKeyAuthentication) {
+            $headerName = $authorization->getHeaderName();
             $additionalValues['headers'][] = $headerName . ':' . $values['header_api_key'] ?? null;
-        } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
-            $cookieName = $this->authorization->getCookieName();
+        } elseif ($authorization instanceof CookieApiKeyAuthentication) {
+            $cookieName = $authorization->getCookieName();
             $additionalValues['cookieFields'][$cookieName] = $values['cookie_api_key'] ?? null;
         }
     }
