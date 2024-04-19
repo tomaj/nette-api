@@ -5,6 +5,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ## [Unreleased][unreleased]
 #### Changed
 * [BC] Support for semantic versioning api. Need retype version from `int` to `string`.
+* [BC] DefaultHandler response code 404 instead 400
 
 #### Added
 * CorsPreflightHandlerInterface - resolve multiple service registered handler error
