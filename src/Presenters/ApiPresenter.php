@@ -142,7 +142,7 @@ final class ApiPresenter implements IPresenter
     {
         return $this->apiDecider->getApi(
             $request->getMethod(),
-            (int) $request->getParameter('version'),
+            $request->getParameter('version'),
             $request->getParameter('package'),
             $request->getParameter('apiAction')
         );

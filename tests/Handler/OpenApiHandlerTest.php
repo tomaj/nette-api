@@ -25,18 +25,18 @@ class OpenApiHandlerTest extends TestCase
 
         $apiDecider = new ApiDecider();
         $apiDecider->addApi(
-            new EndpointIdentifier('GET', 1, 'test'),
+            new EndpointIdentifier('GET', '1', 'test'),
             new MultipleOutputTestHandler(),
             new NoAuthorization()
         );
 
         $apiDecider->addApi(
-            new EndpointIdentifier('GET', 1, 'docs', 'open-api'),
+            new EndpointIdentifier('GET', '1', 'docs', 'open-api'),
             new OpenApiHandler($apiDecider, $apiLink, $request),
             new NoAuthorization()
         );
 
-        $result = $apiDecider->getApi('GET', 1, 'docs', 'open-api');
+        $result = $apiDecider->getApi('GET', '1', 'docs', 'open-api');
         $handler = $result->getHandler();
 
         $response = $handler->handle(['format' => 'json']);
