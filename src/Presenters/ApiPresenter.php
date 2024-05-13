@@ -91,30 +91,29 @@ final class ApiPresenter implements IPresenter
             return $response;
         }
         $params = $paramsProcessor->getValues();
-
         try {
             $response = $handler->handle($params);
-            $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
-            $outputValidatorErrors = [];
-            foreach ($handler->outputs() as $output) {
-                if (!$output instanceof OutputInterface) {
-                    $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
-                    continue;
+            $code = $response->getCode();
+            if (!Debugger::$productionMode) {  /// If not production mode, validate output
+                $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
+                $outputValidatorErrors = [];
+                foreach ($handler->outputs() as $output) {
+                    if (!$output instanceof OutputInterface) {
+                        $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
+                        continue;
+                    }
+                    $validationResult = $output->validate($response);
+                    if ($validationResult->isOk()) {
+                        $outputValid = true;
+                        break;
+                    }
+                    $outputValidatorErrors[] = $validationResult->getErrors();
                 }
-                $validationResult = $output->validate($response);
-                if ($validationResult->isOk()) {
-                    $outputValid = true;
-                    break;
-                }
-                $outputValidatorErrors[] = $validationResult->getErrors();
-            }
-            if (!$outputValid) {
-                Debugger::log($outputValidatorErrors, Debugger::ERROR);
-                if (!Debugger::$productionMode) {
+                if (!$outputValid) {
+                    Debugger::log($outputValidatorErrors, Debugger::ERROR);
                     $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
                 }
             }
-            $code = $response->getCode();
         } catch (Throwable $exception) {
             if (!Debugger::$productionMode) {
                 $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
