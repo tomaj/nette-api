@@ -16,8 +16,15 @@ class EndpointIdentifier implements EndpointInterface
 
     private $apiAction;
 
-    public function __construct(string $method, string $version, string $package, ?string $apiAction = null)
+    /**
+     * @param string $method example: "GET", "POST", "PUT", "DELETE"
+     * @param string|int $version Version must have semantic numbering. For example "1", "1.1", "0.13.2" etc.
+     * @param string $package example: "users"
+     * @param string|null $apiAction example: "query"
+     */
+    public function __construct(string $method, $version, string $package, ?string $apiAction = null)
     {
+        $version = (string) $version;
         $this->method = strtoupper($method);
         if (strpos($version, '/') !== false) {
             throw new InvalidArgumentException('Version must have semantic numbering. For example "1", "1.1", "0.13.2" etc.');
