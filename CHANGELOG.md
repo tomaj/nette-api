@@ -6,9 +6,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 #### Changed
 * Support for semantic versioning api.
 * [BC] DefaultHandler response code 404 instead 400
+* [BC] Added Container to API Decider and API Decider is final
 
 #### Added
 * CorsPreflightHandlerInterface - resolve multiple service registered handler error
+* Lazy API handlers
 
 #### Added
 * Button to copy `Body` content in api console
