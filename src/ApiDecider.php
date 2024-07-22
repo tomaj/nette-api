@@ -14,7 +14,7 @@ use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 
-final class ApiDecider
+class ApiDecider
 {
     /** @var Container */
     private $container;
