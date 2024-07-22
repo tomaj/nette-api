@@ -16,7 +16,8 @@ use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 
 final class ApiDecider
 {
-    private Container $container;
+    /** @var Container */
+    private $container;
 
     /** @var Api[] */
     private $apis = [];
