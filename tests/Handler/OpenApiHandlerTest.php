@@ -6,6 +6,7 @@ namespace Tomaj\NetteApi\Test\Handler;
 
 use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\SimpleRouter;
+use Nette\DI\Container;
 use Nette\Http\UrlScript;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\ApiDecider;
@@ -17,13 +18,21 @@ use Nette\Http\Request;
 
 class OpenApiHandlerTest extends TestCase
 {
+    /** @var Container */
+    private $container;
+
+    protected function setUp(): void
+    {
+        $this->container = new Container();
+    }
+
     public function testHandlerWithMultipleResponseSchemas()
     {
         $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $apiLink = new ApiLink($linkGenerator);
         $request = new Request(new UrlScript('http://test/'));
 
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
             new EndpointIdentifier('GET', '1', 'test'),
             new MultipleOutputTestHandler(),

@@ -19,9 +19,15 @@ class Api
 
     private $rateLimit;
 
+    /**
+     * @param EndpointInterface $endpoint
+     * @param ApiHandlerInterface|string $handler
+     * @param ApiAuthorizationInterface $authorization
+     * @param RateLimitInterface|null $rateLimit
+     */
     public function __construct(
         EndpointInterface $endpoint,
-        ApiHandlerInterface $handler,
+        $handler,
         ApiAuthorizationInterface $authorization,
         ?RateLimitInterface $rateLimit = null
     ) {
@@ -36,7 +42,10 @@ class Api
         return $this->endpoint;
     }
 
-    public function getHandler(): ApiHandlerInterface
+    /**
+     * @return ApiHandlerInterface|string
+     */
+    public function getHandler()
     {
         return $this->handler;
     }

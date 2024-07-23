@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Test\Params;
 
+use Nette\DI\Container;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
@@ -14,9 +15,18 @@ use Tomaj\NetteApi\Handlers\DefaultHandler;
 
 class ApiDeciderTest extends TestCase
 {
+    /** @var Container */
+    private $container;
+
+    protected function setUp(): void
+    {
+        $this->container = new Container();
+    }
+
     public function testDefaultHandlerWithNoRegisteredHandlers()
     {
-        $apiDecider = new ApiDecider();
+
+        $apiDecider = new ApiDecider($this->container);
         $result = $apiDecider->getApi('POST', '1', 'article', 'list');
 
         $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
@@ -26,7 +36,7 @@ class ApiDeciderTest extends TestCase
 
     public function testFindRightHandler()
     {
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
             new EndpointIdentifier('POST', '2', 'comments', 'list'),
             new AlwaysOkHandler(),
@@ -47,7 +57,7 @@ class ApiDeciderTest extends TestCase
 
     public function testGetHandlers()
     {
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
 
         $this->assertEquals(0, count($apiDecider->getApis()));
 
@@ -62,7 +72,7 @@ class ApiDeciderTest extends TestCase
 
     public function testGlobalPreflight()
     {
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
         $apiDecider->enableGlobalPreflight();
 
         $this->assertEquals(0, count($apiDecider->getApis()));

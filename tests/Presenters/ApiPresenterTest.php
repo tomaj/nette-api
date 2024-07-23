@@ -24,9 +24,17 @@ use Tracy\Debugger;
 
 class ApiPresenterTest extends TestCase
 {
+    /** @var Container */
+    private $container;
+
+    protected function setUp(): void
+    {
+        $this->container = new Container();
+    }
+
     public function testSimpleResponse()
     {
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(new EndpointIdentifier('GET', '1', 'test', 'api'), new AlwaysOkHandler(), new NoAuthorization());
 
         $presenter = new ApiPresenter();
@@ -45,7 +53,7 @@ class ApiPresenterTest extends TestCase
 
     public function testWithAuthorization()
     {
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
             new EndpointIdentifier('GET', '1', 'test', 'api'),
             new AlwaysOkHandler(),
@@ -66,7 +74,7 @@ class ApiPresenterTest extends TestCase
 
     public function testWithParams()
     {
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
             new EndpointIdentifier('GET', '1', 'test', 'api'),
             new EchoHandler(),
@@ -95,7 +103,7 @@ class ApiPresenterTest extends TestCase
 
     public function testWithOutputs()
     {
-        $apiDecider = new ApiDecider();
+        $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
             new EndpointIdentifier('GET', '1', 'test', 'api'),
             new TestHandler(),
