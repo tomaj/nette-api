@@ -561,6 +561,13 @@ Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recen
 $ composer test
 ```
 
+### Disable schema validation in not production environment
+Include get parameter no_schema_validate in your request to disable schema validation. This is useful for testing purposes.
+* schema validation is disabled by default in production environment for performance reasons
+
+### Add additional info to error response 
+Include get parameter error_detail in your request to show additional info in error response. This is useful for debugging purposes.
+
 ## Contributing
 
 Please see [CONTRIBUTING](CONTRIBUTING.md) and [CONDUCT](CONDUCT.md) for details.

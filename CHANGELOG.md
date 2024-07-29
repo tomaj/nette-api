@@ -14,6 +14,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 #### Added
 * Button to copy `Body` content in api console
+* Ability to disable schema validation and provide additional error info with get parameters. 
 
 #### Changed
 * Handler tag wrapper has changed class from `btn` to `label`
