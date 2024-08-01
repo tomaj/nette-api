@@ -32,12 +32,19 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 
 ## How Nette-API works
 
-First, you have to register library presenter for routing. In *config.neon* just add this line:
+First, you have to register library presenter for routingz. In *config.neon* just add this line:
 
 ```neon
 application:
   mapping:
     Api: Tomaj\NetteApi\Presenters\*Presenter
+```
+
+Then register your preffered output configurator in *config.neon* services: 
+
+```neon
+services:
+    apiOutputConfigurator: Tomaj\NetteApi\Output\Configurator\QueryConfigurator
 ```
 
 And add route to you RouterFactory:
@@ -560,13 +567,6 @@ Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recen
 ```bash
 $ composer test
 ```
-
-### Disable schema validation in not production environment
-Include get parameter no_schema_validate in your request to disable schema validation. This is useful for testing purposes.
-* schema validation is disabled by default in production environment for performance reasons
-
-### Add additional info to error response 
-Include get parameter error_detail in your request to show additional info in error response. This is useful for debugging purposes.
 
 ## Contributing
 

@@ -7,6 +7,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Support for semantic versioning api.
 * [BC] DefaultHandler response code 404 instead 400
 * [BC] Added Container to API Decider
+* [BC] Output Configurator, Allows different methods for output configuration. Needs to be added to config services.
 
 #### Added
 * CorsPreflightHandlerInterface - resolve multiple service registered handler error
