@@ -32,7 +32,7 @@ Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
 
 ## How Nette-API works
 
-First, you have to register library presenter for routingz. In *config.neon* just add this line:
+First, you have to register library presenter for routing. In *config.neon* just add this line:
 
 ```neon
 application:
