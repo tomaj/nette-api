@@ -44,7 +44,7 @@ Then register your preffered output configurator in *config.neon* services:
 
 ```neon
 services:
-    apiOutputConfigurator: Tomaj\NetteApi\Output\Configurator\QueryConfigurator
+    apiOutputConfigurator: Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator
 ```
 
 And add route to you RouterFactory:

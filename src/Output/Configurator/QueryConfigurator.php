@@ -8,21 +8,26 @@ use Nette\Application\Request;
 
 class QueryConfigurator implements ConfiguratorInterface
 {
-    /*
-    ### Disable schema validation in not production environment
-    Include get parameter no_schema_validate in your request to disable schema validation. This is useful for testing purposes.
-    * schema validation is disabled by default in production environment for performance reasons
+    private string $noSchemaValidateParam = "no_schema_validate";
+    private string $errorDetailParam = "error_detail";
 
-    ### Add additional info to error response 
-    Include get parameter error_detail in your request to show additional info in error response. This is useful for debugging purposes.
-    */
+    /**
+     * @param string $noSchemaValidateParam Name of get parameter to disable schema validation
+     * @param string $errorDetailParam Name of get parameter to show additional info in error response
+     */
+    public function __construct(string $noSchemaValidateParam = "no_schema_validate", string $errorDetailParam = "error_detail")
+    {
+        $this->noSchemaValidateParam = $noSchemaValidateParam;
+        $this->errorDetailParam = $errorDetailParam;
+    }
+
     public function validateSchema(?Request $request = null): bool
     {
         if ($request === null) {
             return false;
         }
         $getParams = $request->getParameters();
-        return !isset($getParams['no_schema_validate']);
+        return !isset($getParams[$this->noSchemaValidateParam]);
     }
 
     public function showErrorDetail(?Request $request = null): bool
@@ -31,6 +36,6 @@ class QueryConfigurator implements ConfiguratorInterface
             return false;
         }
         $getParams = $request->getParameters();
-        return isset($getParams['error_detail']);
+        return isset($getParams[$this->errorDetailParam]);
     }
 }
