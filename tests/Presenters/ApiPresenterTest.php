@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Test\Presenters;
 
-use PHPUnit\Framework\TestCase;
 use Nette\Application\Request;
 use Nette\DI\Container;
 use Nette\Http\Response as HttpResponse;
-use Nette\Http\Request as HttpRequest;
-use Nette\Http\UrlScript;
+use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
@@ -18,6 +16,7 @@ use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
 use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
+use Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
 use Tomaj\NetteApi\Test\Handler\TestHandler;
 use Tracy\Debugger;
@@ -41,6 +40,7 @@ class ApiPresenterTest extends TestCase
         $presenter->apiDecider = $apiDecider;
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
+        $presenter->outputConfigurator = new DebuggerConfigurator();
 
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -64,6 +64,7 @@ class ApiPresenterTest extends TestCase
         $presenter->apiDecider = $apiDecider;
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
+        $presenter->outputConfigurator = new DebuggerConfigurator();
 
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -85,6 +86,7 @@ class ApiPresenterTest extends TestCase
         $presenter->apiDecider = $apiDecider;
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
+        $presenter->outputConfigurator = new DebuggerConfigurator();
 
         Debugger::$productionMode = Debugger::PRODUCTION;
 
@@ -114,6 +116,7 @@ class ApiPresenterTest extends TestCase
         $presenter->apiDecider = $apiDecider;
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
+        $presenter->outputConfigurator = new DebuggerConfigurator();
 
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
