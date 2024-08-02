@@ -99,7 +99,7 @@ final class ApiPresenter implements IPresenter
             $response = $handler->handle($params);
             $code = $response->getCode();
 
-            if ($this->outputConfigurator->validateSchema($request)) {  /// If not production mode or no no_schema_validate parameter present, validate output
+            if ($this->outputConfigurator->validateSchema($request)) {
                 $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
                 $outputValidatorErrors = [];
                 foreach ($handler->outputs() as $output) {
