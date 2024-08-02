@@ -8,8 +8,8 @@ use Nette\Application\Request;
 
 class EnvConfigurator implements ConfiguratorInterface
 {
-    private string $envVariable = "APP_ENV";
-    private string $productionValue = "production";
+    private $envVariable = "APP_ENV";
+    private $productionValue = "production";
 
     /**
      * @param string $envVariable Which environment variable to check for production value

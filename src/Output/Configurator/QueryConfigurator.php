@@ -8,8 +8,8 @@ use Nette\Application\Request;
 
 class QueryConfigurator implements ConfiguratorInterface
 {
-    private string $noSchemaValidateParam = "no_schema_validate";
-    private string $errorDetailParam = "error_detail";
+    private $noSchemaValidateParam = "no_schema_validate";
+    private $errorDetailParam = "error_detail";
 
     /**
      * @param string $noSchemaValidateParam Name of get parameter to disable schema validation
