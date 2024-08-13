@@ -21,6 +21,7 @@ use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
+use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 
 final class ApiPresenter implements IPresenter
 {
@@ -32,6 +33,9 @@ final class ApiPresenter implements IPresenter
 
     /** @var Container @inject */
     public $context;
+
+    /** @var ConfiguratorInterface @inject */
+    public $outputConfigurator;
 
     /**
      * CORS header settings
@@ -83,7 +87,7 @@ final class ApiPresenter implements IPresenter
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
             $this->response->setCode(Response::S400_BAD_REQUEST);
-            if (!Debugger::$productionMode) {
+            if ($this->outputConfigurator->showErrorDetail($request)) {
                 $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input', 'detail' => $paramsProcessor->getErrors()]);
             } else {
                 $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input']);
@@ -94,7 +98,8 @@ final class ApiPresenter implements IPresenter
         try {
             $response = $handler->handle($params);
             $code = $response->getCode();
-            if (!Debugger::$productionMode) {  /// If not production mode, validate output
+
+            if ($this->outputConfigurator->validateSchema($request)) {
                 $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
                 $outputValidatorErrors = [];
                 foreach ($handler->outputs() as $output) {
@@ -115,7 +120,7 @@ final class ApiPresenter implements IPresenter
                 }
             }
         } catch (Throwable $exception) {
-            if (!Debugger::$productionMode) {
+            if ($this->outputConfigurator->showErrorDetail($request)) {
                 $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
             } else {
                 $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
