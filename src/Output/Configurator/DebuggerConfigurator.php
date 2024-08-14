@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Output\Configurator;
 
-use Nette\Application\Request;
 use Tracy\Debugger;
 
 class DebuggerConfigurator implements ConfiguratorInterface
