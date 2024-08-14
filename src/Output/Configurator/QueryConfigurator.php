@@ -4,38 +4,35 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Output\Configurator;
 
-use Nette\Application\Request;
+use Nette\Http\Request;
 
 class QueryConfigurator implements ConfiguratorInterface
 {
-    private $noSchemaValidateParam = 'no_schema_validate';
+    private $schemaValidateParam = 'schema_validate';
     private $errorDetailParam = 'error_detail';
 
     /**
-     * @param string $noSchemaValidateParam Name of get parameter to disable schema validation
+     * @param string $schemaValidateParam Name of get parameter to enable schema validation
      * @param string $errorDetailParam Name of get parameter to show additional info in error response
      */
-    public function __construct(string $noSchemaValidateParam = 'no_schema_validate', string $errorDetailParam = 'error_detail')
-    {
-        $this->noSchemaValidateParam = $noSchemaValidateParam;
+    public function __construct(
+        public readonly Request $request,
+        string $schemaValidateParam = 'schema_validate', 
+        string $errorDetailParam = 'error_detail'
+    ) {
+        $this->schemaValidateParam = $schemaValidateParam;
         $this->errorDetailParam = $errorDetailParam;
     }
 
-    public function validateSchema(?Request $request = null): bool
+    public function validateSchema(): bool
     {
-        if ($request === null) {
-            return false;
-        }
-        $getParams = $request->getParameters();
-        return !isset($getParams[$this->noSchemaValidateParam]);
+        $getParams = $this->request->getQuery();
+        return isset($getParams[$this->schemaValidateParam]);
     }
 
-    public function showErrorDetail(?Request $request = null): bool
+    public function showErrorDetail(): bool
     {
-        if ($request === null) {
-            return false;
-        }
-        $getParams = $request->getParameters();
+        $getParams = $this->request->getQuery();
         return isset($getParams[$this->errorDetailParam]);
     }
 }

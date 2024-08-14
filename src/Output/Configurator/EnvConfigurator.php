@@ -21,7 +21,7 @@ class EnvConfigurator implements ConfiguratorInterface
         $this->productionValue = $productionValue;
     }
 
-    public function validateSchema(?Request $request = null): bool
+    public function validateSchema(): bool
     {
         $appEnv = getenv($this->envVariable);
         if ($appEnv === $this->productionValue) {
@@ -30,7 +30,7 @@ class EnvConfigurator implements ConfiguratorInterface
         return true;
     }
 
-    public function showErrorDetail(?Request $request = null): bool
+    public function showErrorDetail(): bool
     {
         $appEnv = getenv($this->envVariable);
         if ($appEnv === $this->productionValue) {

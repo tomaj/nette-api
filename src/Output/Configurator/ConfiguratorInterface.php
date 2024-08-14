@@ -8,7 +8,7 @@ use Nette\Application\Request;
 
 interface ConfiguratorInterface
 {
-    public function validateSchema(?Request $request = null): bool;
+    public function validateSchema(): bool;
 
-    public function showErrorDetail(?Request $request = null): bool;
+    public function showErrorDetail(): bool;
 }
