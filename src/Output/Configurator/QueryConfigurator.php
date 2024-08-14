@@ -18,7 +18,7 @@ class QueryConfigurator implements ConfiguratorInterface
      */
     public function __construct(
         Request $request,
-        string $schemaValidateParam = 'schema_validate', 
+        string $schemaValidateParam = 'schema_validate',
         string $errorDetailParam = 'error_detail'
     ) {
         $this->request = $request;
