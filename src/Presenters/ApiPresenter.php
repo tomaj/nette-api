@@ -87,7 +87,7 @@ final class ApiPresenter implements IPresenter
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
             $this->response->setCode(Response::S400_BAD_REQUEST);
-            if ($this->outputConfigurator->showErrorDetail($request)) {
+            if ($this->outputConfigurator->showErrorDetail()) {
                 $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input', 'detail' => $paramsProcessor->getErrors()]);
             } else {
                 $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input']);
@@ -99,7 +99,7 @@ final class ApiPresenter implements IPresenter
             $response = $handler->handle($params);
             $code = $response->getCode();
 
-            if ($this->outputConfigurator->validateSchema($request)) {
+            if ($this->outputConfigurator->validateSchema()) {
                 $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
                 $outputValidatorErrors = [];
                 foreach ($handler->outputs() as $output) {
@@ -120,7 +120,7 @@ final class ApiPresenter implements IPresenter
                 }
             }
         } catch (Throwable $exception) {
-            if ($this->outputConfigurator->showErrorDetail($request)) {
+            if ($this->outputConfigurator->showErrorDetail()) {
                 $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
             } else {
                 $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);

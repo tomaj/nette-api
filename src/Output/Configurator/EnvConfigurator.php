@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Output\Configurator;
 
-use Nette\Application\Request;
-
 class EnvConfigurator implements ConfiguratorInterface
 {
     private $envVariable = 'APP_ENV';
@@ -21,7 +19,7 @@ class EnvConfigurator implements ConfiguratorInterface
         $this->productionValue = $productionValue;
     }
 
-    public function validateSchema(?Request $request = null): bool
+    public function validateSchema(): bool
     {
         $appEnv = getenv($this->envVariable);
         if ($appEnv === $this->productionValue) {
@@ -30,7 +28,7 @@ class EnvConfigurator implements ConfiguratorInterface
         return true;
     }
 
-    public function showErrorDetail(?Request $request = null): bool
+    public function showErrorDetail(): bool
     {
         $appEnv = getenv($this->envVariable);
         if ($appEnv === $this->productionValue) {
