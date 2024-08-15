@@ -28,13 +28,13 @@ class QueryConfigurator implements ConfiguratorInterface
 
     public function validateSchema(): bool
     {
-        $getParams = $this->request->getQuery();
-        return isset($getParams[$this->schemaValidateParam]);
+        $getParam = $this->request->getQuery($this->schemaValidateParam);
+        return $getParam !== null && $getParam !== '0' && $getParam !== 'false';
     }
 
     public function showErrorDetail(): bool
     {
-        $getParams = $this->request->getQuery();
-        return isset($getParams[$this->errorDetailParam]);
+        $getParam = $this->request->getQuery($this->errorDetailParam);
+        return $getParam !== null && $getParam !== '0' && $getParam !== 'false';
     }
 }
