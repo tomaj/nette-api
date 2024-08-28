@@ -100,9 +100,10 @@ final class ApiPresenter implements IPresenter
             $code = $response->getCode();
 
             if ($this->outputConfigurator->validateSchema()) {
-                $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
+                $outputs = $handler->outputs();
+                $outputValid = count($outputs) === 0; // back compatibility for handlers with no outputs defined
                 $outputValidatorErrors = [];
-                foreach ($handler->outputs() as $output) {
+                foreach ($outputs as $output) {
                     if (!$output instanceof OutputInterface) {
                         $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
                         continue;
