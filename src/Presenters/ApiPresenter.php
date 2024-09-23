@@ -14,14 +14,15 @@ use Throwable;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
+use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Output\OutputInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
-use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 
 final class ApiPresenter implements IPresenter
 {
@@ -36,6 +37,9 @@ final class ApiPresenter implements IPresenter
 
     /** @var ConfiguratorInterface @inject */
     public $outputConfigurator;
+
+    /** @var ErrorHandlerInterface @inject */
+    public $errorHandler;
 
     /**
      * CORS header settings
@@ -121,13 +125,8 @@ final class ApiPresenter implements IPresenter
                 }
             }
         } catch (Throwable $exception) {
-            if ($this->outputConfigurator->showErrorDetail()) {
-                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
-            } else {
-                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
-            }
+            $response = $this->errorHandler->handle($exception);
             $code = $response->getCode();
-            Debugger::log($exception, Debugger::EXCEPTION);
         }
 
         $end = microtime(true);

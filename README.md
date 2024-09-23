@@ -40,11 +40,18 @@ application:
     Api: Tomaj\NetteApi\Presenters\*Presenter
 ```
 
-Then register your preffered output configurator in *config.neon* services: 
+Register your preferred output configurator in *config.neon* services: 
 
 ```neon
 services:
     apiOutputConfigurator: Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator
+```
+
+Register your preferred error handler in *config.neon* services: 
+
+```neon
+services:
+    apiErrorHandler: Tomaj\NetteApi\Error\DefaultErrorHandler
 ```
 
 And add route to you RouterFactory:
