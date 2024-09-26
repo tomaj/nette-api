@@ -21,8 +21,6 @@ use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Output\OutputInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
-use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tracy\Debugger;
 
 final class ApiPresenter implements IPresenter
 {
@@ -90,14 +88,11 @@ final class ApiPresenter implements IPresenter
 
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
-            $this->response->setCode(Response::S400_BAD_REQUEST);
-            if ($this->outputConfigurator->showErrorDetail()) {
-                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input', 'detail' => $paramsProcessor->getErrors()]);
-            } else {
-                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input']);
-            }
+            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors());
+            $this->response->setCode($response->getCode());
             return $response;
         }
+
         $params = $paramsProcessor->getValues();
         try {
             $response = $handler->handle($params);
@@ -120,8 +115,8 @@ final class ApiPresenter implements IPresenter
                     $outputValidatorErrors[] = $validationResult->getErrors();
                 }
                 if (!$outputValid) {
-                    Debugger::log($outputValidatorErrors, Debugger::ERROR);
-                    $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
+                    $response = $this->errorHandler->handleSchema($outputValidatorErrors);
+                    $code = $response->getCode();
                 }
             }
         } catch (Throwable $exception) {
@@ -155,8 +150,9 @@ final class ApiPresenter implements IPresenter
     private function checkAuth(ApiAuthorizationInterface $authorization): ?IResponse
     {
         if (!$authorization->authorized()) {
-            $this->response->setCode(Response::S403_FORBIDDEN);
-            return new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]);
+            $response = $this->errorHandler->handleAuthorization($authorization);
+            $this->response->setCode($response->getCode());
+            return $response;
         }
         return null;
     }
