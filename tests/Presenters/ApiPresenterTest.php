@@ -12,6 +12,7 @@ use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
+use Tomaj\NetteApi\Error\DefaultErrorHandler;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
 use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Misc\IpDetector;
@@ -41,6 +42,7 @@ class ApiPresenterTest extends TestCase
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
         $presenter->outputConfigurator = new DebuggerConfigurator();
+        $presenter->errorHandler = new DefaultErrorHandler($presenter->outputConfigurator);
 
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -65,6 +67,7 @@ class ApiPresenterTest extends TestCase
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
         $presenter->outputConfigurator = new DebuggerConfigurator();
+        $presenter->errorHandler = new DefaultErrorHandler($presenter->outputConfigurator);
 
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
@@ -87,6 +90,7 @@ class ApiPresenterTest extends TestCase
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
         $presenter->outputConfigurator = new DebuggerConfigurator();
+        $presenter->errorHandler = new DefaultErrorHandler($presenter->outputConfigurator);
 
         Debugger::$productionMode = Debugger::PRODUCTION;
 
@@ -117,6 +121,7 @@ class ApiPresenterTest extends TestCase
         $presenter->response = new HttpResponse();
         $presenter->context = new Container();
         $presenter->outputConfigurator = new DebuggerConfigurator();
+        $presenter->errorHandler = new DefaultErrorHandler($presenter->outputConfigurator);
 
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
