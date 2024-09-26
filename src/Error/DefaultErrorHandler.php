@@ -12,8 +12,13 @@ use Tracy\Debugger;
 
 final class DefaultErrorHandler implements ErrorHandlerInterface
 {
-    /** @var ConfiguratorInterface @inject */
+    /** @var ConfiguratorInterface */
     public $outputConfigurator;
+
+    public function __construct(ConfiguratorInterface $outputConfigurator)
+    {
+        $this->outputConfigurator = $outputConfigurator;
+    }
 
     public function handle(Throwable $exception): JsonApiResponse
     {
