@@ -14,7 +14,7 @@ use Tracy\Debugger;
 final class DefaultErrorHandler implements ErrorHandlerInterface
 {
     /** @var ConfiguratorInterface */
-    public $outputConfigurator;
+    private $outputConfigurator;
 
     public function __construct(ConfiguratorInterface $outputConfigurator)
     {
