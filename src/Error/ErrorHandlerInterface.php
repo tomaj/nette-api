@@ -17,4 +17,6 @@ interface ErrorHandlerInterface
     public function handleSchema(array $errors): JsonApiResponse;
 
     public function handleAuthorization(ApiAuthorizationInterface $auth): JsonApiResponse;
+
+    public function handleAuthorizationException(Throwable $exception): JsonApiResponse;
 }

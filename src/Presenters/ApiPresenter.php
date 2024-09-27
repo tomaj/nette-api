@@ -149,8 +149,14 @@ final class ApiPresenter implements IPresenter
 
     private function checkAuth(ApiAuthorizationInterface $authorization): ?IResponse
     {
-        if (!$authorization->authorized()) {
-            $response = $this->errorHandler->handleAuthorization($authorization);
+        try {
+            if (!$authorization->authorized()) {
+                $response = $this->errorHandler->handleAuthorization($authorization);
+                $this->response->setCode($response->getCode());
+                return $response;
+            }
+        } catch (Throwable $exception) {
+            $response = $this->errorHandler->handleAuthorizationException($exception);
             $this->response->setCode($response->getCode());
             return $response;
         }

@@ -58,4 +58,9 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
     {
         return new JsonApiResponse(Response::S403_FORBIDDEN, ['status' => 'error', 'message' => $auth->getErrorMessage()]);
     }
+
+    public function handleAuthorizationException(Throwable $exception): JsonApiResponse
+    {
+        return new JsonApiResponse(Response::S403_FORBIDDEN, ['status' => 'error', 'message' => $exception->getMessage()]);
+    }
 }
