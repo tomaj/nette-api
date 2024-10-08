@@ -76,7 +76,7 @@ final class ApiPresenter implements IPresenter
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
 
-        $authResponse = $this->checkAuth($authorization);
+        $authResponse = $this->checkAuth($authorization, $request);
         if ($authResponse !== null) {
             return $authResponse;
         }
@@ -88,7 +88,7 @@ final class ApiPresenter implements IPresenter
 
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
-            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors());
+            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors(), $request);
             $this->response->setCode($response->getCode());
             return $response;
         }
@@ -115,12 +115,12 @@ final class ApiPresenter implements IPresenter
                     $outputValidatorErrors[] = $validationResult->getErrors();
                 }
                 if (!$outputValid) {
-                    $response = $this->errorHandler->handleSchema($outputValidatorErrors);
+                    $response = $this->errorHandler->handleSchema($outputValidatorErrors, $request);
                     $code = $response->getCode();
                 }
             }
         } catch (Throwable $exception) {
-            $response = $this->errorHandler->handle($exception);
+            $response = $this->errorHandler->handle($exception, $request);
             $code = $response->getCode();
         }
 
@@ -147,16 +147,16 @@ final class ApiPresenter implements IPresenter
         );
     }
 
-    private function checkAuth(ApiAuthorizationInterface $authorization): ?IResponse
+    private function checkAuth(ApiAuthorizationInterface $authorization, Request $request): ?IResponse
     {
         try {
             if (!$authorization->authorized()) {
-                $response = $this->errorHandler->handleAuthorization($authorization);
+                $response = $this->errorHandler->handleAuthorization($authorization, $request);
                 $this->response->setCode($response->getCode());
                 return $response;
             }
         } catch (Throwable $exception) {
-            $response = $this->errorHandler->handleAuthorizationException($exception);
+            $response = $this->errorHandler->handleAuthorizationException($exception, $request);
             $this->response->setCode($response->getCode());
             return $response;
         }
