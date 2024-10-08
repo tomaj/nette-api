@@ -6,18 +6,34 @@ namespace Tomaj\NetteApi\Error;
 
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
-use Nette\Application\Request;
 use Throwable;
 
 interface ErrorHandlerInterface
 {
-    public function handle(Throwable $error, Request $request): JsonApiResponse;
+    /**
+     * @param array<mixed> $params
+     */
+    public function handle(Throwable $error, array $params): JsonApiResponse;
 
-    public function handleInputParams(array $errors, Request $request): JsonApiResponse;
+    /**
+     * @param array<string> $errors
+     * @param array<mixed> $params
+     */
+    public function handleInputParams(array $errors): JsonApiResponse;
 
-    public function handleSchema(array $errors, Request $request): JsonApiResponse;
+    /**
+     * @param array<string> $errors
+     * @param array<mixed> $params
+     */
+    public function handleSchema(array $errors, array $params): JsonApiResponse;
 
-    public function handleAuthorization(ApiAuthorizationInterface $auth, Request $request): JsonApiResponse;
+    /**
+     * @param array<mixed> $params
+     */
+    public function handleAuthorization(ApiAuthorizationInterface $auth, array $params): JsonApiResponse;
 
-    public function handleAuthorizationException(Throwable $exception, Request $request): JsonApiResponse;
+    /**
+     * @param array<mixed> $params
+     */
+    public function handleAuthorizationException(Throwable $exception, array $params): JsonApiResponse;
 }

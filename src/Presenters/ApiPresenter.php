@@ -73,13 +73,9 @@ final class ApiPresenter implements IPresenter
 
         $api = $this->getApi($request);
         $handler = $api->getHandler();
+
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
-
-        $authResponse = $this->checkAuth($authorization, $request);
-        if ($authResponse !== null) {
-            return $authResponse;
-        }
 
         $rateLimitResponse = $this->checkRateLimit($rateLimit);
         if ($rateLimitResponse !== null) {
@@ -88,12 +84,17 @@ final class ApiPresenter implements IPresenter
 
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
-            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors(), $request);
+            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors());
             $this->response->setCode($response->getCode());
             return $response;
         }
-
         $params = $paramsProcessor->getValues();
+
+        $authResponse = $this->checkAuth($authorization, $params);
+        if ($authResponse !== null) {
+            return $authResponse;
+        }
+
         try {
             $response = $handler->handle($params);
             $code = $response->getCode();
@@ -115,12 +116,12 @@ final class ApiPresenter implements IPresenter
                     $outputValidatorErrors[] = $validationResult->getErrors();
                 }
                 if (!$outputValid) {
-                    $response = $this->errorHandler->handleSchema($outputValidatorErrors, $request);
+                    $response = $this->errorHandler->handleSchema($outputValidatorErrors, $params);
                     $code = $response->getCode();
                 }
             }
         } catch (Throwable $exception) {
-            $response = $this->errorHandler->handle($exception, $request);
+            $response = $this->errorHandler->handle($exception, $params);
             $code = $response->getCode();
         }
 
@@ -147,16 +148,16 @@ final class ApiPresenter implements IPresenter
         );
     }
 
-    private function checkAuth(ApiAuthorizationInterface $authorization, Request $request): ?IResponse
+    private function checkAuth(ApiAuthorizationInterface $authorization, array $params): ?IResponse
     {
         try {
             if (!$authorization->authorized()) {
-                $response = $this->errorHandler->handleAuthorization($authorization, $request);
+                $response = $this->errorHandler->handleAuthorization($authorization, $params);
                 $this->response->setCode($response->getCode());
                 return $response;
             }
         } catch (Throwable $exception) {
-            $response = $this->errorHandler->handleAuthorizationException($exception, $request);
+            $response = $this->errorHandler->handleAuthorizationException($exception, $params);
             $this->response->setCode($response->getCode());
             return $response;
         }

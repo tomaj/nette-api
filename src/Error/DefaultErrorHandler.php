@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Error;
 
-use Nette\Application\Request;
 use Nette\Http\Response;
 use Throwable;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
@@ -22,7 +21,7 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         $this->outputConfigurator = $outputConfigurator;
     }
 
-    public function handle(Throwable $exception, Request $request): JsonApiResponse
+    public function handle(Throwable $exception, array $params): JsonApiResponse
     {
         Debugger::log($exception, Debugger::EXCEPTION);
         if ($this->outputConfigurator->showErrorDetail()) {
@@ -33,7 +32,7 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         return $response;
     }
 
-    public function handleInputParams(array $errors, Request $request): JsonApiResponse
+    public function handleInputParams(array $errors): JsonApiResponse
     {
         if ($this->outputConfigurator->showErrorDetail()) {
             $response = new JsonApiResponse(Response::S400_BAD_REQUEST, ['status' => 'error', 'message' => 'wrong input', 'detail' => $errors]);
@@ -43,7 +42,7 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         return $response;
     }
 
-    public function handleSchema(array $errors, Request $request): JsonApiResponse
+    public function handleSchema(array $errors, array $params): JsonApiResponse
     {
         Debugger::log($errors, Debugger::ERROR);
 
@@ -55,12 +54,12 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         return $response;
     }
 
-    public function handleAuthorization(ApiAuthorizationInterface $auth, Request $request): JsonApiResponse
+    public function handleAuthorization(ApiAuthorizationInterface $auth, array $params): JsonApiResponse
     {
         return new JsonApiResponse(Response::S401_UNAUTHORIZED, ['status' => 'error', 'message' => $auth->getErrorMessage()]);
     }
 
-    public function handleAuthorizationException(Throwable $exception, Request $request): JsonApiResponse
+    public function handleAuthorizationException(Throwable $exception, array $params): JsonApiResponse
     {
         return new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => $exception->getMessage()]);
     }
