@@ -13,7 +13,7 @@ interface ErrorHandlerInterface
     /**
      * @param array<mixed> $params
      */
-    public function handle(Throwable $error, array $params): JsonApiResponse;
+    public function handle(Throwable $exception, array $params): JsonApiResponse;
 
     /**
      * @param array<string> $errors
