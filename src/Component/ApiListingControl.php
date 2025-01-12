@@ -37,7 +37,7 @@ class ApiListingControl extends Control
         $template->render();
     }
 
-    public function handleSelect(string $method, int $version, string $package, ?string $apiAction = null): void
+    public function handleSelect(string $method, $version, string $package, ?string $apiAction = null): void
     {
         $this->onClick($method, $version, $package, $apiAction);
     }
