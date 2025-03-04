@@ -227,7 +227,7 @@ class OpenApiHandler extends BaseHandler
         return new JsonApiResponse(IResponse::S200_OK, $data);
     }
 
-    private function getApis(int $version): array
+    private function getApis(string $version): array
     {
         return array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
             return $version === $api->getEndpoint()->getVersion();
@@ -313,6 +313,17 @@ class OpenApiHandler extends BaseHandler
                                 ],
                             ]
                         ];
+                        if (!empty($examples = $output->getExamples())) {
+                            if (count($examples) === 1) {
+                                $example = is_array($output->getExample())? $output->getExample() : json_decode($output->getExample(), true);
+                                $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
+                            } else {
+                                foreach ($examples as $exampleKey => $example) {
+                                    $example = is_array($example)? $example : json_decode($example, true);
+                                    $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'][$exampleKey] = $example;
+                                }
+                            }
+                        }
                     } else {
                         if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
                             $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
@@ -476,8 +487,14 @@ class OpenApiHandler extends BaseHandler
         foreach ($handler->params() as $param) {
             if ($param instanceof JsonInputParam) {
                 $schema = json_decode($param->getSchema(), true);
-                if ($param->getExample()) {
-                    $schema['example'] = $param->getExample();
+                if (!empty($examples = $param->getExamples())) {
+                    if (count($examples) === 1) {
+                        $schema['example'] = is_array($param->getExample())? $param->getExample() : json_decode($param->getExample(), true);
+                    } else {
+                        foreach ($examples as $exampleKey => $example) {
+                            $schema['examples'][$exampleKey] = is_array($example)? $example : json_decode($example, true);
+                        }
+                    }
                 }
                 return [
                     'description' => $param->getDescription(),
@@ -493,8 +510,12 @@ class OpenApiHandler extends BaseHandler
                 $schema = [
                     'type' => 'string',
                 ];
-                if ($param->getExample()) {
-                    $schema['example'] = $param->getExample();
+                if (!empty($examples = $param->getExamples())) {
+                    if (count($examples) === 1) {
+                        $schema['example'] = $param->getExample();
+                    } else {
+                        $schema['examples'] = $examples;
+                    }
                 }
                 return [
                     'description' => $param->getDescription(),

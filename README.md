@@ -40,6 +40,20 @@ application:
     Api: Tomaj\NetteApi\Presenters\*Presenter
 ```
 
+Register your preferred output configurator in *config.neon* services: 
+
+```neon
+services:
+    apiOutputConfigurator: Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator
+```
+
+Register your preferred error handler in *config.neon* services: 
+
+```neon
+services:
+    apiErrorHandler: Tomaj\NetteApi\Error\DefaultErrorHandler
+```
+
 And add route to you RouterFactory:
 
 ```php
@@ -64,13 +78,26 @@ After that you need only register your API handlers to *apiDecider* [ApiDecider]
 
 ```neon
 services:
-  - Tomaj\NetteApi\Link\ApiLink
-  - Tomaj\NetteApi\Misc\IpDetector
-  apiDecider:
+    - Tomaj\NetteApi\Link\ApiLink
+    - Tomaj\NetteApi\Misc\IpDetector
+    apiDecider:
+        factory: Tomaj\NetteApi\ApiDecider
+        setup:
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\NoAuthorization())
+            - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
+
+```
+
+or lazy (preferred because of performance)
+```neon
+services:
+    - App\MyApi\v1\Handlers\SendEmailLazyHandler()
+    sendEmailLazyNamed: App\MyApi\v1\Handlers\SendEmailLazyNamedHandler()
+    
     factory: Tomaj\NetteApi\ApiDecider
     setup:
-      - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\NoAuthorization())
-      - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
+      - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email-lazy'), 'App\MyApi\v1\Handlers\SendEmailHandler', \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
+      - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email-lazy-named'), '@sendEmailLazyNamed', \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
 ```
 
 As you can see in example, you can register as many endpoints as you want with different configurations. Nette-Api supports API versioning from the beginning.
@@ -328,6 +355,7 @@ services:
         setup:
             - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BasicBasicAuthentication(['first-user': 'first-password', 'second-user': 'second-password']))
 ```
+
 
 ### Bearer token authentication
 For simple use of Bearer token authorization with few tokens, you can use [StaticTokenRepository](src/Misc/StaticTokenRepository.php) (Tomaj\NetteApi\Misc\StaticTokenRepository).

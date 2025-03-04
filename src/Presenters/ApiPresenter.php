@@ -14,13 +14,13 @@ use Throwable;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
+use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Output\OutputInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
-use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tracy\Debugger;
 
 final class ApiPresenter implements IPresenter
 {
@@ -32,6 +32,12 @@ final class ApiPresenter implements IPresenter
 
     /** @var Container @inject */
     public $context;
+
+    /** @var ConfiguratorInterface @inject */
+    public $outputConfigurator;
+
+    /** @var ErrorHandlerInterface @inject */
+    public $errorHandler;
 
     /**
      * CORS header settings
@@ -67,13 +73,9 @@ final class ApiPresenter implements IPresenter
 
         $api = $this->getApi($request);
         $handler = $api->getHandler();
+
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
-
-        $authResponse = $this->checkAuth($authorization);
-        if ($authResponse !== null) {
-            return $authResponse;
-        }
 
         $rateLimitResponse = $this->checkRateLimit($rateLimit);
         if ($rateLimitResponse !== null) {
@@ -82,47 +84,45 @@ final class ApiPresenter implements IPresenter
 
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
-            $this->response->setCode(Response::S400_BAD_REQUEST);
-            if (!Debugger::$productionMode) {
-                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input', 'detail' => $paramsProcessor->getErrors()]);
-            } else {
-                $response = new JsonResponse(['status' => 'error', 'message' => 'wrong input']);
-            }
+            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors());
+            $this->response->setCode($response->getCode());
             return $response;
         }
         $params = $paramsProcessor->getValues();
 
+        $authResponse = $this->checkAuth($authorization, $params);
+        if ($authResponse !== null) {
+            return $authResponse;
+        }
+
         try {
             $response = $handler->handle($params);
-            $outputValid = count($handler->outputs()) === 0; // back compatibility for handlers with no outputs defined
-            $outputValidatorErrors = [];
-            foreach ($handler->outputs() as $output) {
-                if (!$output instanceof OutputInterface) {
-                    $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
-                    continue;
-                }
-                $validationResult = $output->validate($response);
-                if ($validationResult->isOk()) {
-                    $outputValid = true;
-                    break;
-                }
-                $outputValidatorErrors[] = $validationResult->getErrors();
-            }
-            if (!$outputValid) {
-                Debugger::log($outputValidatorErrors, Debugger::ERROR);
-                if (!Debugger::$productionMode) {
-                    $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'details' => $outputValidatorErrors]);
-                }
-            }
             $code = $response->getCode();
+
+            if ($this->outputConfigurator->validateSchema()) {
+                $outputs = $handler->outputs();
+                $outputValid = count($outputs) === 0; // back compatibility for handlers with no outputs defined
+                $outputValidatorErrors = [];
+                foreach ($outputs as $output) {
+                    if (!$output instanceof OutputInterface) {
+                        $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
+                        continue;
+                    }
+                    $validationResult = $output->validate($response);
+                    if ($validationResult->isOk()) {
+                        $outputValid = true;
+                        break;
+                    }
+                    $outputValidatorErrors[] = $validationResult->getErrors();
+                }
+                if (!$outputValid) {
+                    $response = $this->errorHandler->handleSchema($outputValidatorErrors, $params);
+                    $code = $response->getCode();
+                }
+            }
         } catch (Throwable $exception) {
-            if (!Debugger::$productionMode) {
-                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
-            } else {
-                $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
-            }
+            $response = $this->errorHandler->handle($exception, $params);
             $code = $response->getCode();
-            Debugger::log($exception, Debugger::EXCEPTION);
         }
 
         $end = microtime(true);
@@ -142,17 +142,24 @@ final class ApiPresenter implements IPresenter
     {
         return $this->apiDecider->getApi(
             $request->getMethod(),
-            (int) $request->getParameter('version'),
+            $request->getParameter('version'),
             $request->getParameter('package'),
             $request->getParameter('apiAction')
         );
     }
 
-    private function checkAuth(ApiAuthorizationInterface $authorization): ?IResponse
+    private function checkAuth(ApiAuthorizationInterface $authorization, array $params): ?IResponse
     {
-        if (!$authorization->authorized()) {
-            $this->response->setCode(Response::S403_FORBIDDEN);
-            return new JsonResponse(['status' => 'error', 'message' => $authorization->getErrorMessage()]);
+        try {
+            if (!$authorization->authorized()) {
+                $response = $this->errorHandler->handleAuthorization($authorization, $params);
+                $this->response->setCode($response->getCode());
+                return $response;
+            }
+        } catch (Throwable $exception) {
+            $response = $this->errorHandler->handleAuthorizationException($exception, $params);
+            $this->response->setCode($response->getCode());
+            return $response;
         }
         return null;
     }

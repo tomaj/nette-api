@@ -15,6 +15,6 @@ class DefaultHandler extends BaseHandler
      */
     public function handle(array $params): ResponseInterface
     {
-        return new JsonApiResponse(IResponse::S400_BAD_REQUEST, ['status' => 'error', 'message' => 'Unknown api endpoint']);
+        return new JsonApiResponse(IResponse::S404_NOT_FOUND, ['status' => 'error', 'message' => 'Unknown api endpoint']);
     }
 }
