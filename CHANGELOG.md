@@ -3,7 +3,10 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
-#### Changed
+
+## 3.0.0
+
+### Changed
 * Support for semantic versioning api.
 * [BC] DefaultHandler response code 404 instead 400
 * [BC] Added Container to API Decider
@@ -11,22 +14,23 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * [BC] Error handler, Allows for custom error handling of handle method. Needs to be added to config services.
 * Query configurator rework
 
-#### Added
+### Added
 * CorsPreflightHandlerInterface - resolve multiple service registered handler error
 * Lazy API handlers
 
-#### Added
+## 2.12.0
+
+### Added
 * Button to copy `Body` content in api console
 * Ability to disable schema validation and provide additional error info with get parameters. 
 
-#### Changed
+### Changed
 * Handler tag wrapper has changed class from `btn` to `label`
 
 ### Fixed
 * Allowed equal definitions in different handlers in OpenAPIHandler
 
 ## 2.11.0
-
 
 ### Added
 
