@@ -4,18 +4,18 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.12.0
 
-#### Added
+### Added
 * Button to copy `Body` content in api console
 
-#### Changed
+### Changed
 * Handler tag wrapper has changed class from `btn` to `label`
 
 ### Fixed
 * Allowed equal definitions in different handlers in OpenAPIHandler
 
 ## 2.11.0
-
 
 ### Added
 
