@@ -6,15 +6,19 @@ namespace Tomaj\NetteApi;
 
 use InvalidArgumentException;
 
-class EndpointIdentifier implements EndpointInterface
+readonly class EndpointIdentifier implements EndpointInterface
 {
-    private $method;
+    public readonly string $method {
+        get => strtoupper($this->method);
+    }
 
-    private $version;
+    public readonly string $url {
+        get => "v{$this->version}/{$this->package}/{$this->apiAction}";
+    }
 
-    private $package;
-
-    private $apiAction;
+    public readonly ?string $normalizedApiAction {
+        get => $this->apiAction === '' ? null : $this->apiAction;
+    }
 
     /**
      * @param string $method example: "GET", "POST", "PUT", "DELETE"
@@ -22,16 +26,20 @@ class EndpointIdentifier implements EndpointInterface
      * @param string $package example: "users"
      * @param string|null $apiAction example: "query"
      */
-    public function __construct(string $method, $version, string $package, ?string $apiAction = null)
-    {
+    public function __construct(
+        string $method,
+        string|int $version,
+        public readonly string $package,
+        public readonly ?string $apiAction = null
+    ) {
+        $this->method = $method;
         $version = (string) $version;
-        $this->method = strtoupper($method);
-        if (strpos($version, '/') !== false) {
+        
+        if (str_contains($version, '/')) {
             throw new InvalidArgumentException('Version must have semantic numbering. For example "1", "1.1", "0.13.2" etc.');
         }
+        
         $this->version = $version;
-        $this->package = $package;
-        $this->apiAction = $apiAction;
     }
 
     public function getMethod(): string
@@ -51,14 +59,11 @@ class EndpointIdentifier implements EndpointInterface
 
     public function getApiAction(): ?string
     {
-        if ($this->apiAction === '') {
-            return null;
-        }
-        return $this->apiAction;
+        return $this->normalizedApiAction;
     }
 
     public function getUrl(): string
     {
-        return "v{$this->version}/{$this->package}/{$this->apiAction}";
+        return $this->url;
     }
 }

@@ -1,21 +1,28 @@
 # Nette-Api
 
-**Nette simple api library**
+**Modern Nette API library with PHP 8.4 support**
 
 [![Build Status](https://travis-ci.org/tomaj/nette-api.svg)](https://travis-ci.org/tomaj/nette-api)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/tomaj/nette-api/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/tomaj/nette-api/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/tomaj/nette-api/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/tomaj/nette-api/?branch=master)
 [![Latest Stable Version](https://img.shields.io/packagist/v/tomaj/nette-api.svg)](https://packagist.org/packages/tomaj/nette-api)
 
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/b0a43dba-eb81-42de-b043-95ef51b8c097/big.png)](https://insight.sensiolabs.com/projects/b0a43dba-eb81-42de-b043-95ef51b8c097)
-
 ## Why Nette-Api
 
-This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement your custom business logic. Library provides authorization, validation, rate limit and formatting services for you API.
+This library provides a modern, out-of-the-box API solution for the Nette framework, fully utilizing PHP 8.4's latest features including:
 
-## Installation
+- **Property Hooks** for computed properties and validation
+- **Asymmetric Visibility** for better encapsulation
+- **New Array Functions** (`array_find`, `array_find_key`, `array_any`, `array_all`)
+- **Enhanced Type System** with union types and improved type safety
+- **Readonly Classes** for immutable data structures
+- **Enums** for better domain modeling
 
-This library requires PHP 7.1 or later.
+You can register API endpoints and connect them to specified handlers. You need only implement your custom business logic. The library provides authorization, validation, rate limiting, and formatting services for your API.
+
+## Requirements & Installation
+
+**This library requires PHP 8.4 or later.**
 
 Recommended installation method is via Composer:
 
@@ -24,6 +31,75 @@ composer require tomaj/nette-api
 ```
 
 Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
+
+## PHP 8.4 Features Utilized
+
+This library has been modernized to take full advantage of PHP 8.4's new features:
+
+### Property Hooks
+```php
+readonly class EndpointIdentifier implements EndpointInterface
+{
+    public readonly string $method {
+        get => strtoupper($this->method);
+    }
+
+    public readonly string $url {
+        get => "v{$this->version}/{$this->package}/{$this->apiAction}";
+    }
+}
+```
+
+### Asymmetric Visibility
+```php
+readonly class ValidationResult
+{
+    public readonly bool $isOk {
+        get => $this->status === ValidationStatus::OK;
+    }
+
+    public function __construct(
+        public readonly ValidationStatus $status,
+        public readonly array $errors = []
+    ) {}
+}
+```
+
+### New Array Functions
+```php
+// Find first matching API endpoint
+$endpoint = array_find(
+    $endpoints,
+    fn($endpoint) => $endpoint->getMethod() === 'GET'
+);
+
+// Check if any endpoint matches criteria
+$hasPostEndpoint = array_any(
+    $endpoints,
+    fn($endpoint) => $endpoint->getMethod() === 'POST'
+);
+
+// Validate all endpoints
+$allValid = array_all(
+    $endpoints,
+    fn($endpoint) => $endpoint instanceof EndpointInterface
+);
+```
+
+### Enums for Better Domain Modeling
+```php
+enum ValidationStatus: string
+{
+    case OK = 'OK';
+    case ERROR = 'error';
+}
+```
+
+### Enhanced Type Safety
+- Union types (`ApiHandlerInterface|string`)
+- Readonly classes for immutable data structures
+- Strict typing throughout the codebase
+- Modern constructor property promotion
 
 [PSR-1]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-1-basic-coding-standard.md
 [PSR-2]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md

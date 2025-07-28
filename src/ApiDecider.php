@@ -13,103 +13,155 @@ use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
+use Tomaj\NetteApi\Misc\ArrayUtils;
 
-class ApiDecider
+final class ApiDecider
 {
-    /** @var Container */
-    private $container;
-
     /** @var Api[] */
-    private $apis = [];
+    private array $apis = [];
 
-    /** @var ApiHandlerInterface|null */
-    private $globalPreflightHandler = null;
+    private ?ApiHandlerInterface $globalPreflightHandler = null;
 
-    public function __construct(Container $container)
-    {
-        $this->container = $container;
+    public function __construct(
+        private readonly Container $container
+    ) {
     }
 
     /**
      * Get api handler that match input method, version, package and apiAction.
      * If decider cannot find handler for given handler, returns defaults.
-     *
-     * @param string   $method
-     * @param string   $version
-     * @param string   $package
-     * @param string   $apiAction
-     *
-     * @return Api
      */
-    public function getApi(string $method, string $version, string $package, ?string $apiAction = null)
+    public function getApi(string $method, string $version, string $package, ?string $apiAction = null): Api
     {
         $method = strtoupper($method);
         $apiAction = $apiAction === '' ? null : $apiAction;
 
-        foreach ($this->apis as $api) {
-            $identifier = $api->getEndpoint();
-            if ($method === $identifier->getMethod() && $identifier->getVersion() === $version && $identifier->getPackage() === $package && $identifier->getApiAction() === $apiAction) {
-                $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
-                $handler = $this->getHandler($api);
+        // Use PHP 8.4's array_find to find matching API
+        $matchingApi = array_find(
+            $this->apis,
+            fn(Api $api) => $this->isApiMatch($api, $method, $version, $package, $apiAction)
+        );
+
+        if ($matchingApi) {
+            $endpointIdentifier = new EndpointIdentifier($method, $version, $package, $apiAction);
+            $handler = $this->getHandler($matchingApi);
+            
+            if (method_exists($handler, 'setEndpointIdentifier')) {
                 $handler->setEndpointIdentifier($endpointIdentifier);
-                return new Api($api->getEndpoint(), $handler, $api->getAuthorization(), $api->getRateLimit());
             }
-            if ($method === 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() === $version && $identifier->getPackage() === $package && $identifier->getApiAction() === $apiAction) {
-                return new Api(new EndpointIdentifier('OPTIONS', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
+            
+            return new Api($matchingApi->getEndpoint(), $handler, $matchingApi->getAuthorization(), $matchingApi->getRateLimit());
+        }
+
+        // Handle OPTIONS requests with global preflight handler
+        if ($method === 'OPTIONS' && $this->globalPreflightHandler) {
+            $optionsMatch = array_find(
+                $this->apis,
+                fn(Api $api) => $this->isEndpointMatch($api->getEndpoint(), $version, $package, $apiAction)
+            );
+
+            if ($optionsMatch) {
+                return new Api(
+                    new EndpointIdentifier('OPTIONS', $version, $package, $apiAction),
+                    $this->globalPreflightHandler,
+                    new NoAuthorization()
+                );
             }
         }
-        return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
+
+        return new Api(
+            new EndpointIdentifier($method, $version, $package, $apiAction),
+            new DefaultHandler(),
+            new NoAuthorization()
+        );
     }
 
-    public function enableGlobalPreflight(CorsPreflightHandlerInterface $corsHandler = null)
+    public function enableGlobalPreflight(?CorsPreflightHandlerInterface $corsHandler = null): void
     {
-        if (!$corsHandler) {
-            $corsHandler = new CorsPreflightHandler(new Response());
-        }
-        $this->globalPreflightHandler = $corsHandler;
+        $this->globalPreflightHandler = $corsHandler ?? new CorsPreflightHandler(new Response());
     }
 
     /**
      * Register new api handler
-     *
-     * @param EndpointInterface $endpointIdentifier
-     * @param ApiHandlerInterface|string $handler
-     * @param ApiAuthorizationInterface $apiAuthorization
-     * @param RateLimitInterface|null $rateLimit
-     * @return self
      */
-    public function addApi(EndpointInterface $endpointIdentifier, $handler, ApiAuthorizationInterface $apiAuthorization, RateLimitInterface $rateLimit = null): self
-    {
+    public function addApi(
+        EndpointInterface $endpointIdentifier,
+        ApiHandlerInterface|string $handler,
+        ApiAuthorizationInterface $apiAuthorization,
+        ?RateLimitInterface $rateLimit = null
+    ): self {
         $this->apis[] = new Api($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
     }
 
     /**
-     * Get all registered apis
-     *
+     * Get all registered APIs
+     * 
      * @return Api[]
      */
     public function getApis(): array
     {
-        $apis = [];
-        foreach ($this->apis as $api) {
-            $handler = $this->getHandler($api);
-            $apis[] = new Api($api->getEndpoint(), $handler, $api->getAuthorization(), $api->getRateLimit());
-        }
-        return $apis;
+        return $this->apis;
+    }
+
+    /**
+     * Check if any API exists for given version
+     */
+    public function hasApisForVersion(string $version): bool
+    {
+        return array_any(
+            $this->apis,
+            fn(Api $api) => $api->getEndpoint()->getVersion() === $version
+        );
+    }
+
+    /**
+     * Get all APIs for a specific version
+     * 
+     * @return Api[]
+     */
+    public function getApisForVersion(string $version): array
+    {
+        return array_filter(
+            $this->apis,
+            fn(Api $api) => $api->getEndpoint()->getVersion() === $version
+        );
+    }
+
+    /**
+     * Check if API matches the given criteria
+     */
+    private function isApiMatch(Api $api, string $method, string $version, string $package, ?string $apiAction): bool
+    {
+        $identifier = $api->getEndpoint();
+        return $method === $identifier->getMethod()
+            && $identifier->getVersion() === $version
+            && $identifier->getPackage() === $package
+            && $identifier->getApiAction() === $apiAction;
+    }
+
+    /**
+     * Check if endpoint matches (used for OPTIONS requests)
+     */
+    private function isEndpointMatch(EndpointInterface $endpoint, string $version, string $package, ?string $apiAction): bool
+    {
+        return $endpoint->getVersion() === $version
+            && $endpoint->getPackage() === $package
+            && $endpoint->getApiAction() === $apiAction;
     }
 
     private function getHandler(Api $api): ApiHandlerInterface
     {
         $handler = $api->getHandler();
-        if (!is_string($handler)) {
-            return $handler;
+        
+        if (is_string($handler)) {
+            $handler = $this->container->getByType($handler);
         }
-
-        if (str_starts_with($handler, '@')) {
-            return $this->container->getByName(substr($handler, 1));
+        
+        if (!$handler instanceof ApiHandlerInterface) {
+            throw new \InvalidArgumentException('Handler must implement ApiHandlerInterface');
         }
-
-        return $this->container->getByType($handler);
+        
+        return $handler;
     }
 }
