@@ -10,19 +10,17 @@ use Nette\Bridges\ApplicationLatte\Template;
 use Nette\Forms\IFormRenderer;
 use Nette\Http\IRequest;
 use Nette\Utils\ArrayHash;
-use Nette\Utils\Html;
 use Tomaj\Form\Renderer\BootstrapVerticalRenderer;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
-use Tomaj\NetteApi\Authorization\BasicAuthentication;
-use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
 use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
-use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
+use Tomaj\NetteApi\Component\ApiConsoleFormFactoryInterface;
+use Tomaj\NetteApi\Component\DefaultApiConsoleFormFactory;
 
 class ApiConsoleControl extends Control
 {
@@ -36,17 +34,20 @@ class ApiConsoleControl extends Control
 
     private $apiLink;
 
+    private $formFactory;
+
     private $formRenderer;
 
     private $templateFilePath;
 
-    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ApiLink $apiLink = null)
+    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ApiLink $apiLink = null, ApiConsoleFormFactoryInterface $formFactory = null)
     {
         $this->request = $request;
         $this->endpoint = $endpoint;
         $this->handler = $handler;
         $this->authorization = $authorization;
         $this->apiLink = $apiLink;
+        $this->formFactory = $formFactory ?: new DefaultApiConsoleFormFactory();
     }
 
     public function render(): void
@@ -60,76 +61,8 @@ class ApiConsoleControl extends Control
 
     protected function createComponentConsoleForm(): Form
     {
-        $form = new Form();
-
-        $defaults = [];
-
+        $form = $this->formFactory->create($this->request, $this->endpoint, $this->handler, $this->authorization, $this->apiLink);
         $form->setRenderer($this->getFormRenderer());
-
-        if ($this->apiLink) {
-            $url = $this->apiLink->link($this->endpoint);
-        } else {
-            $uri = $this->request->getUrl();
-            $scheme = $uri->scheme;
-            if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
-                $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
-            }
-            $port = '';
-            if ($uri->scheme === 'http' && $uri->port !== 80) {
-                $port = ':' . $uri->port;
-            }
-            $url = $scheme . '://' . $uri->host . $port . '/api/' . $this->endpoint->getUrl();
-        }
-
-        $form->addText('api_url', 'Api Url');
-        $defaults['api_url'] = $url;
-
-        $form->addText('api_method', 'Method');
-        $defaults['api_method'] = $this->endpoint->getMethod();
-
-        if ($this->authorization instanceof BearerTokenAuthorization) {
-            $form->addText('token', 'Token')
-                ->setHtmlAttribute('placeholder', 'Enter token');
-        } elseif ($this->authorization instanceof BasicAuthentication) {
-            $form->addText('basic_authentication_username', 'Username')
-                ->setHtmlAttribute('placeholder', 'Enter basic authentication username');
-            $form->addText('basic_authentication_password', 'Password')
-                ->setHtmlAttribute('placeholder', 'Enter basic authentication password');
-        } elseif ($this->authorization instanceof QueryApiKeyAuthentication) {
-            $form->addText($this->authorization->getQueryParamName(), 'API key')
-                ->setHtmlAttribute('placeholder', 'Enter API key');
-        } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
-            $form->addText('header_api_key', 'API key')
-                ->setHtmlAttribute('placeholder', 'Enter API key');
-        } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
-            $form->addText('cookie_api_key', 'API key')
-                ->setHtmlAttribute('placeholder', 'Enter API key');
-        } elseif ($this->authorization instanceof NoAuthorization) {
-            $form->addText('authorization', 'Authorization')
-                ->setDisabled(true);
-            $defaults['authorization'] = 'No authorization - global access';
-        }
-
-        $form->addCheckbox('send_session_id', 'Send session id cookie');
-
-        $form->addTextArea('custom_headers', 'Custom headers')
-            ->setOption('description', Html::el()->setHtml('Each header on new line. For example: <code>User-agent: Mozilla/5.0</code>'));
-
-        $form->addText('timeout', 'Timeout')
-            ->setDefaultValue(30);
-
-        $params = $this->handler->params();
-        foreach ($params as $param) {
-            $param->updateConsoleForm($form);
-        }
-
-        $form->addSubmit('send', 'Try api')
-            ->getControlPrototype()
-            ->setName('button')
-            ->setHtml('<i class="fa fa-cloud-upload"></i> Try api');
-
-        $form->setDefaults($defaults);
-
         $form->onSuccess[] = array($this, 'formSucceeded');
         return $form;
     }

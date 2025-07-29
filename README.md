@@ -549,11 +549,27 @@ class MyPresenter extends Presenter
     protected function createComponentApiConsole()
     {
         $api = $this->apiDecider->getApi($this->method, $this->version, $this->package, $this->apiAction);
-        $apiConsole = new ApiConsoleControl($this->getHttpRequest(), $api->getEndpoint(), $api->getHandler(), $api->getAuthorization(), $this->apiLink);
+        $apiConsole = new ApiConsoleControl(
+            $this->getHttpRequest(),
+            $api->getEndpoint(),
+            $api->getHandler(),
+            $api->getAuthorization(),
+            $this->apiLink
+        );
         return $apiConsole;
     }
 }
 ```
+
+You can override the generated form by passing your own implementation of
+`Tomaj\NetteApi\Component\ApiConsoleFormFactoryInterface` as the last
+constructor parameter of `ApiConsoleControl`. When omitted, a default factory is
+used so existing code keeps working.
+
+The default factory can be subclassed to keep the same fields while tweaking the
+underlying `Form` instance. Overridable methods include `createForm()`,
+`getUrl()`, and `addAuthorization()`, making it easy to use a different base form
+class or translator without reimplementing the whole factory.
 
 ## Troubleshooting
 
