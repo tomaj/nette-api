@@ -6,29 +6,37 @@ namespace Tomaj\NetteApi\ValidationResult;
 
 use InvalidArgumentException;
 
-class ValidationResult implements ValidationResultInterface
+enum ValidationStatus: string
 {
-    const STATUS_OK = 'OK';
+    case OK = 'OK';
+    case ERROR = 'error';
+}
 
-    const STATUS_ERROR = 'error';
+readonly class ValidationResult implements ValidationResultInterface
+{
+    public readonly bool $isOk {
+        get => $this->status === ValidationStatus::OK;
+    }
 
-    private $status;
+    public function __construct(
+        public readonly ValidationStatus $status,
+        public readonly array $errors = []
+    ) {
+    }
 
-    private $errors = [];
-
-    public function __construct(string $status, array $errors = [])
+    public static function ok(): self
     {
-        if (!in_array($status, [self::STATUS_OK, self::STATUS_ERROR], true)) {
-            throw new InvalidArgumentException($status . ' is not valid validation result status');
-        }
+        return new self(ValidationStatus::OK);
+    }
 
-        $this->status = $status;
-        $this->errors = $errors;
+    public static function error(array $errors = []): self
+    {
+        return new self(ValidationStatus::ERROR, $errors);
     }
 
     public function isOk(): bool
     {
-        return $this->status === self::STATUS_OK;
+        return $this->isOk;
     }
 
     public function getErrors(): array

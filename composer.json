@@ -11,24 +11,24 @@
         }
     ],
     "require": {
-        "php": ">= 7.1.0",
+        "php": ">= 8.4.0",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-session": "*",
         "ext-filter": "*",
-        "nette/application": "^3.0",
-        "nette/http": "^3.0",
-        "tracy/tracy": "^2.6",
-        "league/fractal": "~0.17",
-        "tomaj/nette-bootstrap-form": "^2.0",
-        "justinrainbow/json-schema": "^5.2"
+        "nette/application": "^3.2",
+        "nette/http": "^3.3",
+        "tracy/tracy": "^2.10",
+        "league/fractal": "~0.20",
+        "tomaj/nette-bootstrap-form": "^2.2",
+        "justinrainbow/json-schema": "^5.3"
     },
     "require-dev": {
-        "nette/di": "^3.0",
-        "latte/latte": "^2.4 | ^3.0",
-        "phpunit/phpunit": ">7.0 <10.0",
-        "symfony/yaml": "^4.4|^5.0|^6.0",
-        "squizlabs/php_codesniffer": "^3.2"
+        "nette/di": "^3.2",
+        "latte/latte": "^3.0",
+        "phpunit/phpunit": "^11.0",
+        "symfony/yaml": "^7.0",
+        "squizlabs/php_codesniffer": "^3.8"
     },
     "autoload": {
         "psr-4": {

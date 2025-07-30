@@ -3,11 +3,7 @@ language: php
 services:
 
 php:
-    - 7.1
-    - 7.2
-    - 7.3
-    - 7.4
-    - 8.0snapshot
+    - 8.4
 
 sudo: false
 
@@ -17,7 +13,7 @@ before_script:
 
 script:
     - mkdir -p build/logs
-    - php vendor/bin/phpcs src/ --standard=PSR2 -n
+    - php vendor/bin/phpcs src/ --standard=PSR12 -n
     - vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
 
 after_script:

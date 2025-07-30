@@ -4,6 +4,37 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 8.4.0 - PHP 8.4 Modernization
+
+### Breaking Changes
+- **PHP 8.4 Required**: Minimum PHP version increased from 7.1 to 8.4
+- **BC Break**: Several classes are now readonly, affecting inheritance
+- **BC Break**: ValidationResult constructor now uses enum instead of string constants
+
+### Added
+- **PHP 8.4 Property Hooks**: Added computed properties with automatic validation
+  - `EndpointIdentifier::$method` with automatic case conversion
+  - `EndpointIdentifier::$url` with automatic URL generation  
+  - `ValidationResult::$isOk` computed from status
+- **PHP 8.4 Array Functions**: New utility functions utilizing `array_find`, `array_find_key`, `array_any`, `array_all`
+- **Asymmetric Visibility**: Properties can now be publicly readable but privately writable
+- **Enums**: Replaced string constants with typed enums (ValidationStatus)
+- **New ArrayUtils Class**: Modern utility class demonstrating PHP 8.4 features
+- **Enhanced Type Safety**: Union types and strict typing throughout codebase
+- **Readonly Classes**: Immutable data structures for better performance and safety
+
+### Changed
+- **Modernized Core Classes**: Api, EndpointIdentifier, JsonApiResponse, ApiDecider, ValidationResult
+- **Updated Dependencies**: PHPUnit v11, latest Nette packages, PHP 8.4 compatible versions
+- **CI/CD Improvements**: GitHub Actions with PHP 8.4, dependency caching, PSR-12 standards
+
+### Deprecated
+- `BaseHandler::getEndpointIdentifier()` - Use `getEndpoint()` instead (uses new `#[\Deprecated]` attribute)
+
+### Removed
+- Support for PHP < 8.4
+- Legacy PHPUnit configuration syntax
+
 ## 3.0.0
 
 ### Changed

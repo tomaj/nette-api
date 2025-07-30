@@ -13,10 +13,22 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
 
       - name: Composer update
-        run: composer update --no-progress --no-interaction
+        run: composer update --no-progress --no-interaction --prefer-dist
 
       - name: Code sniffer
-        run: vendor/bin/phpcs src --standard=PSR2 -n
+        run: vendor/bin/phpcs src --standard=PSR12 -n

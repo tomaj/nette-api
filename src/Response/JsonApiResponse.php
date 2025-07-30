@@ -11,50 +11,34 @@ use Nette\Http\IResponse;
 use Nette\SmartObject;
 use Nette\Utils\Json;
 
-class JsonApiResponse implements ResponseInterface
+readonly class JsonApiResponse implements ResponseInterface
 {
     use SmartObject;
 
-    /** @var integer */
-    private $code;
-
-    /** @var array|JsonSerializable */
-    private $payload;
-
-    /** @var string */
-    private $contentType;
-
-    /** @var string */
-    private $charset;
-
-    /** @var DateTimeInterface|null|false */
-    private $expiration;
-
-    /**
-     * @param array|JsonSerializable $payload
-     * @param DateTimeInterface|null|false $expiration
-     */
-    public function __construct(int $code, $payload, string $contentType = 'application/json', string $charset = 'utf-8', $expiration = null)
-    {
-        $this->code = $code;
-        $this->payload = $payload;
-        $this->contentType = $contentType ?: 'application/json';
-        $this->charset = $charset;
-        $this->expiration = $expiration;
+    public readonly string $contentType {
+        get => $this->contentType ?: 'application/json';
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    public readonly string $fullContentType {
+        get => $this->contentType . '; charset=' . $this->charset;
+    }
+
+    public function __construct(
+        public readonly int $code,
+        public readonly array|JsonSerializable $payload,
+        string $contentType = 'application/json',
+        public readonly string $charset = 'utf-8',
+        public readonly DateTimeInterface|null|false $expiration = null
+    ) {
+        $this->contentType = $contentType;
+    }
+
     public function getCode(): int
     {
         return $this->code;
     }
 
-    /**
-     * @return array|JsonSerializable
-     */
-    public function getPayload()
+    public function getPayload(): array|JsonSerializable
     {
         return $this->payload;
     }
@@ -74,15 +58,14 @@ class JsonApiResponse implements ResponseInterface
         return $this->expiration;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType($this->getContentType(), $this->getCharset());
+        
         if ($this->expiration !== false) {
-            $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
+            $httpResponse->setExpiration($this->getExpiration()?->format('c'));
         }
+        
         $result = Json::encode($this->getPayload());
         $httpResponse->setHeader('Content-Length', (string) strlen($result));
         echo $result;
