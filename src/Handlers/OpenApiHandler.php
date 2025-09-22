@@ -44,24 +44,30 @@ class OpenApiHandler extends BaseHandler
 
     private $definitions = [];
 
+    private $allowedEndpoints = [];
+
     /**
      * OpenApiHandler constructor.
      * @param ApiDecider $apiDecider
      * @param ApiLink $apiLink
      * @param Request $request
      * @param array $initData - structured data for initialization response
+     * @param array $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all
+     *                                 Example: ['/api/v1/user' => ['get', 'post', 'delete'], '/api/v1/user' => 'post', '/api/v1/user' => [], '/api/v1/app']
      */
     public function __construct(
         ApiDecider $apiDecider,
         ApiLink $apiLink,
         Request $request,
-        array $initData = []
+        array $initData = [],
+        array $allowedEndpoints = []
     ) {
         parent::__construct();
         $this->apiDecider = $apiDecider;
         $this->apiLink = $apiLink;
         $this->request = $request;
         $this->initData = $initData;
+        $this->allowedEndpoints = $allowedEndpoints;
     }
 
     public function params(): array
@@ -249,6 +255,10 @@ class OpenApiHandler extends BaseHandler
             $path = str_replace([$baseUrl, $basePath], '', $this->apiLink->link($api->getEndpoint()));
             $responses = [];
 
+            if (!$this->isPathAllowed($path, $api->getEndpoint()->getMethod())) {
+                continue;
+            }
+
             $settings = [
                 'summary' => $handler->summary(),
                 'description' => $handler->description(),
@@ -270,7 +280,7 @@ class OpenApiHandler extends BaseHandler
                             'schema' => [
                                 '$ref' => '#/components/schemas/ErrorWrongInput',
                             ],
-                        ]
+                        ],
                     ],
                 ];
             }
@@ -311,15 +321,15 @@ class OpenApiHandler extends BaseHandler
                                 'application/json; charset=utf-8' => [
                                     'schema' => $schema,
                                 ],
-                            ]
+                            ],
                         ];
                         if (!empty($examples = $output->getExamples())) {
                             if (count($examples) === 1) {
-                                $example = is_array($output->getExample())? $output->getExample() : json_decode($output->getExample(), true);
+                                $example = is_array($output->getExample()) ? $output->getExample() : json_decode($output->getExample(), true);
                                 $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
                             } else {
                                 foreach ($examples as $exampleKey => $example) {
-                                    $example = is_array($example)? $example : json_decode($example, true);
+                                    $example = is_array($example) ? $example : json_decode($example, true);
                                     $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'][$exampleKey] = $example;
                                 }
                             }
@@ -345,9 +355,9 @@ class OpenApiHandler extends BaseHandler
                                 'description' => $output->getDescription(),
                                 'schema' => [
                                     'type' => 'string',
-                                ]
+                                ],
                             ],
-                        ]
+                        ],
                     ];
                 }
             }
@@ -395,6 +405,34 @@ class OpenApiHandler extends BaseHandler
             $list[$path][strtolower($api->getEndpoint()->getMethod())] = $settings;
         }
         return $list;
+    }
+
+    private function isPathAllowed($path, $method): bool
+    {
+        if (empty($this->allowedEndpoints)) {
+            return true;
+        }
+
+        foreach ($this->allowedEndpoints as $allowedPath => $allowedMethods) {
+            if (is_int($allowedPath)) {
+                if (strtolower($allowedMethods) === strtolower($path)) {
+                    return true;
+                }
+                continue;
+            }
+            if (strtolower($allowedPath) === strtolower($path)) {
+                if (empty($allowedMethods)) {
+                    return true;
+                }
+                if (is_string($allowedMethods) && strtolower($allowedMethods) === strtolower($method)) {
+                    return true;
+                }
+                if (is_array($allowedMethods) && in_array(strtolower($method), array_map('strtolower', $allowedMethods), true)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private function getBasePath(array $apis, string $baseUrl): string
@@ -489,10 +527,10 @@ class OpenApiHandler extends BaseHandler
                 $schema = json_decode($param->getSchema(), true);
                 if (!empty($examples = $param->getExamples())) {
                     if (count($examples) === 1) {
-                        $schema['example'] = is_array($param->getExample())? $param->getExample() : json_decode($param->getExample(), true);
+                        $schema['example'] = is_array($param->getExample()) ? $param->getExample() : json_decode($param->getExample(), true);
                     } else {
                         foreach ($examples as $exampleKey => $example) {
-                            $schema['examples'][$exampleKey] = is_array($example)? $example : json_decode($example, true);
+                            $schema['examples'][$exampleKey] = is_array($example) ? $example : json_decode($example, true);
                         }
                     }
                 }
@@ -634,7 +672,7 @@ class OpenApiHandler extends BaseHandler
     private function addDefinition($name, $definition)
     {
         if (isset($this->definitions[$name]) && $this->definitions[$name] !== $definition) {
-            throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');
+            // throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');
         }
         $this->definitions[$name] = $definition;
     }
