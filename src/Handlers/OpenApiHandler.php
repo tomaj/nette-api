@@ -672,7 +672,7 @@ class OpenApiHandler extends BaseHandler
     private function addDefinition($name, $definition)
     {
         if (isset($this->definitions[$name]) && $this->definitions[$name] !== $definition) {
-            // throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');
+            throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');
         }
         $this->definitions[$name] = $definition;
     }
