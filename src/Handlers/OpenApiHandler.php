@@ -52,8 +52,8 @@ class OpenApiHandler extends BaseHandler
      * @param ApiLink $apiLink
      * @param Request $request
      * @param array $initData - structured data for initialization response
-     * @param array $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all
-     *                                 Example: ['/api/v1/user' => ['get', 'post', 'delete'], '/api/v1/user' => 'post', '/api/v1/user' => [], '/api/v1/app']
+     * @param array $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
+     *                                 Example: ['user/*' => ['get', 'post', 'delete'], 'user/list' => 'post', 'user/list' => [], 'user/list']
      */
     public function __construct(
         ApiDecider $apiDecider,
@@ -254,8 +254,8 @@ class OpenApiHandler extends BaseHandler
             $handler = $api->getHandler();
             $path = str_replace([$baseUrl, $basePath], '', $this->apiLink->link($api->getEndpoint()));
             $responses = [];
-
-            if (!$this->isPathAllowed($path, $api->getEndpoint()->getMethod())) {
+            $endpointPath = str_replace('v' . $api->getEndpoint()->getVersion() . '/', '', $api->getEndpoint()->getUrl());
+            if (!$this->isPathAllowed($endpointPath, $api->getEndpoint()->getMethod())) {
                 continue;
             }
 
@@ -414,13 +414,18 @@ class OpenApiHandler extends BaseHandler
         }
 
         foreach ($this->allowedEndpoints as $allowedPath => $allowedMethods) {
-            if (is_int($allowedPath)) {
-                if (strtolower($allowedMethods) === strtolower($path)) {
+            if (is_int($allowedPath)) { // ['user/list'] format
+                $pattern = str_replace('*', '.*?', preg_quote(strtolower($allowedMethods)));
+                if (preg_match("#$pattern#", strtolower($path))) {
                     return true;
                 }
+
                 continue;
             }
-            if (strtolower($allowedPath) === strtolower($path)) {
+
+            // ['user/*' => ['get', 'post'], 'user/list' => 'post', 'user/list' => [], 'user/list' => '*'] format
+            $pattern = str_replace('*', '.*?', preg_quote(strtolower($allowedPath)));
+            if (preg_match("#$pattern#", strtolower($path))) {
                 if (empty($allowedMethods)) {
                     return true;
                 }
