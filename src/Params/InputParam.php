@@ -48,9 +48,14 @@ abstract class InputParam implements ParamInterface
     /** @var array */
     protected $examples = [];
 
-    protected ?string $valueType;
+    /** @var string|null */
+    protected $valueType;
 
-    public function __construct(string $key, ?string $valueType = null)
+    /**
+     * InputParam constructor.
+     * @param string|null $valueType
+     */
+    public function __construct(string $key, $valueType = null)
     {
         $this->key = $key;
         $this->valueType = $valueType;
