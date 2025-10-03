@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Params;
 
+use Tomaj\NetteApi\Validation\InputValidator;
+
 class GetInputParam extends InputParam
 {
     protected $type = self::TYPE_GET;
@@ -14,6 +16,8 @@ class GetInputParam extends InputParam
             return $_GET[$this->key];
         }
         $value = $this->isMulti() ? filter_input(INPUT_GET, $this->key, FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) : filter_input(INPUT_GET, $this->key);
-        return $value !== null && $value !== false ? $value : $this->default;
+        $value = $value !== null && $value !== false ? $value : $this->default;
+        $inputValidator = new InputValidator();
+        return $inputValidator->transformType($value, $this->valueType);
     }
 }
