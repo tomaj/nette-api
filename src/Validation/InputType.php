@@ -2,12 +2,12 @@
 
 namespace Tomaj\NetteApi\Validation;
 
-enum InputType: string
+class InputType
 {
-    case Boolean = 'boolean';
-    case Integer = 'integer';
-    case Double = 'double';
-    case Float = 'float';
-    case String = 'string';
-    case Array = 'array';
+    public const Boolean = 'boolean';
+    public const Integer = 'integer';
+    public const Double = 'double';
+    public const Float = 'float';
+    public const String = 'string';
+    public const Array = 'array';
 }

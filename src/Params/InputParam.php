@@ -7,7 +7,6 @@ namespace Tomaj\NetteApi\Params;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
 use Nette\Utils\Html;
-use Tomaj\NetteApi\Validation\InputType;
 use Tomaj\NetteApi\Validation\InputValidator;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
@@ -49,9 +48,9 @@ abstract class InputParam implements ParamInterface
     /** @var array */
     protected $examples = [];
 
-    protected ?InputType $valueType;
+    protected ?string $valueType;
 
-    public function __construct(string $key, ?InputType $valueType = null)
+    public function __construct(string $key, ?string $valueType = null)
     {
         $this->key = $key;
         $this->valueType = $valueType;

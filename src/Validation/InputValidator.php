@@ -9,7 +9,7 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 class InputValidator
 {
-    public function validate($value, ?InputType $expectedType = null): ValidationResultInterface
+    public function validate($value, ?string $expectedType = null): ValidationResultInterface
     {
         if ($value === null || $expectedType === null) {
             return new ValidationResult(ValidationResult::STATUS_OK);
@@ -31,7 +31,7 @@ class InputValidator
         return new ValidationResult(ValidationResult::STATUS_OK);
     }
 
-    public function transformType($value, ?InputType $expectedType = null)
+    public function transformType($value, ?string $expectedType = null)
     {
         if ($value === null || $expectedType === null) {
             return $value;
