@@ -484,6 +484,7 @@ class OpenApiHandler extends BaseHandler
         ];
         $filesInBody = false;
         $requestBodyExample = [];
+        $result = [];
         foreach ($handler->params() as $param) {
             if ($param instanceof JsonInputParam) {
                 $schema = json_decode($param->getSchema(), true);
@@ -496,14 +497,11 @@ class OpenApiHandler extends BaseHandler
                         }
                     }
                 }
-                return [
-                    'description' => $param->getDescription(),
-                    'required' => $param->isRequired(),
-                    'content' => [
-                        'application/json' => [
-                            'schema' => $this->transformSchema($schema),
-                        ],
-                    ],
+
+                $result['description'] = $param->getDescription();
+                $result['required'] = $param->isRequired();
+                $result['content']['application/json'] = [
+                    'schema' => $this->transformSchema($schema),
                 ];
             }
             if ($param instanceof RawInputParam) {
@@ -517,14 +515,10 @@ class OpenApiHandler extends BaseHandler
                         $schema['examples'] = $examples;
                     }
                 }
-                return [
-                    'description' => $param->getDescription(),
-                    'required' => $param->isRequired(),
-                    'content' => [
-                        'text/plain' => [
-                            'schema' => $schema,
-                        ],
-                    ],
+                $result['description'] ??= $param->getDescription();
+                $result['required'] ??= $param->isRequired();
+                $result['content']['text/plain'] = [
+                    'schema' => $schema,
                 ];
             }
             if ($param->getType() === InputParam::TYPE_POST || $param->getType() === InputParam::TYPE_PUT) {
@@ -594,17 +588,14 @@ class OpenApiHandler extends BaseHandler
             }
 
             $contentType = $filesInBody ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
-            return [
-                'required' => true,
-                'content' => [
-                    $contentType => [
-                        'schema' => $requestBodySchema,
-                    ],
-                ],
+
+            $result['required'] = true;
+            $result['content'][$contentType] = [
+                'schema' => $requestBodySchema,
             ];
         }
 
-        return null;
+        return $result ?: null;
     }
 
     private function createIn($type)
