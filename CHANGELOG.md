@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+### Changed
+* Set null value when process empty file params, instead of false
+
+
 
 ## 3.0.0
 
