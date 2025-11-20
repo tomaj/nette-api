@@ -29,7 +29,7 @@ abstract class BaseHandler implements ApiHandlerInterface
      */
     protected $linkGenerator;
 
-    public function __construct(ScopeFactoryInterface $scopeFactory = null)
+    public function __construct(?ScopeFactoryInterface $scopeFactory = null)
     {
         $this->fractal = new Manager($scopeFactory);
     }
