@@ -20,22 +20,22 @@ class ConsoleResponseTest extends TestCase
             ['Content-Type' => 'text']
         );
 
-        $this->assertEquals('http://url.com/', $response->getUrl());
-        $this->assertEquals('POST', $response->getMethod());
-        $this->assertEquals(['mykey1' => 'asdsd'], $response->getPostFields());
-        $this->assertEquals(['mykey2' => 'wegewg'], $response->getGetFields());
-        $this->assertEquals(['mykey3' => 'gwegerg'], $response->getCookieFields());
-        $this->assertEquals(['Content-Type' => 'text'], $response->getHeaders());
-        $this->assertNull($response->getResponseCode());
-        $this->assertFalse($response->isError());
+        self::assertEquals('http://url.com/', $response->getUrl());
+        self::assertEquals('POST', $response->getMethod());
+        self::assertEquals(['mykey1' => 'asdsd'], $response->getPostFields());
+        self::assertEquals(['mykey2' => 'wegewg'], $response->getGetFields());
+        self::assertEquals(['mykey3' => 'gwegerg'], $response->getCookieFields());
+        self::assertEquals(['Content-Type' => 'text'], $response->getHeaders());
+        self::assertNull($response->getResponseCode());
+        self::assertFalse($response->isError());
 
         $response->logRequest(202, '{"aaa": "bbb"}', 'responseheadersd', 145);
-        $this->assertEquals('{"aaa": "bbb"}', $response->getResponseBody());
-        $this->assertEquals('responseheadersd', $response->getResponseHeaders());
-        $this->assertEquals("{\n    \"aaa\": \"bbb\"\n}", $response->getFormattedJsonBody());
-        $this->assertEquals(145, $response->getResponseTime());
-        $this->assertFalse($response->isError());
-        $this->assertEquals(202, $response->getResponseCode());
+        self::assertEquals('{"aaa": "bbb"}', $response->getResponseBody());
+        self::assertEquals('responseheadersd', $response->getResponseHeaders());
+        self::assertEquals("{\n    \"aaa\": \"bbb\"\n}", $response->getFormattedJsonBody());
+        self::assertEquals(145, $response->getResponseTime());
+        self::assertFalse($response->isError());
+        self::assertEquals(202, $response->getResponseCode());
     }
 
     public function testLogErrorRequest()
@@ -49,9 +49,9 @@ class ConsoleResponseTest extends TestCase
         );
 
         $response->logError(503, 'err message', 21);
-        $this->assertEquals(503, $response->getErrorNumber());
-        $this->assertEquals('err message', $response->getErrorMessage());
-        $this->assertEquals(21, $response->getResponseTime());
-        $this->assertTrue($response->isError());
+        self::assertEquals(503, $response->getErrorNumber());
+        self::assertEquals('err message', $response->getErrorMessage());
+        self::assertEquals(21, $response->getResponseTime());
+        self::assertTrue($response->isError());
     }
 }

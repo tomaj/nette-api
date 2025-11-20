@@ -49,9 +49,9 @@ class ApiListingHandlerTest extends TestCase
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);
-        $this->assertEquals(200, $response->getCode());
+        self::assertEquals(200, $response->getCode());
         $payload = $response->getPayload();
-        $this->assertEquals(2, count($payload['endpoints']));
+        self::assertEquals(2, count($payload['endpoints']));
     }
 
     public function testHandlerWithParam()
@@ -76,9 +76,9 @@ class ApiListingHandlerTest extends TestCase
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);
-        $this->assertEquals(200, $response->getCode());
+        self::assertEquals(200, $response->getCode());
         $payload = $response->getPayload();
-        $this->assertEquals(2, count($payload['endpoints']));
-        $this->assertEquals(2, count($payload['endpoints'][0]['params']));
+        self::assertEquals(2, count($payload['endpoints']));
+        self::assertEquals(2, count($payload['endpoints'][0]['params']));
     }
 }

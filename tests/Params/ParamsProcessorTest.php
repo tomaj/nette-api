@@ -18,16 +18,16 @@ class ParamsProcessorTest extends TestCase
             (new PostInputParam('mykey1'))->setRequired(),
         ]);
 
-        $this->assertTrue($processor->isError());
-        $this->assertEquals(['mykey1' => ['Field is required']], $processor->getErrors());
+        self::assertTrue($processor->isError());
+        self::assertEquals(['mykey1' => ['Field is required']], $processor->getErrors());
 
         $_GET['mykey2'] = 'x';
         $processor = new ParamsProcessor([
             (new GetInputParam('mykey2'))->setRequired()->setAvailableValues(['a', 'b', 'c']),
         ]);
 
-        $this->assertTrue($processor->isError());
-        $this->assertEquals(['mykey2' => ['Field contains not available value(s)']], $processor->getErrors());
+        self::assertTrue($processor->isError());
+        self::assertEquals(['mykey2' => ['Field contains not available value(s)']], $processor->getErrors());
     }
 
     public function testPass()
@@ -42,10 +42,10 @@ class ParamsProcessorTest extends TestCase
             new PostInputParam('mykey3'),
         ]);
 
-        $this->assertFalse($processor->isError());
-        $this->assertEquals([], $processor->getErrors());
+        self::assertFalse($processor->isError());
+        self::assertEquals([], $processor->getErrors());
 
-        $this->assertEquals($processor->getValues(), [
+        self::assertEquals($processor->getValues(), [
             'mykey1' => 'hello',
             'mykey2' => 'asdasd',
             'mykey3' => 'asd',
@@ -60,7 +60,7 @@ class ParamsProcessorTest extends TestCase
             new PutInputParam('mykey30'),
         ]);
 
-        $this->assertEquals($processor->getValues(), [
+        self::assertEquals($processor->getValues(), [
             'mykey10' => null,
             'mykey20' => null,
             'mykey30' => null,

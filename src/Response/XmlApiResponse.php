@@ -9,6 +9,10 @@ use Nette\Http\IRequest;
 use Nette\Http\IResponse;
 use Nette\SmartObject;
 
+/**
+ * @method mixed __call(string $name, array<mixed> $args)
+ * @method static void __callStatic(string $name, array<mixed> $args)
+ */
 class XmlApiResponse implements ResponseInterface
 {
     use SmartObject;

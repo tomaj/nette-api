@@ -15,7 +15,7 @@ class XmlApiResponseTest extends TestCase
     public function testCreatingResponse()
     {
         $xmlResponse = new XmlApiResponse(200, '<data>hello</data>');
-        $this->assertEquals(200, $xmlResponse->getCode());
+        self::assertEquals(200, $xmlResponse->getCode());
 
         $this->expectOutputString('<data>hello</data>');
         $xmlResponse->send(new Request(new UrlScript()), new Response());

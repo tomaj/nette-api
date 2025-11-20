@@ -67,10 +67,10 @@ class ConsoleParamsTest extends TestCase
             $inputParam->updateConsoleForm($form);
         }
 
-        $this->assertCount($totalCount, $form->getControls());
+        self::assertCount($totalCount, $form->getControls());
 
         foreach ($form->getControls() as $control) {
-            $this->assertInstanceOf(BaseControl::class, $control);
+            self::assertInstanceOf(BaseControl::class, $control);
         }
     }
 }
