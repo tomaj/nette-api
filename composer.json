@@ -22,8 +22,7 @@
         "league/fractal": "~0.17",
         "tomaj/nette-bootstrap-form": "^2.0",
         "justinrainbow/json-schema": "^5.2",
-        "latte/latte": "^3.0",
-        "nette/utils": "^4.0"
+        "latte/latte": "^3.0"
     },
     "require-dev": {
         "nette/di": "^3.0",
