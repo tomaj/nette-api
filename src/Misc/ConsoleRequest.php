@@ -97,7 +97,7 @@ class ConsoleRequest
             foreach ($cookieFields as $key => $value) {
                 $parts[] = "$key=$value";
             }
-            $headers[] = "Cookie: " . implode('&', $parts);
+            $headers[] = 'Cookie: ' . implode('&', $parts);
         }
         if ($token !== null && $token !== false) {
             $headers[] = 'Authorization: Bearer ' . $token;
@@ -251,7 +251,7 @@ class ConsoleRequest
 
             foreach ($value as $innerKey => $innerValue) {
                 if ($innerValue !== '' && $innerValue !== null) {
-                    $result[$key . "[" . $innerKey . "]"] = $innerValue;
+                    $result[$key . '[' . $innerKey . ']'] = $innerValue;
                 }
             }
         }

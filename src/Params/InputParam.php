@@ -12,12 +12,12 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 abstract class InputParam implements ParamInterface
 {
-    public const TYPE_POST      = 'POST';
-    public const TYPE_GET       = 'GET';
-    public const TYPE_PUT       = 'PUT';
-    public const TYPE_FILE      = 'FILE';
-    public const TYPE_COOKIE    = 'COOKIE';
-    public const TYPE_POST_RAW  = 'POST_RAW';
+    public const TYPE_POST = 'POST';
+    public const TYPE_GET = 'GET';
+    public const TYPE_PUT = 'PUT';
+    public const TYPE_FILE = 'FILE';
+    public const TYPE_COOKIE = 'COOKIE';
+    public const TYPE_POST_RAW = 'POST_RAW';
     public const TYPE_POST_JSON = 'POST_JSON';
 
     public const OPTIONAL = false;
@@ -152,7 +152,7 @@ abstract class InputParam implements ParamInterface
      */
     public function setExample($example): self
     {
-        $this->examples["default"] = $example;
+        $this->examples['default'] = $example;
         return $this;
     }
 
@@ -175,7 +175,7 @@ abstract class InputParam implements ParamInterface
 
     public function updateConsoleForm(Form $form): void
     {
-        $count = $this->isMulti() ? self::DEFAULT_MULTI_INPUT_COUNT : 1;  // TODO moznost nastavit kolko inputov sa ma vygenerovat v konzole, default moze byt 5
+        $count = $this->isMulti() ? self::DEFAULT_MULTI_INPUT_COUNT : 1; // TODO moznost nastavit kolko inputov sa ma vygenerovat v konzole, default moze byt 5
         for ($i = 0; $i < $count; $i++) {
             $key = $this->getKey();
             if ($this->isMulti()) {

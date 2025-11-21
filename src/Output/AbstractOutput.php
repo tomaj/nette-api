@@ -50,7 +50,7 @@ abstract class AbstractOutput implements OutputInterface
      */
     public function setExample($example): self
     {
-        $this->examples["default"] = $example;
+        $this->examples['default'] = $example;
         return $this;
     }
 

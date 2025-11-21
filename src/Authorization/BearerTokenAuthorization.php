@@ -10,6 +10,7 @@ use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 class BearerTokenAuthorization extends TokenAuthorization
 {
     private const EXPECTED_HTTP_PARTS = 2;
+
     /**
       * BearerTokenAuthorization constructor.
       *

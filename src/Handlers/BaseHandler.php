@@ -128,15 +128,15 @@ abstract class BaseHandler implements ApiHandlerInterface
     final public function createLink(array $params = []): string
     {
         if (!$this->linkGenerator) {
-            throw new InvalidStateException("You have setupLinkGenerator for this handler if you want to generate link in this handler");
+            throw new InvalidStateException('You have setupLinkGenerator for this handler if you want to generate link in this handler');
         }
         if (!$this->endpoint) {
-            throw new InvalidStateException("You have setEndpoint() for this handler if you want to generate link in this handler");
+            throw new InvalidStateException('You have setEndpoint() for this handler if you want to generate link in this handler');
         }
         $params = array_merge([
             'version' => $this->endpoint->getVersion(),
             'package' => $this->endpoint->getPackage(),
-            'apiAction' => $this->endpoint->getApiAction()
+            'apiAction' => $this->endpoint->getApiAction(),
         ], $params);
         return $this->linkGenerator->link('Api:Api:default', $params) ?: '';
     }

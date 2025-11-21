@@ -108,7 +108,7 @@ final class ApiPresenter implements IPresenter
                 $outputValidatorErrors = [];
                 foreach ($outputs as $output) {
                     if (!$output instanceof OutputInterface) {
-                        $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
+                        $outputValidatorErrors[] = ['Output does not implement OutputInterface'];
                         continue;
                     }
                     $validationResult = $output->validate($response);

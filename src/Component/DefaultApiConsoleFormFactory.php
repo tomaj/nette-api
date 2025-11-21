@@ -21,6 +21,7 @@ use Tomaj\NetteApi\Link\ApiLink;
 class DefaultApiConsoleFormFactory implements ApiConsoleFormFactoryInterface
 {
     private const HTTP_PORT = 80;
+
     public function create(
         IRequest $request,
         EndpointInterface $endpoint,

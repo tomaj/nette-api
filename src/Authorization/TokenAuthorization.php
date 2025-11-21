@@ -24,10 +24,6 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
      */
     protected $ipDetector;
 
-    /**
-     * @param TokenRepositoryInterface $tokenRepository
-     * @param IpDetectorInterface            $ipDetector
-     */
     public function __construct(TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         $this->tokenRepository = $tokenRepository;

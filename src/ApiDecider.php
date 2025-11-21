@@ -20,9 +20,8 @@ class ApiDecider
 
     private ?ApiHandlerInterface $globalPreflightHandler = null;
 
-    public function __construct(
-    ) {
-
+    public function __construct()
+    {
     }
 
     /**

@@ -32,7 +32,7 @@ class JsonInputParam extends InputParam
 
     public function getValue(): mixed
     {
-        $input = $this->rawInput = file_get_contents("php://input") ?: $this->default;
+        $input = $this->rawInput = file_get_contents('php://input') ?: $this->default;
         if ($input === null) {
             $input = '';
         }
@@ -78,7 +78,6 @@ class JsonInputParam extends InputParam
                 }
             }
         }
-
 
         if (!empty($fullSchema['examples'])) {
             $this->description .= <<< HTML

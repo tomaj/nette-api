@@ -9,7 +9,9 @@ use Nette\Http\Request;
 class QueryConfigurator implements ConfiguratorInterface
 {
     private $schemaValidateParam = 'schema_validate';
+
     private $errorDetailParam = 'error_detail';
+
     public Request $request;
 
     /**

@@ -36,7 +36,7 @@ class ApiLink
         $params = array_merge([
             'version' => $endpoint->getVersion(),
             'package' => $endpoint->getPackage(),
-            'apiAction' => $endpoint->getApiAction()
+            'apiAction' => $endpoint->getApiAction(),
         ], $params);
         return $this->linkGenerator->link('Api:Api:default', $params) ?: '';
     }

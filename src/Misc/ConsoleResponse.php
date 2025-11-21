@@ -29,6 +29,7 @@ class ConsoleResponse
     private ?string $responseBody = null;
 
     private ?string $responseHeaders = null;
+
     private ?int $responseTime = null;
 
     private bool $isError = false;

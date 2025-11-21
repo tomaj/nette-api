@@ -46,7 +46,6 @@ class OpenApiHandler extends BaseHandler
     /** @var array<string,mixed> */
     private $definitions = [];
 
-
     /**
      * OpenApiHandler constructor.
      * @param ApiDecider $apiDecider
@@ -281,7 +280,7 @@ class OpenApiHandler extends BaseHandler
                             'schema' => [
                                 '$ref' => '#/components/schemas/ErrorWrongInput',
                             ],
-                        ]
+                        ],
                     ],
                 ];
             }
@@ -322,7 +321,7 @@ class OpenApiHandler extends BaseHandler
                                 'application/json; charset=utf-8' => [
                                     'schema' => $schema,
                                 ],
-                            ]
+                            ],
                         ];
                         if (!empty($examples = $output->getExamples())) {
                             if (count($examples) === 1) {
@@ -361,9 +360,9 @@ class OpenApiHandler extends BaseHandler
                                 'description' => $output->getDescription(),
                                 'schema' => [
                                     'type' => 'string',
-                                ]
+                                ],
                             ],
-                        ]
+                        ],
                     ];
                 }
             }
@@ -424,7 +423,6 @@ class OpenApiHandler extends BaseHandler
         }
         return rtrim(str_replace($baseUrl, '', $basePath), '/');
     }
-
 
     private function getLongestCommonSubstring(?string $path1, string $path2): string
     {
