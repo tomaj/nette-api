@@ -8,5 +8,8 @@ interface ValidationResultInterface
 {
     public function isOk(): bool;
 
+    /**
+     * @return array<mixed>
+     */
     public function getErrors(): array;
 }

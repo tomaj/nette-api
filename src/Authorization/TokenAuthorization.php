@@ -113,6 +113,7 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
         list($range, $netmask) = explode('/', $range, 2);
         $range_decimal = ip2long($range);
         $ipDecimal = ip2long($ip);
+        /** @phpstan-ignore-next-line */
         $wildcard_decimal = pow(2, (32 - (int)$netmask)) - 1;
         $netmask_decimal = ~ $wildcard_decimal;
         return (($ipDecimal & $netmask_decimal) === ($range_decimal & $netmask_decimal));

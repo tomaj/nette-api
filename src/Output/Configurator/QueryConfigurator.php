@@ -10,7 +10,7 @@ class QueryConfigurator implements ConfiguratorInterface
 {
     private $schemaValidateParam = 'schema_validate';
     private $errorDetailParam = 'error_detail';
-    public $request = null;
+    public Request $request;
 
     /**
      * @param string $schemaValidateParam Name of get parameter to enable schema validation

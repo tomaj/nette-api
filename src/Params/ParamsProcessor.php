@@ -9,6 +9,7 @@ class ParamsProcessor
     /** @var ParamInterface[] */
     private $params;
 
+    /** @var array<mixed> */
     private $errors = [];
 
     /**
@@ -30,11 +31,17 @@ class ParamsProcessor
         return !empty($this->errors);
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function getErrors(): array
     {
         return $this->errors;
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function getValues(): array
     {
         $result = [];

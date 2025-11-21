@@ -17,7 +17,7 @@ class RawInputParam extends InputParam
         throw new Exception('Cannot use multi raw input param');
     }
 
-    public function getValue()
+    public function getValue(): mixed
     {
         return file_get_contents("php://input") ?: $this->default;
     }

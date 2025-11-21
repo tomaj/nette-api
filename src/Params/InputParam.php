@@ -12,16 +12,18 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 abstract class InputParam implements ParamInterface
 {
-    const TYPE_POST      = 'POST';
-    const TYPE_GET       = 'GET';
-    const TYPE_PUT       = 'PUT';
-    const TYPE_FILE      = 'FILE';
-    const TYPE_COOKIE    = 'COOKIE';
-    const TYPE_POST_RAW  = 'POST_RAW';
-    const TYPE_POST_JSON = 'POST_JSON';
+    public const TYPE_POST      = 'POST';
+    public const TYPE_GET       = 'GET';
+    public const TYPE_PUT       = 'PUT';
+    public const TYPE_FILE      = 'FILE';
+    public const TYPE_COOKIE    = 'COOKIE';
+    public const TYPE_POST_RAW  = 'POST_RAW';
+    public const TYPE_POST_JSON = 'POST_JSON';
 
-    const OPTIONAL = false;
-    const REQUIRED = true;
+    public const OPTIONAL = false;
+    public const REQUIRED = true;
+
+    public const DEFAULT_MULTI_INPUT_COUNT = 5;
 
     /** @var string */
     protected $type;
@@ -32,7 +34,7 @@ abstract class InputParam implements ParamInterface
     /** @var bool */
     protected $required = self::OPTIONAL;
 
-    /** @var array|null */
+    /** @var array<string, mixed>|null */
     protected $availableValues = null;
 
     /** @var bool */
@@ -44,7 +46,7 @@ abstract class InputParam implements ParamInterface
     /** @var mixed */
     protected $default;
 
-    /** @var array */
+    /** @var array<string, mixed> */
     protected $examples = [];
 
     public function __construct(string $key)
@@ -58,6 +60,9 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
+    /**
+     * @param array<int, mixed> $availableValues
+     */
     public function setAvailableValues(array $availableValues): self
     {
         if ($availableValues === array_values($availableValues)) {
@@ -88,6 +93,9 @@ abstract class InputParam implements ParamInterface
         return $this->required;
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function getAvailableValues(): ?array
     {
         return $this->availableValues;
@@ -119,10 +127,7 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getDefault()
+    public function getDefault(): mixed
     {
         return $this->default;
     }
@@ -151,11 +156,7 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
-    /**
-     * Returns first example
-     * @return mixed
-     */
-    public function getExample()
+    public function getExample(): mixed
     {
         if (empty($this->examples)) {
             return null;
@@ -165,7 +166,7 @@ abstract class InputParam implements ParamInterface
 
     /**
      * Returns all examples
-     * @return array
+     * @return array<string, mixed>
      */
     public function getExamples(): array
     {
@@ -174,7 +175,7 @@ abstract class InputParam implements ParamInterface
 
     public function updateConsoleForm(Form $form): void
     {
-        $count = $this->isMulti() ? 5 : 1;  // TODO moznost nastavit kolko inputov sa ma vygenerovat v konzole, default moze byt 5
+        $count = $this->isMulti() ? self::DEFAULT_MULTI_INPUT_COUNT : 1;  // TODO moznost nastavit kolko inputov sa ma vygenerovat v konzole, default moze byt 5
         for ($i = 0; $i < $count; $i++) {
             $key = $this->getKey();
             if ($this->isMulti()) {

@@ -40,16 +40,19 @@ class OpenApiHandler extends BaseHandler
     /** @var Request */
     private $request;
 
+    /** @var array<string,mixed> */
     private $initData = [];
 
+    /** @var array<string,mixed> */
     private $definitions = [];
+
 
     /**
      * OpenApiHandler constructor.
      * @param ApiDecider $apiDecider
      * @param ApiLink $apiLink
      * @param Request $request
-     * @param array $initData - structured data for initialization response
+     * @param array<string,mixed> $initData - structured data for initialization response
      */
     public function __construct(
         ApiDecider $apiDecider,
@@ -64,6 +67,9 @@ class OpenApiHandler extends BaseHandler
         $this->initData = $initData;
     }
 
+    /**
+     * @return InputParam[]
+     */
     public function params(): array
     {
         $availableFormats = ['json'];
@@ -85,6 +91,7 @@ class OpenApiHandler extends BaseHandler
 
     /**
      * {@inheritdoc}
+     * @return string[]
      */
     public function tags(): array
     {
@@ -93,11 +100,12 @@ class OpenApiHandler extends BaseHandler
 
     /**
      * {@inheritdoc}
+     * @param array<string,mixed> $params
      */
     public function handle(array $params): ResponseInterface
     {
-        $version = $this->getEndpoint()->getVersion();
-        $apis = $this->getApis($version);
+        $version = $this->getEndpoint()?->getVersion();
+        $apis = $this->getApis($version ?: '');
         $scheme = $this->request->getUrl()->getScheme();
         $baseUrl = $this->request->getUrl()->getHostUrl();
         $basePath = $this->getBasePath($apis, $baseUrl);
@@ -152,7 +160,7 @@ class OpenApiHandler extends BaseHandler
         $data = [
             'openapi' => '3.0.0',
             'info' => [
-                'version' => (string)$version,
+                'version' => $version,
                 'title' => 'Nette API',
             ],
             'servers' => [
@@ -227,6 +235,9 @@ class OpenApiHandler extends BaseHandler
         return new JsonApiResponse(IResponse::S200_OK, $data);
     }
 
+    /**
+     * @return Api[]
+     */
     private function getApis(string $version): array
     {
         return array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
@@ -238,7 +249,7 @@ class OpenApiHandler extends BaseHandler
      * @param Api[] $versionApis
      * @param string $baseUrl
      * @param string $basePath
-     * @return array
+     * @return array<string,mixed>
      * @throws InvalidLinkException
      */
     private function getPaths(array $versionApis, string $baseUrl, string $basePath): array
@@ -315,24 +326,29 @@ class OpenApiHandler extends BaseHandler
                         ];
                         if (!empty($examples = $output->getExamples())) {
                             if (count($examples) === 1) {
-                                $example = is_array($output->getExample())? $output->getExample() : json_decode($output->getExample(), true);
+                                $example = is_array($output->getExample()) ? $output->getExample() : json_decode($output->getExample(), true);
+                                /** @phpstan-ignore-next-line */
                                 $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
                             } else {
                                 foreach ($examples as $exampleKey => $example) {
-                                    $example = is_array($example)? $example : json_decode($example, true);
+                                    $example = is_array($example) ? $example : json_decode($example, true);
+                                    /** @phpstan-ignore-next-line */
                                     $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'][$exampleKey] = $example;
                                 }
                             }
                         }
                     } else {
                         if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
+                            /** @phpstan-ignore-next-line */
                             $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
                             unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
+                            /** @phpstan-ignore-next-line */
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
                                 'oneOf' => [],
                             ];
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $tmp;
                         }
+                        /** @phpstan-ignore-next-line */
                         $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $schema;
                     }
                 }
@@ -397,6 +413,9 @@ class OpenApiHandler extends BaseHandler
         return $list;
     }
 
+    /**
+     * @param Api[] $apis
+     */
     private function getBasePath(array $apis, string $baseUrl): string
     {
         $basePath = '';
@@ -406,7 +425,8 @@ class OpenApiHandler extends BaseHandler
         return rtrim(str_replace($baseUrl, '', $basePath), '/');
     }
 
-    private function getLongestCommonSubstring($path1, $path2)
+
+    private function getLongestCommonSubstring(?string $path1, string $path2): string
     {
         if ($path1 === null) {
             return $path2;
@@ -426,10 +446,9 @@ class OpenApiHandler extends BaseHandler
      * Create array with params for specified handler
      *
      * @param ApiHandlerInterface $handler
-     *
-     * @return array
+     * @return array<int,array<string,mixed>>
      */
-    private function createParamsList(ApiHandlerInterface $handler)
+    private function createParamsList(ApiHandlerInterface $handler): array
     {
         $parameters = [];
         foreach ($handler->params() as $param) {
@@ -476,6 +495,10 @@ class OpenApiHandler extends BaseHandler
         return $parameters;
     }
 
+    /**
+     * @param ApiHandlerInterface $handler
+     * @return array<string,mixed>|null
+     */
     private function createRequestBody(ApiHandlerInterface $handler)
     {
         $requestBody = [
@@ -489,10 +512,10 @@ class OpenApiHandler extends BaseHandler
                 $schema = json_decode($param->getSchema(), true);
                 if (!empty($examples = $param->getExamples())) {
                     if (count($examples) === 1) {
-                        $schema['example'] = is_array($param->getExample())? $param->getExample() : json_decode($param->getExample(), true);
+                        $schema['example'] = is_array($param->getExample()) ? $param->getExample() : json_decode($param->getExample(), true);
                     } else {
                         foreach ($examples as $exampleKey => $example) {
-                            $schema['examples'][$exampleKey] = is_array($example)? $example : json_decode($example, true);
+                            $schema['examples'][$exampleKey] = is_array($example) ? $example : json_decode($example, true);
                         }
                     }
                 }
@@ -607,6 +630,10 @@ class OpenApiHandler extends BaseHandler
         return null;
     }
 
+    /**
+     * @param int|string $type
+     * @return string
+     */
     private function createIn($type)
     {
         if ($type == InputParam::TYPE_GET) {
@@ -618,6 +645,10 @@ class OpenApiHandler extends BaseHandler
         return 'body';
     }
 
+    /**
+     * @param array<string,mixed> $schema
+     * @return array<string,mixed>
+     */
     private function transformSchema(array $schema)
     {
         OpenApiTransform::transformTypes($schema);
@@ -628,10 +659,14 @@ class OpenApiHandler extends BaseHandler
             }
             unset($schema['definitions']);
         }
-        return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES)), true);
+        return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES) ?: ''), true);
     }
 
-    private function addDefinition($name, $definition)
+    /**
+     * @param string $name
+     * @param array<string,mixed> $definition
+     */
+    private function addDefinition($name, $definition): void
     {
         if (isset($this->definitions[$name]) && $this->definitions[$name] !== $definition) {
             throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');

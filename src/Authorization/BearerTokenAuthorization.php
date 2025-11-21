@@ -9,12 +9,13 @@ use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
 class BearerTokenAuthorization extends TokenAuthorization
 {
-   /**
-     * BearerTokenAuthorization constructor.
-     *
-     * @param TokenRepositoryInterface $tokenRepository
-     * @param IpDetectorInterface      $ipDetector
-     */
+    private const EXPECTED_HTTP_PARTS = 2;
+    /**
+      * BearerTokenAuthorization constructor.
+      *
+      * @param TokenRepositoryInterface $tokenRepository
+      * @param IpDetectorInterface      $ipDetector
+      */
     public function __construct(TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         parent::__construct($tokenRepository, $ipDetector);
@@ -33,7 +34,7 @@ class BearerTokenAuthorization extends TokenAuthorization
             return null;
         }
         $parts = explode(' ', $_SERVER['HTTP_AUTHORIZATION']);
-        if (count($parts) !== 2) {
+        if (count($parts) !== self::EXPECTED_HTTP_PARTS) {
             $this->errorMessage = 'Authorization header contains invalid structure';
             return null;
         }

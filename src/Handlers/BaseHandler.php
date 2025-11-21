@@ -60,6 +60,7 @@ abstract class BaseHandler implements ApiHandlerInterface
 
     /**
      * {@inheritdoc}
+     * @return string[]
      */
     public function tags(): array
     {
@@ -119,7 +120,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * Create link to actual handler endpoint
      *
-     * @param array   $params
+     * @param array<string,mixed> $params
      *
      * @return string
      * @throws InvalidLinkException if handler doesn't have linkgenerator or endpoint
@@ -137,11 +138,12 @@ abstract class BaseHandler implements ApiHandlerInterface
             'package' => $this->endpoint->getPackage(),
             'apiAction' => $this->endpoint->getApiAction()
         ], $params);
-        return $this->linkGenerator->link('Api:Api:default', $params);
+        return $this->linkGenerator->link('Api:Api:default', $params) ?: '';
     }
 
     /**
      * {@inheritdoc}
+     * @param array<string,mixed> $params
      */
     abstract public function handle(array $params): ResponseInterface;
 }

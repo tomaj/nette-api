@@ -41,7 +41,7 @@ class EndpointIdentifier implements EndpointInterface
 
     public function getVersion(): string
     {
-        return $this->version;
+        return (string) $this->version;
     }
 
     public function getPackage(): string

@@ -13,6 +13,9 @@ use Tomaj\NetteApi\Params\ParamInterface;
 
 class ConsoleRequest
 {
+    public const DEFAULT_TIMEOUT = 30;
+    public const ELAPSED_MILLISECONDS = 1000;
+
     /** @var ApiHandlerInterface */
     private $handler;
 
@@ -29,6 +32,13 @@ class ConsoleRequest
         $this->apiLink = $apiLink;
     }
 
+    /**
+     * @param string $url
+     * @param string $method
+     * @param array<string,mixed> $values
+     * @param array<string,mixed> $additionalValues
+     * @param string|null $token
+     */
     public function makeRequest(string $url, string $method, array $values, array $additionalValues = [], ?string $token = null): ConsoleResponse
     {
         list($postFields, $getFields, $cookieFields, $rawPost, $putFields) = $this->processValues($values);
@@ -73,7 +83,7 @@ class ConsoleRequest
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_VERBOSE, false);
-        curl_setopt($curl, CURLOPT_TIMEOUT, $additionalValues['timeout'] ?? 30);
+        curl_setopt($curl, CURLOPT_TIMEOUT, $additionalValues['timeout'] ?? self::DEFAULT_TIMEOUT);
         curl_setopt($curl, CURLOPT_HEADER, true);
 
         if (count($postFields) || $rawPost || $putRawPost !== null) {
@@ -113,13 +123,14 @@ class ConsoleRequest
         );
 
         $response = curl_exec($curl);
-        $elapsed = intval((microtime(true) - $startTime) * 1000);
+        $elapsed = (int) ((microtime(true) - $startTime) * self::ELAPSED_MILLISECONDS);
 
         if ($response === false) {
             $response = '';
         }
 
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $response = (string) $response;
         $responseHeaders = substr($response, 0, $headerSize);
         $responseBody = substr($response, $headerSize);
 
@@ -138,18 +149,21 @@ class ConsoleRequest
     /**
      * Process given values to POST and GET fields
      *
-     * @param array $values
-     *
-     * @return array
+     * @param array<string,mixed> $values
+     * @return array{0:array<string,mixed>,1:array<string,mixed>,2:array<string,mixed>,3:string|null,4:array<string,mixed>}
      */
     private function processValues(array $values): array
     {
         $params = $this->handler->params();
 
+        /** @var array<string,mixed> $postFields */
         $postFields = [];
         $rawPost = isset($values['post_raw']) ? $values['post_raw'] : null;
+        /** @var array<string,mixed> $getFields */
         $getFields = [];
+        /** @var array<string,mixed> $putFields */
         $putFields = [];
+        /** @var array<string,mixed> $cookieFields */
         $cookieFields = [];
 
         foreach ($values as $key => $value) {
@@ -165,7 +179,7 @@ class ConsoleRequest
                 }
 
                 if ($param->isMulti()) {
-                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
+                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE], true)) {
                         $postFields[$key][] = $valueData;
                     } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key][] = $valueData;
@@ -175,7 +189,7 @@ class ConsoleRequest
                         $getFields[$key][] = urlencode((string)$valueData);
                     }
                 } else {
-                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
+                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE], true)) {
                         $postFields[$key] = $valueData;
                     } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key] = $valueData;
@@ -222,6 +236,10 @@ class ConsoleRequest
         return null;
     }
 
+    /**
+     * @param array<string,mixed> $values
+     * @return array<string,mixed>
+     */
     private function normalizeValues(array $values): array
     {
         $result = [];

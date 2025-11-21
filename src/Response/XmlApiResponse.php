@@ -44,7 +44,7 @@ class XmlApiResponse implements ResponseInterface
         return $this->code;
     }
 
-    public function getExpiration(): ?DateTimeInterface
+    public function getExpiration(): DateTimeInterface|false|null
     {
         return $this->expiration;
     }

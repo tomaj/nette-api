@@ -16,7 +16,7 @@ class FileInputParam extends InputParam
         return $form->addUpload($key, $this->getParamLabel());
     }
 
-    public function getValue()
+    public function getValue(): mixed
     {
         if (isset($_FILES[$this->key])) {
             return $this->isMulti() ? $this->processMultiFileUploads($_FILES[$this->key]) : $_FILES[$this->key];
@@ -24,7 +24,11 @@ class FileInputParam extends InputParam
         return $this->default;
     }
 
-    private function processMultiFileUploads($files)
+    /**
+     * @param array<mixed> $files
+     * @return array<mixed>
+     */
+    private function processMultiFileUploads(array$files): array
     {
         $result = [];
         foreach ($files as $key => $values) {

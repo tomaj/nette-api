@@ -32,7 +32,7 @@ interface ApiHandlerInterface
 
     /**
      * Returns list of tags for handler
-     * @return array
+     * @return string[]
      */
     public function tags(): array;
 
@@ -46,7 +46,7 @@ interface ApiHandlerInterface
      * Main handle method that will be executed when api
      * endpoint contected with this handler will be triggered
      *
-     * @param array $params
+     * @param array<mixed> $params
      *
      * @return ResponseInterface
      */

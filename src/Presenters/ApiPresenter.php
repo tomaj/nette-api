@@ -24,6 +24,9 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 final class ApiPresenter implements IPresenter
 {
+    private const TO_SECONDS = 1000;
+    private const HTTP_PORT = 80;
+
     /** @var ApiDecider @inject */
     public $apiDecider;
 
@@ -141,13 +144,16 @@ final class ApiPresenter implements IPresenter
     private function getApi(Request $request): Api
     {
         return $this->apiDecider->getApi(
-            $request->getMethod(),
+            $request->getMethod() ?? '',
             $request->getParameter('version'),
             $request->getParameter('package'),
             $request->getParameter('apiAction')
         );
     }
 
+    /**
+     * @param array<mixed> $params
+     */
     private function checkAuth(ApiAuthorizationInterface $authorization, array $params): ?IResponse
     {
         try {
@@ -208,12 +214,12 @@ final class ApiPresenter implements IPresenter
         $ipDetector = $this->context->getByType(IpDetectorInterface::class);
         $logger->log(
             $code,
-            $request->getMethod(),
+            $request->getMethod() ?? '',
             $requestHeaders,
             (string) filter_input(INPUT_SERVER, 'REQUEST_URI'),
-            $ipDetector ? $ipDetector->getRequestIp() : '',
+            $ipDetector->getRequestIp(),
             (string) filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
-            (int) ($elapsed) * 1000
+            (int) ($elapsed * self::TO_SECONDS)
         );
     }
 
@@ -250,7 +256,7 @@ final class ApiPresenter implements IPresenter
             return null;
         }
         $url = $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
-        if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== 80) {
+        if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== self::HTTP_PORT) {
             $url .= ':' . $refererParsedUrl['port'];
         }
         return $url;

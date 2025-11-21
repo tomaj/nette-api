@@ -8,14 +8,17 @@ use InvalidArgumentException;
 
 class ValidationResult implements ValidationResultInterface
 {
-    const STATUS_OK = 'OK';
+    public const STATUS_OK = 'OK';
 
-    const STATUS_ERROR = 'error';
+    public const STATUS_ERROR = 'error';
 
     private $status;
 
     private $errors = [];
 
+    /**
+     * @param array<mixed> $errors
+     */
     public function __construct(string $status, array $errors = [])
     {
         if (!in_array($status, [self::STATUS_OK, self::STATUS_ERROR], true)) {
@@ -31,6 +34,9 @@ class ValidationResult implements ValidationResultInterface
         return $this->status === self::STATUS_OK;
     }
 
+    /**
+     * @return array<mixed>
+     */
     public function getErrors(): array
     {
         return $this->errors;

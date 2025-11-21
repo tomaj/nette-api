@@ -27,18 +27,17 @@ class ApiLink
      * Create link to specified api endpoint
      *
      * @param EndpointInterface  $endpoint
-     * @param array               $params
+     * @param array<mixed>       $params
      *
-     * @return string
      * @throws InvalidLinkException
      */
-    public function link(EndpointInterface $endpoint, $params = [])
+    public function link(EndpointInterface $endpoint, $params = []): string
     {
         $params = array_merge([
             'version' => $endpoint->getVersion(),
             'package' => $endpoint->getPackage(),
             'apiAction' => $endpoint->getApiAction()
         ], $params);
-        return $this->linkGenerator->link('Api:Api:default', $params);
+        return $this->linkGenerator->link('Api:Api:default', $params) ?: '';
     }
 }

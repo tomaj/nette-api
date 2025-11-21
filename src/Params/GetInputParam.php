@@ -8,7 +8,7 @@ class GetInputParam extends InputParam
 {
     protected $type = self::TYPE_GET;
 
-    public function getValue()
+    public function getValue(): mixed
     {
         if (!filter_has_var(INPUT_GET, $this->key) && isset($_GET[$this->key])) {
             return $_GET[$this->key];

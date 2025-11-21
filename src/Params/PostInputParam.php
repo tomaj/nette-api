@@ -8,7 +8,7 @@ class PostInputParam extends InputParam
 {
     protected $type = self::TYPE_POST;
 
-    public function getValue()
+    public function getValue(): mixed
     {
         if (!filter_has_var(INPUT_POST, $this->key) && isset($_POST[$this->key])) {
             return $_POST[$this->key];

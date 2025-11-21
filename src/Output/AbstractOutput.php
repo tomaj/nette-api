@@ -6,12 +6,14 @@ namespace Tomaj\NetteApi\Output;
 
 abstract class AbstractOutput implements OutputInterface
 {
-    protected $code;
+    /** @var int */
+    protected int $code;
 
-    protected $description;
+    /** @var string */
+    protected string $description;
 
-    /** @var array */
-    protected $examples = [];
+    /** @var array<string, mixed> */
+    protected array $examples = [];
 
     public function __construct(int $code, string $description = '')
     {
@@ -66,7 +68,7 @@ abstract class AbstractOutput implements OutputInterface
 
     /**
      * Returns all examples
-     * @return array
+     * @return array<string, mixed>
      */
     public function getExamples(): array
     {
