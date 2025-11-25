@@ -3,11 +3,12 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+
+## 3.1.0
+
 ### Changed
 * Update Request body schema in OpenApiHandler
 * Set null value when process empty file params, instead of false
-
-
 
 ## 3.0.0
 
