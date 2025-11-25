@@ -515,8 +515,8 @@ class OpenApiHandler extends BaseHandler
                         $schema['examples'] = $examples;
                     }
                 }
-                $result['description'] ??= $param->getDescription();
-                $result['required'] ??= $param->isRequired();
+                $result['description'] = $result['description'] ?? $param->getDescription();
+                $result['required'] = $result['required'] ?? $param->isRequired();
                 $result['content']['text/plain'] = [
                     'schema' => $schema,
                 ];
