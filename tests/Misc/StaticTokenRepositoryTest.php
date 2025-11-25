@@ -15,9 +15,9 @@ class StaticTokenRepositoryTest extends TestCase
             'mytoken' => '*',
         ]);
 
-        $this->assertTrue($repository->validToken('mytoken'));
-        $this->assertFalse($repository->validToken('mytoken2'));
-        $this->assertEquals('*', $repository->ipRestrictions('mytoken'));
+        self::assertTrue($repository->validToken('mytoken'));
+        self::assertFalse($repository->validToken('mytoken2'));
+        self::assertEquals('*', $repository->ipRestrictions('mytoken'));
     }
 
     public function testIpRestrictionsForInvalidToken()
@@ -25,6 +25,6 @@ class StaticTokenRepositoryTest extends TestCase
         $repository = new StaticTokenRepository([
             'mytoken' => '*',
         ]);
-        $this->assertNull($repository->ipRestrictions('mytoken2'));
+        self::assertNull($repository->ipRestrictions('mytoken2'));
     }
 }

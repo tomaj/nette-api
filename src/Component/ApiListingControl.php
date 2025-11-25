@@ -5,21 +5,24 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
-use Nette\Bridges\ApplicationLatte\Template;
-use Tomaj\NetteApi\ApiDecider;
+use Nette\Bridges\ApplicationLatte\DefaultTemplate;
 use Tomaj\NetteApi\Api;
+use Tomaj\NetteApi\ApiDecider;
 
 /**
- * @method void onClick(string $method, int $version, string $package, ?string $apiAction)
+ * @method void onClick(string $method, string $version, string $package, ?string $apiAction)
  */
 class ApiListingControl extends Control
 {
     /** @var ApiDecider */
     private $apiDecider;
 
-    public $onClick = [];
+    /**
+     * @var array<mixed>
+     */
+    public array $onClick = [];
 
-    private $templateFilePath;
+    private ?string $templateFilePath = null;
 
     public function __construct(ApiDecider $apiDecider)
     {
@@ -30,21 +33,21 @@ class ApiListingControl extends Control
     {
         $apis = $this->apiDecider->getApis();
 
-        /** @var Template $template */
+        /** @var DefaultTemplate $template */
         $template = $this->getTemplate();
         $template->add('apis', $this->groupApis($apis));
         $template->setFile($this->getTemplateFilePath());
         $template->render();
     }
 
-    public function handleSelect(string $method, $version, string $package, ?string $apiAction = null): void
+    public function handleSelect(string $method, string $version, string $package, ?string $apiAction = null): void
     {
         $this->onClick($method, $version, $package, $apiAction);
     }
 
     /**
      * @param Api[] $handlers
-     * @return array
+     * @return array<string, array<int, Api>>.
      */
     private function groupApis(array $handlers): array
     {

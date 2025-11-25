@@ -12,7 +12,7 @@ class NoAuthorizationTest extends TestCase
     public function testResponse()
     {
         $noAuthorization = new NoAuthorization();
-        $this->assertTrue($noAuthorization->authorized());
-        $this->assertNull($noAuthorization->getErrorMessage());
+        self::assertTrue($noAuthorization->authorized());
+        self::assertNull($noAuthorization->getErrorMessage());
     }
 }

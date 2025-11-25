@@ -1,0 +1,13 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - vendor
+        - tests
+    ignoreErrors:
+        # Ignore magic number warnings in Nette SmartObject trait (vendor code)
+        - 
+            message: '#^Do not use magic number in bitwise operations\. Move to constant with a suitable name\.$#'
+            path: 'vendor/nette/utils/src/SmartObject.php'

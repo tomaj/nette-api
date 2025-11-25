@@ -18,20 +18,20 @@ class DefaultHandlerTest extends TestCase
     {
         $defaultHandler = new DefaultHandler();
         $result = $defaultHandler->handle([]);
-        $this->assertEquals(404, $result->getCode());
-        $this->assertEquals('application/json', $result->getContentType());
-        $this->assertEquals('utf-8', $result->getCharset());
-        $this->assertEquals(['status' => 'error', 'message' => 'Unknown api endpoint'], $result->getPayload());
+        self::assertEquals(404, $result->getCode());
+        self::assertEquals('application/json', $result->getContentType());
+        self::assertEquals('utf-8', $result->getCharset());
+        self::assertEquals(['status' => 'error', 'message' => 'Unknown api endpoint'], $result->getPayload());
     }
 
     public function testEndpointSetter()
     {
         $defaultHandler = new DefaultHandler();
-        $this->assertNull($defaultHandler->getEndpoint());
+        self::assertNull($defaultHandler->getEndpoint());
 
         $endpointIdentifier = new EndpointIdentifier('POST', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
-        $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
+        self::assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
 
     public function testExceptionWhenCreatingLinkWithoutLinkGenerator()
@@ -65,6 +65,6 @@ class DefaultHandlerTest extends TestCase
         $endpointIdentifier = new EndpointIdentifier('POST', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
 
-        $this->assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
+        self::assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
     }
 }

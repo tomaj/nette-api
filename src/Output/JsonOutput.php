@@ -29,7 +29,7 @@ class JsonOutput extends AbstractOutput
             return new ValidationResult(ValidationResult::STATUS_ERROR, ['Response code doesn\'t match']);
         }
 
-        $value = json_decode(json_encode($response->getPayload()));
+        $value = json_decode(json_encode($response->getPayload()) ?: '');
 
         $schemaValidator = new JsonSchemaValidator();
         return $schemaValidator->validate($value, $this->schema);

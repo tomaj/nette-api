@@ -29,9 +29,9 @@ class ApiDeciderTest extends TestCase
         $apiDecider = new ApiDecider($this->container);
         $result = $apiDecider->getApi('POST', '1', 'article', 'list');
 
-        $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
-        $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
-        $this->assertInstanceOf(DefaultHandler::class, $result->getHandler());
+        self::assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
+        self::assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
+        self::assertInstanceOf(DefaultHandler::class, $result->getHandler());
     }
 
     public function testFindRightHandler()
@@ -45,21 +45,21 @@ class ApiDeciderTest extends TestCase
 
         $result = $apiDecider->getApi('POST', '2', 'comments', 'list');
 
-        $this->assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
-        $this->assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
-        $this->assertInstanceOf(AlwaysOkHandler::class, $result->getHandler());
+        self::assertInstanceOf(EndpointIdentifier::class, $result->getEndpoint());
+        self::assertInstanceOf(NoAuthorization::class, $result->getAuthorization());
+        self::assertInstanceOf(AlwaysOkHandler::class, $result->getHandler());
 
-        $this->assertEquals('POST', $result->getEndpoint()->getMethod());
-        $this->assertEquals('2', $result->getEndpoint()->getVersion());
-        $this->assertEquals('comments', $result->getEndpoint()->getPackage());
-        $this->assertEquals('list', $result->getEndpoint()->getApiAction());
+        self::assertEquals('POST', $result->getEndpoint()->getMethod());
+        self::assertEquals('2', $result->getEndpoint()->getVersion());
+        self::assertEquals('comments', $result->getEndpoint()->getPackage());
+        self::assertEquals('list', $result->getEndpoint()->getApiAction());
     }
 
     public function testGetHandlers()
     {
         $apiDecider = new ApiDecider($this->container);
 
-        $this->assertEquals(0, count($apiDecider->getApis()));
+        self::assertEquals(0, count($apiDecider->getApis()));
 
         $apiDecider->addApi(
             new EndpointIdentifier('POST', '2', 'comments', 'list'),
@@ -67,7 +67,7 @@ class ApiDeciderTest extends TestCase
             new NoAuthorization()
         );
 
-        $this->assertEquals(1, count($apiDecider->getApis()));
+        self::assertEquals(1, count($apiDecider->getApis()));
     }
 
     public function testGlobalPreflight()
@@ -75,7 +75,7 @@ class ApiDeciderTest extends TestCase
         $apiDecider = new ApiDecider($this->container);
         $apiDecider->enableGlobalPreflight();
 
-        $this->assertEquals(0, count($apiDecider->getApis()));
+        self::assertEquals(0, count($apiDecider->getApis()));
 
         $apiDecider->addApi(
             new EndpointIdentifier('POST', '2', 'comments', 'list'),
@@ -83,9 +83,9 @@ class ApiDeciderTest extends TestCase
             new NoAuthorization()
         );
 
-        $this->assertEquals(1, count($apiDecider->getApis()));
+        self::assertEquals(1, count($apiDecider->getApis()));
 
         $handler = $apiDecider->getApi('OPTIONS', '2', 'comments', 'list');
-        $this->assertInstanceOf(CorsPreflightHandler::class, $handler->getHandler());
+        self::assertInstanceOf(CorsPreflightHandler::class, $handler->getHandler());
     }
 }

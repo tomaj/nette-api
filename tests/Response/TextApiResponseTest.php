@@ -15,7 +15,7 @@ class TextApiResponseTest extends TestCase
     public function testCreatingResponse()
     {
         $apiResponse = new TextApiResponse(200, 'hello');
-        $this->assertEquals(200, $apiResponse->getCode());
+        self::assertEquals(200, $apiResponse->getCode());
 
         $request = new Request(new UrlScript());
         $response = new Response();

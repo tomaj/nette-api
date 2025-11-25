@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Handlers;
 
-use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Api;
+use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
@@ -41,17 +41,17 @@ class ApiListingHandler extends BaseHandler
      */
     public function handle(array $params): ResponseInterface
     {
-        $version = $this->getEndpoint()->getVersion();
-        $endpoints = $this->getApiList($version);
+        $version = $this->getEndpoint()?->getVersion();
+        $endpoints = $this->getApiList($version ?? '');
         return new JsonApiResponse(200, ['endpoints' => $endpoints]);
     }
 
     /**
      * Create handler list for specified version
      *
-     * @param integer $version
+     * @param string $version
      *
-     * @return array
+     * @return array<string,mixed>
      */
     private function getApiList(string $version): array
     {
@@ -77,11 +77,12 @@ class ApiListingHandler extends BaseHandler
      *
      * @param ApiHandlerInterface $handler
      *
-     * @return array
+     * @return array{type: string, key: string, is_required: bool, available_values?: non-empty-array<string, mixed>}
      */
     private function createParamsList(ApiHandlerInterface $handler): array
     {
-        return array_map(function (InputParam $param) {
+        /** @phpstan-ignore-next-line */
+        return array_map(function (InputParam $param): array {
             $parameter = [
                 'type' => $param->getType(),
                 'key' => $param->getKey(),

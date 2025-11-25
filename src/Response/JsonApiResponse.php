@@ -18,7 +18,7 @@ class JsonApiResponse implements ResponseInterface
     /** @var integer */
     private $code;
 
-    /** @var array|JsonSerializable */
+    /** @var array<mixed>|JsonSerializable */
     private $payload;
 
     /** @var string */
@@ -31,7 +31,7 @@ class JsonApiResponse implements ResponseInterface
     private $expiration;
 
     /**
-     * @param array|JsonSerializable $payload
+     * @param array<mixed>|JsonSerializable $payload
      * @param DateTimeInterface|null|false $expiration
      */
     public function __construct(int $code, $payload, string $contentType = 'application/json', string $charset = 'utf-8', $expiration = null)
@@ -52,9 +52,9 @@ class JsonApiResponse implements ResponseInterface
     }
 
     /**
-     * @return array|JsonSerializable
+     * @return array<mixed>|JsonSerializable
      */
-    public function getPayload()
+    public function getPayload(): array|JsonSerializable
     {
         return $this->payload;
     }
@@ -69,7 +69,7 @@ class JsonApiResponse implements ResponseInterface
         return $this->charset;
     }
 
-    public function getExpiration(): ?DateTimeInterface
+    public function getExpiration(): DateTimeInterface|false|null
     {
         return $this->expiration;
     }

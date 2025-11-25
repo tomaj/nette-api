@@ -15,7 +15,7 @@ class JsonApiResponseTest extends TestCase
     public function testCreatingResponse()
     {
         $jsonResponse = new JsonApiResponse(200, ['asdasd' => 'asdsd']);
-        $this->assertEquals(200, $jsonResponse->getCode());
+        self::assertEquals(200, $jsonResponse->getCode());
 
         $this->expectOutputString('{"asdasd":"asdsd"}');
         $jsonResponse->send(new Request(new UrlScript()), new Response());

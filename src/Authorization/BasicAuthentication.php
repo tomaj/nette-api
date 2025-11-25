@@ -8,8 +8,8 @@ use Nette\Http\IRequest;
 
 class BasicAuthentication implements ApiAuthorizationInterface
 {
-    /** @var array */
-    private $authentications;
+    /** @var array<string, string> */
+    private array $authentications;
 
     /** @var IRequest */
     private $httpRequest;

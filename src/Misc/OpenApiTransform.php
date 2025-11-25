@@ -7,6 +7,7 @@ namespace Tomaj\NetteApi\Misc;
 class OpenApiTransform
 {
     /**
+     * @param array<mixed> $schema
      * @param string|int|null $parent
      */
     public static function transformTypes(array &$schema, $parent = null): void
@@ -14,7 +15,7 @@ class OpenApiTransform
         foreach ($schema as $key => &$value) {
             if ($key === 'type' && is_array($value) && $parent !== 'properties') {
                 if (count($value) > 1 && in_array('null', $value, true)) {
-                    unset($value[array_search('null', $value)]);
+                    unset($value[array_search('null', $value, true)]);
                     $schema['nullable'] = true;
                 }
                 if (count($value) === 1) {

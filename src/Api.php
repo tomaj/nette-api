@@ -21,7 +21,7 @@ class Api
 
     /**
      * @param EndpointInterface $endpoint
-     * @param ApiHandlerInterface|string $handler
+     * @param ApiHandlerInterface $handler
      * @param ApiAuthorizationInterface $authorization
      * @param RateLimitInterface|null $rateLimit
      */
@@ -42,10 +42,7 @@ class Api
         return $this->endpoint;
     }
 
-    /**
-     * @return ApiHandlerInterface|string
-     */
-    public function getHandler()
+    public function getHandler(): ApiHandlerInterface
     {
         return $this->handler;
     }

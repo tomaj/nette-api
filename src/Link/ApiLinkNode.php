@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Link;
 
+use Generator;
 use Latte\Compiler\Nodes\Php\Expression\ArrayNode;
 use Latte\Compiler\Nodes\StatementNode;
 use Latte\Compiler\PrintContext;
@@ -37,8 +38,7 @@ final class ApiLinkNode extends StatementNode
         return $context->format('echo ($this->filters->apiLink)(new Tomaj\NetteApi\EndpointIdentifier(%args), %args);', $this->endpointArgs, $this->endpointParams);
     }
 
-
-    public function &getIterator(): \Generator
+    public function &getIterator(): Generator
     {
         yield $this->endpointArgs;
         yield $this->endpointParams;

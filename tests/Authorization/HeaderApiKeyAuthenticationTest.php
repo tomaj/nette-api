@@ -17,7 +17,7 @@ class HeaderApiKeyAuthenticationTest extends TestCase
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        $this->assertTrue($authorization->authorized());
+        self::assertTrue($authorization->authorized());
     }
 
     public function testUnarizedApiKey()
@@ -26,8 +26,8 @@ class HeaderApiKeyAuthenticationTest extends TestCase
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        $this->assertFalse($authorization->authorized());
-        $this->assertEquals('Token doesn\'t exists or isn\'t active', $authorization->getErrorMessage());
+        self::assertFalse($authorization->authorized());
+        self::assertEquals('Token doesn\'t exists or isn\'t active', $authorization->getErrorMessage());
     }
 
     public function testNoApiKey()
@@ -35,8 +35,8 @@ class HeaderApiKeyAuthenticationTest extends TestCase
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        $this->assertFalse($authorization->authorized());
-        $this->assertEquals('API key is not set', $authorization->getErrorMessage());
+        self::assertFalse($authorization->authorized());
+        self::assertEquals('API key is not set', $authorization->getErrorMessage());
     }
 
     public function testGetQueryParamName()
@@ -44,6 +44,6 @@ class HeaderApiKeyAuthenticationTest extends TestCase
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        $this->assertEquals('X-API-KEY', $authorization->getHeaderName());
+        self::assertEquals('X-API-KEY', $authorization->getHeaderName());
     }
 }
