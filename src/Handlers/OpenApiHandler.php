@@ -177,7 +177,7 @@ class OpenApiHandler extends BaseHandler
                         ],
                         'required' => ['status', 'message'],
                     ],
-                    'ErrorForbidden' => [
+                    'ErrorUnauthorized' => [
                         'type' => 'object',
                         'properties' => [
                             'status' => [
@@ -278,12 +278,12 @@ class OpenApiHandler extends BaseHandler
             $authorization = $api->getAuthorization();
 
             if (!$authorization instanceof NoAuthorization) {
-                $responses[IResponse::S403_FORBIDDEN] = [
+                $responses[IResponse::S401_Unauthorized] = [
                     'description' => 'Operation forbidden',
                     'content' => [
                         'application/json; charset=utf-8' => [
                             'schema' => [
-                                '$ref' => '#/components/schemas/ErrorForbidden',
+                                '$ref' => '#/components/schemas/ErrorUnauthorized',
                             ],
                         ],
                     ],

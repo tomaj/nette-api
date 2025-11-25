@@ -211,7 +211,7 @@ class ConsoleRequest
                 if ($file->isOk()) {
                     $valueData = curl_file_create($file->getTemporaryFile(), $file->getContentType(), $file->getName());
                 } else {
-                    $valueData = false;
+                    $valueData = null;
                 }
             } elseif ($param->getType() === InputParam::TYPE_POST_RAW) {
                 $valueData = file_get_contents('php://input');
