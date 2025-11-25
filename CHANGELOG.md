@@ -4,6 +4,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 ### Changed
+* Update Request body schema in OpenApiHandler
 * Set null value when process empty file params, instead of false
 
 
