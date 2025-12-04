@@ -40,7 +40,7 @@ class ApiConsoleControl extends Control
 
     private $templateFilePath;
 
-    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ApiLink $apiLink = null, ApiConsoleFormFactoryInterface $formFactory = null)
+    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ?ApiLink $apiLink = null, ?ApiConsoleFormFactoryInterface $formFactory = null)
     {
         $this->request = $request;
         $this->endpoint = $endpoint;

@@ -60,7 +60,7 @@ class ApiDecider
         return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
     }
 
-    public function enableGlobalPreflight(CorsPreflightHandlerInterface $corsHandler = null)
+    public function enableGlobalPreflight(?CorsPreflightHandlerInterface $corsHandler = null)
     {
         if (!$corsHandler) {
             $corsHandler = new CorsPreflightHandler(new Response());
@@ -75,7 +75,7 @@ class ApiDecider
      * @param ApiHandlerInterface|string $handler
      * @param RateLimitInterface|null $rateLimit
      */
-    public function addApi(EndpointInterface $endpointIdentifier, $handler, ApiAuthorizationInterface $apiAuthorization, RateLimitInterface $rateLimit = null): self
+    public function addApi(EndpointInterface $endpointIdentifier, $handler, ApiAuthorizationInterface $apiAuthorization, ?RateLimitInterface $rateLimit = null): self
     {
         $this->apis[] = new Api($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
