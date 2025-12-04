@@ -12,8 +12,6 @@ class StaticIpDetector implements IpDetectorInterface
     /**
      * Create Static Ip Detector
      * Ip that will be in constructor will return as actual request IP.
-     *
-     * @param string $ip
      */
     public function __construct(string $ip)
     {

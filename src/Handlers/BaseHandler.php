@@ -87,6 +87,7 @@ abstract class BaseHandler implements ApiHandlerInterface
         if (!$this->fractal) {
             throw new InvalidStateException("Fractal manager isn't initialized. Did you call parent::__construct() in your handler constructor?");
         }
+
         return $this->fractal;
     }
 
@@ -106,9 +107,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * Set link generator to handler
      *
-     * @param LinkGenerator $linkGenerator
      *
-     * @return self
      */
     final public function setupLinkGenerator(LinkGenerator $linkGenerator): self
     {
@@ -119,9 +118,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * Create link to actual handler endpoint
      *
-     * @param array   $params
      *
-     * @return string
      * @throws InvalidLinkException if handler doesn't have linkgenerator or endpoint
      */
     final public function createLink(array $params = []): string
@@ -129,9 +126,11 @@ abstract class BaseHandler implements ApiHandlerInterface
         if (!$this->linkGenerator) {
             throw new InvalidStateException("You have setupLinkGenerator for this handler if you want to generate link in this handler");
         }
+
         if (!$this->endpoint) {
             throw new InvalidStateException("You have setEndpoint() for this handler if you want to generate link in this handler");
         }
+
         $params = array_merge([
             'version' => $this->endpoint->getVersion(),
             'package' => $this->endpoint->getPackage(),

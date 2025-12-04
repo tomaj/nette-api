@@ -32,6 +32,7 @@ class ApiLinkMacro extends MacroSet
             if (!Debugger::$productionMode) {
                 throw new InvalidLinkException($message);
             }
+
             Debugger::log($message, Debugger::EXCEPTION);
             return '';
         }

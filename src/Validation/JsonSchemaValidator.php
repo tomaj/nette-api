@@ -12,8 +12,6 @@ class JsonSchemaValidator
 {
     /**
      * @param mixed $data
-     * @param string $schema
-     * @return ValidationResultInterface
      */
     public function validate($data, string $schema): ValidationResultInterface
     {
@@ -30,9 +28,11 @@ class JsonSchemaValidator
             if ($error['property']) {
                 $errorMessage .= '[Property ' . $error['property'] . '] ';
             }
+
             $errorMessage .= $error['message'];
             $errors[] = $errorMessage;
         }
+
         return new ValidationResult(ValidationResult::STATUS_ERROR, $errors);
     }
 }

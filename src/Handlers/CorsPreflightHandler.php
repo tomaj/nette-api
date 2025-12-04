@@ -36,6 +36,7 @@ class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerIn
                 $this->response->addHeader($name, $value);
             }
         }
+
         return new JsonApiResponse(Response::S200_OK, []);
     }
 }

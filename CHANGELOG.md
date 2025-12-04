@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+### Changed
+* Code refactored to support PHP 7.1 to 8.4
 
 ## 3.1.0
 

@@ -25,6 +25,7 @@ class JsonOutput extends AbstractOutput
         if (!$response instanceof JsonApiResponse) {
             return new ValidationResult(ValidationResult::STATUS_ERROR);
         }
+
         if ($this->code !== $response->getCode()) {
             return new ValidationResult(ValidationResult::STATUS_ERROR, ['Response code doesn\'t match']);
         }

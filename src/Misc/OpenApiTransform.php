@@ -17,12 +17,14 @@ class OpenApiTransform
                     unset($value[array_search('null', $value)]);
                     $schema['nullable'] = true;
                 }
+
                 if (count($value) === 1) {
                     $value = implode(',', $value);
                 } elseif (count($value) > 1) {
                     foreach ($schema['type'] as $type) {
                         $schema['oneOf'][] = ['type' => $type];
                     }
+
                     unset($schema['type']);
                 }
             } elseif (is_array($value)) {

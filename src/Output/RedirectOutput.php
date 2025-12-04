@@ -16,9 +16,11 @@ class RedirectOutput extends AbstractOutput
         if (!$response instanceof RedirectResponse) {
             return new ValidationResult(ValidationResult::STATUS_ERROR);
         }
+
         if ($this->code !== $response->getCode()) {
             return new ValidationResult(ValidationResult::STATUS_ERROR, ['Response code doesn\'t match']);
         }
+
         return new ValidationResult(ValidationResult::STATUS_OK);
     }
 }

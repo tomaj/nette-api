@@ -7,6 +7,7 @@ namespace Tomaj\NetteApi\Output\Configurator;
 class EnvConfigurator implements ConfiguratorInterface
 {
     private $envVariable = 'APP_ENV';
+
     private $productionValue = 'production';
 
     /**
@@ -25,6 +26,7 @@ class EnvConfigurator implements ConfiguratorInterface
         if ($appEnv === $this->productionValue) {
             return false;
         }
+
         return true;
     }
 
@@ -34,6 +36,7 @@ class EnvConfigurator implements ConfiguratorInterface
         if ($appEnv === $this->productionValue) {
             return false;
         }
+
         return true;
     }
 }

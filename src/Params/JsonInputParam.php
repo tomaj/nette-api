@@ -36,6 +36,7 @@ class JsonInputParam extends InputParam
         if ($input === null) {
             $input = '';
         }
+
         return json_decode($input, true);
     }
 
@@ -93,6 +94,7 @@ HTML;
                 </div>
 HTML;
             }
+
             $this->description .= <<< HTML
                 <script>
                     function setExample(btn) {
@@ -104,6 +106,7 @@ HTML;
 
 HTML;
         }
+
         $this->description .= '<div id="show_schema_link"><a href="#" onclick="document.getElementById(\'json_schema\').style.display = \'block\'; document.getElementById(\'show_schema_link\').style.display = \'none\'; return false;">Show schema</a></div>
                             <div id="json_schema" style="display: none;">
                             <div><a href="#" onclick="document.getElementById(\'show_schema_link\').style.display = \'block\'; document.getElementById(\'json_schema\').style.display = \'none\'; return false;">Hide schema</a></div>'
