@@ -24,6 +24,7 @@ class CookieApiKeyAuthentication extends TokenAuthorization
             $this->errorMessage = 'API key is not set';
             return null;
         }
+
         return $apiKey;
     }
 

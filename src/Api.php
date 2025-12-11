@@ -20,10 +20,7 @@ class Api
     private $rateLimit;
 
     /**
-     * @param EndpointInterface $endpoint
      * @param ApiHandlerInterface $handler
-     * @param ApiAuthorizationInterface $authorization
-     * @param RateLimitInterface|null $rateLimit
      */
     public function __construct(
         EndpointInterface $endpoint,

@@ -25,9 +25,6 @@ class ApiListingHandler extends BaseHandler
 
     /**
      * ApiListingHandler constructor.
-     *
-     * @param ApiDecider  $apiDecider
-     * @param ApiLink     $apiLink
      */
     public function __construct(ApiDecider $apiDecider, ApiLink $apiLink)
     {
@@ -49,7 +46,6 @@ class ApiListingHandler extends BaseHandler
     /**
      * Create handler list for specified version
      *
-     * @param string $version
      *
      * @return array<string,mixed>
      */
@@ -75,7 +71,6 @@ class ApiListingHandler extends BaseHandler
     /**
      * Create array with params for specified handler
      *
-     * @param ApiHandlerInterface $handler
      *
      * @return array{type: string, key: string, is_required: bool, available_values?: non-empty-array<string, mixed>}
      */
@@ -91,6 +86,7 @@ class ApiListingHandler extends BaseHandler
             if ($param->getAvailableValues()) {
                 $parameter['available_values'] = $param->getAvailableValues();
             }
+
             return $parameter;
         }, $handler->params());
     }

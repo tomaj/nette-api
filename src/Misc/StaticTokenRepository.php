@@ -41,9 +41,6 @@ class StaticTokenRepository implements BearerTokenRepositoryInterface
      */
     public function ipRestrictions(string $token): ?string
     {
-        if (isset($this->validTokens[$token])) {
-            return $this->validTokens[$token];
-        }
-        return null;
+        return $this->validTokens[$token] ?? null;
     }
 }

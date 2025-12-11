@@ -39,13 +39,10 @@ class ConsoleResponse
     private ?string $errorMessage = null;
 
     /**
-     * @param string $url
-     * @param string $method
      * @param array<string,mixed> $postFields
      * @param array<string,mixed> $getFields
      * @param array<string,mixed> $cookieFields
      * @param array<string,mixed> $headers
-     * @param string|null $rawPost
      */
     public function __construct(string $url, string $method, array $postFields = [], array $getFields = [], array $cookieFields = [], array $headers = [], ?string $rawPost = null)
     {
@@ -142,10 +139,12 @@ class ConsoleResponse
         if ($body === null) {
             return '';
         }
+
         $decoded = json_decode($body);
         if ($decoded) {
             $body = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
+
         return $body ?: '';
     }
 

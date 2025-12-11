@@ -20,17 +20,10 @@ class ApiDecider
 
     private ?ApiHandlerInterface $globalPreflightHandler = null;
 
-    public function __construct()
-    {
-    }
-
     /**
      * Get api handler that match input method, version, package and apiAction.
      * If decider cannot find handler for given handler, returns defaults.
      *
-     * @param string   $method
-     * @param string   $version
-     * @param string   $package
      * @param string   $apiAction
      *
      * @return Api
@@ -48,10 +41,12 @@ class ApiDecider
                 $handler->setEndpointIdentifier($endpointIdentifier);
                 return new Api($api->getEndpoint(), $handler, $api->getAuthorization(), $api->getRateLimit());
             }
+
             if ($method === 'OPTIONS' && $this->globalPreflightHandler && $identifier->getVersion() === $version && $identifier->getPackage() === $package && $identifier->getApiAction() === $apiAction) {
                 return new Api(new EndpointIdentifier('OPTIONS', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
             }
         }
+
         return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
     }
 
@@ -60,6 +55,7 @@ class ApiDecider
         if (!$corsHandler) {
             $corsHandler = new CorsPreflightHandler(new Response());
         }
+
         $this->globalPreflightHandler = $corsHandler;
     }
 
@@ -84,6 +80,7 @@ class ApiDecider
             $handler = $this->getHandler($api);
             $apis[] = new Api($api->getEndpoint(), $handler, $api->getAuthorization(), $api->getRateLimit());
         }
+
         return $apis;
     }
 

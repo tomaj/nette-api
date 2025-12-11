@@ -11,7 +11,7 @@ class PutInputParam extends InputParam
     public function getValue(): mixed
     {
         $values = file_get_contents('php://input');
-        parse_str($values ? $values : '', $params);
+        parse_str($values ?: '', $params);
         return $params[$this->key] ?? $this->default;
     }
 }

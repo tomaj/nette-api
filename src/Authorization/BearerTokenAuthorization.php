@@ -12,11 +12,8 @@ class BearerTokenAuthorization extends TokenAuthorization
     private const EXPECTED_HTTP_PARTS = 2;
 
     /**
-      * BearerTokenAuthorization constructor.
-      *
-      * @param TokenRepositoryInterface $tokenRepository
-      * @param IpDetectorInterface      $ipDetector
-      */
+     * BearerTokenAuthorization constructor.
+     */
     public function __construct(TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         parent::__construct($tokenRepository, $ipDetector);
@@ -25,8 +22,6 @@ class BearerTokenAuthorization extends TokenAuthorization
     /**
      * Read HTTP reader with authorization token
      * If everything is ok, it return token. In other situations returns false and set errorMessage.
-     *
-     * @return string|null
      */
     protected function readAuthorizationToken(): ?string
     {
@@ -34,15 +29,18 @@ class BearerTokenAuthorization extends TokenAuthorization
             $this->errorMessage = 'Authorization header HTTP_Authorization is not set';
             return null;
         }
+
         $parts = explode(' ', $_SERVER['HTTP_AUTHORIZATION']);
         if (count($parts) !== self::EXPECTED_HTTP_PARTS) {
             $this->errorMessage = 'Authorization header contains invalid structure';
             return null;
         }
+
         if (strtolower($parts[0]) !== 'bearer') {
             $this->errorMessage = 'Authorization header doesn\'t contain bearer token';
             return null;
         }
+
         return $parts[1];
     }
 }

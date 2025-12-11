@@ -29,6 +29,7 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         } else {
             $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
         }
+
         return $response;
     }
 
@@ -39,6 +40,7 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         } else {
             $response = new JsonApiResponse(Response::S400_BAD_REQUEST, ['status' => 'error', 'message' => 'wrong input']);
         }
+
         return $response;
     }
 
@@ -51,6 +53,7 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         } else {
             $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
         }
+
         return $response;
     }
 

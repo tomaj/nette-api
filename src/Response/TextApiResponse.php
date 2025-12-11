@@ -20,7 +20,6 @@ class TextApiResponse implements ResponseInterface
     private $data;
 
     /**
-     * @param int $code
      * @param mixed $data
      */
     public function __construct(int $code, $data)

@@ -70,17 +70,17 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
      *   '127.0.0.1,127.0.02' - accessible from multiple IP, separator could be new line or space
      *   '127.0.0.1/32'       - accessible from ip range
      *   null                 - disabled access
-     *
-     * @return boolean
      */
     private function isValidIp(?string $ipRestrictions): bool
     {
         if ($ipRestrictions === null) {
             return false;
         }
+
         if ($ipRestrictions === '*' || $ipRestrictions === '') {
             return true;
         }
+
         $ip = $this->ipDetector->getRequestIp();
 
         $ipWhiteList = str_replace([',', ' ', "\n"], '#', $ipRestrictions);
@@ -89,6 +89,7 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
             if ($whiteIp === $ip) {
                 return true;
             }
+
             if (strpos($whiteIp, '/') !== false) {
                 return $this->ipInRange($ip, $whiteIp);
             }
@@ -102,15 +103,14 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
      *
      * @param string $ip     this ip will be verified
      * @param string $range  is in IP/CIDR format eg 127.0.0.1/24
-     * @return boolean
      */
     private function ipInRange(string $ip, string $range): bool
     {
-        list($range, $netmask) = explode('/', $range, 2);
+        [$range, $netmask] = explode('/', $range, 2);
         $range_decimal = ip2long($range);
         $ipDecimal = ip2long($ip);
         /** @phpstan-ignore-next-line */
-        $wildcard_decimal = pow(2, (32 - (int)$netmask)) - 1;
+        $wildcard_decimal = 2 ** (32 - (int)$netmask) - 1;
         $netmask_decimal = ~ $wildcard_decimal;
         return (($ipDecimal & $netmask_decimal) === ($range_decimal & $netmask_decimal));
     }

@@ -28,6 +28,7 @@ class ParamsProcessor
                 $this->errors[$param->getKey()] = $validationResult->getErrors();
             }
         }
+
         return !empty($this->errors);
     }
 

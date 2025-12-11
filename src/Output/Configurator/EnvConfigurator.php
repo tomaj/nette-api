@@ -26,6 +26,7 @@ class EnvConfigurator implements ConfiguratorInterface
         if ($appEnv === $this->productionValue) {
             return false;
         }
+
         return true;
     }
 
@@ -35,6 +36,7 @@ class EnvConfigurator implements ConfiguratorInterface
         if ($appEnv === $this->productionValue) {
             return false;
         }
+
         return true;
     }
 }

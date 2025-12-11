@@ -57,8 +57,10 @@ class ApiListingControl extends Control
             if (!isset($versionHandlers[$endPoint->getVersion()])) {
                 $versionHandlers[$endPoint->getVersion()] = [];
             }
+
             $versionHandlers[$endPoint->getVersion()][] = $handler;
         }
+
         return $versionHandlers;
     }
 

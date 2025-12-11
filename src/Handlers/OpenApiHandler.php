@@ -48,9 +48,6 @@ class OpenApiHandler extends BaseHandler
 
     /**
      * OpenApiHandler constructor.
-     * @param ApiDecider $apiDecider
-     * @param ApiLink $apiLink
-     * @param Request $request
      * @param array<string,mixed> $initData - structured data for initialization response
      */
     public function __construct(
@@ -75,6 +72,7 @@ class OpenApiHandler extends BaseHandler
         if (class_exists(Yaml::class)) {
             $availableFormats[] = 'yaml';
         }
+
         return [
             (new GetInputParam('format'))->setAvailableValues($availableFormats)->setDescription('Response format'),
         ];
@@ -120,6 +118,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof BearerTokenAuthorization) {
                 $securitySchemes['Bearer'] = [
                     'type' => 'http',
@@ -127,6 +126,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof QueryApiKeyAuthentication) {
                 $queryParamName = $authorization->getQueryParamName();
                 $securitySchemes[$this->normalizeSecuritySchemeName('query', $queryParamName)] = [
@@ -136,6 +136,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof HeaderApiKeyAuthentication) {
                 $headerName = $authorization->getHeaderName();
                 $securitySchemes[$this->normalizeSecuritySchemeName('header', $headerName)] = [
@@ -145,6 +146,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof CookieApiKeyAuthentication) {
                 $cookieName = $authorization->getCookieName();
                 $securitySchemes[$this->normalizeSecuritySchemeName('cookie', $cookieName)] = [
@@ -231,6 +233,7 @@ class OpenApiHandler extends BaseHandler
         if ($params['format'] === 'yaml') {
             return new TextApiResponse(IResponse::S200_OK, Yaml::dump($data, PHP_INT_MAX, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE));
         }
+
         return new JsonApiResponse(IResponse::S200_OK, $data);
     }
 
@@ -246,8 +249,6 @@ class OpenApiHandler extends BaseHandler
 
     /**
      * @param Api[] $versionApis
-     * @param string $baseUrl
-     * @param string $basePath
      * @return array<string,mixed>
      * @throws InvalidLinkException
      */
@@ -347,6 +348,7 @@ class OpenApiHandler extends BaseHandler
                             ];
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $tmp;
                         }
+
                         /** @phpstan-ignore-next-line */
                         $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $schema;
                     }
@@ -406,9 +408,11 @@ class OpenApiHandler extends BaseHandler
                     ],
                 ];
             }
+
             $settings['responses'] = $responses;
             $list[$path][strtolower($api->getEndpoint()->getMethod())] = $settings;
         }
+
         return $list;
     }
 
@@ -421,6 +425,7 @@ class OpenApiHandler extends BaseHandler
         foreach ($apis as $handler) {
             $basePath = $this->getLongestCommonSubstring($basePath, $this->apiLink->link($handler->getEndpoint()));
         }
+
         return rtrim(str_replace($baseUrl, '', $basePath), '/');
     }
 
@@ -429,21 +434,23 @@ class OpenApiHandler extends BaseHandler
         if ($path1 === null) {
             return $path2;
         }
+
         $commonSubstring = '';
         $shortest = min(strlen($path1), strlen($path2));
         for ($i = 0; $i <= $shortest; ++$i) {
             if (substr($path1, 0, $i) !== substr($path2, 0, $i)) {
                 break;
             }
+
             $commonSubstring = substr($path1, 0, $i);
         }
+
         return $commonSubstring;
     }
 
     /**
      * Create array with params for specified handler
      *
-     * @param ApiHandlerInterface $handler
      * @return array<int,array<string,mixed>>
      */
     private function createParamsList(ApiHandlerInterface $handler): array
@@ -466,10 +473,12 @@ class OpenApiHandler extends BaseHandler
             if ($param->isMulti()) {
                 $schema['items'] = ['type' => 'string'];
             }
+
             $descriptionParts = [];
             if ($param->getDescription()) {
                 $descriptionParts[] = $param->getDescription();
             }
+
             $availableValues = $param->getAvailableValues();
             if ($availableValues) {
                 $schema['enum'] = array_keys($availableValues);
@@ -479,6 +488,7 @@ class OpenApiHandler extends BaseHandler
                     }
                 }
             }
+
             $parameter['schema'] = $schema;
             if ($descriptionParts !== []) {
                 $parameter['description'] = implode("\n", $descriptionParts);
@@ -490,11 +500,11 @@ class OpenApiHandler extends BaseHandler
 
             $parameters[] = $parameter;
         }
+
         return $parameters;
     }
 
     /**
-     * @param ApiHandlerInterface $handler
      * @return array<string,mixed>|null
      */
     private function createRequestBody(ApiHandlerInterface $handler)
@@ -517,6 +527,7 @@ class OpenApiHandler extends BaseHandler
                         }
                     }
                 }
+
                 return [
                     'description' => $param->getDescription(),
                     'required' => $param->isRequired(),
@@ -527,6 +538,7 @@ class OpenApiHandler extends BaseHandler
                     ],
                 ];
             }
+
             if ($param instanceof RawInputParam) {
                 $schema = [
                     'type' => 'string',
@@ -538,6 +550,7 @@ class OpenApiHandler extends BaseHandler
                         $schema['examples'] = $examples;
                     }
                 }
+
                 return [
                     'description' => $param->getDescription(),
                     'required' => $param->isRequired(),
@@ -548,6 +561,7 @@ class OpenApiHandler extends BaseHandler
                     ],
                 ];
             }
+
             if ($param->getType() === InputParam::TYPE_POST || $param->getType() === InputParam::TYPE_PUT) {
                 $property = [
                     'type' => $param->isMulti() ? 'array' : 'string',
@@ -555,10 +569,12 @@ class OpenApiHandler extends BaseHandler
                 if ($param->isMulti()) {
                     $property['items'] = ['type' => 'string'];
                 }
+
                 $descriptionParts = [];
                 if ($param->getDescription()) {
                     $descriptionParts[] = $param->getDescription();
                 }
+
                 $availableValues = $param->getAvailableValues();
                 if ($availableValues) {
                     $property['enum'] = array_keys($availableValues);
@@ -637,9 +653,11 @@ class OpenApiHandler extends BaseHandler
         if ($type == InputParam::TYPE_GET) {
             return 'query';
         }
+
         if ($type == InputParam::TYPE_COOKIE) {
             return 'cookie';
         }
+
         return 'body';
     }
 
@@ -655,8 +673,10 @@ class OpenApiHandler extends BaseHandler
             foreach ($schema['definitions'] as $name => $definition) {
                 $this->addDefinition($name, $this->transformSchema($definition));
             }
+
             unset($schema['definitions']);
         }
+
         return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES) ?: ''), true);
     }
 
@@ -669,6 +689,7 @@ class OpenApiHandler extends BaseHandler
         if (isset($this->definitions[$name]) && $this->definitions[$name] !== $definition) {
             throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');
         }
+
         $this->definitions[$name] = $definition;
     }
 

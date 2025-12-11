@@ -16,7 +16,6 @@ class BasicAuthentication implements ApiAuthorizationInterface
 
     /**
      * @param array<string, string> $autentications - available username - password pairs
-     * @param IRequest $httpRequest
      */
     public function __construct(array $autentications, IRequest $httpRequest)
     {
@@ -34,6 +33,7 @@ class BasicAuthentication implements ApiAuthorizationInterface
         if (!$authentication) {
             return false;
         }
+
         return $authentication === $urlScript->getPassword();
     }
 

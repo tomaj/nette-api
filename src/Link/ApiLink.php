@@ -15,8 +15,6 @@ class ApiLink
 
     /**
      * Create ApiLink
-     *
-     * @param LinkGenerator $linkGenerator
      */
     public function __construct(LinkGenerator $linkGenerator)
     {
@@ -26,9 +24,7 @@ class ApiLink
     /**
      * Create link to specified api endpoint
      *
-     * @param EndpointInterface  $endpoint
      * @param array<mixed>       $params
-     *
      * @throws InvalidLinkException
      */
     public function link(EndpointInterface $endpoint, $params = []): string
