@@ -40,7 +40,7 @@ class ApiConsoleControl extends Control
 
     private $templateFilePath;
 
-    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ApiLink $apiLink = null, ApiConsoleFormFactoryInterface $formFactory = null)
+    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ?ApiLink $apiLink = null, ?ApiConsoleFormFactoryInterface $formFactory = null)
     {
         $this->request = $request;
         $this->endpoint = $endpoint;
@@ -63,7 +63,7 @@ class ApiConsoleControl extends Control
     {
         $form = $this->formFactory->create($this->request, $this->endpoint, $this->handler, $this->authorization, $this->apiLink);
         $form->setRenderer($this->getFormRenderer());
-        $form->onSuccess[] = array($this, 'formSucceeded');
+        $form->onSuccess[] = [$this, 'formSucceeded'];
         return $form;
     }
 
@@ -142,8 +142,10 @@ class ApiConsoleControl extends Control
             if ($values['do_not_send_empty_value_for_' . $key] === true && $values[$key] === '') {
                 unset($values[$key]);
             }
+
             unset($values['do_not_send_empty_value_for_' . $key]);
         }
+
         return $values;
     }
 }

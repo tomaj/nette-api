@@ -21,6 +21,7 @@ class FileInputParam extends InputParam
         if (isset($_FILES[$this->key])) {
             return $this->isMulti() ? $this->processMultiFileUploads($_FILES[$this->key]) : $_FILES[$this->key];
         }
+
         return $this->default;
     }
 
@@ -32,6 +33,7 @@ class FileInputParam extends InputParam
                 $result[$index][$key] = $value;
             }
         }
+
         return $result;
     }
 }

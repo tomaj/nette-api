@@ -32,7 +32,6 @@ abstract class AbstractOutput implements OutputInterface
     /**
      * @param string $name Example name
      * @param mixed $example Example
-     * @return Self
      */
     public function addExample(string $name, $example): self
     {
@@ -43,7 +42,6 @@ abstract class AbstractOutput implements OutputInterface
     /**
      * Set default example
      * @param mixed $example
-     * @return self
      * @deprecated Use addExample instead
      */
     public function setExample($example): self
@@ -61,12 +59,12 @@ abstract class AbstractOutput implements OutputInterface
         if (empty($this->examples)) {
             return null;
         }
+
         return reset($this->examples);
     }
 
     /**
      * Returns all examples
-     * @return array
      */
     public function getExamples(): array
     {

@@ -29,6 +29,7 @@ class EndpointIdentifier implements EndpointInterface
         if (strpos($version, '/') !== false) {
             throw new InvalidArgumentException('Version must have semantic numbering. For example "1", "1.1", "0.13.2" etc.');
         }
+
         $this->version = $version;
         $this->package = $package;
         $this->apiAction = $apiAction;
@@ -54,11 +55,12 @@ class EndpointIdentifier implements EndpointInterface
         if ($this->apiAction === '') {
             return null;
         }
+
         return $this->apiAction;
     }
 
     public function getUrl(): string
     {
-        return "v{$this->version}/{$this->package}/{$this->apiAction}";
+        return sprintf('v%s/%s/%s', $this->version, $this->package, $this->apiAction);
     }
 }

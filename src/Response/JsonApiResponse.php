@@ -83,6 +83,7 @@ class JsonApiResponse implements ResponseInterface
         if ($this->expiration !== false) {
             $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
         }
+
         $result = Json::encode($this->getPayload());
         $httpResponse->setHeader('Content-Length', (string) strlen($result));
         echo $result;

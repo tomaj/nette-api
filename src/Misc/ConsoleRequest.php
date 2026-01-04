@@ -31,7 +31,7 @@ class ConsoleRequest
 
     public function makeRequest(string $url, string $method, array $values, array $additionalValues = [], ?string $token = null): ConsoleResponse
     {
-        list($postFields, $getFields, $cookieFields, $rawPost, $putFields) = $this->processValues($values);
+        [$postFields, $getFields, $cookieFields, $rawPost, $putFields] = $this->processValues($values);
 
         $postFields = array_merge($postFields, $additionalValues['postFields'] ?? []);
         $getFields = array_merge($getFields, $additionalValues['getFields'] ?? []);
@@ -44,10 +44,10 @@ class ConsoleRequest
 
         if ($this->endpoint && $this->apiLink) {
             $url = $this->apiLink->link($this->endpoint, $getFields);
-        } elseif (count($getFields)) {
+        } elseif ($getFields !== []) {
             $parts = [];
             foreach ($getFields as $key => $value) {
-                $parts[] = "$key=$value";
+                $parts[] = sprintf('%s=%s', $key, $value);
             }
 
             $parsedUrl = parse_url($url);
@@ -56,11 +56,12 @@ class ConsoleRequest
         }
 
         $putRawPost = null;
-        if (count($putFields)) {
+        if ($putFields !== []) {
             $parts = [];
             foreach ($putFields as $key => $value) {
-                $parts[] = "$key=$value";
+                $parts[] = sprintf('%s=%s', $key, $value);
             }
+
             $putRawPost = implode('&', $parts);
         }
 
@@ -82,16 +83,19 @@ class ConsoleRequest
         }
 
         $headers = $additionalValues['headers'] ?? [];
-        if (count($cookieFields)) {
+        if ($cookieFields !== []) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
-                $parts[] = "$key=$value";
+                $parts[] = sprintf('%s=%s', $key, $value);
             }
+
             $headers[] = "Cookie: " . implode('&', $parts);
         }
+
         if ($token !== null && $token !== false) {
             $headers[] = 'Authorization: Bearer ' . $token;
         }
+
         if (count($headers)) {
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
@@ -99,7 +103,7 @@ class ConsoleRequest
         $basicAuthUsername = $values['basic_authentication_username'] ?? null;
         $basicAuthPassword = $values['basic_authentication_password'] ?? null;
         if ($basicAuthUsername && $basicAuthPassword) {
-            curl_setopt($curl, CURLOPT_USERPWD, "$basicAuthUsername:$basicAuthPassword");
+            curl_setopt($curl, CURLOPT_USERPWD, sprintf('%s:%s', $basicAuthUsername, $basicAuthPassword));
         }
 
         $consoleResponse = new ConsoleResponse(
@@ -138,16 +142,14 @@ class ConsoleRequest
     /**
      * Process given values to POST and GET fields
      *
-     * @param array $values
      *
-     * @return array
      */
     private function processValues(array $values): array
     {
         $params = $this->handler->params();
 
         $postFields = [];
-        $rawPost = isset($values['post_raw']) ? $values['post_raw'] : null;
+        $rawPost = $values['post_raw'] ?? null;
         $getFields = [];
         $putFields = [];
         $cookieFields = [];
@@ -219,6 +221,7 @@ class ConsoleRequest
 
             return $valueData;
         }
+
         return null;
     }
 
@@ -237,6 +240,7 @@ class ConsoleRequest
                 }
             }
         }
+
         return $result;
     }
 }

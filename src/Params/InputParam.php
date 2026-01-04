@@ -13,14 +13,21 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 abstract class InputParam implements ParamInterface
 {
     const TYPE_POST      = 'POST';
+
     const TYPE_GET       = 'GET';
+
     const TYPE_PUT       = 'PUT';
+
     const TYPE_FILE      = 'FILE';
+
     const TYPE_COOKIE    = 'COOKIE';
+
     const TYPE_POST_RAW  = 'POST_RAW';
+
     const TYPE_POST_JSON = 'POST_JSON';
 
     const OPTIONAL = false;
+
     const REQUIRED = true;
 
     /** @var string */
@@ -63,6 +70,7 @@ abstract class InputParam implements ParamInterface
         if ($availableValues === array_values($availableValues)) {
             $availableValues = array_combine($availableValues, $availableValues);
         }
+
         $this->availableValues = $availableValues;
         return $this;
     }
@@ -111,7 +119,6 @@ abstract class InputParam implements ParamInterface
 
     /**
      * @param mixed $default
-     * @return self
      */
     public function setDefault($default): self
     {
@@ -131,7 +138,6 @@ abstract class InputParam implements ParamInterface
      * Add example, can be used multiple times to add many examples
      * @param string $name Example name
      * @param mixed $example Example
-     * @return Self
      */
     public function addExample(string $name, $example): self
     {
@@ -142,7 +148,6 @@ abstract class InputParam implements ParamInterface
     /**
      * Set default example
      * @param mixed $example
-     * @return self
      * @deprecated Use addExample instead
      */
     public function setExample($example): self
@@ -160,12 +165,12 @@ abstract class InputParam implements ParamInterface
         if (empty($this->examples)) {
             return null;
         }
+
         return reset($this->examples);
     }
 
     /**
      * Returns all examples
-     * @return array
      */
     public function getExamples(): array
     {
@@ -180,16 +185,19 @@ abstract class InputParam implements ParamInterface
             if ($this->isMulti()) {
                 $key = $key . '___' . $i;
             }
+
             $input = $this->addFormInput($form, $key);
             if ($this->description) {
                 $input->setOption('description', Html::el('div', ['class' => 'param-description'])->setHtml($this->description));
             }
+
             if ($this->getExample() || $this->getDefault()) {
                 $default = $this->getExample() ?: $this->getDefault();
                 $default = is_array($default) ? ($default[$i] ?? null) : $default;
                 $input->setDefaultValue($default);
             }
         }
+
         $form->addCheckbox('do_not_send_empty_value_for_' . $this->getKey(), 'Do not send empty value for ' . $this->getLabel());
     }
 
@@ -199,6 +207,7 @@ abstract class InputParam implements ParamInterface
             return $form->addSelect($key, $this->getParamLabel(), $this->getAvailableValues())
                 ->setPrompt('Select ' . $this->getLabel());
         }
+
         return $form->addText($key, $this->getParamLabel());
     }
 
@@ -213,8 +222,8 @@ abstract class InputParam implements ParamInterface
         if ($this->isRequired()) {
             $title .= ' *';
         }
-        $title .= ' (' . $this->getType() . ')';
-        return $title;
+
+        return $title . (' (' . $this->getType() . ')');
     }
 
     /**

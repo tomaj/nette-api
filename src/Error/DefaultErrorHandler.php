@@ -25,21 +25,19 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
     {
         Debugger::log($exception, Debugger::EXCEPTION);
         if ($this->outputConfigurator->showErrorDetail()) {
-            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
-        } else {
-            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
+            return new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $exception->getMessage()]);
         }
-        return $response;
+
+        return new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
     }
 
     public function handleInputParams(array $errors): JsonApiResponse
     {
         if ($this->outputConfigurator->showErrorDetail()) {
-            $response = new JsonApiResponse(Response::S400_BAD_REQUEST, ['status' => 'error', 'message' => 'wrong input', 'detail' => $errors]);
-        } else {
-            $response = new JsonApiResponse(Response::S400_BAD_REQUEST, ['status' => 'error', 'message' => 'wrong input']);
+            return new JsonApiResponse(Response::S400_BAD_REQUEST, ['status' => 'error', 'message' => 'wrong input', 'detail' => $errors]);
         }
-        return $response;
+
+        return new JsonApiResponse(Response::S400_BAD_REQUEST, ['status' => 'error', 'message' => 'wrong input']);
     }
 
     public function handleSchema(array $errors, array $params): JsonApiResponse
@@ -47,11 +45,10 @@ final class DefaultErrorHandler implements ErrorHandlerInterface
         Debugger::log($errors, Debugger::ERROR);
 
         if ($this->outputConfigurator->showErrorDetail()) {
-            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $errors]);
-        } else {
-            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
+            return new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error', 'detail' => $errors]);
         }
-        return $response;
+
+        return new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => 'Internal server error']);
     }
 
     public function handleAuthorization(ApiAuthorizationInterface $auth, array $params): JsonApiResponse

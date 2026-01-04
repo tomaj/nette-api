@@ -57,8 +57,6 @@ final class ApiPresenter implements IPresenter
      * Set cors header
      *
      * See description to property $corsHeader for valid inputs
-     *
-     * @param string $corsHeader
      */
     public function setCorsHeader(string $corsHeader): void
     {
@@ -88,6 +86,7 @@ final class ApiPresenter implements IPresenter
             $this->response->setCode($response->getCode());
             return $response;
         }
+
         $params = $paramsProcessor->getValues();
 
         $authResponse = $this->checkAuth($authorization, $params);
@@ -108,20 +107,23 @@ final class ApiPresenter implements IPresenter
                         $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
                         continue;
                     }
+
                     $validationResult = $output->validate($response);
                     if ($validationResult->isOk()) {
                         $outputValid = true;
                         break;
                     }
+
                     $outputValidatorErrors[] = $validationResult->getErrors();
                 }
+
                 if (!$outputValid) {
                     $response = $this->errorHandler->handleSchema($outputValidatorErrors, $params);
                     $code = $response->getCode();
                 }
             }
-        } catch (Throwable $exception) {
-            $response = $this->errorHandler->handle($exception, $params);
+        } catch (Throwable $throwable) {
+            $response = $this->errorHandler->handle($throwable, $params);
             $code = $response->getCode();
         }
 
@@ -156,11 +158,12 @@ final class ApiPresenter implements IPresenter
                 $this->response->setCode($response->getCode());
                 return $response;
             }
-        } catch (Throwable $exception) {
-            $response = $this->errorHandler->handleAuthorizationException($exception, $params);
+        } catch (Throwable $throwable) {
+            $response = $this->errorHandler->handleAuthorizationException($throwable, $params);
             $this->response->setCode($response->getCode());
             return $response;
         }
+
         return null;
     }
 
@@ -183,6 +186,7 @@ final class ApiPresenter implements IPresenter
             $this->response->addHeader('Retry-After', (string)$retryAfter);
             return $rateLimitResponse->getErrorResponse() ?: new JsonResponse(['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
         }
+
         return null;
     }
 
@@ -202,7 +206,7 @@ final class ApiPresenter implements IPresenter
 
         $requestHeaders = '';
         foreach ($headers as $key => $value) {
-            $requestHeaders .= "$key: $value\n";
+            $requestHeaders .= sprintf('%s: %s%s', $key, $value, PHP_EOL);
         }
 
         $ipDetector = $this->context->getByType(IpDetectorInterface::class);
@@ -227,6 +231,7 @@ final class ApiPresenter implements IPresenter
                 $this->response->addHeader('Access-Control-Allow-Origin', $domain);
                 $this->response->addHeader('Access-Control-Allow-Credentials', 'true');
             }
+
             return;
         }
 
@@ -245,14 +250,17 @@ final class ApiPresenter implements IPresenter
         if (!filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
             return null;
         }
+
         $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
         if (!(isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host']))) {
             return null;
         }
+
         $url = $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
         if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== 80) {
             $url .= ':' . $refererParsedUrl['port'];
         }
+
         return $url;
     }
 }

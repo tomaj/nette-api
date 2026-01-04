@@ -54,6 +54,7 @@ class XmlApiResponse implements ResponseInterface
         if ($this->expiration !== false) {
             $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
         }
+
         $httpResponse->setHeader('Content-Length', (string) strlen($this->response));
 
         echo $this->response;

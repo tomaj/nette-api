@@ -44,7 +44,6 @@ class ApiListingControl extends Control
 
     /**
      * @param Api[] $handlers
-     * @return array
      */
     private function groupApis(array $handlers): array
     {
@@ -54,8 +53,10 @@ class ApiListingControl extends Control
             if (!isset($versionHandlers[$endPoint->getVersion()])) {
                 $versionHandlers[$endPoint->getVersion()] = [];
             }
+
             $versionHandlers[$endPoint->getVersion()][] = $handler;
         }
+
         return $versionHandlers;
     }
 

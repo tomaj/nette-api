@@ -66,6 +66,7 @@ class DefaultApiConsoleFormFactory implements ApiConsoleFormFactoryInterface
         if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
             $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
         }
+
         $port = '';
         if ($uri->scheme === 'http' && $uri->port !== 80) {
             $port = ':' . $uri->port;
