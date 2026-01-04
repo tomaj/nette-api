@@ -7,21 +7,22 @@ namespace Tomaj\NetteApi\Params;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
 use Nette\Utils\Html;
+use Tomaj\NetteApi\Validation\InputValidator;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 abstract class InputParam implements ParamInterface
 {
-    const TYPE_POST      = 'POST';
-    const TYPE_GET       = 'GET';
-    const TYPE_PUT       = 'PUT';
-    const TYPE_FILE      = 'FILE';
-    const TYPE_COOKIE    = 'COOKIE';
-    const TYPE_POST_RAW  = 'POST_RAW';
-    const TYPE_POST_JSON = 'POST_JSON';
+    public const TYPE_POST      = 'POST';
+    public const TYPE_GET       = 'GET';
+    public const TYPE_PUT       = 'PUT';
+    public const TYPE_FILE      = 'FILE';
+    public const TYPE_COOKIE    = 'COOKIE';
+    public const TYPE_POST_RAW  = 'POST_RAW';
+    public const TYPE_POST_JSON = 'POST_JSON';
 
-    const OPTIONAL = false;
-    const REQUIRED = true;
+    public const OPTIONAL = false;
+    public const REQUIRED = true;
 
     /** @var string */
     protected $type;
@@ -47,9 +48,17 @@ abstract class InputParam implements ParamInterface
     /** @var array */
     protected $examples = [];
 
-    public function __construct(string $key)
+    /** @var string|null */
+    protected $valueType;
+
+    /**
+     * InputParam constructor.
+     * @param string|null $valueType
+     */
+    public function __construct(string $key, $valueType = null)
     {
         $this->key = $key;
+        $this->valueType = $valueType;
     }
 
     public function setRequired(): self
@@ -238,6 +247,7 @@ abstract class InputParam implements ParamInterface
             }
         }
 
-        return new ValidationResult(ValidationResult::STATUS_OK);
+        $inputValidator = new InputValidator();
+        return $inputValidator->validate($value, $this->valueType);
     }
 }
