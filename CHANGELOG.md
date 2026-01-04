@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 2.13.0
+
 ### Added
 * Allow justinrainbow/json-schema to use v6 if necessary
 
