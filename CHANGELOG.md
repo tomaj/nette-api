@@ -3,8 +3,12 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+
+## 3.2.0
+
 ### Added
 - Input type validation for InputParam
+* Allow justinrainbow/json-schema to use v6 if necessary
 
 ## 3.1.0
 
