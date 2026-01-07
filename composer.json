@@ -11,7 +11,7 @@
         }
     ],
     "require": {
-        "php": ">= 7.1.0",
+        "php": ">= 8.2.0",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-session": "*",
@@ -19,7 +19,7 @@
         "nette/application": "^3.0",
         "nette/http": "^3.0",
         "tracy/tracy": "^2.6",
-        "league/fractal": "~0.17",
+        "league/fractal": "~0.20",
         "tomaj/nette-bootstrap-form": "^2.0",
         "justinrainbow/json-schema": "^5.2|^6.6"
     },
