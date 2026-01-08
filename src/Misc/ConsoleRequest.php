@@ -76,7 +76,9 @@ class ConsoleRequest
         $startTime = microtime(true);
 
         $curl = curl_init();
+        /** @phpstan-ignore-next-line */
         curl_setopt($curl, CURLOPT_URL, $url);
+        /** @phpstan-ignore-next-line */
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($curl, CURLOPT_NOBODY, false);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
@@ -87,6 +89,7 @@ class ConsoleRequest
 
         if (count($postFields) || $rawPost || $putRawPost !== null) {
             curl_setopt($curl, CURLOPT_POST, true);
+            /** @phpstan-ignore-next-line */
             curl_setopt($curl, CURLOPT_POSTFIELDS, count($postFields) ? $postFields : ($rawPost ?: $putRawPost));
         }
 
@@ -100,7 +103,7 @@ class ConsoleRequest
             $headers[] = 'Cookie: ' . implode('&', $parts);
         }
 
-        if ($token !== null && $token !== false) {
+        if ($token !== null) {
             $headers[] = 'Authorization: Bearer ' . $token;
         }
 

@@ -327,12 +327,10 @@ class OpenApiHandler extends BaseHandler
                         if (!empty($examples = $output->getExamples())) {
                             if (count($examples) === 1) {
                                 $example = is_array($output->getExample()) ? $output->getExample() : json_decode($output->getExample(), true);
-                                /** @phpstan-ignore-next-line */
                                 $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
                             } else {
                                 foreach ($examples as $exampleKey => $example) {
                                     $example = is_array($example) ? $example : json_decode($example, true);
-                                    /** @phpstan-ignore-next-line */
                                     $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'][$exampleKey] = $example;
                                 }
                             }
@@ -342,14 +340,12 @@ class OpenApiHandler extends BaseHandler
                             /** @phpstan-ignore-next-line */
                             $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
                             unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
-                            /** @phpstan-ignore-next-line */
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
                                 'oneOf' => [],
                             ];
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $tmp;
                         }
 
-                        /** @phpstan-ignore-next-line */
                         $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $schema;
                     }
                 }

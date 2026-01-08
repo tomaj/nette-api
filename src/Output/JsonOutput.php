@@ -12,7 +12,7 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 class JsonOutput extends AbstractOutput
 {
-    private $schema;
+    private string $schema;
 
     public function __construct(int $code, string $schema, string $description = '')
     {

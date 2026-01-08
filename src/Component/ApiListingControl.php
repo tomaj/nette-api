@@ -47,7 +47,7 @@ class ApiListingControl extends Control
 
     /**
      * @param Api[] $handlers
-     * @return array<string, array<int, Api>>.
+     * @return array<string, array<int, Api>>
      */
     private function groupApis(array $handlers): array
     {

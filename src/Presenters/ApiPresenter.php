@@ -7,7 +7,6 @@ namespace Tomaj\NetteApi\Presenters;
 use Nette\Application\IPresenter;
 use Nette\Application\IResponse;
 use Nette\Application\Request;
-use Nette\Application\Responses\JsonResponse;
 use Nette\DI\Container;
 use Nette\Http\Response;
 use Throwable;
@@ -18,9 +17,9 @@ use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
-use Tomaj\NetteApi\Output\OutputInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 final class ApiPresenter implements IPresenter
 {
@@ -107,11 +106,6 @@ final class ApiPresenter implements IPresenter
                 $outputValid = $outputs === []; // back compatibility for handlers with no outputs defined
                 $outputValidatorErrors = [];
                 foreach ($outputs as $output) {
-                    if (!$output instanceof OutputInterface) {
-                        $outputValidatorErrors[] = ['Output does not implement OutputInterface'];
-                        continue;
-                    }
-
                     $validationResult = $output->validate($response);
                     if ($validationResult->isOk()) {
                         $outputValid = true;
@@ -191,7 +185,7 @@ final class ApiPresenter implements IPresenter
         if ($remaining === 0) {
             $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
             $this->response->addHeader('Retry-After', (string)$retryAfter);
-            return $rateLimitResponse->getErrorResponse() ?: new JsonResponse(['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
+            return $rateLimitResponse->getErrorResponse() ?: new JsonApiResponse(Response::S429_TOO_MANY_REQUESTS, ['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
         }
 
         return null;

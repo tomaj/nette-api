@@ -18,7 +18,7 @@ final class ApiLinkNode extends StatementNode
     /** @var ArrayNode $endpointParams */
     public $endpointParams;
 
-    public static function create(Tag $tag): ?ApiLinkNode
+    public static function create(Tag $tag): ApiLinkNode
     {
         $tag->expectArguments();
         $node = new self();

@@ -52,10 +52,15 @@ class ApiConsoleControl extends Control
     {
         $form = $this->formFactory->create($this->request, $this->endpoint, $this->handler, $this->authorization, $this->apiLink);
         $form->setRenderer($this->getFormRenderer());
+        /** @phpstan-ignore-next-line */
         $form->onSuccess[] = [$this, 'formSucceeded'];
         return $form;
     }
 
+    /**
+     * @param Form $form
+     * @param ArrayHash<mixed> $values
+     */
     public function formSucceeded(Form $form, ArrayHash $values): void
     {
         $url = $values['api_url'];
@@ -99,7 +104,7 @@ class ApiConsoleControl extends Control
         $template = $this->getTemplate();
         $template->add('response', $result);
 
-        if ($this->getPresenter()->isAjax()) {
+        if ($this->getPresenter()?->isAjax()) {
             $this->getPresenter()->redrawControl();
         }
     }
