@@ -23,6 +23,7 @@ abstract class InputParam implements ParamInterface
 
     public const OPTIONAL = false;
     public const REQUIRED = true;
+    public const DEFAULT_MULTI_INPUT_COUNT = 5;
 
     /** @var string */
     protected $type;
