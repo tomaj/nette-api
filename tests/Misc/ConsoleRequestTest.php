@@ -17,7 +17,7 @@ class ConsoleRequestTest extends TestCase
         $request = new ConsoleRequest($handler);
         $response = $request->makeRequest("http://127.0.0.1:23523/", 'POST', ['status' => 'ok', 'message' => 'Hello']);
 
-        $this->assertTrue($response->isError());
-        $this->assertEquals('http://127.0.0.1:23523/?status=ok&message=Hello', $response->getUrl());
+        self::assertTrue($response->isError());
+        self::assertEquals('http://127.0.0.1:23523/?status=ok&message=Hello', $response->getUrl());
     }
 }

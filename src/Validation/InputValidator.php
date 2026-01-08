@@ -62,7 +62,7 @@ class InputValidator
      * @param mixed $value
      * @param ?string $expectedType
      */
-    public function transformType($value, $expectedType = null)
+    public function transformType($value, $expectedType = null): mixed
     {
         if ($value === null || $expectedType === null) {
             return $value;

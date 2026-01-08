@@ -17,6 +17,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Changed
 * Update Request body schema in OpenApiHandler
 * Set null value when process empty file params, instead of false
+* [BC] Update to php >= 8.3, support for 8.4
+* [BC] addApi register method now requires ApiHandlerInterface as second parameter instead of string or service name
 
 ## 3.0.0
 

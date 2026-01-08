@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Response;
 
-use Nette\Http\IResponse;
 use Nette\Http\IRequest;
+use Nette\Http\IResponse;
 use Nette\SmartObject;
 
 class RedirectResponse implements ResponseInterface

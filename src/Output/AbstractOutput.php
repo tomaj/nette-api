@@ -6,12 +6,12 @@ namespace Tomaj\NetteApi\Output;
 
 abstract class AbstractOutput implements OutputInterface
 {
-    protected $code;
+    protected int $code;
 
-    protected $description;
+    protected string $description;
 
-    /** @var array */
-    protected $examples = [];
+    /** @var array<string, mixed> */
+    protected array $examples = [];
 
     public function __construct(int $code, string $description = '')
     {
@@ -32,7 +32,6 @@ abstract class AbstractOutput implements OutputInterface
     /**
      * @param string $name Example name
      * @param mixed $example Example
-     * @return Self
      */
     public function addExample(string $name, $example): self
     {
@@ -43,12 +42,11 @@ abstract class AbstractOutput implements OutputInterface
     /**
      * Set default example
      * @param mixed $example
-     * @return self
      * @deprecated Use addExample instead
      */
     public function setExample($example): self
     {
-        $this->examples["default"] = $example;
+        $this->examples['default'] = $example;
         return $this;
     }
 
@@ -61,12 +59,13 @@ abstract class AbstractOutput implements OutputInterface
         if (empty($this->examples)) {
             return null;
         }
+
         return reset($this->examples);
     }
 
     /**
      * Returns all examples
-     * @return array
+     * @return array<string, mixed>
      */
     public function getExamples(): array
     {

@@ -29,7 +29,7 @@ abstract class BaseHandler implements ApiHandlerInterface
      */
     protected $linkGenerator;
 
-    public function __construct(ScopeFactoryInterface $scopeFactory = null)
+    public function __construct(?ScopeFactoryInterface $scopeFactory = null)
     {
         $this->fractal = new Manager($scopeFactory);
     }
@@ -60,6 +60,7 @@ abstract class BaseHandler implements ApiHandlerInterface
 
     /**
      * {@inheritdoc}
+     * @return string[]
      */
     public function tags(): array
     {
@@ -87,6 +88,7 @@ abstract class BaseHandler implements ApiHandlerInterface
         if (!$this->fractal) {
             throw new InvalidStateException("Fractal manager isn't initialized. Did you call parent::__construct() in your handler constructor?");
         }
+
         return $this->fractal;
     }
 
@@ -106,9 +108,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * Set link generator to handler
      *
-     * @param LinkGenerator $linkGenerator
      *
-     * @return self
      */
     final public function setupLinkGenerator(LinkGenerator $linkGenerator): self
     {
@@ -119,29 +119,31 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * Create link to actual handler endpoint
      *
-     * @param array   $params
+     * @param array<string,mixed> $params
      *
-     * @return string
      * @throws InvalidLinkException if handler doesn't have linkgenerator or endpoint
      */
     final public function createLink(array $params = []): string
     {
         if (!$this->linkGenerator) {
-            throw new InvalidStateException("You have setupLinkGenerator for this handler if you want to generate link in this handler");
+            throw new InvalidStateException('You have setupLinkGenerator for this handler if you want to generate link in this handler');
         }
+
         if (!$this->endpoint) {
-            throw new InvalidStateException("You have setEndpoint() for this handler if you want to generate link in this handler");
+            throw new InvalidStateException('You have setEndpoint() for this handler if you want to generate link in this handler');
         }
+
         $params = array_merge([
             'version' => $this->endpoint->getVersion(),
             'package' => $this->endpoint->getPackage(),
-            'apiAction' => $this->endpoint->getApiAction()
+            'apiAction' => $this->endpoint->getApiAction(),
         ], $params);
-        return $this->linkGenerator->link('Api:Api:default', $params);
+        return $this->linkGenerator->link('Api:Api:default', $params) ?: '';
     }
 
     /**
      * {@inheritdoc}
+     * @param array<string,mixed> $params
      */
     abstract public function handle(array $params): ResponseInterface;
 }

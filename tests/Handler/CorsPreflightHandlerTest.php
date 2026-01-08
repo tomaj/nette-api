@@ -19,18 +19,18 @@ class CorsPreflightHandlerTest extends TestCase
     {
         $preflighthandler = new CorsPreflightHandler(new Response());
         $result = $preflighthandler->handle([]);
-        $this->assertEquals(200, $result->getCode());
-        $this->assertEquals([], $result->getPayload());
+        self::assertEquals(200, $result->getCode());
+        self::assertEquals([], $result->getPayload());
     }
 
     public function testEndpointSetter()
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
-        $this->assertNull($defaultHandler->getEndpoint());
+        self::assertNull($defaultHandler->getEndpoint());
 
         $endpointIdentifier = new EndpointIdentifier('OPTIONS', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
-        $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
+        self::assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
 
     public function testExceptionWhenCreatingLinkWithoutLinkGenerator()
@@ -64,6 +64,6 @@ class CorsPreflightHandlerTest extends TestCase
         $endpointIdentifier = new EndpointIdentifier('OPTIONS', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
 
-        $this->assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
+        self::assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
     }
 }

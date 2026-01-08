@@ -10,11 +10,7 @@ namespace Tomaj\NetteApi\Misc;
 class StaticTokenRepository implements BearerTokenRepositoryInterface
 {
     /**
-     * array
-     */
-    private $validTokens = [];
-
-    /**
+     *
      * Create static bearer token repository.
      * You can pass multiple tokens that will be available for your api.
      * Format is associtive array where key is token string and value is IP range
@@ -26,12 +22,10 @@ class StaticTokenRepository implements BearerTokenRepositoryInterface
      * ['asfoihegoihregoihrhgrehg' => '127.0.0.1', 'asfo9uyewtoiyewgt4ty4r' => '*']
      *
      * @see BearerTokenAuthorization#isValidIp for all available Ip range formats
-     *
-     * @param array $validTokens
+     * @param array<string, string> $validTokens Array of valid tokens as keys and optional IP restrictions as values
      */
-    public function __construct($validTokens = [])
+    public function __construct(private array $validTokens = [])
     {
-        $this->validTokens = $validTokens;
     }
 
     /**
@@ -39,7 +33,7 @@ class StaticTokenRepository implements BearerTokenRepositoryInterface
      */
     public function validToken(string $token): bool
     {
-        return in_array($token, array_keys($this->validTokens));
+        return in_array($token, array_keys($this->validTokens), true);
     }
 
     /**
@@ -47,9 +41,6 @@ class StaticTokenRepository implements BearerTokenRepositoryInterface
      */
     public function ipRestrictions(string $token): ?string
     {
-        if (isset($this->validTokens[$token])) {
-            return $this->validTokens[$token];
-        }
-        return null;
+        return $this->validTokens[$token] ?? null;
     }
 }

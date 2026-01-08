@@ -8,20 +8,12 @@ use Nette\Application\IResponse;
 
 class RateLimitResponse
 {
-    private $limit;
-
-    private $remaining;
-
-    private $retryAfter;
-
-    private $errorResponse;
-
-    public function __construct(int $limit, int $remaining, ?int $retryAfter = null, ?IResponse $errorResponse = null)
-    {
-        $this->limit = $limit;
-        $this->remaining = $remaining;
-        $this->retryAfter = $retryAfter;
-        $this->errorResponse = $errorResponse;
+    public function __construct(
+        private int $limit,
+        private int $remaining,
+        private ?int $retryAfter = null,
+        private ?IResponse $errorResponse = null
+    ) {
     }
 
     public function getLimit(): int

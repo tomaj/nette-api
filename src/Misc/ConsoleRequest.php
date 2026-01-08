@@ -13,6 +13,10 @@ use Tomaj\NetteApi\Params\ParamInterface;
 
 class ConsoleRequest
 {
+    public const DEFAULT_TIMEOUT = 30;
+
+    public const ELAPSED_MILLISECONDS = 1000;
+
     /** @var ApiHandlerInterface */
     private $handler;
 
@@ -29,9 +33,13 @@ class ConsoleRequest
         $this->apiLink = $apiLink;
     }
 
+    /**
+     * @param array<string,mixed> $values
+     * @param array<string,mixed> $additionalValues
+     */
     public function makeRequest(string $url, string $method, array $values, array $additionalValues = [], ?string $token = null): ConsoleResponse
     {
-        list($postFields, $getFields, $cookieFields, $rawPost, $putFields) = $this->processValues($values);
+        [$postFields, $getFields, $cookieFields, $rawPost, $putFields] = $this->processValues($values);
 
         $postFields = array_merge($postFields, $additionalValues['postFields'] ?? []);
         $getFields = array_merge($getFields, $additionalValues['getFields'] ?? []);
@@ -44,10 +52,10 @@ class ConsoleRequest
 
         if ($this->endpoint && $this->apiLink) {
             $url = $this->apiLink->link($this->endpoint, $getFields);
-        } elseif (count($getFields)) {
+        } elseif ($getFields !== []) {
             $parts = [];
             foreach ($getFields as $key => $value) {
-                $parts[] = "$key=$value";
+                $parts[] = sprintf('%s=%s', $key, $value);
             }
 
             $parsedUrl = parse_url($url);
@@ -56,42 +64,49 @@ class ConsoleRequest
         }
 
         $putRawPost = null;
-        if (count($putFields)) {
+        if ($putFields !== []) {
             $parts = [];
             foreach ($putFields as $key => $value) {
-                $parts[] = "$key=$value";
+                $parts[] = sprintf('%s=%s', $key, $value);
             }
+
             $putRawPost = implode('&', $parts);
         }
 
         $startTime = microtime(true);
 
         $curl = curl_init();
+        /** @phpstan-ignore-next-line */
         curl_setopt($curl, CURLOPT_URL, $url);
+        /** @phpstan-ignore-next-line */
         curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($curl, CURLOPT_NOBODY, false);
         curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_VERBOSE, false);
-        curl_setopt($curl, CURLOPT_TIMEOUT, $additionalValues['timeout'] ?? 30);
+        curl_setopt($curl, CURLOPT_TIMEOUT, $additionalValues['timeout'] ?? self::DEFAULT_TIMEOUT);
         curl_setopt($curl, CURLOPT_HEADER, true);
 
         if (count($postFields) || $rawPost || $putRawPost !== null) {
             curl_setopt($curl, CURLOPT_POST, true);
+            /** @phpstan-ignore-next-line */
             curl_setopt($curl, CURLOPT_POSTFIELDS, count($postFields) ? $postFields : ($rawPost ?: $putRawPost));
         }
 
         $headers = $additionalValues['headers'] ?? [];
-        if (count($cookieFields)) {
+        if ($cookieFields !== []) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
-                $parts[] = "$key=$value";
+                $parts[] = sprintf('%s=%s', $key, $value);
             }
-            $headers[] = "Cookie: " . implode('&', $parts);
+
+            $headers[] = 'Cookie: ' . implode('&', $parts);
         }
-        if ($token !== null && $token !== false) {
+
+        if ($token !== null) {
             $headers[] = 'Authorization: Bearer ' . $token;
         }
+
         if (count($headers)) {
             curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         }
@@ -99,7 +114,7 @@ class ConsoleRequest
         $basicAuthUsername = $values['basic_authentication_username'] ?? null;
         $basicAuthPassword = $values['basic_authentication_password'] ?? null;
         if ($basicAuthUsername && $basicAuthPassword) {
-            curl_setopt($curl, CURLOPT_USERPWD, "$basicAuthUsername:$basicAuthPassword");
+            curl_setopt($curl, CURLOPT_USERPWD, sprintf('%s:%s', $basicAuthUsername, $basicAuthPassword));
         }
 
         $consoleResponse = new ConsoleResponse(
@@ -113,13 +128,14 @@ class ConsoleRequest
         );
 
         $response = curl_exec($curl);
-        $elapsed = intval((microtime(true) - $startTime) * 1000);
+        $elapsed = (int) ((microtime(true) - $startTime) * self::ELAPSED_MILLISECONDS);
 
         if ($response === false) {
             $response = '';
         }
 
         $headerSize = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $response = (string) $response;
         $responseHeaders = substr($response, 0, $headerSize);
         $responseBody = substr($response, $headerSize);
 
@@ -138,18 +154,21 @@ class ConsoleRequest
     /**
      * Process given values to POST and GET fields
      *
-     * @param array $values
-     *
-     * @return array
+     * @param array<string,mixed> $values
+     * @return array{0:array<string,mixed>,1:array<string,mixed>,2:array<string,mixed>,3:string|null,4:array<string,mixed>}
      */
     private function processValues(array $values): array
     {
         $params = $this->handler->params();
 
+        /** @var array<string,mixed> $postFields */
         $postFields = [];
-        $rawPost = isset($values['post_raw']) ? $values['post_raw'] : null;
+        $rawPost = $values['post_raw'] ?? null;
+        /** @var array<string,mixed> $getFields */
         $getFields = [];
+        /** @var array<string,mixed> $putFields */
         $putFields = [];
+        /** @var array<string,mixed> $cookieFields */
         $cookieFields = [];
 
         foreach ($values as $key => $value) {
@@ -165,7 +184,7 @@ class ConsoleRequest
                 }
 
                 if ($param->isMulti()) {
-                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
+                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE], true)) {
                         $postFields[$key][] = $valueData;
                     } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key][] = $valueData;
@@ -175,7 +194,7 @@ class ConsoleRequest
                         $getFields[$key][] = urlencode((string)$valueData);
                     }
                 } else {
-                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE])) {
+                    if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE], true)) {
                         $postFields[$key] = $valueData;
                     } elseif ($param->getType() === InputParam::TYPE_PUT) {
                         $putFields[$key] = $valueData;
@@ -219,9 +238,14 @@ class ConsoleRequest
 
             return $valueData;
         }
+
         return null;
     }
 
+    /**
+     * @param array<string,mixed> $values
+     * @return array<string,mixed>
+     */
     private function normalizeValues(array $values): array
     {
         $result = [];
@@ -233,10 +257,11 @@ class ConsoleRequest
 
             foreach ($value as $innerKey => $innerValue) {
                 if ($innerValue !== '' && $innerValue !== null) {
-                    $result[$key . "[" . $innerKey . "]"] = $innerValue;
+                    $result[$key . '[' . $innerKey . ']'] = $innerValue;
                 }
             }
         }
+
         return $result;
     }
 }

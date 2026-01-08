@@ -7,7 +7,6 @@ namespace Tomaj\NetteApi\Presenters;
 use Nette\Application\IPresenter;
 use Nette\Application\IResponse;
 use Nette\Application\Request;
-use Nette\Application\Responses\JsonResponse;
 use Nette\DI\Container;
 use Nette\Http\Response;
 use Throwable;
@@ -18,12 +17,16 @@ use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
-use Tomaj\NetteApi\Output\OutputInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 final class ApiPresenter implements IPresenter
 {
+    private const TO_SECONDS = 1000;
+
+    private const HTTP_PORT = 80;
+
     /** @var ApiDecider @inject */
     public $apiDecider;
 
@@ -57,8 +60,6 @@ final class ApiPresenter implements IPresenter
      * Set cors header
      *
      * See description to property $corsHeader for valid inputs
-     *
-     * @param string $corsHeader
      */
     public function setCorsHeader(string $corsHeader): void
     {
@@ -88,6 +89,7 @@ final class ApiPresenter implements IPresenter
             $this->response->setCode($response->getCode());
             return $response;
         }
+
         $params = $paramsProcessor->getValues();
 
         $authResponse = $this->checkAuth($authorization, $params);
@@ -101,27 +103,25 @@ final class ApiPresenter implements IPresenter
 
             if ($this->outputConfigurator->validateSchema()) {
                 $outputs = $handler->outputs();
-                $outputValid = count($outputs) === 0; // back compatibility for handlers with no outputs defined
+                $outputValid = $outputs === []; // back compatibility for handlers with no outputs defined
                 $outputValidatorErrors = [];
                 foreach ($outputs as $output) {
-                    if (!$output instanceof OutputInterface) {
-                        $outputValidatorErrors[] = ["Output does not implement OutputInterface"];
-                        continue;
-                    }
                     $validationResult = $output->validate($response);
                     if ($validationResult->isOk()) {
                         $outputValid = true;
                         break;
                     }
+
                     $outputValidatorErrors[] = $validationResult->getErrors();
                 }
+
                 if (!$outputValid) {
                     $response = $this->errorHandler->handleSchema($outputValidatorErrors, $params);
                     $code = $response->getCode();
                 }
             }
-        } catch (Throwable $exception) {
-            $response = $this->errorHandler->handle($exception, $params);
+        } catch (Throwable $throwable) {
+            $response = $this->errorHandler->handle($throwable, $params);
             $code = $response->getCode();
         }
 
@@ -141,13 +141,16 @@ final class ApiPresenter implements IPresenter
     private function getApi(Request $request): Api
     {
         return $this->apiDecider->getApi(
-            $request->getMethod(),
+            $request->getMethod() ?? '',
             $request->getParameter('version'),
             $request->getParameter('package'),
             $request->getParameter('apiAction')
         );
     }
 
+    /**
+     * @param array<mixed> $params
+     */
     private function checkAuth(ApiAuthorizationInterface $authorization, array $params): ?IResponse
     {
         try {
@@ -156,11 +159,12 @@ final class ApiPresenter implements IPresenter
                 $this->response->setCode($response->getCode());
                 return $response;
             }
-        } catch (Throwable $exception) {
-            $response = $this->errorHandler->handleAuthorizationException($exception, $params);
+        } catch (Throwable $throwable) {
+            $response = $this->errorHandler->handleAuthorizationException($throwable, $params);
             $this->response->setCode($response->getCode());
             return $response;
         }
+
         return null;
     }
 
@@ -181,8 +185,9 @@ final class ApiPresenter implements IPresenter
         if ($remaining === 0) {
             $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
             $this->response->addHeader('Retry-After', (string)$retryAfter);
-            return $rateLimitResponse->getErrorResponse() ?: new JsonResponse(['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
+            return $rateLimitResponse->getErrorResponse() ?: new JsonApiResponse(Response::S429_TOO_MANY_REQUESTS, ['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
         }
+
         return null;
     }
 
@@ -202,18 +207,18 @@ final class ApiPresenter implements IPresenter
 
         $requestHeaders = '';
         foreach ($headers as $key => $value) {
-            $requestHeaders .= "$key: $value\n";
+            $requestHeaders .= sprintf('%s: %s%s', $key, $value, PHP_EOL);
         }
 
         $ipDetector = $this->context->getByType(IpDetectorInterface::class);
         $logger->log(
             $code,
-            $request->getMethod(),
+            $request->getMethod() ?? '',
             $requestHeaders,
             (string) filter_input(INPUT_SERVER, 'REQUEST_URI'),
-            $ipDetector ? $ipDetector->getRequestIp() : '',
+            $ipDetector->getRequestIp(),
             (string) filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
-            (int) ($elapsed) * 1000
+            (int) ($elapsed * self::TO_SECONDS)
         );
     }
 
@@ -227,6 +232,7 @@ final class ApiPresenter implements IPresenter
                 $this->response->addHeader('Access-Control-Allow-Origin', $domain);
                 $this->response->addHeader('Access-Control-Allow-Credentials', 'true');
             }
+
             return;
         }
 
@@ -245,14 +251,17 @@ final class ApiPresenter implements IPresenter
         if (!filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
             return null;
         }
+
         $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
         if (!(isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host']))) {
             return null;
         }
+
         $url = $refererParsedUrl['scheme'] . '://' . $refererParsedUrl['host'];
-        if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== 80) {
+        if (isset($refererParsedUrl['port']) && $refererParsedUrl['port'] !== self::HTTP_PORT) {
             $url .= ':' . $refererParsedUrl['port'];
         }
+
         return $url;
     }
 }

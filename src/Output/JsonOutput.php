@@ -12,7 +12,7 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 class JsonOutput extends AbstractOutput
 {
-    private $schema;
+    private string $schema;
 
     public function __construct(int $code, string $schema, string $description = '')
     {
@@ -25,11 +25,12 @@ class JsonOutput extends AbstractOutput
         if (!$response instanceof JsonApiResponse) {
             return new ValidationResult(ValidationResult::STATUS_ERROR);
         }
+
         if ($this->code !== $response->getCode()) {
             return new ValidationResult(ValidationResult::STATUS_ERROR, ['Response code doesn\'t match']);
         }
 
-        $value = json_decode(json_encode($response->getPayload()));
+        $value = json_decode(json_encode($response->getPayload()) ?: '');
 
         $schemaValidator = new JsonSchemaValidator();
         return $schemaValidator->validate($value, $this->schema);

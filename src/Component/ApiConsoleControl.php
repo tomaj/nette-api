@@ -6,8 +6,8 @@ namespace Tomaj\NetteApi\Component;
 
 use Nette\Application\UI\Control;
 use Nette\Application\UI\Form;
-use Nette\Bridges\ApplicationLatte\Template;
-use Nette\Forms\IFormRenderer;
+use Nette\Bridges\ApplicationLatte\DefaultTemplate;
+use Nette\Forms\FormRenderer;
 use Nette\Http\IRequest;
 use Nette\Utils\ArrayHash;
 use Tomaj\Form\Renderer\BootstrapVerticalRenderer;
@@ -19,40 +19,29 @@ use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
-use Tomaj\NetteApi\Component\ApiConsoleFormFactoryInterface;
-use Tomaj\NetteApi\Component\DefaultApiConsoleFormFactory;
 
 class ApiConsoleControl extends Control
 {
-    private $request;
+    private ApiConsoleFormFactoryInterface $formFactory;
 
-    private $endpoint;
+    private ?FormRenderer $formRenderer = null;
 
-    private $handler;
+    private ?string $templateFilePath = null;
 
-    private $authorization;
-
-    private $apiLink;
-
-    private $formFactory;
-
-    private $formRenderer;
-
-    private $templateFilePath;
-
-    public function __construct(IRequest $request, EndpointInterface $endpoint, ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, ApiLink $apiLink = null, ApiConsoleFormFactoryInterface $formFactory = null)
-    {
-        $this->request = $request;
-        $this->endpoint = $endpoint;
-        $this->handler = $handler;
-        $this->authorization = $authorization;
-        $this->apiLink = $apiLink;
+    public function __construct(
+        private IRequest $request,
+        private EndpointInterface $endpoint,
+        private ApiHandlerInterface $handler,
+        private ApiAuthorizationInterface $authorization,
+        private ?ApiLink $apiLink = null,
+        ?ApiConsoleFormFactoryInterface $formFactory = null
+    ) {
         $this->formFactory = $formFactory ?: new DefaultApiConsoleFormFactory();
     }
 
     public function render(): void
     {
-        /** @var Template $template */
+        /** @var DefaultTemplate $template */
         $template = $this->getTemplate();
         $template->setFile($this->getTemplateFilePath());
         $template->add('handler', $this->handler);
@@ -63,10 +52,15 @@ class ApiConsoleControl extends Control
     {
         $form = $this->formFactory->create($this->request, $this->endpoint, $this->handler, $this->authorization, $this->apiLink);
         $form->setRenderer($this->getFormRenderer());
-        $form->onSuccess[] = array($this, 'formSucceeded');
+        /** @phpstan-ignore-next-line */
+        $form->onSuccess[] = [$this, 'formSucceeded'];
         return $form;
     }
 
+    /**
+     * @param Form $form
+     * @param ArrayHash<mixed> $values
+     */
     public function formSucceeded(Form $form, ArrayHash $values): void
     {
         $url = $values['api_url'];
@@ -97,7 +91,7 @@ class ApiConsoleControl extends Control
             $additionalValues['getFields'][$queryParamName] = $values[$queryParamName] ?? null;
         } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
             $headerName = $this->authorization->getHeaderName();
-            $additionalValues['headers'][] = $headerName . ':' . $values['header_api_key'] ?? null;
+            $additionalValues['headers'][] = $headerName . ':' . ($values['header_api_key'] ?? null);
         } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
             $cookieName = $this->authorization->getCookieName();
             $additionalValues['cookieFields'][$cookieName] = $values['cookie_api_key'] ?? null;
@@ -106,21 +100,21 @@ class ApiConsoleControl extends Control
         $consoleRequest = new ConsoleRequest($this->handler, $this->endpoint, $this->apiLink);
         $result = $consoleRequest->makeRequest($url, $method, $this->filterFormValues((array) $values), $additionalValues, $token);
 
-        /** @var Template $template */
+        /** @var DefaultTemplate $template */
         $template = $this->getTemplate();
         $template->add('response', $result);
 
-        if ($this->getPresenter()->isAjax()) {
+        if ($this->getPresenter()?->isAjax()) {
             $this->getPresenter()->redrawControl();
         }
     }
 
-    public function setFormRenderer(IFormRenderer $formRenderer): void
+    public function setFormRenderer(FormRenderer $formRenderer): void
     {
         $this->formRenderer = $formRenderer;
     }
 
-    private function getFormRenderer(): IFormRenderer
+    private function getFormRenderer(): FormRenderer
     {
         return $this->formRenderer ?: new BootstrapVerticalRenderer();
     }
@@ -135,6 +129,10 @@ class ApiConsoleControl extends Control
         return $this->templateFilePath ?: __DIR__ . '/console.latte';
     }
 
+    /**
+     * @param mixed[] $values
+     * @return mixed[]
+    */
     private function filterFormValues(array $values): array
     {
         foreach ($this->handler->params() as $param) {
@@ -142,8 +140,10 @@ class ApiConsoleControl extends Control
             if ($values['do_not_send_empty_value_for_' . $key] === true && $values[$key] === '') {
                 unset($values[$key]);
             }
+
             unset($values['do_not_send_empty_value_for_' . $key]);
         }
+
         return $values;
     }
 }

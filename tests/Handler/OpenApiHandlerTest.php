@@ -49,15 +49,15 @@ class OpenApiHandlerTest extends TestCase
         $handler = $result->getHandler();
 
         $response = $handler->handle(['format' => 'json']);
-        $this->assertEquals(200, $response->getCode());
+        self::assertEquals(200, $response->getCode());
         $payload = $response->getPayload();
 
-        $this->assertEquals(2, count($payload['paths']));
+        self::assertEquals(2, count($payload['paths']));
 
         $def = array_values($payload['paths'])[0]; // MultipleOutputTestHandler
-        $this->assertEquals(2, count($def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema']['oneOf']));
+        self::assertEquals(2, count($def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema']['oneOf']));
 
         $def = array_values($payload['paths'])[1]; // OpenApiHandler
-        $this->assertFalse(isset($def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema']['oneOf']));
+        self::assertFalse(isset($def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema']['oneOf']));
     }
 }
