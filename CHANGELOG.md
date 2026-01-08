@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+### Changed
+* update minimum PHP to version 8.2 (currently still supported version) + update league/fractal library [BC]
+
+## 3.2.0
+
+### Added
+- Input type validation for InputParam
+* Allow justinrainbow/json-schema to use v6 if necessary
 
 ## 3.1.0
 
