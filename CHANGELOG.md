@@ -5,6 +5,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ## [Unreleased][unreleased]
 ### Changed
 * update minimum PHP to version 8.2 (currently still supported version) + update league/fractal library [BC]
+* change Inject from PHPDoc format to native PHP attribute
 
 ## 3.2.0
 

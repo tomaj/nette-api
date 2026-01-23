@@ -7,6 +7,7 @@ namespace Tomaj\NetteApi\Presenters;
 use Nette\Application\IPresenter;
 use Nette\Application\IResponse;
 use Nette\Application\Request;
+use Nette\DI\Attributes\Inject;
 use Nette\DI\Container;
 use Nette\Http\Response;
 use Throwable;
@@ -27,20 +28,20 @@ final class ApiPresenter implements IPresenter
 
     private const HTTP_PORT = 80;
 
-    /** @var ApiDecider @inject */
-    public $apiDecider;
+    #[Inject]
+    public ApiDecider $apiDecider;
 
-    /** @var Response @inject */
-    public $response;
+    #[Inject]
+    public Response $response;
 
-    /** @var Container @inject */
-    public $context;
+    #[Inject]
+    public Container $context;
 
-    /** @var ConfiguratorInterface @inject */
-    public $outputConfigurator;
+    #[Inject]
+    public ConfiguratorInterface $outputConfigurator;
 
-    /** @var ErrorHandlerInterface @inject */
-    public $errorHandler;
+    #[Inject]
+    public ErrorHandlerInterface $errorHandler;
 
     /**
      * CORS header settings
