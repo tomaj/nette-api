@@ -15,9 +15,9 @@ class Api
 
     public function __construct(
         private EndpointInterface $endpoint,
-        private ApiHandlerInterface $handler,
+        private ApiHandlerInterface|string $handler,
         private ApiAuthorizationInterface $authorization,
-        ?RateLimitInterface $rateLimit = null
+        ?RateLimitInterface $rateLimit = null,
     ) {
         $this->rateLimit = $rateLimit ?: new NoRateLimit();
     }
@@ -27,7 +27,7 @@ class Api
         return $this->endpoint;
     }
 
-    public function getHandler(): ApiHandlerInterface
+    public function getHandler(): ApiHandlerInterface|string
     {
         return $this->handler;
     }

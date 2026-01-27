@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi;
 
+use Nette\DI\Container;
 use Nette\Http\Response;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
@@ -16,9 +17,14 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 class ApiDecider
 {
     /** @var Api[] */
-    private $apis = [];
+    private array $apis = [];
 
     private ?ApiHandlerInterface $globalPreflightHandler = null;
+
+    public function __construct(
+        private Container $container,
+    ) {
+    }
 
     /**
      * Get api handler that match input method, version, package and apiAction.
@@ -62,7 +68,7 @@ class ApiDecider
     /**
      * Register new api handler
      */
-    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface $handler, ApiAuthorizationInterface $apiAuthorization, ?RateLimitInterface $rateLimit = null): self
+    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, ?RateLimitInterface $rateLimit = null): self
     {
         $this->apis[] = new Api($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
@@ -84,8 +90,26 @@ class ApiDecider
         return $apis;
     }
 
-    private function getHandler(Api $api): ApiHandlerInterface
+    public function getHandler(Api $api): ApiHandlerInterface
     {
-        return $api->getHandler();
+        $handler = $api->getHandler();
+        if (!is_string($handler)) {
+            return $handler;
+        }
+
+        if (str_starts_with($handler, '@')) {
+            /**
+             * @var ApiHandlerInterface $apiHandler
+             */
+            $apiHandler = $this->container->getByName(substr($handler, 1));
+            return $apiHandler;
+        }
+
+        /**
+         * @var ApiHandlerInterface $apiHandler
+         * @var class-string<object> $handler
+         */
+        $apiHandler = $this->container->getByType($handler);
+        return $apiHandler;
     }
 }
