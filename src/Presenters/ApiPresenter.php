@@ -74,7 +74,7 @@ final class ApiPresenter implements IPresenter
         $this->sendCorsHeaders();
 
         $api = $this->getApi($request);
-        $handler = $api->getHandler();
+        $handler = $this->apiDecider->getHandler($api);
 
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
