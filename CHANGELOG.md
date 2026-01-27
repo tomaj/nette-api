@@ -6,6 +6,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Changed
 * update minimum PHP to version 8.2 (currently still supported version) + update league/fractal library [BC]
 * change Inject from PHPDoc format to native PHP attribute
+* Remove BC addApi register method now requires ApiHandlerInterface as second parameter instead of string or service name
 
 ## 3.2.0
 
@@ -19,6 +20,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * Update Request body schema in OpenApiHandler
 * Set null value when process empty file params, instead of false
 * [BC] Update to php >= 8.3, support for 8.4
+* [BC] addApi register method now requires ApiHandlerInterface as second parameter instead of string or service name
 
 ## 3.0.0
 
