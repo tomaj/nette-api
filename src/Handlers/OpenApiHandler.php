@@ -256,7 +256,7 @@ class OpenApiHandler extends BaseHandler
     {
         $list = [];
         foreach ($versionApis as $api) {
-            $handler = $this->apiDecider->getHandler($api);
+            $handler = $api->getHandler();
             $path = str_replace([$baseUrl, $basePath], '', $this->apiLink->link($api->getEndpoint()));
             $responses = [];
 

@@ -16,7 +16,7 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class ApiDecider
 {
-    /** @var Api[] */
+    /** @var ApiHolder[] */
     private array $apis = [];
 
     private ?ApiHandlerInterface $globalPreflightHandler = null;
@@ -70,7 +70,7 @@ class ApiDecider
      */
     public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, ?RateLimitInterface $rateLimit = null): self
     {
-        $this->apis[] = new Api($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
+        $this->apis[] = new ApiHolder($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
     }
 
@@ -90,7 +90,7 @@ class ApiDecider
         return $apis;
     }
 
-    public function getHandler(Api $api): ApiHandlerInterface
+    private function getHandler(ApiHolder $api): ApiHandlerInterface
     {
         $handler = $api->getHandler();
         if (!is_string($handler)) {

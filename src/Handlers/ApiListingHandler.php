@@ -63,7 +63,7 @@ class ApiListingHandler extends BaseHandler
                 'api_action' => $api->getEndpoint()->getApiAction(),
                 'authorization' => get_class($api->getAuthorization()),
                 'url' => $this->apiLink->link($api->getEndpoint()),
-                'params' => $this->createParamsList($this->apiDecider->getHandler($api)),
+                'params' => $this->createParamsList($api->getHandler()),
             ];
         }, $versionApis);
     }
