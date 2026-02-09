@@ -14,7 +14,7 @@ class ApiHolder
     private RateLimitInterface $rateLimit;
 
     /**
-     * Allows to define api with handler as a string. 
+     * Allows to define api with handler as a string.
      * Alows asynchronous loading of handlers if handler is defined as a string.
      * ApiDecider will try to load the handler from container.
      * Should not be used outside of ApiDecider.
