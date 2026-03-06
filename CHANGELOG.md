@@ -2,9 +2,12 @@
 All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
+## [Unreleased][unreleased]
+### Added
+* Allowed endpoints filter for OpenApiHandler
+
 ## 3.3.0
 
-## [Unreleased][unreleased]
 ### Changed
 * update minimum PHP to version 8.2 (currently still supported version) + update league/fractal library [BC]
 * change Inject from PHPDoc format to native PHP attribute

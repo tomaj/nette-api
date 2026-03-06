@@ -46,21 +46,28 @@ class OpenApiHandler extends BaseHandler
     /** @var array<string,mixed> */
     private $definitions = [];
 
+    /** @var array<string|int, mixed> */
+    private $allowedEndpoints = [];
+
     /**
      * OpenApiHandler constructor.
      * @param array<string,mixed> $initData - structured data for initialization response
+     * @param array<string|int, mixed> $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
+     *      Example: ['user/*' => ['get', 'post', 'delete'], 'user/list' => 'post', 'user/list' => [], 'user/list']
      */
     public function __construct(
         ApiDecider $apiDecider,
         ApiLink $apiLink,
         Request $request,
-        array $initData = []
+        array $initData = [],
+        array $allowedEndpoints = [],
     ) {
         parent::__construct();
         $this->apiDecider = $apiDecider;
         $this->apiLink = $apiLink;
         $this->request = $request;
         $this->initData = $initData;
+        $this->allowedEndpoints = $allowedEndpoints;
     }
 
     /**
@@ -259,6 +266,10 @@ class OpenApiHandler extends BaseHandler
             $handler = $api->getHandler();
             $path = str_replace([$baseUrl, $basePath], '', $this->apiLink->link($api->getEndpoint()));
             $responses = [];
+            $endpointPath = str_replace('v' . $api->getEndpoint()->getVersion() . '/', '', $api->getEndpoint()->getUrl());
+            if (!$this->isPathAllowed($endpointPath, $api->getEndpoint()->getMethod())) {
+                continue;
+            }
 
             $settings = [
                 'summary' => $handler->summary(),
@@ -410,6 +421,39 @@ class OpenApiHandler extends BaseHandler
         }
 
         return $list;
+    }
+
+    private function isPathAllowed(string $path, string $method): bool
+    {
+        if (empty($this->allowedEndpoints)) {
+            return true;
+        }
+
+        foreach ($this->allowedEndpoints as $allowedPath => $allowedMethods) {
+            if (is_int($allowedPath)) { // ['user/list'] format
+                $pattern = str_replace('*', '.*?', preg_quote(strtolower($allowedMethods)));
+                if (preg_match("#$pattern#", strtolower($path))) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            // ['user/*' => ['get', 'post'], 'user/list' => 'post', 'user/list' => [], 'user/list' => '*'] format
+            $pattern = str_replace('*', '.*?', preg_quote(strtolower($allowedPath)));
+            if (preg_match("#$pattern#", strtolower($path))) {
+                if (empty($allowedMethods)) {
+                    return true;
+                }
+                if (is_string($allowedMethods) && strtolower($allowedMethods) === strtolower($method)) {
+                    return true;
+                }
+                if (is_array($allowedMethods) && in_array(strtolower($method), array_map('strtolower', $allowedMethods), true)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
