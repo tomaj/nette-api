@@ -14,42 +14,42 @@ class EndpointIdentifierTest extends TestCase
     {
         $endpoint = new EndpointIdentifier('POST', '1', 'core', 'show');
 
-        $this->assertSame('1', $endpoint->getVersion());
-        $this->assertEquals('POST', $endpoint->getMethod());
-        $this->assertEquals('core', $endpoint->getPackage());
-        $this->assertEquals('show', $endpoint->getApiAction());
-        $this->assertEquals('v1/core/show', $endpoint->getUrl());
+        self::assertSame('1', $endpoint->getVersion());
+        self::assertEquals('POST', $endpoint->getMethod());
+        self::assertEquals('core', $endpoint->getPackage());
+        self::assertEquals('show', $endpoint->getApiAction());
+        self::assertEquals('v1/core/show', $endpoint->getUrl());
 
         $endpoint = new EndpointIdentifier('POST', '1.1', 'core', 'show');
-        $this->assertEquals('v1.1/core/show', $endpoint->getUrl());
+        self::assertEquals('v1.1/core/show', $endpoint->getUrl());
 
         $endpoint = new EndpointIdentifier('POST', '1.1.2', 'core', 'show');
-        $this->assertEquals('v1.1.2/core/show', $endpoint->getUrl());
+        self::assertEquals('v1.1.2/core/show', $endpoint->getUrl());
     }
 
     public function testSimpleUrl()
     {
         $endpoint = new EndpointIdentifier('get', '2', 'main', '');
-        $this->assertNull($endpoint->getApiAction());
-        $this->assertEquals('GET', $endpoint->getMethod());
+        self::assertNull($endpoint->getApiAction());
+        self::assertEquals('GET', $endpoint->getMethod());
     }
 
     public function testSupportedVersions()
     {
         $endpoint = new EndpointIdentifier('GET', '0', 'core', 'show');
-        $this->assertEquals('v0/core/show', $endpoint->getUrl());
+        self::assertEquals('v0/core/show', $endpoint->getUrl());
         $endpoint = new EndpointIdentifier('GET', '1', 'core', 'show');
-        $this->assertEquals('v1/core/show', $endpoint->getUrl());
+        self::assertEquals('v1/core/show', $endpoint->getUrl());
         $endpoint = new EndpointIdentifier('GET', '1.0', 'core', 'show');
-        $this->assertEquals('v1.0/core/show', $endpoint->getUrl());
+        self::assertEquals('v1.0/core/show', $endpoint->getUrl());
         $endpoint = new EndpointIdentifier('GET', '1.1', 'core', 'show');
-        $this->assertEquals('v1.1/core/show', $endpoint->getUrl());
+        self::assertEquals('v1.1/core/show', $endpoint->getUrl());
         $endpoint = new EndpointIdentifier('GET', '1.33', 'core', 'show');
-        $this->assertEquals('v1.33/core/show', $endpoint->getUrl());
+        self::assertEquals('v1.33/core/show', $endpoint->getUrl());
         $endpoint = new EndpointIdentifier('GET', '1.33-dev', 'core', 'show');
-        $this->assertEquals('v1.33-dev/core/show', $endpoint->getUrl());
+        self::assertEquals('v1.33-dev/core/show', $endpoint->getUrl());
         $endpoint = new EndpointIdentifier('GET', '0.33.43', 'core', 'show');
-        $this->assertEquals('v0.33.43/core/show', $endpoint->getUrl());
+        self::assertEquals('v0.33.43/core/show', $endpoint->getUrl());
     }
 
     public function testFailVersion()

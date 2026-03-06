@@ -27,7 +27,7 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        $this->assertEquals($expected, $schema);
+        self::assertEquals($expected, $schema);
     }
 
     public function testTypePropertyRequest()
@@ -48,7 +48,7 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        $this->assertEquals($expected, $schema);
+        self::assertEquals($expected, $schema);
     }
 
     public function testNullStringRequest()
@@ -70,7 +70,7 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        $this->assertEquals($expected, $schema);
+        self::assertEquals($expected, $schema);
     }
 
     public function testIntegerStringRequest()
@@ -94,7 +94,7 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        $this->assertEquals($expected, $schema);
+        self::assertEquals($expected, $schema);
     }
 
     public function testNullIntegerStringRequest()
@@ -119,7 +119,7 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        $this->assertEquals($expected, $schema);
+        self::assertEquals($expected, $schema);
     }
 
     public function testTypePropertyNullIntegerStringRequest()
@@ -144,6 +144,6 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        $this->assertEquals($expected, $schema);
+        self::assertEquals($expected, $schema);
     }
 }

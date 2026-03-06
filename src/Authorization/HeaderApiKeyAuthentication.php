@@ -9,12 +9,9 @@ use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
 class HeaderApiKeyAuthentication extends TokenAuthorization
 {
-    private $headerName;
-
-    public function __construct(string $headerName, TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
+    public function __construct(private string $headerName, TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         parent::__construct($tokenRepository, $ipDetector);
-        $this->headerName = $headerName;
     }
 
     protected function readAuthorizationToken(): ?string
@@ -25,6 +22,7 @@ class HeaderApiKeyAuthentication extends TokenAuthorization
             $this->errorMessage = 'API key is not set';
             return null;
         }
+
         return $apiKey;
     }
 

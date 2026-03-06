@@ -10,10 +10,14 @@ use Tomaj\NetteApi\Response\ResponseInterface;
 
 class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerInterface
 {
-    private $response;
+    private Response $response;
 
-    private $headers = [];
+    /** @var array<string,string[]|string> */
+    private array $headers = [];
 
+    /**
+     * @param array<string,string[]|string> $headers
+     */
     public function __construct(
         Response $response,
         array $headers = [
@@ -28,6 +32,9 @@ class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerIn
         $this->headers = $headers;
     }
 
+    /**
+     * @param array<string,mixed> $params
+     */
     public function handle(array $params): ResponseInterface
     {
         foreach ($this->headers as $name => $values) {
@@ -36,6 +43,7 @@ class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerIn
                 $this->response->addHeader($name, $value);
             }
         }
+
         return new JsonApiResponse(Response::S200_OK, []);
     }
 }

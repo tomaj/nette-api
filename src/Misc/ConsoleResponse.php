@@ -6,34 +6,44 @@ namespace Tomaj\NetteApi\Misc;
 
 class ConsoleResponse
 {
-    private $postFields;
+    /** @var array<string,mixed> */
+    private array $postFields;
 
-    private $rawPost;
+    private ?string $rawPost;
 
-    private $getFields;
+    /** @var array<string,mixed> */
+    private array $getFields;
 
-    private $cookieFields;
+    /** @var array<string,mixed> */
+    private array $cookieFields;
 
-    private $url;
+    private string $url;
 
-    private $method;
+    private string $method;
 
-    private $headers;
+    /** @var array<string,mixed> */
+    private array $headers;
 
-    private $responseCode;
+    private ?int $responseCode = null;
 
-    private $responseBody;
+    private ?string $responseBody = null;
 
-    private $responseHeaders;
+    private ?string $responseHeaders = null;
 
-    private $responseTime;
+    private ?int $responseTime = null;
 
-    private $isError = false;
+    private bool $isError = false;
 
-    private $errorNumber;
+    private ?int $errorNumber = null;
 
-    private $errorMessage;
+    private ?string $errorMessage = null;
 
+    /**
+     * @param array<string,mixed> $postFields
+     * @param array<string,mixed> $getFields
+     * @param array<string,mixed> $cookieFields
+     * @param array<string,mixed> $headers
+     */
     public function __construct(string $url, string $method, array $postFields = [], array $getFields = [], array $cookieFields = [], array $headers = [], ?string $rawPost = null)
     {
         $this->url = $url;
@@ -71,6 +81,9 @@ class ConsoleResponse
         return $this->method;
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getPostFields(): array
     {
         return $this->postFields;
@@ -81,16 +94,25 @@ class ConsoleResponse
         return $this->rawPost;
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getGetFields(): array
     {
         return $this->getFields;
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getCookieFields(): array
     {
         return $this->cookieFields;
     }
 
+    /**
+     * @return array<string,mixed>
+     */
     public function getHeaders(): array
     {
         return $this->headers;
@@ -106,7 +128,7 @@ class ConsoleResponse
         return $this->responseCode;
     }
 
-    public function getResponseBody(): string
+    public function getResponseBody(): ?string
     {
         return $this->responseBody;
     }
@@ -117,11 +139,13 @@ class ConsoleResponse
         if ($body === null) {
             return '';
         }
+
         $decoded = json_decode($body);
         if ($decoded) {
             $body = json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         }
-        return $body;
+
+        return $body ?: '';
     }
 
     public function getResponseHeaders(): ?string
@@ -129,17 +153,17 @@ class ConsoleResponse
         return $this->responseHeaders;
     }
 
-    public function getResponseTime(): int
+    public function getResponseTime(): ?int
     {
         return $this->responseTime;
     }
 
-    public function getErrorNumber(): int
+    public function getErrorNumber(): ?int
     {
         return $this->errorNumber;
     }
 
-    public function getErrorMessage(): string
+    public function getErrorMessage(): ?string
     {
         return $this->errorMessage;
     }

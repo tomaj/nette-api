@@ -20,6 +20,8 @@ use Tomaj\NetteApi\Link\ApiLink;
 
 class DefaultApiConsoleFormFactory implements ApiConsoleFormFactoryInterface
 {
+    private const HTTP_PORT = 80;
+
     public function create(
         IRequest $request,
         EndpointInterface $endpoint,
@@ -66,14 +68,18 @@ class DefaultApiConsoleFormFactory implements ApiConsoleFormFactoryInterface
         if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
             $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
         }
+
         $port = '';
-        if ($uri->scheme === 'http' && $uri->port !== 80) {
+        if ($uri->scheme === 'http' && $uri->port !== self::HTTP_PORT) {
             $port = ':' . $uri->port;
         }
 
         return $scheme . '://' . $uri->host . $port . '/api/' . $endpoint->getUrl();
     }
 
+    /**
+     * @param array<string, mixed> $defaults
+     */
     protected function addAuthorization(Form $form, ApiAuthorizationInterface $authorization, array &$defaults): void
     {
         if ($authorization instanceof BearerTokenAuthorization) {

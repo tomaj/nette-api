@@ -8,8 +8,6 @@ interface IpDetectorInterface
 {
     /**
      * Get actual request IP.
-     *
-     * @return string
      */
     public function getRequestIp(): string;
 }

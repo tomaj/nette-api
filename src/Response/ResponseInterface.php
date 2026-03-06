@@ -10,8 +10,6 @@ interface ResponseInterface extends IResponse
 {
     /**
      * Return api response http code
-     *
-     * @return int
      */
     public function getCode(): int;
 }

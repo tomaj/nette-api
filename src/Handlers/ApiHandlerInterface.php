@@ -13,13 +13,11 @@ interface ApiHandlerInterface
 {
     /**
      * Summary of handler - short description of handler
-     * @return string
      */
     public function summary(): string;
 
     /**
      * Description of handler
-     * @return string
      */
     public function description(): string;
 
@@ -32,13 +30,12 @@ interface ApiHandlerInterface
 
     /**
      * Returns list of tags for handler
-     * @return array
+     * @return string[]
      */
     public function tags(): array;
 
     /**
      * Marks handler as deprecated
-     * @return bool
      */
     public function deprecated(): bool;
 
@@ -46,9 +43,7 @@ interface ApiHandlerInterface
      * Main handle method that will be executed when api
      * endpoint contected with this handler will be triggered
      *
-     * @param array $params
-     *
-     * @return ResponseInterface
+     * @param array<mixed> $params
      */
     public function handle(array $params): ResponseInterface;
 
@@ -56,9 +51,7 @@ interface ApiHandlerInterface
      * Set actual endpoint identifier to hnadler.
      * It is neccesary for link creation.
      *
-     * @param EndpointInterface $endpoint
      *
-     * @return void
      */
     public function setEndpointIdentifier(EndpointInterface $endpoint): void;
 

@@ -9,12 +9,9 @@ use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
 class CookieApiKeyAuthentication extends TokenAuthorization
 {
-    private $cookieName;
-
-    public function __construct(string $cookieName, TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
+    public function __construct(private string $cookieName, TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         parent::__construct($tokenRepository, $ipDetector);
-        $this->cookieName = $cookieName;
     }
 
     protected function readAuthorizationToken(): ?string
@@ -24,6 +21,7 @@ class CookieApiKeyAuthentication extends TokenAuthorization
             $this->errorMessage = 'API key is not set';
             return null;
         }
+
         return $apiKey;
     }
 

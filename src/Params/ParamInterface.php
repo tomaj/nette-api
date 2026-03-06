@@ -17,25 +17,20 @@ interface ParamInterface
 
     public function isRequired(): bool;
 
+    /**
+     * @return array<mixed>|null
+     */
     public function getAvailableValues(): ?array;
 
     public function isMulti(): bool;
 
     public function getDescription(): string;
 
-    /**
-     * default value
-     * @return mixed
-     */
-    public function getDefault();
+    public function getDefault(): mixed;
 
-    /**
-     * example value
-     * @return mixed
-     */
-    public function getExample();
+    public function getExample(): mixed;
 
-    public function getValue();
+    public function getValue(): mixed;
 
     public function updateConsoleForm(Form $form): void;
 }

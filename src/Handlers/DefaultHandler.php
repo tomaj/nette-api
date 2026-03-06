@@ -12,6 +12,7 @@ class DefaultHandler extends BaseHandler
 {
     /**
      * {@inheritdoc}
+     * @param array<string,mixed> $params
      */
     public function handle(array $params): ResponseInterface
     {

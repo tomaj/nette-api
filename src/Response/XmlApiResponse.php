@@ -9,6 +9,10 @@ use Nette\Http\IRequest;
 use Nette\Http\IResponse;
 use Nette\SmartObject;
 
+/**
+ * @method mixed __call(string $name, array<mixed> $args)
+ * @method static void __callStatic(string $name, array<mixed> $args)
+ */
 class XmlApiResponse implements ResponseInterface
 {
     use SmartObject;
@@ -40,7 +44,7 @@ class XmlApiResponse implements ResponseInterface
         return $this->code;
     }
 
-    public function getExpiration(): ?DateTimeInterface
+    public function getExpiration(): DateTimeInterface|false|null
     {
         return $this->expiration;
     }
@@ -54,6 +58,7 @@ class XmlApiResponse implements ResponseInterface
         if ($this->expiration !== false) {
             $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
         }
+
         $httpResponse->setHeader('Content-Length', (string) strlen($this->response));
 
         echo $this->response;

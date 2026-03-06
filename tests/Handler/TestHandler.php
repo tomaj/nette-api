@@ -49,6 +49,7 @@ class TestHandler extends BaseHandler
         if (isset($params['use_fractal']) && $params['use_fractal'] === true) {
             $this->getFractal()->createData(new Collection([]))->toArray();
         }
+
         return new JsonApiResponse(200, ['hello' => 'world']);
     }
 

@@ -12,14 +12,14 @@ class EchoHandlerTest extends TestCase
     public function testResponse()
     {
         $handler = new EchoHandler();
-        $this->assertEquals('', $handler->summary());
-        $this->assertEquals('', $handler->description());
-        $this->assertFalse($handler->deprecated());
-        $this->assertEquals([], $handler->tags());
+        self::assertEquals('', $handler->summary());
+        self::assertEquals('', $handler->description());
+        self::assertFalse($handler->deprecated());
+        self::assertEquals([], $handler->tags());
         
         $result = $handler->handle(['status' => 'error', 'message' => 'Hello']);
-        $this->assertEquals(200, $result->getCode());
+        self::assertEquals(200, $result->getCode());
         
-        $this->assertEquals(['status' => 'error', 'params' => ['status' => 'error', 'message' => 'Hello']], $result->getPayload());
+        self::assertEquals(['status' => 'error', 'params' => ['status' => 'error', 'message' => 'Hello']], $result->getPayload());
     }
 }

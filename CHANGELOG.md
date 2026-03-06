@@ -6,6 +6,27 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Added
 * Allowed endpoints filter for OpenApiHandler
 
+## 3.3.0
+
+### Changed
+* update minimum PHP to version 8.2 (currently still supported version) + update league/fractal library [BC]
+* change Inject from PHPDoc format to native PHP attribute
+* [Reverted] Remove BC addApi register method now requires ApiHandlerInterface as second parameter instead of string or service name
+
+## 3.2.0
+
+### Added
+- Input type validation for InputParam
+* Allow justinrainbow/json-schema to use v6 if necessary
+
+## 3.1.0
+
+### Changed
+* Update Request body schema in OpenApiHandler
+* Set null value when process empty file params, instead of false
+* [BC] Update to php >= 8.3, support for 8.4
+* [BC] addApi register method now requires ApiHandlerInterface as second parameter instead of string or service name
+
 ## 3.0.0
 
 ### Changed

@@ -20,6 +20,7 @@ class IpDetector implements IpDetectorInterface
         } else {
             $ip = 'cli';
         }
+
         return $ip;
     }
 }

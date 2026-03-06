@@ -3,3 +3,4 @@ vendor
 build
 coverage.clover
 .idea
+.phpunit.result.cache

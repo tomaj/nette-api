@@ -8,9 +8,6 @@ interface TokenRepositoryInterface
 {
     /**
      * Return true if token is valid, otherwise return false
-     *
-     * @param string $token
-     * @return bool
      */
     public function validToken(string $token): bool;
 
@@ -23,9 +20,7 @@ interface TokenRepositoryInterface
      *   '156.26.252/32'  - access from ip range
      *   false            - if token doesn't exists
      *
-     * @param string $token
      *
-     * @return string|null
      */
     public function ipRestrictions(string $token): ?string;
 }

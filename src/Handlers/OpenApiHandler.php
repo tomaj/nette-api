@@ -40,27 +40,26 @@ class OpenApiHandler extends BaseHandler
     /** @var Request */
     private $request;
 
+    /** @var array<string,mixed> */
     private $initData = [];
 
+    /** @var array<string,mixed> */
     private $definitions = [];
 
     private $allowedEndpoints = [];
 
     /**
      * OpenApiHandler constructor.
-     * @param ApiDecider $apiDecider
-     * @param ApiLink $apiLink
-     * @param Request $request
-     * @param array $initData - structured data for initialization response
-     * @param array $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
-     *                                 Example: ['user/*' => ['get', 'post', 'delete'], 'user/list' => 'post', 'user/list' => [], 'user/list']
+     * @param array<string,mixed> $initData - structured data for initialization response
+     * @param array<mixed> $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
+     *      Example: ['user/*' => ['get', 'post', 'delete'], 'user/list' => 'post', 'user/list' => [], 'user/list']
      */
     public function __construct(
         ApiDecider $apiDecider,
         ApiLink $apiLink,
         Request $request,
         array $initData = [],
-        array $allowedEndpoints = []
+        array $allowedEndpoints = [],
     ) {
         parent::__construct();
         $this->apiDecider = $apiDecider;
@@ -70,12 +69,16 @@ class OpenApiHandler extends BaseHandler
         $this->allowedEndpoints = $allowedEndpoints;
     }
 
+    /**
+     * @return InputParam[]
+     */
     public function params(): array
     {
         $availableFormats = ['json'];
         if (class_exists(Yaml::class)) {
             $availableFormats[] = 'yaml';
         }
+
         return [
             (new GetInputParam('format'))->setAvailableValues($availableFormats)->setDescription('Response format'),
         ];
@@ -91,6 +94,7 @@ class OpenApiHandler extends BaseHandler
 
     /**
      * {@inheritdoc}
+     * @return string[]
      */
     public function tags(): array
     {
@@ -99,11 +103,12 @@ class OpenApiHandler extends BaseHandler
 
     /**
      * {@inheritdoc}
+     * @param array<string,mixed> $params
      */
     public function handle(array $params): ResponseInterface
     {
-        $version = $this->getEndpoint()->getVersion();
-        $apis = $this->getApis($version);
+        $version = $this->getEndpoint()?->getVersion();
+        $apis = $this->getApis($version ?: '');
         $scheme = $this->request->getUrl()->getScheme();
         $baseUrl = $this->request->getUrl()->getHostUrl();
         $basePath = $this->getBasePath($apis, $baseUrl);
@@ -119,6 +124,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof BearerTokenAuthorization) {
                 $securitySchemes['Bearer'] = [
                     'type' => 'http',
@@ -126,6 +132,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof QueryApiKeyAuthentication) {
                 $queryParamName = $authorization->getQueryParamName();
                 $securitySchemes[$this->normalizeSecuritySchemeName('query', $queryParamName)] = [
@@ -135,6 +142,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof HeaderApiKeyAuthentication) {
                 $headerName = $authorization->getHeaderName();
                 $securitySchemes[$this->normalizeSecuritySchemeName('header', $headerName)] = [
@@ -144,6 +152,7 @@ class OpenApiHandler extends BaseHandler
                 ];
                 continue;
             }
+
             if ($authorization instanceof CookieApiKeyAuthentication) {
                 $cookieName = $authorization->getCookieName();
                 $securitySchemes[$this->normalizeSecuritySchemeName('cookie', $cookieName)] = [
@@ -158,7 +167,7 @@ class OpenApiHandler extends BaseHandler
         $data = [
             'openapi' => '3.0.0',
             'info' => [
-                'version' => (string)$version,
+                'version' => $version,
                 'title' => 'Nette API',
             ],
             'servers' => [
@@ -183,7 +192,7 @@ class OpenApiHandler extends BaseHandler
                         ],
                         'required' => ['status', 'message'],
                     ],
-                    'ErrorForbidden' => [
+                    'ErrorUnauthorized' => [
                         'type' => 'object',
                         'properties' => [
                             'status' => [
@@ -230,9 +239,13 @@ class OpenApiHandler extends BaseHandler
         if ($params['format'] === 'yaml') {
             return new TextApiResponse(IResponse::S200_OK, Yaml::dump($data, PHP_INT_MAX, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE));
         }
+
         return new JsonApiResponse(IResponse::S200_OK, $data);
     }
 
+    /**
+     * @return Api[]
+     */
     private function getApis(string $version): array
     {
         return array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
@@ -242,9 +255,7 @@ class OpenApiHandler extends BaseHandler
 
     /**
      * @param Api[] $versionApis
-     * @param string $baseUrl
-     * @param string $basePath
-     * @return array
+     * @return array<string,mixed>
      * @throws InvalidLinkException
      */
     private function getPaths(array $versionApis, string $baseUrl, string $basePath): array
@@ -288,12 +299,12 @@ class OpenApiHandler extends BaseHandler
             $authorization = $api->getAuthorization();
 
             if (!$authorization instanceof NoAuthorization) {
-                $responses[IResponse::S403_FORBIDDEN] = [
+                $responses[IResponse::S401_Unauthorized] = [
                     'description' => 'Operation forbidden',
                     'content' => [
                         'application/json; charset=utf-8' => [
                             'schema' => [
-                                '$ref' => '#/components/schemas/ErrorForbidden',
+                                '$ref' => '#/components/schemas/ErrorUnauthorized',
                             ],
                         ],
                     ],
@@ -336,6 +347,7 @@ class OpenApiHandler extends BaseHandler
                         }
                     } else {
                         if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
+                            /** @phpstan-ignore-next-line */
                             $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
                             unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
@@ -343,6 +355,7 @@ class OpenApiHandler extends BaseHandler
                             ];
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $tmp;
                         }
+
                         $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $schema;
                     }
                 }
@@ -401,13 +414,15 @@ class OpenApiHandler extends BaseHandler
                     ],
                 ];
             }
+
             $settings['responses'] = $responses;
             $list[$path][strtolower($api->getEndpoint()->getMethod())] = $settings;
         }
+
         return $list;
     }
 
-    private function isPathAllowed($path, $method): bool
+    private function isPathAllowed(string $path, string $method): bool
     {
         if (empty($this->allowedEndpoints)) {
             return true;
@@ -440,39 +455,44 @@ class OpenApiHandler extends BaseHandler
         return false;
     }
 
+    /**
+     * @param Api[] $apis
+     */
     private function getBasePath(array $apis, string $baseUrl): string
     {
         $basePath = '';
         foreach ($apis as $handler) {
             $basePath = $this->getLongestCommonSubstring($basePath, $this->apiLink->link($handler->getEndpoint()));
         }
+
         return rtrim(str_replace($baseUrl, '', $basePath), '/');
     }
 
-    private function getLongestCommonSubstring($path1, $path2)
+    private function getLongestCommonSubstring(?string $path1, string $path2): string
     {
         if ($path1 === null) {
             return $path2;
         }
+
         $commonSubstring = '';
         $shortest = min(strlen($path1), strlen($path2));
         for ($i = 0; $i <= $shortest; ++$i) {
             if (substr($path1, 0, $i) !== substr($path2, 0, $i)) {
                 break;
             }
+
             $commonSubstring = substr($path1, 0, $i);
         }
+
         return $commonSubstring;
     }
 
     /**
      * Create array with params for specified handler
      *
-     * @param ApiHandlerInterface $handler
-     *
-     * @return array
+     * @return array<int,array<string,mixed>>
      */
-    private function createParamsList(ApiHandlerInterface $handler)
+    private function createParamsList(ApiHandlerInterface $handler): array
     {
         $parameters = [];
         foreach ($handler->params() as $param) {
@@ -492,10 +512,12 @@ class OpenApiHandler extends BaseHandler
             if ($param->isMulti()) {
                 $schema['items'] = ['type' => 'string'];
             }
+
             $descriptionParts = [];
             if ($param->getDescription()) {
                 $descriptionParts[] = $param->getDescription();
             }
+
             $availableValues = $param->getAvailableValues();
             if ($availableValues) {
                 $schema['enum'] = array_keys($availableValues);
@@ -505,6 +527,7 @@ class OpenApiHandler extends BaseHandler
                     }
                 }
             }
+
             $parameter['schema'] = $schema;
             if ($descriptionParts !== []) {
                 $parameter['description'] = implode("\n", $descriptionParts);
@@ -516,9 +539,13 @@ class OpenApiHandler extends BaseHandler
 
             $parameters[] = $parameter;
         }
+
         return $parameters;
     }
 
+    /**
+     * @return array<string,mixed>|null
+     */
     private function createRequestBody(ApiHandlerInterface $handler)
     {
         $requestBody = [
@@ -527,6 +554,7 @@ class OpenApiHandler extends BaseHandler
         ];
         $filesInBody = false;
         $requestBodyExample = [];
+        $result = [];
         foreach ($handler->params() as $param) {
             if ($param instanceof JsonInputParam) {
                 $schema = json_decode($param->getSchema(), true);
@@ -539,16 +567,14 @@ class OpenApiHandler extends BaseHandler
                         }
                     }
                 }
-                return [
-                    'description' => $param->getDescription(),
-                    'required' => $param->isRequired(),
-                    'content' => [
-                        'application/json' => [
-                            'schema' => $this->transformSchema($schema),
-                        ],
-                    ],
+
+                $result['description'] = $param->getDescription();
+                $result['required'] = $param->isRequired();
+                $result['content']['application/json'] = [
+                    'schema' => $this->transformSchema($schema),
                 ];
             }
+
             if ($param instanceof RawInputParam) {
                 $schema = [
                     'type' => 'string',
@@ -560,16 +586,13 @@ class OpenApiHandler extends BaseHandler
                         $schema['examples'] = $examples;
                     }
                 }
-                return [
-                    'description' => $param->getDescription(),
-                    'required' => $param->isRequired(),
-                    'content' => [
-                        'text/plain' => [
-                            'schema' => $schema,
-                        ],
-                    ],
+                $result['description'] = $result['description'] ?? $param->getDescription();
+                $result['required'] = $result['required'] ?? $param->isRequired();
+                $result['content']['text/plain'] = [
+                    'schema' => $schema,
                 ];
             }
+
             if ($param->getType() === InputParam::TYPE_POST || $param->getType() === InputParam::TYPE_PUT) {
                 $property = [
                     'type' => $param->isMulti() ? 'array' : 'string',
@@ -577,10 +600,12 @@ class OpenApiHandler extends BaseHandler
                 if ($param->isMulti()) {
                     $property['items'] = ['type' => 'string'];
                 }
+
                 $descriptionParts = [];
                 if ($param->getDescription()) {
                     $descriptionParts[] = $param->getDescription();
                 }
+
                 $availableValues = $param->getAvailableValues();
                 if ($availableValues) {
                     $property['enum'] = array_keys($availableValues);
@@ -637,30 +662,37 @@ class OpenApiHandler extends BaseHandler
             }
 
             $contentType = $filesInBody ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
-            return [
-                'required' => true,
-                'content' => [
-                    $contentType => [
-                        'schema' => $requestBodySchema,
-                    ],
-                ],
+
+            $result['required'] = true;
+            $result['content'][$contentType] = [
+                'schema' => $requestBodySchema,
             ];
         }
 
-        return null;
+        return $result ?: null;
     }
 
+    /**
+     * @param int|string $type
+     * @return string
+     */
     private function createIn($type)
     {
         if ($type == InputParam::TYPE_GET) {
             return 'query';
         }
+
         if ($type == InputParam::TYPE_COOKIE) {
             return 'cookie';
         }
+
         return 'body';
     }
 
+    /**
+     * @param array<string,mixed> $schema
+     * @return array<string,mixed>
+     */
     private function transformSchema(array $schema)
     {
         OpenApiTransform::transformTypes($schema);
@@ -669,16 +701,23 @@ class OpenApiHandler extends BaseHandler
             foreach ($schema['definitions'] as $name => $definition) {
                 $this->addDefinition($name, $this->transformSchema($definition));
             }
+
             unset($schema['definitions']);
         }
-        return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES)), true);
+
+        return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES) ?: ''), true);
     }
 
-    private function addDefinition($name, $definition)
+    /**
+     * @param string $name
+     * @param array<string,mixed> $definition
+     */
+    private function addDefinition($name, $definition): void
     {
         if (isset($this->definitions[$name]) && $this->definitions[$name] !== $definition) {
             throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');
         }
+
         $this->definitions[$name] = $definition;
     }
 
