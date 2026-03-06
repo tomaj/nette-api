@@ -46,12 +46,13 @@ class OpenApiHandler extends BaseHandler
     /** @var array<string,mixed> */
     private $definitions = [];
 
+    /** @var array<string,mixed> */
     private $allowedEndpoints = [];
 
     /**
      * OpenApiHandler constructor.
      * @param array<string,mixed> $initData - structured data for initialization response
-     * @param array<mixed> $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
+     * @param array<string,mixed> $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
      *      Example: ['user/*' => ['get', 'post', 'delete'], 'user/list' => 'post', 'user/list' => [], 'user/list']
      */
     public function __construct(
