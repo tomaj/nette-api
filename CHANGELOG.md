@@ -6,6 +6,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Added
 * Allowed endpoints filter for OpenApiHandler
 
+### Removed
+* Support for justinrainbow/json-schema (causes issues with validating schema)
+
 ## 3.3.0
 
 ### Changed

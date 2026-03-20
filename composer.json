@@ -21,7 +21,7 @@
         "tracy/tracy": "^2.6",
         "league/fractal": "~0.20",
         "tomaj/nette-bootstrap-form": "^2.0",
-        "justinrainbow/json-schema": "^5.2|^6.6",
+        "justinrainbow/json-schema": "^5.2",
         "latte/latte": "^3.0"
     },
     "require-dev": {
