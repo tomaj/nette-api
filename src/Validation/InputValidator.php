@@ -76,17 +76,17 @@ class InputValidator
                 }
                 // no break
             case InputType::INTEGER:
-                if (is_numeric($value)) {
+                if (is_numeric($value) || $value === '') {
                     settype($value, 'integer');
                 }
                 break;
             case InputType::DOUBLE:
-                if (is_numeric($value)) {
+                if (is_numeric($value) || $value === '') {
                     settype($value, 'double');
                 }
                 break;
             case InputType::FLOAT:
-                if (is_numeric($value)) {
+                if (is_numeric($value) || $value === '') {
                     settype($value, 'float');
                 }
                 break;
