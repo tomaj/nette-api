@@ -351,8 +351,8 @@ class OpenApiHandler extends BaseHandler
                         if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
                             /** @phpstan-ignore-next-line */
                             $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
-                            /** @phpstan-ignore-next-line */
                             unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
+                            /** @phpstan-ignore-next-line */
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
                                 'oneOf' => [],
                             ];
