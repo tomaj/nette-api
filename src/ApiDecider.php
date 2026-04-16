@@ -61,8 +61,10 @@ class ApiDecider
         if (!$corsHandler && !$this->globalPreflightHandler) {
             $corsHandler = new CorsPreflightHandler(new Response());
         }
-
-        $this->globalPreflightHandler = $corsHandler;
+        
+        if ($corsHandler) {
+            $this->globalPreflightHandler = $corsHandler;
+        }
     }
 
     /**
