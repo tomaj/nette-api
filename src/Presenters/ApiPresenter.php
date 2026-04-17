@@ -84,6 +84,11 @@ final class ApiPresenter implements IPresenter
             return $rateLimitResponse;
         }
 
+        $authResponse = $this->checkAuth($authorization, []);
+        if ($authResponse !== null) {
+            return $authResponse;
+        }
+
         $paramsProcessor = new ParamsProcessor($handler->params());
         if ($paramsProcessor->isError()) {
             $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors());
@@ -92,11 +97,6 @@ final class ApiPresenter implements IPresenter
         }
 
         $params = $paramsProcessor->getValues();
-
-        $authResponse = $this->checkAuth($authorization, $params);
-        if ($authResponse !== null) {
-            return $authResponse;
-        }
 
         try {
             $response = $handler->handle($params);
