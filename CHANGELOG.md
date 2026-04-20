@@ -4,6 +4,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Fixed
+- Input validation before authorization check in ApiPresenter (causes issues with some authorization handlers that need to check input params)
+
 ## 3.4.0
 
 ### Added
