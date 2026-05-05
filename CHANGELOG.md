@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+### Fixed
+- Don't overwrite global preflight handler if it is set and enableGlobalPreflight is called without parameter
 
 ## 3.4.0
 

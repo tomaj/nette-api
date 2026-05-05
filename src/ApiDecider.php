@@ -58,11 +58,13 @@ class ApiDecider
 
     public function enableGlobalPreflight(?CorsPreflightHandlerInterface $corsHandler = null): void
     {
-        if (!$corsHandler) {
+        if (!$corsHandler && !$this->globalPreflightHandler) {
             $corsHandler = new CorsPreflightHandler(new Response());
         }
-
-        $this->globalPreflightHandler = $corsHandler;
+        
+        if ($corsHandler) {
+            $this->globalPreflightHandler = $corsHandler;
+        }
     }
 
     /**
