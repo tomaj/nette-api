@@ -5,6 +5,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ## [Unreleased][unreleased]
 ### Fixed
 - Don't overwrite global preflight handler if it is set and enableGlobalPreflight is called without parameter
+- Input validation before authorization check in ApiPresenter (causes issues with some authorization handlers that need to check input params)
 
 ## 3.4.0
 
