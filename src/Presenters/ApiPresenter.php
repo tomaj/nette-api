@@ -85,17 +85,17 @@ final class ApiPresenter implements IPresenter
         }
 
         $paramsProcessor = new ParamsProcessor($handler->params());
-        if ($paramsProcessor->isError()) {
-            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors());
-            $this->response->setCode($response->getCode());
-            return $response;
-        }
-
-        $params = $paramsProcessor->getValues();
+        $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
 
         $authResponse = $this->checkAuth($authorization, $params);
         if ($authResponse !== null) {
             return $authResponse;
+        }
+
+        if ($paramsProcessor->isError()) {
+            $response = $this->errorHandler->handleInputParams($paramsProcessor->getErrors());
+            $this->response->setCode($response->getCode());
+            return $response;
         }
 
         try {
@@ -145,7 +145,7 @@ final class ApiPresenter implements IPresenter
             $request->getMethod() ?? '',
             $request->getParameter('version'),
             $request->getParameter('package'),
-            $request->getParameter('apiAction')
+            $request->getParameter('apiAction'),
         );
     }
 
@@ -216,10 +216,10 @@ final class ApiPresenter implements IPresenter
             $code,
             $request->getMethod() ?? '',
             $requestHeaders,
-            (string) filter_input(INPUT_SERVER, 'REQUEST_URI'),
+            (string)filter_input(INPUT_SERVER, 'REQUEST_URI'),
             $ipDetector->getRequestIp(),
-            (string) filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
-            (int) ($elapsed * self::TO_SECONDS)
+            (string)filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
+            (int)($elapsed * self::TO_SECONDS),
         );
     }
 
