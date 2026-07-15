@@ -342,7 +342,6 @@ class OpenApiHandler extends BaseHandler
                             } else {
                                 foreach ($examples as $exampleKey => $example) {
                                     $example = is_array($example) ? $example : json_decode($example, true);
-                                    /** @phpstan-ignore-next-line */
                                     $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'][$exampleKey] = $example;
                                 }
                             }
