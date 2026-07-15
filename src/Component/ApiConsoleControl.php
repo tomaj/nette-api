@@ -104,7 +104,7 @@ class ApiConsoleControl extends Control
         $template = $this->getTemplate();
         $template->add('response', $result);
 
-        if ($this->getPresenter()?->isAjax()) {
+        if ($this->getPresenter()->isAjax()) {
             $this->getPresenter()->redrawControl();
         }
     }
