@@ -3,8 +3,10 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+
+## 3.4.3
 ### Fixed
-- Invalid input type returned when value is empty in InputValidator
+* Invalid input type returned when value is empty in InputValidator
 
 ## 3.4.2
 ### Fixed
