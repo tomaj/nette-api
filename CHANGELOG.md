@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) principles.
 
 ## [Unreleased][unreleased]
+### Fixed
+- Multi value validation and transformation if expected type is not array but instead expects array of specific type. For example if expected type is integer and value is array of integers, validation and transformation will pass.
 
 ## 3.4.3
 ### Fixed

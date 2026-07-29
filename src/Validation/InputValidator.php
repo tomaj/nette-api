@@ -20,6 +20,10 @@ class InputValidator
             return new ValidationResult(ValidationResult::STATUS_OK);
         }
 
+        if (is_array($value) && $expectedType !== InputType::ARRAY) {
+            return $this->validateMulti($value, $expectedType);
+        }
+
         switch ($expectedType) {
             case InputType::BOOLEAN:
                 if (!is_bool($value)) {
@@ -67,6 +71,11 @@ class InputValidator
         if ($value === null || $expectedType === null) {
             return $value;
         }
+
+        if (is_array($value) && $expectedType !== InputType::ARRAY) {
+            return $this->transformMulti($value, $expectedType);
+        }
+
         switch ($expectedType) {
             case InputType::BOOLEAN:
                 if ($value === '1' || $value === 1 || $value === true || strtolower((string) $value) === 'true') {
@@ -97,6 +106,32 @@ class InputValidator
                 break;
             default:
                 return $value;
+        }
+        return $value;
+    }
+
+    /**
+     * @param mixed[] $value
+     */
+    private function validateMulti(array $value, string $expectedType): ValidationResultInterface
+    {
+        foreach ($value as $item) {
+            $result = $this->validate($item, $expectedType);
+            if ($result->isOk() === false) {
+                return $result;
+            }
+        }
+        return new ValidationResult(ValidationResult::STATUS_OK);
+    }
+
+    /**
+     * @param mixed[] $value
+     * @return mixed[]
+     */
+    private function transformMulti(array $value, string $expectedType): array
+    {
+        foreach ($value as $key => $item) {
+            $value[$key] = $this->transformType($item, $expectedType);
         }
         return $value;
     }
