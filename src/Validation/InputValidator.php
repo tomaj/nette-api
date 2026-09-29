@@ -10,7 +10,7 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 class InputValidator
 {
     /**
-     * Summary of validate
+     * Validate expected type of the input value.
      * @param mixed $value
      * @param ?string $expectedType
      */
@@ -62,11 +62,11 @@ class InputValidator
     }
 
     /**
-     * Summary of transformType
+     * Transform the input value to the expected type if possible.
      * @param mixed $value
      * @param ?string $expectedType
      */
-    public function transformType($value, $expectedType = null): mixed
+    public function transformType($value, $expectedType = null, bool $isRequired = false): mixed
     {
         if ($value === null || $expectedType === null) {
             return $value;
@@ -85,22 +85,28 @@ class InputValidator
                 }
                 // no break
             case InputType::INTEGER:
-                if (is_numeric($value) || $value === '') {
+                $value = $this->checkNumeric($value, $isRequired);
+                if ($value !== null) {
                     settype($value, 'integer');
                 }
                 break;
             case InputType::DOUBLE:
-                if (is_numeric($value) || $value === '') {
+                $value = $this->checkNumeric($value, $isRequired);
+                if ($value !== null) {
                     settype($value, 'double');
                 }
                 break;
             case InputType::FLOAT:
-                if (is_numeric($value) || $value === '') {
+                $value = $this->checkNumeric($value, $isRequired);
+                if ($value !== null) {
                     settype($value, 'float');
                 }
                 break;
             case InputType::STRING:
                 if (is_string($value)) {
+                    if ($value === '' && $isRequired) {
+                        return null;
+                    }
                     settype($value, 'string');
                 }
                 break;
@@ -108,6 +114,17 @@ class InputValidator
                 return $value;
         }
         return $value;
+    }
+
+    /**
+     * Check if the value is numeric and return it as float if possible.
+     */
+    private function checkNumeric(mixed $value, bool $isRequired = false): ?float
+    {
+        if ($isRequired && $value === '') {
+            return null;
+        }
+        return is_numeric($value) ? (float) $value : null;
     }
 
     /**
