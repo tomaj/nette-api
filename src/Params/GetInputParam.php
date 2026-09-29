@@ -19,6 +19,6 @@ class GetInputParam extends InputParam
         $value = $this->isMulti() ? filter_input(INPUT_GET, $this->key, FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) : filter_input(INPUT_GET, $this->key);
         $value = $value !== null && $value !== false ? $value : $this->default;
         $inputValidator = new InputValidator();
-        return $inputValidator->transformType($value, $this->valueType);
+        return $inputValidator->transformType($value, $this->valueType, $this->isRequired());
     }
 }

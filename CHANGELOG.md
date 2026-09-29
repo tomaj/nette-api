@@ -5,6 +5,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ## [Unreleased][unreleased]
 ### Fixed
 - Multi value validation and transformation if expected type is not array but instead expects array of specific type. For example if expected type is integer and value is array of integers, validation and transformation will pass.
+- Added check for required numeric values in InputValidator's transformType method.
 
 ## 3.4.3
 ### Fixed
