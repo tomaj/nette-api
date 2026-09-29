@@ -10,7 +10,7 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 class InputValidator
 {
     /**
-     * Summary of validate
+     * Validate expected type of the input value.
      * @param mixed $value
      * @param ?string $expectedType
      */
@@ -62,7 +62,7 @@ class InputValidator
     }
 
     /**
-     * Summary of transformType
+     * Transform the input value to the expected type if possible.
      * @param mixed $value
      * @param ?string $expectedType
      */
@@ -116,6 +116,9 @@ class InputValidator
         return $value;
     }
 
+    /**
+     * Check if the value is numeric and return it as float if possible.
+     */
     private function checkNumeric(mixed $value, bool $isRequired = false): ?float
     {
         if ($isRequired && $value === '') {
