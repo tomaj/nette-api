@@ -188,7 +188,6 @@ class OpenApiHandler extends BaseHandler
                             ],
                             'message' => [
                                 'type' => 'string',
-                                'enum' => ['wrong input'],
                             ],
                         ],
                         'required' => ['status', 'message'],

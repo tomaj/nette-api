@@ -52,6 +52,8 @@ class OpenApiHandlerTest extends TestCase
         self::assertEquals(200, $response->getCode());
         $payload = $response->getPayload();
 
+        self::assertEquals('string', $payload['components']['schemas']['ErrorWrongInput']['properties']['message']['type']);
+        self::assertArrayNotHasKey('enum', $payload['components']['schemas']['ErrorWrongInput']['properties']['message']);
         self::assertEquals(2, count($payload['paths']));
 
         $def = array_values($payload['paths'])[0]; // MultipleOutputTestHandler

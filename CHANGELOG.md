@@ -4,7 +4,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 ### Fixed
-- OpenApiHandler: 'wrong input' message enum value changed to lowercase as is real response.
+- OpenApiHandler: ErrorWrongInput can contain any message in the response.
 
 ## 3.4.4
 ### Fixed
