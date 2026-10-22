@@ -5,6 +5,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ## [Unreleased][unreleased]
 
 ### Added
+* Added support for PHP 8.6
+
+### Added
 * Added support for PHP 8.5
 
 ## 3.4.5
