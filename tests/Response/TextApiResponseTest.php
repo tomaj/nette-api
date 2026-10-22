@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Test\Response;
 
+use Nette\Application\UI\ITemplate;
 use Nette\Http\Request;
 use Nette\Http\Response;
 use Nette\Http\UrlScript;
@@ -22,5 +23,16 @@ class TextApiResponseTest extends TestCase
 
         $this->expectOutputString('hello');
         $apiResponse->send($request, $response);
+    }
+
+    public function testRenderingTemplate()
+    {
+        $template = $this->createMock(ITemplate::class);
+        $template->expects(self::once())->method('render');
+
+        $apiResponse = new TextApiResponse(200, $template);
+
+        $this->expectOutputString('');
+        $apiResponse->send(new Request(new UrlScript()), new Response());
     }
 }

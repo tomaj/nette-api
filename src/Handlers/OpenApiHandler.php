@@ -188,7 +188,6 @@ class OpenApiHandler extends BaseHandler
                             ],
                             'message' => [
                                 'type' => 'string',
-                                'enum' => ['Wrong input'],
                             ],
                         ],
                         'required' => ['status', 'message'],
@@ -351,7 +350,6 @@ class OpenApiHandler extends BaseHandler
                             /** @phpstan-ignore-next-line */
                             $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
                             unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
-                            /** @phpstan-ignore-next-line */
                             $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
                                 'oneOf' => [],
                             ];
