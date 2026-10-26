@@ -16,6 +16,7 @@ use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
+use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
@@ -47,7 +48,9 @@ final class ApiPresenter implements IPresenter
      * CORS header settings
      *
      * Available values:
-     *   'auto'  - send back header Access-Control-Allow-Origin with domain that made request
+     *   'auto'  - send back header Access-Control-Allow-Origin with domain taken from the Referer header
+     *             together with Access-Control-Allow-Credentials: true. This allows credentialed requests
+     *             (cookies) from ANY website, use setCorsAllowedOrigins() instead
      *   '*'     - send header with '*' - this will workf fine if you dont need to send cookies via ajax calls to api
      *             with jquery $.ajax with xhrFields: { withCredentials: true } settings
      *   'off'   - will not send any CORS header
@@ -57,6 +60,8 @@ final class ApiPresenter implements IPresenter
      */
     protected $corsHeader = '*';
 
+    private ?CorsOriginAllowlist $corsAllowlist = null;
+
     /**
      * Set cors header
      *
@@ -65,6 +70,19 @@ final class ApiPresenter implements IPresenter
     public function setCorsHeader(string $corsHeader): void
     {
         $this->corsHeader = $corsHeader;
+    }
+
+    /**
+     * Allow CORS only for the listed origins (compared with the request Origin header).
+     *
+     * When set, it takes precedence over setCorsHeader().
+     *
+     * @param string[] $origins e.g. ['https://app.example.com', 'http://localhost:3000']
+     * @param bool $allowCredentials send Access-Control-Allow-Credentials: true for allowed origins
+     */
+    public function setCorsAllowedOrigins(array $origins, bool $allowCredentials = false): void
+    {
+        $this->corsAllowlist = new CorsOriginAllowlist($origins, $allowCredentials);
     }
 
     public function run(Request $request): IResponse
@@ -226,6 +244,15 @@ final class ApiPresenter implements IPresenter
     protected function sendCorsHeaders(): void
     {
         $this->response->addHeader('Access-Control-Allow-Methods', 'POST, DELETE, PUT, GET, OPTIONS');
+
+        if ($this->corsAllowlist !== null) {
+            $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+            foreach ($this->corsAllowlist->headers(is_string($origin) ? $origin : null) as $name => $value) {
+                $this->response->addHeader($name, $value);
+            }
+
+            return;
+        }
 
         if ($this->corsHeader === 'auto') {
             $domain = $this->getRequestDomain();
