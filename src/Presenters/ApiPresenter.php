@@ -29,6 +29,13 @@ final class ApiPresenter implements IPresenter
 
     private const HTTP_PORT = 80;
 
+    /**
+     * Headers masked in the API log by setMaskedLogHeaders() without arguments
+     */
+    public const DEFAULT_MASKED_LOG_HEADERS = ['Authorization', 'Proxy-Authorization', 'Cookie', 'Set-Cookie', 'X-Api-Key'];
+
+    public const MASKED_LOG_HEADER_VALUE = '***';
+
     #[Inject]
     public ApiDecider $apiDecider;
 
@@ -62,6 +69,9 @@ final class ApiPresenter implements IPresenter
 
     private ?CorsOriginAllowlist $corsAllowlist = null;
 
+    /** @var string[] lowercase names of headers whose values are masked in the API log */
+    private array $maskedLogHeaders = [];
+
     /**
      * Set cors header
      *
@@ -83,6 +93,18 @@ final class ApiPresenter implements IPresenter
     public function setCorsAllowedOrigins(array $origins, bool $allowCredentials = false): void
     {
         $this->corsAllowlist = new CorsOriginAllowlist($origins, $allowCredentials);
+    }
+
+    /**
+     * Mask values of sensitive request headers before they are passed to ApiLoggerInterface.
+     *
+     * Header names are case-insensitive. Masking is off by default in 3.x.
+     *
+     * @param string[] $headers
+     */
+    public function setMaskedLogHeaders(array $headers = self::DEFAULT_MASKED_LOG_HEADERS): void
+    {
+        $this->maskedLogHeaders = array_map('strtolower', $headers);
     }
 
     public function run(Request $request): IResponse
@@ -226,6 +248,9 @@ final class ApiPresenter implements IPresenter
 
         $requestHeaders = '';
         foreach ($headers as $key => $value) {
+            if (in_array(strtolower($key), $this->maskedLogHeaders, true)) {
+                $value = self::MASKED_LOG_HEADER_VALUE;
+            }
             $requestHeaders .= sprintf('%s: %s%s', $key, $value, PHP_EOL);
         }
 
