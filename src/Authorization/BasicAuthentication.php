@@ -8,14 +8,14 @@ use Nette\Http\IRequest;
 
 class BasicAuthentication implements ApiAuthorizationInterface
 {
-    /** @var array<string, string> */
+    /** @var array<array-key, mixed> */
     private array $authentications;
 
     /** @var IRequest */
     private $httpRequest;
 
     /**
-     * @param array<string, string> $autentications - available username - password pairs
+     * @param array<array-key, mixed> $autentications - available username - password pairs (only string passwords can match)
      */
     public function __construct(array $autentications, IRequest $httpRequest)
     {
@@ -34,7 +34,8 @@ class BasicAuthentication implements ApiAuthorizationInterface
             return false;
         }
 
-        return $authentication === $urlScript->getPassword();
+        // non-string passwords (e.g. integers from neon) never matched with ===, keep that outcome
+        return is_string($authentication) && hash_equals($authentication, $urlScript->getPassword());
     }
 
     /**

@@ -4,6 +4,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Security
+* `BasicAuthentication` and `StaticTokenRepository` compare passwords and tokens with `hash_equals()` (constant time) instead of `===` / `in_array()`. Results are unchanged, including for non-string passwords and numeric tokens, which never matched before and still don't.
+
 ### Added
 * `ApiPresenter::setCorsAllowedOrigins()`: opt-in CORS allowlist based on the `Origin` header (with optional credentials and `Vary: Origin`). Existing `setCorsHeader()` values, including `'auto'`, behave exactly as before.
 * README: warning about the `'auto'` CORS mode (any site can make credentialed requests) and a migration path to the allowlist.

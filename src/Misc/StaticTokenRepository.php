@@ -22,7 +22,7 @@ class StaticTokenRepository implements BearerTokenRepositoryInterface
      * ['asfoihegoihregoihrhgrehg' => '127.0.0.1', 'asfo9uyewtoiyewgt4ty4r' => '*']
      *
      * @see BearerTokenAuthorization#isValidIp for all available Ip range formats
-     * @param array<string, string> $validTokens Array of valid tokens as keys and optional IP restrictions as values
+     * @param array<array-key, string> $validTokens Array of valid tokens as keys and optional IP restrictions as values
      */
     public function __construct(private array $validTokens = [])
     {
@@ -33,7 +33,16 @@ class StaticTokenRepository implements BearerTokenRepositoryInterface
      */
     public function validToken(string $token): bool
     {
-        return in_array($token, array_keys($this->validTokens), true);
+        // constant-time comparison; every key is checked so the timing does not reveal which token matched
+        // integer keys (numeric tokens cast by PHP) never matched the strict in_array(), keep that outcome
+        $valid = false;
+        foreach (array_keys($this->validTokens) as $validToken) {
+            if (is_string($validToken) && hash_equals($validToken, $token)) {
+                $valid = true;
+            }
+        }
+
+        return $valid;
     }
 
     /**
