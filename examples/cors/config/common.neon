@@ -1,0 +1,35 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+parameters:
+	# where the browser frontend runs
+	frontendOrigin: 'http://localhost:5173'
+
+services:
+	router: App\RouterFactory::create
+
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+		setup:
+			# sent as Access-Control-Allow-Origin on every response.
+			# Other values: '*' (the default), 'auto' (the origin of the Referer header,
+			# with Access-Control-Allow-Credentials: true) and 'off' (no header)
+			- setCorsHeader(%frontendOrigin%)
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'notes'), App\Api\NoteListHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'notes'), App\Api\NoteCreateHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+			# answer OPTIONS for every registered endpoint, so the browser may send
+			# the Content-Type and Authorization headers
+			- enableGlobalPreflight(
+				Tomaj\NetteApi\Handlers\CorsPreflightHandler(headers: [
+					Access-Control-Allow-Headers: [Content-Type, Authorization],
+					Access-Control-Max-Age: '600'
+				])
+			)

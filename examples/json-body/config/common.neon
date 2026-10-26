@@ -1,0 +1,18 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# POST /api/v1/orders with a JSON body
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'orders'), App\Api\OrderCreateHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+			# PUT /api/v1/products/import with a CSV body
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('PUT', 1, 'products', 'import'), App\Api\CsvImportHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())

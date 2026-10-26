@@ -1,0 +1,111 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [ opened, reopened, synchronize, closed ]
+
+concurrency:
+  group: docs-${{ github.event.pull_request.number || 'master' }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+
+      - name: Parse neon snippets
+        working-directory: .
+        run: composer install --no-interaction --no-progress && php docs/scripts/check-neon.php
+
+      - name: Install
+        run: npm ci
+
+      - name: Build and check links
+        run: npm run docs:links
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Build
+        working-directory: docs
+        run: npm ci && npm run docs:build
+
+      - name: Publish to gh-pages
+        uses: JamesIves/github-pages-deploy-action@fa24774553152dd7873cd16ebd8d959b010c5445 # v4.9.0
+        with:
+          branch: gh-pages
+          folder: docs/.vitepress/dist
+          clean-exclude: pr-preview/
+          force: false
+
+  preview:
+    # Forks get a read-only token, so they cannot push a preview.
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node
+        if: github.event.action != 'closed'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Build
+        if: github.event.action != 'closed'
+        working-directory: docs
+        env:
+          DOCS_BASE: /nette-api/pr-preview/pr-${{ github.event.number }}/
+          DOCS_NOINDEX: '1'
+        run: npm ci && npm run docs:build
+
+      - name: Publish or remove the preview
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
+        with:
+          source-dir: docs/.vitepress/dist
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto

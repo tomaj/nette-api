@@ -1,0 +1,45 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+		*: App\UI\*\**Presenter
+
+latte:
+	extensions:
+		# the {apiLink} tag
+		- Tomaj\NetteApi\Link\ApiLinkExtension
+
+parameters:
+	apiTokens:
+		secret-token: '*'
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	- App\UI\Console\ConsolePresenter
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+	- Tomaj\NetteApi\Misc\IpDetector
+
+	apiLink: Tomaj\NetteApi\Link\ApiLink
+	# {apiLink} calls the filter of this name
+	latte.latteFactory:
+		setup:
+			- addFilter(apiLink, [@apiLink, link])
+
+	- App\Api\BookListHandler
+	- App\Api\BookCreateHandler
+	# the listing handlers need ApiDecider, so they are registered by class name below
+	# and created only when their endpoint is called
+	- Tomaj\NetteApi\Handlers\OpenApiHandler(initData: [info: [title: 'Bookshelf API', description: 'Example API documented with OpenAPI']])
+	- Tomaj\NetteApi\Handlers\ApiListingHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'books'), App\Api\BookListHandler, Tomaj\NetteApi\Authorization\NoAuthorization())
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'books'), App\Api\BookCreateHandler, Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%)))
+			# GET /api/v1/openapi, ?format=yaml with symfony/yaml installed
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'openapi'), Tomaj\NetteApi\Handlers\OpenApiHandler, Tomaj\NetteApi\Authorization\NoAuthorization())
+			# GET /api/v1/endpoints, a short JSON list of the version 1 endpoints
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'endpoints'), Tomaj\NetteApi\Handlers\ApiListingHandler, Tomaj\NetteApi\Authorization\NoAuthorization())

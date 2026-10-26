@@ -1,646 +1,121 @@
-# Nette-Api
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/public/logo-dark.svg">
+    <img alt="" src="docs/public/logo.svg" width="48" height="48" align="absmiddle">
+  </picture>
+  Nette API
+</h1>
 
-**Nette simple api library**
+> **Documentation: [tomaj.github.io/nette-api](https://tomaj.github.io/nette-api/)** (English, [slovensky](https://tomaj.github.io/nette-api/sk/))
 
-[![Build Status](https://travis-ci.org/tomaj/nette-api.svg)](https://travis-ci.org/tomaj/nette-api)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/tomaj/nette-api/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/tomaj/nette-api/?branch=master)
-[![Code Coverage](https://scrutinizer-ci.com/g/tomaj/nette-api/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/tomaj/nette-api/?branch=master)
+[![PHPunit](https://github.com/tomaj/nette-api/actions/workflows/phpunit.yml/badge.svg)](https://github.com/tomaj/nette-api/actions/workflows/phpunit.yml)
+[![Examples](https://github.com/tomaj/nette-api/actions/workflows/examples.yml/badge.svg)](https://github.com/tomaj/nette-api/actions/workflows/examples.yml)
 [![Latest Stable Version](https://img.shields.io/packagist/v/tomaj/nette-api.svg)](https://packagist.org/packages/tomaj/nette-api)
 
-[![SensioLabsInsight](https://insight.sensiolabs.com/projects/b0a43dba-eb81-42de-b043-95ef51b8c097/big.png)](https://insight.sensiolabs.com/projects/b0a43dba-eb81-42de-b043-95ef51b8c097)
+Robust REST APIs inside your Nette application. Nette API adds a complete API layer to Nette, wired through Nette DI with one handler class per endpoint. You register endpoints and write handlers with your business logic; the library takes care of routing, typed and validated params, authorization, rate limits, output checks, error responses, logging, OpenAPI and a web console for trying the API.
 
-## Why Nette-Api
-
-This library provides out-of-the box API solution for Nette framework. You can register API endpoints and connect it to specified handlers. You need only implement your custom business logic. Library provides authorization, validation, rate limit and formatting services for you API.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/diagrams/architecture-1-dark.svg">
+  <img alt="A request goes through ApiDecider, the rate limit, authorization and param error reporting to the handler; the output is checked and logged, and the response goes back to the client; 429, 401 and 400 errors go back to the client too, and an unknown URL becomes a 404 from DefaultHandler, which is logged" src="docs/public/diagrams/architecture-1-light.svg">
+</picture>
 
 ## Installation
 
-This library requires PHP 7.1 or later.
-
-Recommended installation method is via Composer:
+Nette API 3.x needs PHP 8.3 or newer.
 
 ```bash
 composer require tomaj/nette-api
 ```
 
-Library is compliant with [PSR-1][], [PSR-2][], [PSR-3][] and [PSR-4][].
+## Quick start
 
-[PSR-1]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-1-basic-coding-standard.md
-[PSR-2]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md
-[PSR-3]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-3-logger-interface.md
-[PSR-4]: https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-4-autoloader.md
+Route `/api` to the library presenter:
 
-## How Nette-API works
+```php
+$router->addRoute('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default');
+```
 
-First, you have to register library presenter for routing. In *config.neon* just add this line:
+Register the services and your endpoints in NEON:
 
 ```neon
 application:
-  mapping:
-    Api: Tomaj\NetteApi\Presenters\*Presenter
-```
+    mapping:
+        Api: Tomaj\NetteApi\Presenters\*Presenter
 
-Register your preferred output configurator in *config.neon* services: 
-
-```neon
 services:
+    - Tomaj\NetteApi\Presenters\ApiPresenter
     apiOutputConfigurator: Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator
-```
-
-Register your preferred error handler in *config.neon* services: 
-
-```neon
-services:
     apiErrorHandler: Tomaj\NetteApi\Error\DefaultErrorHandler
-```
-
-And add route to you RouterFactory:
-
-```php
-$router[] = new Route('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api:default');
-```
-
-If you want to use RESTful urls you will need another route:
-```php
-$router[] = new Route('api/v<version>/<package>/<id>', [
-    'presenter' => 'Api:Api',
-    'action' => 'default',
-    'id' => [
-        Route::FILTER_IN => function ($id) {
-            $_GET['id'] = $id;
-            return $id;
-        }
-    ],
-]);
-```
-
-After that you need only register your API handlers to *apiDecider* [ApiDecider](src/ApiDecider.php), register [ApiLink](src/Link/ApiLink.php) and [Tomaj\NetteApi\Misc\IpDetector](src/Misc/IpDetector.php). This can be done also with *config.neon*:
-
-```neon
-services:
-    - Tomaj\NetteApi\Link\ApiLink
-    - Tomaj\NetteApi\Misc\IpDetector
+    - App\Api\HelloHandler
     apiDecider:
         factory: Tomaj\NetteApi\ApiDecider
         setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\NoAuthorization())
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email'), \App\MyApi\v1\Handlers\SendEmailHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
-
+            - addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'hello'), App\Api\HelloHandler, Tomaj\NetteApi\Authorization\NoAuthorization())
 ```
 
-or lazy (preferred because of performance)
-```neon
-services:
-    - App\MyApi\v1\Handlers\SendEmailLazyHandler()
-    sendEmailLazyNamed: App\MyApi\v1\Handlers\SendEmailLazyNamedHandler()
-    
-    factory: Tomaj\NetteApi\ApiDecider
-    setup:
-      - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email-lazy'), 'App\MyApi\v1\Handlers\SendEmailHandler', \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
-      - addApi(\Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users', 'send-email-lazy-named'), '@sendEmailLazyNamed', \Tomaj\NetteApi\Authorization\BearerTokenAuthorization())
-```
-
-As you can see in example, you can register as many endpoints as you want with different configurations. Nette-Api supports API versioning from the beginning.
-This example will prepare these API calls:
-
-1. `http://yourapp/api/v1/users` - available via GET
-2. `http://yourapp/api/v1/users/send-email`  - available via POST
-
-
-Core of the Nette-Api are handlers. For this example you need to implement two classes:
-
-1. App\MyApi\v1\Handlers\UsersListingHandler
-2. App\MyApi\v1\Handlers\SendEmailHandler
-
-These handlers implement interface *[ApiHandlerInterface](src/Handlers/ApiHandlerInterface.php)* but for easier usage you can extend your handlers from [BaseHandler](src/Handlers/BaseHandler.php). 
-When someone reach your API, these handlers will be triggered and *handle()* method will be called.
+Write the handler:
 
 ```php
-namespace App\MyApi\v1\Handlers;
-
-use Tomaj\NetteApi\Handlers\BaseHandler;
-use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tomaj\NetteApi\Response\ResponseInterface;
-
-class UsersListingHandler extends Basehandler
+final class HelloHandler extends BaseHandler
 {
-    private $userRepository;
-
-    public function __construct(UsersRepository $userRepository)
-    {
-        parent::__construct();
-        $this->userRepository = $userRepository;
-    }
-
-    public function handle(array $params): ResponseInterface
-    {
-        $users = [];
-        foreach ($this->userRepository->all() as $user) {
-            $users[] = $user->toArray();
-        }
-        return new JsonApiResponse(200, ['status' => 'ok', 'users' => $users]);
-    }
-}
-```
-
-This simple handler is using *UsersRepository* that was created by Nette Container (so you have to register your *App\MyApi\v1\Handlers\UsersListingHandler* in config.neon).
-
-## Advanced use (with Fractal)
-
-Nette-Api provides integration with [Fractal][] library for formatting API responses.
-If you want to use it, you have to extend your handler from *[BaseHandler](src/Handlers/BaseHandler.php)* and your Fractal instance will be accessible by `$this->getFractal()`.
-
-Main advantage of Fractal is separation of your API "view" (like transformation data to json object or xml or anything...). Also you can include transformations in other transformations to include other objects to others. 
-
-Example with fractal:
-
-1. You will need Transformer
-
-```php
-namespace App\MyApi\v1\Transformers;
-
-use League\Fractal\TransformerAbstract;
-
-class UserTransformer extends TransformerAbstract
-{
-    public function transform($user)
-    {
-        return [
-            'id' => $user->id,
-            'email' => $user->email,
-            'name' => $user->name,
-        ];
-    }
-}
-```
-
-2. And this will be your handler:
-
-```php
-namespace App\MyApi\v1\Handlers;
-
-use Tomaj\NetteApi\Handlers\BaseHandler;
-use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tomaj\NetteApi\Response\ResponseInterface;
-
-class UsersListingHandler extends Basehandler
-{
-    private $userTransformer;
-
-    public function __construct(UserTransformer $userTransformer)
-    {
-        parent::__construct();
-        $this->userTransformer = $userTransformer;
-    }
-
-    public function handle(array $params): ResponseInterface
-    {
-        $users = $this->useRepository->all(); 
-
-        $resource = new Collection($users, $this->userTransformer);
-        $result = $this->getFractal()->createData($resource)->toArray();
-
-        return new JsonApiResponse(200, $result);
-    }
-}
-```
-
-We recommend to take a look at [Fractal][] library. There are much more information about transformers, serializers, paginations etc. It is really nice library.
-
-[Fractal]: http://fractal.thephpleague.com/
-
-
-## ApiLink in latte
-
-First, you have to register filter in *config.neon*:
-
-```neon
-services:
-    apiLink: Tomaj\NetteApi\Link\ApiLink()
-    latte.latteFactory:
-        setup:
-            - addFilter(apiLink, [@apiLink, link])
-
-```
-**Note**: Name of filter has to be `apiLink`, because it is used in macro / extension.
-
-For latte < 3.0 register latte macro:
-```neon
-latte:
-    macros:
-        - Tomaj\NetteApi\Link\ApiLinkMacro
-```
-
-For latte >= 3.0 register latte extension:
-```neon
-latte:
-    extensions:
-        - Tomaj\NetteApi\Link\ApiLinkExtension
-```
-
-
-Usage in latte files:
-
-```
-{apiLink $method, $version, $package, $apiAction, ['title' => 'My title', 'data-foo' => 'bar']}
-```
-
-## Endpoint inputs
-
-Each handler can describe which input is required. It could be GET or POST parameters, also COOKIES, raw post, JSON or file uploads. You have to implement method `params()` where you have to return array with params. These params are used in API console to generate form.
-
-Example with user detail:
-
-```php
-namespace App\MyApi\v1\Handlers;
-
-use Tomaj\NetteApi\Handlers\BaseHandler;
-use Tomaj\NetteApi\Params\GetInputParam;
-use Tomaj\NetteApi\Response\JsonApiResponse;
-use Tomaj\NetteApi\Response\ResponseInterface;
-
-class UsersDetailHandler extends Basehandler
-{
-    private $userRepository;
-
-    public function __construct(UsersRepository $userRepository)
-    {
-        parent::__construct();
-        $this->userRepository = $userRepository;
-    }
-
     public function params(): array
     {
         return [
-            (new GetInputParam('id'))->setRequired(),
+            (new GetInputParam('name'))->setDefault('world'),
         ];
     }
 
     public function handle(array $params): ResponseInterface
     {
-        $user = $this->userRepository->find($params['id']);
-        if (!$user) {
-            return new JsonApiResponse(404, ['status' => 'error', 'message' => 'User not found']);
-        }
-        return new JsonApiResponse(200, ['status' => 'ok', 'user' => [
-            'id' => $user->id,
-            'email' => $user->email,
-            'name' => $user->name,
-        ]);
+        return new JsonApiResponse(200, ['message' => 'Hello ' . $params['name'] . '!']);
     }
 }
 ```
 
-## Input Types
-
-Nette-Api provides various InputParam types. You can send params with GET, POST, COOKIES, FILES, RAW POST data or JSON.
-All input types are available via test console.
-
-This is table with supported input types:
-
-| Input type      | Example
-| ----------      | -------
-| GET             | `new GetInputParam('key')`
-| POST            | `new PostInputParam('key')`
-| COOKIE          | `new CookieInputParam('key')`
-| FILE            | `new FileInputParam('key')`
-| RAW POST        | `new RawInputParam('key')`
-| JSON            | `new JsonInputParam('key', '{"type": "object"}')`
-
-
-## Outputs
-
-By implementing method outputs for your handlers you can specify list of possible outputs (e.g. output schemas) and those will be validated before response is sent to user. If no outputs are set, response is sent to user without validating.
-
-Usage example:
-```php
-public function outputs(): array
-{
-    $schema = [
-        'type' => 'object',
-        'properties' => [
-            'name' => [
-                'type' => 'string',
-            ],
-            'surname' => [
-                'type' => 'string',
-            ],
-            'sex' => [
-                'type' => 'string',
-                'enum' => ['M', 'F'],
-            ],
-        ],
-        'required' => ['name', 'surname'],
-        'additionalProperties' => false,
-    ];
-    return [
-        new JsonOutput(200, json_encode($schema)),
-    ];
-}
-```
-For more examples see [JSON schema web page](http://json-schema.org). Keep in mind that nette api uses [justinrainbow/json-schema](https://github.com/justinrainbow/json-schema/tree/master/dist/schema) for validating schemas and this package supports only json schema draft 03 and 04.
-
-
-## Security
-
-Protecting your API is easy with Nette-Api. You have to implement your [Authorization](src/Authorization/ApiAuthorizationInterface.php) (Tomaj\NetteApi\Authorization\ApiAuthorizationInterface) or use prepared implementations and add it as third argument to *addApi()* method in *config.neon*.
-
-### Basic authentication
-Basic authentication is a simple authentication scheme built into the HTTP protocol. It contains username and password. You can define as many pairs of usernames and passwords as you want. But just one password for each username.
-
-```neon
-services:
-    apiDecider:
-        factory: Tomaj\NetteApi\ApiDecider
-        setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BasicBasicAuthentication(['first-user': 'first-password', 'second-user': 'second-password']))
+```bash
+curl http://localhost:8000/api/v1/hello?name=Nette
+# {"message":"Hello Nette!"}
 ```
 
+The [getting started guide](https://tomaj.github.io/nette-api/guide/getting-started) explains every line.
 
-### Bearer token authentication
-For simple use of Bearer token authorization with few tokens, you can use [StaticTokenRepository](src/Misc/StaticTokenRepository.php) (Tomaj\NetteApi\Misc\StaticTokenRepository).
+## What is in the documentation
 
-```neon
-services:
-    staticTokenRepository: Tomaj\NetteApi\Misc\StaticTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
+| Topic | Page |
+| --- | --- |
+| How a request is processed | [Architecture](https://tomaj.github.io/nette-api/guide/architecture) |
+| What each layer does: ApiDecider, presenter, authorization, params, handler, outputs | [Layers](https://tomaj.github.io/nette-api/guide/layers), [ApiDecider](https://tomaj.github.io/nette-api/guide/api-decider), [ApiPresenter pipeline](https://tomaj.github.io/nette-api/guide/presenter) |
+| Handlers, params and outputs | [Handlers](https://tomaj.github.io/nette-api/guide/handlers), [Params](https://tomaj.github.io/nette-api/guide/params), [Outputs](https://tomaj.github.io/nette-api/guide/outputs) |
+| Bearer tokens, API keys, HTTP Basic, IP restrictions | [Authorization](https://tomaj.github.io/nette-api/guide/authorization) |
+| Rate limits, CORS, logging, errors | [Rate limiting](https://tomaj.github.io/nette-api/guide/rate-limit), [CORS](https://tomaj.github.io/nette-api/guide/cors), [Logging](https://tomaj.github.io/nette-api/guide/logging), [Error handling](https://tomaj.github.io/nette-api/guide/errors) |
+| OpenAPI, web console, `{apiLink}` | [OpenAPI](https://tomaj.github.io/nette-api/guide/openapi), [Web console](https://tomaj.github.io/nette-api/guide/console), [Links and versions](https://tomaj.github.io/nette-api/guide/links) |
+| Every class | [Reference](https://tomaj.github.io/nette-api/api/reference) |
 
-    apiDecider:
-        factory: Tomaj\NetteApi\ApiDecider
-        setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticTokenRepository))
-```
+## Security notes
 
-With this registration you will have api `/api/v1/users` that will be accessible from anywhere with Authorisation HTTP header `Bearer dasfoihwet90hidsg` or from *127.0.0.1* with `Bearer asfoihweiohgwegi`.
-In Nette-Api if you would like to specify IP restrictions for tokens you can use this patterns:
+* **CORS:** `setCorsHeader('auto')` reflects any site from the `Referer` header and allows credentials. Use `setCorsAllowedOrigins([...])` (since 3.6.0) or one fixed origin. See [CORS](https://tomaj.github.io/nette-api/guide/cors).
+* **Logs:** request headers reach `ApiLoggerInterface` as they arrived. Call `setMaskedLogHeaders()` on `ApiPresenter` (since 3.6.0) to log `***` instead of `Authorization`, `Cookie`, `X-Api-Key` and other secrets. See [Logging](https://tomaj.github.io/nette-api/guide/logging#masking-headers).
+* **Tokens and passwords:** `BasicAuthentication` and `StaticTokenRepository` compare with `hash_equals()` (since 3.6.0). See [Authorization](https://tomaj.github.io/nette-api/guide/authorization).
 
-| IP Pattern                | Access
-| ----------                | ------
-|`*`                        | accessible from anywhere
-|`127.0.0.1`                | accessible from single IP
-|`127.0.0.1,127.0.02`       | accessible from multiple IP, separator could be new line or space
-|`127.0.0.1/32`             | accessible from ip range
-|*null*                     | token is disabled, cannot access 
+## Examples
 
+Thirteen runnable projects in [`examples/`](examples/), each with an `e2e.sh` test that CI runs against the current code:
+[hello world](examples/hello-world), [params and validation](examples/params-validation), [authorization and rate limit](examples/auth), [CORS](examples/cors), [OpenAPI and console](examples/openapi-console), [logging and errors](examples/logging-errors), [custom authorization](examples/custom-authorization), [JSON and raw body](examples/json-body), [file upload](examples/file-upload), [pagination](examples/pagination), [API versions](examples/versions), [rate limit](examples/rate-limit), [testing](examples/testing).
 
-But it is very easy to implement your own Authorisation for API.
+## Upgrading
 
-### API keys
-You can also use API keys for authorization. An API key is a token that a client provides when making API calls. The key can be sent in the query string, header or cookie. See examples below:
-
-```neon
-services:
-    staticTokenRepository: Tomaj\NetteApi\Misc\StaticTokenRepository(['dasfoihwet90hidsg': '*', 'asfoihweiohgwegi': '127.0.0.1'])
-
-    apiDecider:
-        factory: Tomaj\NetteApi\ApiDecider
-        setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'query'), Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication('api_key', @staticTokenRepository))
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'header'), Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-API-KEY', @staticTokenRepository))
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users', 'cookie'), Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication('api_key', @staticTokenRepository))
-```
-
-## Rate limit
-
-This library provides simple interface for API rate limit. All you need to do is implement this interface like in example below:
-
-```php
-
-use Nette\Application\Responses\TextResponse;
-use Tomaj\NetteApi\RateLimit\RateLimitInterface;
-use Tomaj\NetteApi\RateLimit\RateLimitResponse;
-
-class MyRateLimit implements RateLimitInterface
-{
-    public function check(): ?RateLimitResponse
-    {
-        // do some logic here
-
-        // example outputs:
-        
-        return null;    // no rate limit
-
-        return new RateLimitResponse(60, 50);   // remains 50 of 60 hits
-    
-        return new RateLimitResponse(60, 0, 120);   // remains 0 of 60 hits, retry after 120 seconds
-
-        return new RateLimitResponse(60, 0, 120, new TextResponse('My custom error message'));  // remains 0 of 60 hits, retry after 120 seconds, with custom TextResponse (default is Json response, see ApiPresenter::checkRateLimit())
-    }
-}
-```
-
-Then you have to register API to ApiDecider with Rate Limit
-
-```neon
-services:
-    apiDecider:
-        factory: Tomaj\NetteApi\ApiDecider
-        setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), \Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@staticTokenRepository), MyRateLimit())
-```
-
-## Javascript ajax calls (CORS - preflight OPTIONS calls)
-
-If you need to call API via javascript ajax from other domains, you will need to prepare API for [preflight calls with OPTIONS method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS).
-Nette-api is ready for this situation and you can choose if you want to enable pre-flight calls globally or you can register prepared prefligt handlers.
-
-Globally enabled - every api endpoint will be available for preflight OPTIONS call:
-
-```neon
-services:
-    apiDecider:
-        factory: Tomaj\NetteApi\ApiDecider
-        setup:
-            - enableGlobalPreflight()
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
-```
-
-Or you can register custom OPTIONS endpoints:
-
-```neon
-services:
-    apiDecider:
-        factory: Tomaj\NetteApi\ApiDecider
-        setup:
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('OPTIONS', 1, 'users'), \Tomaj\NetteApi\Handlers\CorsPreflightHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
-            - addApi(\Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), \App\MyApi\v1\Handlers\UsersListingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
-            
-```
-
-## Logging
-
-It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all API requests.
-
-### Masking sensitive headers in the log
-
-By default all request headers are passed to the logger as they are, including `Authorization` and `Cookie`. Since 3.6.0 you can mask their values (they are logged as `***`):
-
-```neon
-services:
-  -
-    factory: Tomaj\NetteApi\Presenters\ApiPresenter
-    setup:
-      - setMaskedLogHeaders()
-```
-
-Without arguments it masks `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie` and `X-Api-Key` (`ApiPresenter::DEFAULT_MASKED_LOG_HEADERS`). You can pass your own list, header names are case-insensitive and the list replaces the default one:
-
-```neon
-      - setMaskedLogHeaders([Authorization, Cookie, X-My-Token])
-```
-
-Masking is off by default in 3.x to keep logs unchanged; we plan to turn it on by default in 4.0. Note that the request URI is logged as is, so API keys sent in the query string (`QueryApiKeyAuthentication`) are not masked.
-
-## CORS Security
-
-If you need to iteract with your API with Javascript you will need to send correct CORS headers. [ApiPresenter](src/Presenters/ApiPresenter.php) has property to set this headers. By default api will send header **'Access-Control-Allow-Origin'** with value *'*'*. If you need to change it you can set property $corsHeader to values:
-
-1. *'auto'* - send back header Access-Control-Allow-Origin with domain that made request (taken from the `Referer` header) together with `Access-Control-Allow-Credentials: true`. **This is not secure**, see the warning below
-2. *'*'* - send header with '*' - this will work fine if you dont need to send cookies via ajax calls to api with jquery *$.ajax with xhrFields: { withCredentials: true }* settings
-3. *'off'* - will not send any CORS header
-4. other - any other value will be send in *Access-Control-Allow-Origin* header
-
-You can set this property in config.neon if you register [ApiPresenter](src/Presenters/ApiPresenter.php):
-
-```neon
-services:
-  -
-    factory: Tomaj\NetteApi\Presenters\ApiPresenter
-    setup:
-      - setCorsHeader('auto')
-```
-
-or if you extend [ApiPresenter](src/Presenters/ApiPresenter.php), than you can set it on your own presenter.
-
-### Allowed origins (recommended)
-
-Since 3.6.0 you can list the origins that may call your API from a browser. The request `Origin` header is compared with the list (scheme, host and port, case-insensitive). A matching origin is sent back in `Access-Control-Allow-Origin`, any other origin gets no `Access-Control-Allow-Origin` header, so the browser blocks the response. `Vary: Origin` is always sent so caches don't mix responses for different origins.
-
-```neon
-services:
-  -
-    factory: Tomaj\NetteApi\Presenters\ApiPresenter
-    setup:
-      - setCorsAllowedOrigins(['https://app.example.com', 'http://localhost:3000'], true)
-```
-
-The second argument sends `Access-Control-Allow-Credentials: true` for allowed origins (needed for cookies / `withCredentials`), it is `false` by default. Origins must be in the form `scheme://host[:port]` (no path, no trailing slash or whitespace, `*` and `null` are not allowed, internationalized domains in punycode, e.g. `https://xn--bcher-kva.example`), otherwise `InvalidArgumentException` is thrown. Default ports are dropped like browsers do, so `https://app.example.com:443` matches `https://app.example.com`. When the allowlist is set it takes precedence over `setCorsHeader()`.
-
-### Warning about `'auto'`
-
-`'auto'` reflects any website that links to your API (from the `Referer` header) and allows credentials. Any page a logged-in user visits can therefore call your API with the user's cookies and read the response. If your API authenticates with cookies (or anything the browser sends automatically), switch to `setCorsAllowedOrigins()`.
-
-`'auto'` keeps working exactly as before in 3.x; we plan to remove it (or make it safe) in 4.0.
-
-Migrating from `'auto'`:
-1. Find out which origins really call your API (frontend domains, local development hosts).
-2. Replace `setCorsHeader('auto')` with `setCorsAllowedOrigins([...], true)`. Keep `true` only if you rely on cookies or `withCredentials`.
-3. Requests from origins not on the list will be blocked by browsers. Server-to-server calls and same-origin calls are not affected by CORS.
-
-`'auto'` uses the `Referer` header, not `Origin`. Switching it to `Origin` would change outcomes (browsers may omit `Referer` through `Referrer-Policy` while sending `Origin`, and vice versa), so `'auto'` is intentionally left unchanged.
-
-
-# WEB console - API tester
-
-Nette-Api contains 2 UI controls that can be used to validate you api.
-It will generate listing with all API calls and also auto generate form with all api params.
-
-All components generate bootstrap html and can be styled with bootstrap css:
-
-You have to create components in your controller:
-
-```php
-use Nette\Application\UI\Presenter;
-use Tomaj\NetteApi\ApiDecider;
-use Tomaj\NetteApi\Component\ApiConsoleControl;
-use Tomaj\NetteApi\Component\ApiListingControl;
-use Tomaj\NetteApi\Link\ApiLink;
-
-class MyPresenter extends Presenter
-{
-    private $apiDecider;
-
-    private $apiLink;
-
-    private $method;
-    
-    private $version;
-    
-    private $package;
-    
-    private $apiAction;
-
-    public function __construct(ApiDecider $apiDecider, ApiLink $apiLink = null)
-    {
-        parent::__construct();
-        $this->apiDecider = $apiDecider;
-        $this->apiLink = $apiLink;
-    }
-
-    public function renderShow(string $method, int $version, string $package, ?string $apiAction = null): void
-    {
-        $this->method = $method;
-        $this->version = $version;
-        $this->package = $package;
-        $this->apiAction = $apiAction;
-    }
-
-    protected function createComponentApiListing(): ApiListingControl
-    {
-        $apiListing = new ApiListingControl($this->apiDecider);
-        $apiListing->onClick[] = function ($method, $version, $package, $apiAction) {
-            $this->redirect('show', $method, $version, $package, $apiAction);
-        };
-        return $apiListing;
-    }
-
-    protected function createComponentApiConsole()
-    {
-        $api = $this->apiDecider->getApi($this->method, $this->version, $this->package, $this->apiAction);
-        $apiConsole = new ApiConsoleControl(
-            $this->getHttpRequest(),
-            $api->getEndpoint(),
-            $api->getHandler(),
-            $api->getAuthorization(),
-            $this->apiLink
-        );
-        return $apiConsole;
-    }
-}
-```
-
-You can override the generated form by passing your own implementation of
-`Tomaj\NetteApi\Component\ApiConsoleFormFactoryInterface` as the last
-constructor parameter of `ApiConsoleControl`. When omitted, a default factory is
-used so existing code keeps working.
-
-The default factory can be subclassed to keep the same fields while tweaking the
-underlying `Form` instance. Overridable methods include `createForm()`,
-`getUrl()`, and `addAuthorization()`, making it easy to use a different base form
-class or translator without reimplementing the whole factory.
-
-## Troubleshooting
-
-If your apache server is runing on CGI or fastCGI script, *$_SERVER['HTTP_AUTHORIZATION']* is empty.
-You'll need to do some mod_rewrite wizardry to get your headers past the CGI barrier, like so:
-
-```
-RewriteEngine on
-RewriteRule .? - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]`
-```
-
-## Change log
-
-Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+See [UPGRADE.md](UPGRADE.md) and [CHANGELOG.md](CHANGELOG.md). Documentation for 2.x is the [README of 2.13.0](https://github.com/tomaj/nette-api/tree/2.13.0).
 
 ## Testing
 
 ```bash
-$ composer test
+composer install
+vendor/bin/phpunit
 ```
 
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) and [CONDUCT](CONDUCT.md) for details.
+Please see [CONTRIBUTING](CONTRIBUTING.md). The documentation lives in [`docs/`](docs/).
 
 ## Security
 
@@ -648,4 +123,4 @@ If you discover any security related issues, please email tomasmajer@gmail.com i
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information 
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.

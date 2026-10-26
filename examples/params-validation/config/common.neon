@@ -1,0 +1,24 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+
+	# outside APP_ENV=production: validate outputs against their schemas and show error details
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator('APP_ENV', 'production')
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+
+	- App\UserRepository
+	# handlers registered as services get their constructor arguments autowired
+	- App\Api\UserListHandler
+	- App\Api\UserCreateHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# a class name is resolved from the container only when the endpoint is called
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'users'), App\Api\UserListHandler, Tomaj\NetteApi\Authorization\NoAuthorization())
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users'), App\Api\UserCreateHandler, Tomaj\NetteApi\Authorization\NoAuthorization())

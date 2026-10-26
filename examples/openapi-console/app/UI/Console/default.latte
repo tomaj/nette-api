@@ -1,0 +1,8 @@
+{block content}
+<h1>API console</h1>
+<p>
+    OpenAPI document: <a href="{apiLink 'GET', '1', 'openapi'}">JSON</a>,
+    <a href="{apiLink 'GET', '1', 'openapi', null, ['format' => 'yaml']}">YAML</a>
+</p>
+{control apiListing}
+{/block}

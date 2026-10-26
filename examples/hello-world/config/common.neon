@@ -1,0 +1,26 @@
+application:
+	mapping:
+		# Api:Api:default is Tomaj\NetteApi\Presenters\ApiPresenter
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+services:
+	router: App\RouterFactory::create
+
+	# Nette 3.3 creates presenters only from the DI container
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+
+	# required by ApiPresenter: when to validate output schemas and show error details
+	- Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator
+	# required by ApiPresenter: turns errors into JSON responses
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# GET /api/v1/hello
+			- addApi(
+				Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'hello'),
+				App\Api\HelloHandler(),
+				Tomaj\NetteApi\Authorization\NoAuthorization()
+			)
