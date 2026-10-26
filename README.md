@@ -474,10 +474,10 @@ It is good practice to log you api access if you provide valuable information wi
 
 If you need to iteract with your API with Javascript you will need to send correct CORS headers. [ApiPresenter](src/Presenters/ApiPresenter.php) has property to set this headers. By default api will send header **'Access-Control-Allow-Origin'** with value *'*'*. If you need to change it you can set property $corsHeader to values:
 
-1. *'auto'* - send back header Access-Control-Allow-Origin with domain that made request. It is not secure, but you can acces this api from other domains via AJAX
+1. *'auto'* - send back header Access-Control-Allow-Origin with domain that made request (taken from the `Referer` header) together with `Access-Control-Allow-Credentials: true`. **This is not secure**, see the warning below
 2. *'*'* - send header with '*' - this will work fine if you dont need to send cookies via ajax calls to api with jquery *$.ajax with xhrFields: { withCredentials: true }* settings
 3. *'off'* - will not send any CORS header
-5. other - any other value will be send in *Access-Control-Allow-Origin* header
+4. other - any other value will be send in *Access-Control-Allow-Origin* header
 
 You can set this property in config.neon if you register [ApiPresenter](src/Presenters/ApiPresenter.php):
 
@@ -490,6 +490,33 @@ services:
 ```
 
 or if you extend [ApiPresenter](src/Presenters/ApiPresenter.php), than you can set it on your own presenter.
+
+### Allowed origins (recommended)
+
+Since 3.6.0 you can list the origins that may call your API from a browser. The request `Origin` header is compared with the list (scheme, host and port, case-insensitive). A matching origin is sent back in `Access-Control-Allow-Origin`, any other origin gets no `Access-Control-Allow-Origin` header, so the browser blocks the response. `Vary: Origin` is always sent so caches don't mix responses for different origins.
+
+```neon
+services:
+  -
+    factory: Tomaj\NetteApi\Presenters\ApiPresenter
+    setup:
+      - setCorsAllowedOrigins(['https://app.example.com', 'http://localhost:3000'], true)
+```
+
+The second argument sends `Access-Control-Allow-Credentials: true` for allowed origins (needed for cookies / `withCredentials`), it is `false` by default. Origins must be in the form `scheme://host[:port]` (no path, no trailing slash or whitespace, `*` and `null` are not allowed, internationalized domains in punycode, e.g. `https://xn--bcher-kva.example`), otherwise `InvalidArgumentException` is thrown. Default ports are dropped like browsers do, so `https://app.example.com:443` matches `https://app.example.com`. When the allowlist is set it takes precedence over `setCorsHeader()`.
+
+### Warning about `'auto'`
+
+`'auto'` reflects any website that links to your API (from the `Referer` header) and allows credentials. Any page a logged-in user visits can therefore call your API with the user's cookies and read the response. If your API authenticates with cookies (or anything the browser sends automatically), switch to `setCorsAllowedOrigins()`.
+
+`'auto'` keeps working exactly as before in 3.x; we plan to remove it (or make it safe) in 4.0.
+
+Migrating from `'auto'`:
+1. Find out which origins really call your API (frontend domains, local development hosts).
+2. Replace `setCorsHeader('auto')` with `setCorsAllowedOrigins([...], true)`. Keep `true` only if you rely on cookies or `withCredentials`.
+3. Requests from origins not on the list will be blocked by browsers. Server-to-server calls and same-origin calls are not affected by CORS.
+
+`'auto'` uses the `Referer` header, not `Origin`. Switching it to `Origin` would change outcomes (browsers may omit `Referer` through `Referrer-Policy` while sending `Origin`, and vice versa), so `'auto'` is intentionally left unchanged.
 
 
 # WEB console - API tester

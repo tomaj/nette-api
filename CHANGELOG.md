@@ -4,6 +4,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Added
+* `ApiPresenter::setCorsAllowedOrigins()`: opt-in CORS allowlist based on the `Origin` header (with optional credentials and `Vary: Origin`). Existing `setCorsHeader()` values, including `'auto'`, behave exactly as before.
+* README: warning about the `'auto'` CORS mode (any site can make credentialed requests) and a migration path to the allowlist.
+
 ## 3.5.0
 
 ### Added
