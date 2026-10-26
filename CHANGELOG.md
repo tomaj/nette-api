@@ -10,6 +10,7 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 ### Added
 * `ApiPresenter::setCorsAllowedOrigins()`: opt-in CORS allowlist based on the `Origin` header (with optional credentials and `Vary: Origin`). Existing `setCorsHeader()` values, including `'auto'`, behave exactly as before.
 * README: warning about the `'auto'` CORS mode (any site can make credentialed requests) and a migration path to the allowlist.
+* `ApiPresenter::setMaskedLogHeaders()`: opt-in masking of sensitive request header values (`Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key` by default, or a custom case-insensitive list) before they are passed to `ApiLoggerInterface`. Logging is unchanged unless enabled.
 
 ## 3.5.0
 

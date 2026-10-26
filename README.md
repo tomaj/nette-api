@@ -470,6 +470,26 @@ services:
 
 It is good practice to log you api access if you provide valuable information with your API. To enable logging you need to implement class with interface [ApiLoggerInterface](src/Logger/ApiLoggerInterface.php) (Tomaj\NetteApi\Logger\ApiLoggerInterface) and register it as service in *config.neon*. It will be automatically wired and called after execution of all API requests.
 
+### Masking sensitive headers in the log
+
+By default all request headers are passed to the logger as they are, including `Authorization` and `Cookie`. Since 3.6.0 you can mask their values (they are logged as `***`):
+
+```neon
+services:
+  -
+    factory: Tomaj\NetteApi\Presenters\ApiPresenter
+    setup:
+      - setMaskedLogHeaders()
+```
+
+Without arguments it masks `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie` and `X-Api-Key` (`ApiPresenter::DEFAULT_MASKED_LOG_HEADERS`). You can pass your own list, header names are case-insensitive and the list replaces the default one:
+
+```neon
+      - setMaskedLogHeaders([Authorization, Cookie, X-My-Token])
+```
+
+Masking is off by default in 3.x to keep logs unchanged; we plan to turn it on by default in 4.0. Note that the request URI is logged as is, so API keys sent in the query string (`QueryApiKeyAuthentication`) are not masked.
+
 ## CORS Security
 
 If you need to iteract with your API with Javascript you will need to send correct CORS headers. [ApiPresenter](src/Presenters/ApiPresenter.php) has property to set this headers. By default api will send header **'Access-Control-Allow-Origin'** with value *'*'*. If you need to change it you can set property $corsHeader to values:
