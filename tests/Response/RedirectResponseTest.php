@@ -10,35 +10,35 @@ use Nette\Http\UrlScript;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Response\RedirectResponse;
 
-class RedirectResponseTest extends TestCase
+final class RedirectResponseTest extends TestCase
 {
-    public function testDefaultRedirect()
+    public function testDefaultRedirect(): void
     {
         $url = 'https://example.com/resource';
         $apiResponse = new RedirectResponse($url);
 
-        self::assertSame($url, $apiResponse->getUrl());
-        self::assertSame(IResponse::S302_FOUND, $apiResponse->getCode());
+        $this->assertSame($url, $apiResponse->getUrl());
+        $this->assertSame(IResponse::S302_FOUND, $apiResponse->getCode());
 
         $httpResponse = $this->createMock(IResponse::class);
-        $httpResponse->expects(self::once())
+        $httpResponse->expects($this->once())
             ->method('redirect')
             ->with($url, IResponse::S302_FOUND);
 
         $apiResponse->send(new Request(new UrlScript()), $httpResponse);
     }
 
-    public function testRedirectWithCustomStatusCode()
+    public function testRedirectWithCustomStatusCode(): void
     {
         $url = '/resource';
         $statusCode = IResponse::S301_MOVED_PERMANENTLY;
         $apiResponse = new RedirectResponse($url, $statusCode);
 
-        self::assertSame($url, $apiResponse->getUrl());
-        self::assertSame($statusCode, $apiResponse->getCode());
+        $this->assertSame($url, $apiResponse->getUrl());
+        $this->assertSame($statusCode, $apiResponse->getCode());
 
         $httpResponse = $this->createMock(IResponse::class);
-        $httpResponse->expects(self::once())
+        $httpResponse->expects($this->once())
             ->method('redirect')
             ->with($url, $statusCode);
 

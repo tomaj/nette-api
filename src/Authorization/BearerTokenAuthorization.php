@@ -9,7 +9,7 @@ use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
 class BearerTokenAuthorization extends TokenAuthorization
 {
-    private const EXPECTED_HTTP_PARTS = 2;
+    private const int EXPECTED_HTTP_PARTS = 2;
 
     /**
      * BearerTokenAuthorization constructor.
@@ -25,12 +25,13 @@ class BearerTokenAuthorization extends TokenAuthorization
      */
     protected function readAuthorizationToken(): ?string
     {
-        if (!isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
+        if (!is_string($header)) {
             $this->errorMessage = 'Authorization header HTTP_Authorization is not set';
             return null;
         }
 
-        $parts = explode(' ', $_SERVER['HTTP_AUTHORIZATION']);
+        $parts = explode(' ', $header);
         if (count($parts) !== self::EXPECTED_HTTP_PARTS) {
             $this->errorMessage = 'Authorization header contains invalid structure';
             return null;

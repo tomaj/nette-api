@@ -17,12 +17,12 @@ class EndpointIdentifier implements EndpointInterface
     public function __construct(
         private string $method,
         private string|int $version,
-        private string $package,
-        private ?string $apiAction = null
+        private readonly string $package,
+        private readonly ?string $apiAction = null
     ) {
         $version = (string) $version;
         $this->method = strtoupper($method);
-        if (strpos($version, '/') !== false) {
+        if (str_contains($version, '/')) {
             throw new InvalidArgumentException('Version must have semantic numbering. For example "1", "1.1", "0.13.2" etc.');
         }
         $this->version = $version;

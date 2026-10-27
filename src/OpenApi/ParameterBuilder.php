@@ -10,7 +10,7 @@ use Tomaj\NetteApi\Params\InputParam;
 /**
  * Creates operation parameters from query (GET) and cookie params of handler
  */
-class ParameterBuilder
+class ParameterBuilder implements ParameterBuilderInterface
 {
     /**
      * @return array<int, array<string, mixed>>

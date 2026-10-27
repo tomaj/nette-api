@@ -7,7 +7,7 @@ namespace Tomaj\NetteApi\OpenApi;
 /**
  * Decides which endpoints are included in the generated spec
  */
-class EndpointFilter
+final readonly class EndpointFilter
 {
     /**
      * @param array<string|int, mixed> $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
@@ -42,7 +42,7 @@ class EndpointFilter
                 if (is_string($allowedMethods) && strtolower($allowedMethods) === strtolower($method)) {
                     return true;
                 }
-                if (is_array($allowedMethods) && in_array(strtolower($method), array_map('strtolower', $allowedMethods), true)) {
+                if (is_array($allowedMethods) && in_array(strtolower($method), array_map(strtolower(...), $allowedMethods), true)) {
                     return true;
                 }
             }

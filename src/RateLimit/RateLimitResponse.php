@@ -9,10 +9,10 @@ use Nette\Application\IResponse;
 class RateLimitResponse
 {
     public function __construct(
-        private int $limit,
-        private int $remaining,
-        private ?int $retryAfter = null,
-        private ?IResponse $errorResponse = null
+        private readonly int $limit,
+        private readonly int $remaining,
+        private readonly ?int $retryAfter = null,
+        private readonly ?IResponse $errorResponse = null
     ) {
     }
 

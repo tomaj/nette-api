@@ -24,7 +24,7 @@ final class CorsOriginAllowlist
      * @param string[] $origins e.g. ['https://app.example.com', 'http://localhost:3000']
      * @param bool $allowCredentials send `Access-Control-Allow-Credentials: true` for allowed origins
      */
-    public function __construct(array $origins, private bool $allowCredentials = false)
+    public function __construct(array $origins, private readonly bool $allowCredentials = false)
     {
         if ($origins === []) {
             throw new InvalidArgumentException('CORS allowlist must contain at least one origin');
@@ -54,9 +54,9 @@ final class CorsOriginAllowlist
         return $headers;
     }
 
-    private const DEFAULT_PORTS = ['http' => '80', 'https' => '443'];
+    private const array DEFAULT_PORTS = ['http' => '80', 'https' => '443'];
 
-    private const ORIGIN_PATTERN = '~^([a-z][a-z0-9+.-]*)://([a-z0-9.-]+|\\[[0-9a-f:.]+\\])(?::([1-9][0-9]{0,4}))?$~iD';
+    private const string ORIGIN_PATTERN = '~^([a-z][a-z0-9+.-]*)://([a-z0-9.-]+|\\[[0-9a-f:.]+\\])(?::([1-9][0-9]{0,4}))?$~iD';
 
     /**
      * Normalize to the form browsers send in the Origin header (lowercase, no default port).

@@ -16,7 +16,7 @@ class EchoHandler extends BaseHandler
     public function params(): array
     {
         return [
-            (new GetInputParam('status'))->setRequired()->setAvailableValues(['ok', 'error']),
+            new GetInputParam('status')->setRequired()->setAvailableValues(['ok', 'error']),
             new GetInputParam('message'),
         ];
     }

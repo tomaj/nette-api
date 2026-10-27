@@ -34,7 +34,7 @@ new OpenApiHandler(
     Nette\Http\Request $request,
     array $initData = [],        // zlúči sa do dokumentu, napr. info.title
     array $allowedEndpoints = [], // vzor cesty => metódy na zahrnutie; prázdne znamená všetky
-    ?SpecBuilder $specBuilder = null // vlastný builder, pozri nižšie
+    ?SpecBuilderInterface $specBuilder = null // vlastný builder, pozri nižšie
 )
 ```
 
@@ -66,6 +66,8 @@ Dokument vytvárajú malé buildery v `Tomaj\NetteApi\OpenApi`, každý zodpoved
 ### Výmena buildera cez DI
 
 Builder rozšírte a zaregistrujte v DI spolu s `PathBuilder` a `SpecBuilder`. `OpenApiHandler` dostane `SpecBuilder` cez autowiring, inak sa použijú predvolené buildery. Linky vždy vytvára `ApiLink` handlera.
+
+Od verzie 4.0 má každý builder rozhranie (`SpecBuilderInterface`, `PathBuilderInterface`, `ParameterBuilderInterface`, `RequestBodyBuilderInterface`, `ResponseBuilderInterface`, `SecuritySchemeBuilderInterface`) a konštruktory prijímajú rozhranie, takže builder môžete namiesto rozšírenia nahradiť aj vlastnou implementáciou.
 
 ```php
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;

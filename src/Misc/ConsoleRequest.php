@@ -17,20 +17,8 @@ class ConsoleRequest
 
     public const ELAPSED_MILLISECONDS = 1000;
 
-    /** @var ApiHandlerInterface */
-    private $handler;
-
-    /** @var EndpointInterface|null */
-    private $endpoint;
-
-    /** @var ApiLink|null */
-    private $apiLink;
-
-    public function __construct(ApiHandlerInterface $handler, ?EndpointInterface $endpoint = null, ?ApiLink $apiLink = null)
+    public function __construct(private readonly ApiHandlerInterface $handler, private readonly ?EndpointInterface $endpoint = null, private readonly ?ApiLink $apiLink = null)
     {
-        $this->handler = $handler;
-        $this->endpoint = $endpoint;
-        $this->apiLink = $apiLink;
     }
 
     /**
@@ -172,7 +160,7 @@ class ConsoleRequest
         $cookieFields = [];
 
         foreach ($values as $key => $value) {
-            if (strstr($key, '___') !== false) {
+            if (str_contains($key, '___')) {
                 $parts = explode('___', $key);
                 $key = $parts[0];
             }

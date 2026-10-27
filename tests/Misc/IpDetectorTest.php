@@ -7,23 +7,23 @@ namespace Tomaj\NetteApi\Test\Params;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\IpDetector;
 
-class IpDetectorTest extends TestCase
+final class IpDetectorTest extends TestCase
 {
-    public function testValidation()
+    public function testValidation(): void
     {
         $ipDetector = new IpDetector();
-        self::assertEquals('cli', $ipDetector->getRequestIp());
+        $this->assertSame('cli', $ipDetector->getRequestIp());
 
         $_SERVER['HTTP_CLIENT_IP'] = '1.2.3.4';
-        self::assertEquals('1.2.3.4', $ipDetector->getRequestIp());
+        $this->assertSame('1.2.3.4', $ipDetector->getRequestIp());
         unset($_SERVER['HTTP_CLIENT_IP']);
 
         $_SERVER['HTTP_X_FORWARDED_FOR'] = '1.2.3.5';
-        self::assertEquals('1.2.3.5', $ipDetector->getRequestIp());
+        $this->assertSame('1.2.3.5', $ipDetector->getRequestIp());
         unset($_SERVER['HTTP_X_FORWARDED_FOR']);
 
         $_SERVER['REMOTE_ADDR'] = '1.2.3.6';
-        self::assertEquals('1.2.3.6', $ipDetector->getRequestIp());
+        $this->assertSame('1.2.3.6', $ipDetector->getRequestIp());
         unset($_SERVER['REMOTE_ADDR']);
     }
 }

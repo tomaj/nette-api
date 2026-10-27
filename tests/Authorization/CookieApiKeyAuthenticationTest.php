@@ -9,41 +9,51 @@ use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
 
-class CookieApiKeyAuthenticationTest extends TestCase
+final class CookieApiKeyAuthenticationTest extends TestCase
 {
-    public function testAuthorizedApiKey()
+    public function testAuthorizedApiKey(): void
     {
         $_COOKIE['api_key'] = 'sad0f98uwegoihweg09i4hergy';
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new CookieApiKeyAuthentication('api_key', $tokenRepository, $ipDetector);
-        self::assertTrue($authorization->authorized());
+        $this->assertTrue($authorization->authorized());
     }
 
-    public function testUnarizedApiKey()
+    public function testUnarizedApiKey(): void
     {
         $_COOKIE['api_key'] = 'asflkhwetiohegedgfsdgwe';
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new CookieApiKeyAuthentication('api_key', $tokenRepository, $ipDetector);
-        self::assertFalse($authorization->authorized());
-        self::assertEquals('Token doesn\'t exists or isn\'t active', $authorization->getErrorMessage());
+        $this->assertFalse($authorization->authorized());
+        $this->assertSame('Token doesn\'t exists or isn\'t active', $authorization->getErrorMessage());
     }
 
-    public function testNoApiKey()
+    public function testNoApiKey(): void
     {
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new CookieApiKeyAuthentication('api_key', $tokenRepository, $ipDetector);
-        self::assertFalse($authorization->authorized());
-        self::assertEquals('API key is not set', $authorization->getErrorMessage());
+        $this->assertFalse($authorization->authorized());
+        $this->assertSame('API key is not set', $authorization->getErrorMessage());
     }
 
-    public function testGetCookieName()
+    public function testGetCookieName(): void
     {
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new CookieApiKeyAuthentication('api_key', $tokenRepository, $ipDetector);
-        self::assertEquals('api_key', $authorization->getCookieName());
+        $this->assertSame('api_key', $authorization->getCookieName());
+    }
+
+    public function testNonStringApiKeyIsNotSet(): void
+    {
+        $_COOKIE['api_key'] = ['sad0f98uwegoihweg09i4hergy'];
+        $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $ipDetector = new StaticIpDetector('34.24.126.44');
+        $authorization = new CookieApiKeyAuthentication('api_key', $tokenRepository, $ipDetector);
+        $this->assertFalse($authorization->authorized());
+        $this->assertSame('API key is not set', $authorization->getErrorMessage());
     }
 }

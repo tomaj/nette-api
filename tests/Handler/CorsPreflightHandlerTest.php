@@ -7,33 +7,34 @@ namespace Tomaj\NetteApi\Test\Handler;
 use Nette\Http\Response;
 use Nette\Http\UrlScript;
 use Nette\InvalidStateException;
+use PHPUnit\Framework\Attributes\RequiresFunction;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\SimpleRouter;
 
-class CorsPreflightHandlerTest extends TestCase
+final class CorsPreflightHandlerTest extends TestCase
 {
-    public function testResponse()
+    public function testResponse(): void
     {
         $preflighthandler = new CorsPreflightHandler(new Response());
         $result = $preflighthandler->handle([]);
-        self::assertEquals(200, $result->getCode());
-        self::assertEquals([], $result->getPayload());
+        $this->assertSame(200, $result->getCode());
+        $this->assertEquals([], $result->getPayload());
     }
 
-    public function testEndpointSetter()
+    public function testEndpointSetter(): void
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
-        self::assertNull($defaultHandler->getEndpoint());
+        $this->assertNull($defaultHandler->getEndpoint());
 
         $endpointIdentifier = new EndpointIdentifier('OPTIONS', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
-        self::assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
+        $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
 
-    public function testExceptionWhenCreatingLinkWithoutLinkGenerator()
+    public function testExceptionWhenCreatingLinkWithoutLinkGenerator(): void
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
 
@@ -42,7 +43,7 @@ class CorsPreflightHandlerTest extends TestCase
         $defaultHandler->createLink([]);
     }
 
-    public function testExceptionWHenCreatingLinkWithoutEndpoint()
+    public function testExceptionWHenCreatingLinkWithoutEndpoint(): void
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
 
@@ -54,7 +55,7 @@ class CorsPreflightHandlerTest extends TestCase
         $defaultHandler->createLink([]);
     }
 
-    public function testCreateLink()
+    public function testCreateLink(): void
     {
         $defaultHandler = new CorsPreflightHandler(new Response());
 
@@ -64,6 +65,25 @@ class CorsPreflightHandlerTest extends TestCase
         $endpointIdentifier = new EndpointIdentifier('OPTIONS', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
 
-        self::assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
+        $this->assertSame('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
+    }
+
+    #[RequiresFunction('xdebug_get_headers')]
+    public function testDefaultHeaders(): void
+    {
+        new CorsPreflightHandler(new Response())->handle([]);
+        $this->assertSame([
+            'Access-Control-Allow-Headers: Authorization',
+            'Access-Control-Allow-Headers: X-Requested-With',
+        ], xdebug_get_headers());
+    }
+
+    public function testDefaultHeadersConfiguration(): void
+    {
+        $handler = new CorsPreflightHandler(new Response());
+        $this->assertSame(
+            ['Access-Control-Allow-Headers' => ['Authorization', 'X-Requested-With']],
+            new \ReflectionProperty($handler, 'headers')->getValue($handler)
+        );
     }
 }

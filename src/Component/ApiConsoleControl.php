@@ -22,18 +22,18 @@ use Tomaj\NetteApi\Misc\ConsoleRequest;
 
 class ApiConsoleControl extends Control
 {
-    private ApiConsoleFormFactoryInterface $formFactory;
+    private readonly ApiConsoleFormFactoryInterface $formFactory;
 
     private ?FormRenderer $formRenderer = null;
 
     private ?string $templateFilePath = null;
 
     public function __construct(
-        private IRequest $request,
-        private EndpointInterface $endpoint,
-        private ApiHandlerInterface $handler,
-        private ApiAuthorizationInterface $authorization,
-        private ?ApiLink $apiLink = null,
+        private readonly IRequest $request,
+        private readonly EndpointInterface $endpoint,
+        private readonly ApiHandlerInterface $handler,
+        private readonly ApiAuthorizationInterface $authorization,
+        private readonly ?ApiLink $apiLink = null,
         ?ApiConsoleFormFactoryInterface $formFactory = null
     ) {
         $this->formFactory = $formFactory ?: new DefaultApiConsoleFormFactory();
@@ -53,7 +53,7 @@ class ApiConsoleControl extends Control
         $form = $this->formFactory->create($this->request, $this->endpoint, $this->handler, $this->authorization, $this->apiLink);
         $form->setRenderer($this->getFormRenderer());
         /** @phpstan-ignore-next-line */
-        $form->onSuccess[] = [$this, 'formSucceeded'];
+        $form->onSuccess[] = $this->formSucceeded(...);
         return $form;
     }
 
@@ -81,7 +81,7 @@ class ApiConsoleControl extends Control
         }
 
         if (isset($values['custom_headers']) && $values['custom_headers']) {
-            $additionalValues['headers'] = array_filter(array_map('trim', explode("\n", $values['custom_headers'])));
+            $additionalValues['headers'] = array_filter(array_map(trim(...), explode("\n", $values['custom_headers'])));
         }
 
         $additionalValues['timeout'] = $values['timeout'];

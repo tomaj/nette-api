@@ -21,7 +21,7 @@ Robust REST APIs inside your Nette application. Nette API adds a complete API la
 
 ## Installation
 
-Nette API 3.x needs PHP 8.3 or newer.
+Nette API 3.x needs PHP 8.3 or newer. 4.0, in development on `master`, needs PHP 8.4 or newer, see [UPGRADE-4.0.md](UPGRADE-4.0.md).
 
 ```bash
 composer require tomaj/nette-api

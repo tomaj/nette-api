@@ -11,8 +11,8 @@ class EnvConfigurator implements ConfiguratorInterface
      * @param string $productionValue Value that indicates production environment eg. 'production' or 'prod'...
      */
     public function __construct(
-        private string $envVariable = 'APP_ENV',
-        private string $productionValue = 'production'
+        private readonly string $envVariable = 'APP_ENV',
+        private readonly string $productionValue = 'production'
     ) {
     }
 

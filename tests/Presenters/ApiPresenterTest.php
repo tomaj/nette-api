@@ -22,17 +22,17 @@ use Tomaj\NetteApi\Presenters\ApiPresenter;
 use Tomaj\NetteApi\Test\Handler\TestHandler;
 use Tracy\Debugger;
 
-class ApiPresenterTest extends TestCase
+final class ApiPresenterTest extends TestCase
 {
     /** @var Container */
-    private $container;
+    private Container $container;
 
     protected function setUp(): void
     {
         $this->container = new Container();
     }
 
-    public function testSimpleResponse()
+    public function testSimpleResponse(): void
     {
         $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(new EndpointIdentifier('GET', '1', 'test', 'api'), new AlwaysOkHandler(), new NoAuthorization());
@@ -47,13 +47,13 @@ class ApiPresenterTest extends TestCase
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
-        self::assertEquals(200, $result->getCode());
-        self::assertEquals(['status' => 'ok'], $result->getPayload());
-        self::assertEquals('application/json', $result->getContentType());
-        self::assertEquals('utf-8', $result->getCharset());
+        $this->assertEquals(200, $result->getCode());
+        $this->assertEquals(['status' => 'ok'], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
+        $this->assertEquals('utf-8', $result->getCharset());
     }
 
-    public function testWithAuthorization()
+    public function testWithAuthorization(): void
     {
         $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
@@ -72,11 +72,11 @@ class ApiPresenterTest extends TestCase
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
-        self::assertEquals(['status' => 'error', 'message' => 'Authorization header HTTP_Authorization is not set'], $result->getPayload());
-        self::assertEquals('application/json', $result->getContentType());
+        $this->assertEquals(['status' => 'error', 'message' => 'Authorization header HTTP_Authorization is not set'], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
     }
 
-    public function testWithParams()
+    public function testWithParams(): void
     {
         $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
@@ -97,17 +97,17 @@ class ApiPresenterTest extends TestCase
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
-        self::assertEquals(['status' => 'error', 'message' => 'wrong input'], $result->getPayload());
-        self::assertEquals('application/json', $result->getContentType());
+        $this->assertEquals(['status' => 'error', 'message' => 'wrong input'], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
 
         Debugger::$productionMode = Debugger::DETECT;
 
         $result = $presenter->run($request);
-        self::assertEquals(['status' => 'error', 'message' => 'wrong input', 'detail' => ['status' => ['Field is required']]], $result->getPayload());
-        self::assertEquals('application/json', $result->getContentType());
+        $this->assertEquals(['status' => 'error', 'message' => 'wrong input', 'detail' => ['status' => ['Field is required']]], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
     }
 
-    public function testWithOutputs()
+    public function testWithOutputs(): void
     {
         $apiDecider = new ApiDecider($this->container);
         $apiDecider->addApi(
@@ -126,7 +126,7 @@ class ApiPresenterTest extends TestCase
         $request = new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']);
         $result = $presenter->run($request);
 
-        self::assertEquals(['hello' => 'world'], $result->getPayload());
-        self::assertEquals('application/json', $result->getContentType());
+        $this->assertEquals(['hello' => 'world'], $result->getPayload());
+        $this->assertEquals('application/json', $result->getContentType());
     }
 }

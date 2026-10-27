@@ -4,10 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Misc;
 
-/**
- * @todo change implements to TokenRepositoryInterface after BearerTokenRepositoryInterface will be removed in 3.0.0
- */
-class StaticTokenRepository implements BearerTokenRepositoryInterface
+class StaticTokenRepository implements TokenRepositoryInterface
 {
     /**
      *

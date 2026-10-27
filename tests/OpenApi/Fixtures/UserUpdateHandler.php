@@ -17,11 +17,11 @@ class UserUpdateHandler extends BaseHandler
     {
         $schema = '{"type": "object", "properties": {"address": {"$ref": "#/definitions/Address"}, "age": {"type": ["integer", "string"]}}, "required": ["address"], "definitions": {"Address": {"type": "object", "properties": {"city": {"type": ["string", "null"]}}}}}';
         return [
-            (new JsonInputParam('data', $schema))->setRequired()->setDescription('User data')
+            new JsonInputParam('data', $schema)->setRequired()->setDescription('User data')
                 ->addExample('minimal', ['address' => ['city' => null]])
                 ->addExample('full', '{"address": {"city": "Bratislava"}, "age": 30}'),
-            (new RawInputParam('note'))->setDescription('Raw note')->addExample('a', 'first')->addExample('b', 'second'),
-            (new PutInputParam('flag'))->setExample('yes'),
+            new RawInputParam('note')->setDescription('Raw note')->addExample('a', 'first')->addExample('b', 'second'),
+            new PutInputParam('flag')->setExample('yes'),
         ];
     }
 

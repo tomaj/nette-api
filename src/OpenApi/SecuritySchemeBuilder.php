@@ -17,7 +17,7 @@ use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
  *
  * To change or add schemes override createScheme(), it is used for both components and operations so they stay consistent.
  */
-class SecuritySchemeBuilder
+class SecuritySchemeBuilder implements SecuritySchemeBuilderInterface
 {
     /**
      * @param Api[] $apis
@@ -46,7 +46,7 @@ class SecuritySchemeBuilder
         }
 
         return [
-            array_map(fn() => [], $scheme),
+            array_map(fn(): array => [], $scheme),
         ];
     }
 

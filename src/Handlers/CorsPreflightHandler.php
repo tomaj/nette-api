@@ -10,17 +10,12 @@ use Tomaj\NetteApi\Response\ResponseInterface;
 
 class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerInterface
 {
-    private Response $response;
-
-    /** @var array<string,string[]|string> */
-    private array $headers = [];
-
     /**
      * @param array<string,string[]|string> $headers
      */
     public function __construct(
-        Response $response,
-        array $headers = [
+        private readonly Response $response,
+        private readonly array $headers = [
             'Access-Control-Allow-Headers' => [
                 'Authorization',
                 'X-Requested-With',
@@ -28,8 +23,6 @@ class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerIn
         ]
     ) {
         parent::__construct();
-        $this->response = $response;
-        $this->headers = $headers;
     }
 
     /**

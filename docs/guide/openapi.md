@@ -34,7 +34,7 @@ new OpenApiHandler(
     Nette\Http\Request $request,
     array $initData = [],        // merged into the document, e.g. info.title
     array $allowedEndpoints = [], // path pattern => methods to include; empty means all
-    ?SpecBuilder $specBuilder = null // custom builder, see below
+    ?SpecBuilderInterface $specBuilder = null // custom builder, see below
 )
 ```
 
@@ -66,6 +66,8 @@ The document is created by small builders in `Tomaj\NetteApi\OpenApi`, each resp
 ### Replacing a builder via DI
 
 Extend the builder and register it in DI together with `PathBuilder` and `SpecBuilder`. `OpenApiHandler` gets `SpecBuilder` autowired, otherwise the default builders are used. Links are always created by the `ApiLink` of the handler.
+
+Since 4.0 each builder has an interface (`SpecBuilderInterface`, `PathBuilderInterface`, `ParameterBuilderInterface`, `RequestBodyBuilderInterface`, `ResponseBuilderInterface`, `SecuritySchemeBuilderInterface`) and constructors accept the interface, so you can also replace a builder with your own implementation instead of extending it.
 
 ```php
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;

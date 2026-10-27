@@ -8,19 +8,11 @@ use Nette\Http\IRequest;
 
 class BasicAuthentication implements ApiAuthorizationInterface
 {
-    /** @var array<array-key, mixed> */
-    private array $authentications;
-
-    /** @var IRequest */
-    private $httpRequest;
-
     /**
-     * @param array<array-key, mixed> $autentications - available username - password pairs (only string passwords can match)
+     * @param array<array-key, mixed> $authentications - available username - password pairs (only string passwords can match)
      */
-    public function __construct(array $autentications, IRequest $httpRequest)
+    public function __construct(private array $authentications, private readonly IRequest $httpRequest)
     {
-        $this->authentications = $autentications;
-        $this->httpRequest = $httpRequest;
     }
 
     /**

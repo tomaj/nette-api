@@ -12,16 +12,8 @@ class RedirectResponse implements ResponseInterface
 {
     use SmartObject;
 
-    /** @var string */
-    private $url;
-
-    /** @var int */
-    private $httpCode;
-
-    public function __construct(string $url, int $httpCode = IResponse::S302_FOUND)
+    public function __construct(private string $url, private int $httpCode = IResponse::S302_FOUND)
     {
-        $this->url = $url;
-        $this->httpCode = $httpCode;
     }
 
     public function getUrl(): string

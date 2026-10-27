@@ -10,6 +10,7 @@ use Symfony\Component\Yaml\Yaml;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\OpenApi\SpecBuilder;
+use Tomaj\NetteApi\OpenApi\SpecBuilderInterface;
 use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
@@ -18,46 +19,22 @@ use Tomaj\NetteApi\Response\TextApiResponse;
 
 class OpenApiHandler extends BaseHandler
 {
-    /** @var ApiDecider */
-    private $apiDecider;
-
-    /** @var ApiLink */
-    private $apiLink;
-
-    /** @var Request */
-    private $request;
-
-    /** @var array<string,mixed> */
-    private $initData = [];
-
-    /** @var array<string|int, mixed> */
-    private $allowedEndpoints = [];
-
-    /** @var SpecBuilder|null */
-    private $specBuilder;
-
     /**
      * OpenApiHandler constructor.
      * @param array<string,mixed> $initData - structured data for initialization response
      * @param array<string|int, mixed> $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
      *      Example: ['user/*' => ['get', 'post', 'delete'], 'user/list' => 'post', 'user/list' => [], 'user/list']
-     * @param SpecBuilder|null $specBuilder - builder of the spec, default builders are used if not set
+     * @param SpecBuilderInterface|null $specBuilder - builder of the spec, default builders are used if not set
      */
     public function __construct(
-        ApiDecider $apiDecider,
-        ApiLink $apiLink,
-        Request $request,
-        array $initData = [],
-        array $allowedEndpoints = [],
-        ?SpecBuilder $specBuilder = null,
+        private readonly ApiDecider $apiDecider,
+        private readonly ApiLink $apiLink,
+        private readonly Request $request,
+        private readonly array $initData = [],
+        private readonly array $allowedEndpoints = [],
+        private ?SpecBuilderInterface $specBuilder = null,
     ) {
         parent::__construct();
-        $this->apiDecider = $apiDecider;
-        $this->apiLink = $apiLink;
-        $this->request = $request;
-        $this->initData = $initData;
-        $this->allowedEndpoints = $allowedEndpoints;
-        $this->specBuilder = $specBuilder;
     }
 
     /**
@@ -71,7 +48,7 @@ class OpenApiHandler extends BaseHandler
         }
 
         return [
-            (new GetInputParam('format'))->setAvailableValues($availableFormats)->setDescription('Response format'),
+            new GetInputParam('format')->setAvailableValues($availableFormats)->setDescription('Response format'),
         ];
     }
 

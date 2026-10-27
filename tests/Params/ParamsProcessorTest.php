@@ -10,49 +10,49 @@ use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\Params\PostInputParam;
 use Tomaj\NetteApi\Params\PutInputParam;
 
-class ParamsProcessorTest extends TestCase
+final class ParamsProcessorTest extends TestCase
 {
-    public function testError()
+    public function testError(): void
     {
         $processor = new ParamsProcessor([
-            (new PostInputParam('mykey1'))->setRequired(),
+            new PostInputParam('mykey1')->setRequired(),
         ]);
 
-        self::assertTrue($processor->isError());
-        self::assertEquals(['mykey1' => ['Field is required']], $processor->getErrors());
+        $this->assertTrue($processor->isError());
+        $this->assertEquals(['mykey1' => ['Field is required']], $processor->getErrors());
 
         $_GET['mykey2'] = 'x';
         $processor = new ParamsProcessor([
-            (new GetInputParam('mykey2'))->setRequired()->setAvailableValues(['a', 'b', 'c']),
+            new GetInputParam('mykey2')->setRequired()->setAvailableValues(['a', 'b', 'c']),
         ]);
 
-        self::assertTrue($processor->isError());
-        self::assertEquals(['mykey2' => ['Field contains not available value(s)']], $processor->getErrors());
+        $this->assertTrue($processor->isError());
+        $this->assertEquals(['mykey2' => ['Field contains not available value(s)']], $processor->getErrors());
     }
 
-    public function testPass()
+    public function testPass(): void
     {
         $_POST['mykey1'] = 'hello';
         $_GET['mykey2'] = 'asdasd';
         $_POST['mykey3'] = 'asd';
 
         $processor = new ParamsProcessor([
-            (new PostInputParam('mykey1'))->setRequired(),
-            (new GetInputParam('mykey2'))->setRequired(),
+            new PostInputParam('mykey1')->setRequired(),
+            new GetInputParam('mykey2')->setRequired(),
             new PostInputParam('mykey3'),
         ]);
 
-        self::assertFalse($processor->isError());
-        self::assertEquals([], $processor->getErrors());
+        $this->assertFalse($processor->isError());
+        $this->assertEquals([], $processor->getErrors());
 
-        self::assertEquals($processor->getValues(), [
+        $this->assertEquals([
             'mykey1' => 'hello',
             'mykey2' => 'asdasd',
             'mykey3' => 'asd',
-        ]);
+        ], $processor->getValues());
     }
 
-    public function testOptionalDefaultValue()
+    public function testOptionalDefaultValue(): void
     {
         $processor = new ParamsProcessor([
             new PostInputParam('mykey10'),
@@ -60,10 +60,10 @@ class ParamsProcessorTest extends TestCase
             new PutInputParam('mykey30'),
         ]);
 
-        self::assertEquals($processor->getValues(), [
+        $this->assertEquals([
             'mykey10' => null,
             'mykey20' => null,
             'mykey30' => null,
-        ]);
+        ], $processor->getValues());
     }
 }

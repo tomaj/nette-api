@@ -10,7 +10,7 @@ use Tomaj\NetteApi\Misc\OpenApiTransform;
 /**
  * Transforms JSON schemas to OpenAPI schemas and collects their definitions as reusable components
  */
-class SchemaRegistry
+final class SchemaRegistry
 {
     /** @var array<string|int, mixed> numeric definition names are int keys */
     private array $definitions = [];

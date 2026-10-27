@@ -6,6 +6,4 @@ namespace Tomaj\NetteApi\Handlers;
 
 interface CorsPreflightHandlerInterface extends ApiHandlerInterface
 {
-
-
 }

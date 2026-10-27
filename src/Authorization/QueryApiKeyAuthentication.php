@@ -9,7 +9,7 @@ use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
 class QueryApiKeyAuthentication extends TokenAuthorization
 {
-    public function __construct(private string $queryParamName, TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
+    public function __construct(private readonly string $queryParamName, TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         parent::__construct($tokenRepository, $ipDetector);
     }
@@ -17,7 +17,7 @@ class QueryApiKeyAuthentication extends TokenAuthorization
     protected function readAuthorizationToken(): ?string
     {
         $apiKey = $_GET[$this->queryParamName] ?? null;
-        if (!$apiKey) {
+        if (!is_string($apiKey) || !$apiKey) {
             $this->errorMessage = 'API key is not set';
             return null;
         }

@@ -4,6 +4,28 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
+
+### Changed (BC breaks)
+* Minimum PHP version is 8.4. CI runs on PHP 8.4 and 8.5; PHP 8.6 runs as an experimental job.
+* Raised dependency minimums: `nette/application` ^3.2, `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0.
+* Removed deprecated `Tomaj\NetteApi\Misc\BearerTokenRepositoryInterface` and `Tomaj\NetteApi\Misc\StaticBearerTokenRepository`. Use `TokenRepositoryInterface` and `StaticTokenRepository`.
+* All source files declare `strict_types=1`.
+* Constructor-promoted and `readonly` properties, typed class constants (`ApiPresenter::DEFAULT_MASKED_LOG_HEADERS`, `MASKED_LOG_HEADER_VALUE`) and native type declarations replace docblock-only types. Subclasses that reassigned inherited properties, or overrode methods without matching types, must be updated.
+* `QueryApiKeyAuthentication`, `HeaderApiKeyAuthentication` and `CookieApiKeyAuthentication` reject a non-string API key (e.g. `?api_key[]=x`) with `API key is not set` instead of throwing a `TypeError`.
+* `BasicAuthentication` constructor parameter `$autentications` was renamed to `$authentications` (affects named arguments only).
+* `ApiDecider::getApi()` declares its `Api` return type natively.
+* `BearerTokenAuthorization` treats a non-string `Authorization` header as missing.
+* `OpenApi\SchemaRegistry` and `OpenApi\EndpointFilter` are `final`; `SpecBuilder::$pathBuilder` is typed as `PathBuilderInterface`.
+
+### Added
+* Rector config with a CI dry-run job, PHP_CodeSniffer config (PSR-12), Infection mutation testing in CI, lowest-dependency test job.
+* `UPGRADE-4.0.md`.
+* OpenAPI builder interfaces (`SpecBuilderInterface`, `PathBuilderInterface`, `ParameterBuilderInterface`, `RequestBodyBuilderInterface`, `ResponseBuilderInterface`, `SecuritySchemeBuilderInterface`). `OpenApiHandler`, `SpecBuilder` and `PathBuilder` accept the interfaces.
+
+### Changed
+* Dev tools: PHPUnit ^12 || ^13, PHPStan ^2.1 (level max with a baseline), Rector ^2.2, PHP_CodeSniffer ^4.0, Infection; `symfony/yaml` ^7.4.12 || ^8.0.12.
+
 ## 3.6.0 - 2026-10-27
 
 ### Security

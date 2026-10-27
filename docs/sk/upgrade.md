@@ -17,7 +17,7 @@ Samostatný nie. Nekompatibilné zmeny 3.0.0 sú položky [BC] v [changelogu](/s
 
 ### Existuje 4.0, na ktorú sa dá prejsť?
 
-Zatiaľ nie. 3.x je aktuálna rada. Na GitHube je otvorený [milník 4.0.0](https://github.com/tomaj/nette-api/milestone/9) s plánovanými nekompatibilnými zmenami, napríklad odstránením nebezpečného režimu CORS `'auto'` a vyššou minimálnou verziou PHP. Dátum vydania zatiaľ nie je; viac vo [Verziách tejto dokumentácie](/sk/guide/versioning).
+Zatiaľ nie. 3.x je aktuálna rada. Verzia 4.0 sa vyvíja vo vetve `master`: potrebuje PHP 8.4 alebo novšie a jej doterajšie nekompatibilné zmeny sú v [UPGRADE-4.0.md](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md). Na GitHube je otvorený [milník 4.0.0](https://github.com/tomaj/nette-api/milestone/9) s plánovanými nekompatibilnými zmenami, napríklad odstránením nebezpečného režimu CORS `'auto'` a vyššou minimálnou verziou PHP. Dátum vydania zatiaľ nie je; viac vo [Verziách tejto dokumentácie](/sk/guide/versioning).
 
 ### Akú verziu PHP potrebuje 3.x?
 

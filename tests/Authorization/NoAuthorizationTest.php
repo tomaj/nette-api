@@ -7,12 +7,12 @@ namespace Tomaj\NetteApi\Test\Handler;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 
-class NoAuthorizationTest extends TestCase
+final class NoAuthorizationTest extends TestCase
 {
-    public function testResponse()
+    public function testResponse(): void
     {
         $noAuthorization = new NoAuthorization();
-        self::assertTrue($noAuthorization->authorized());
-        self::assertNull($noAuthorization->getErrorMessage());
+        $this->assertTrue($noAuthorization->authorized());
+        $this->assertNull($noAuthorization->getErrorMessage());
     }
 }

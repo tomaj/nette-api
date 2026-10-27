@@ -4,22 +4,19 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Test\Params;
 
-use Exception;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
 use PHPUnit\Framework\TestCase;
-use Tomaj\NetteApi\Params\CookieInputParam;
 use Tomaj\NetteApi\Params\FileInputParam;
 use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Params\JsonInputParam;
 use Tomaj\NetteApi\Params\ParamInterface;
 use Tomaj\NetteApi\Params\PostInputParam;
-use Tomaj\NetteApi\Params\PutInputParam;
 use Tomaj\NetteApi\Params\RawInputParam;
 
-class ConsoleParamsTest extends TestCase
+final class ConsoleParamsTest extends TestCase
 {
-    public function testUpdateFormFileAndGetInput()
+    public function testUpdateFormFileAndGetInput(): void
     {
         $inputParams = [
             new GetInputParam('asdsd'),
@@ -28,17 +25,17 @@ class ConsoleParamsTest extends TestCase
         $this->addInputsToForm($inputParams);
     }
 
-    public function testUpdateFormPostInputs()
+    public function testUpdateFormPostInputs(): void
     {
         $inputParams = [
-            (new PostInputParam('mykey1'))->setRequired()->setExample('Hello world'),
-            (new PostInputParam('mykey2'))->setMulti(),
-            (new PostInputParam('mykey3'))->setRequired()->setAvailableValues(['a', 'b']),
+            new PostInputParam('mykey1')->setRequired()->setExample('Hello world'),
+            new PostInputParam('mykey2')->setMulti(),
+            new PostInputParam('mykey3')->setRequired()->setAvailableValues(['a', 'b']),
         ];
         $this->addInputsToForm($inputParams);
     }
 
-    public function testUpdateFormJsonInput()
+    public function testUpdateFormJsonInput(): void
     {
         $inputParams = [
             new JsonInputParam('json', '{}'),
@@ -46,7 +43,7 @@ class ConsoleParamsTest extends TestCase
         $this->addInputsToForm($inputParams);
     }
 
-    public function testUpdateFormRawInput()
+    public function testUpdateFormRawInput(): void
     {
         $inputParams = [
             new RawInputParam('raw'),
@@ -57,7 +54,7 @@ class ConsoleParamsTest extends TestCase
     /**
      * @param ParamInterface[] $inputParams
      */
-    private function addInputsToForm(array $inputParams)
+    private function addInputsToForm(array $inputParams): void
     {
         $form = new Form();
         $totalCount = 0;
@@ -67,10 +64,8 @@ class ConsoleParamsTest extends TestCase
             $inputParam->updateConsoleForm($form);
         }
 
-        self::assertCount($totalCount, $form->getControls());
+        $this->assertCount($totalCount, iterator_to_array($form->getControls()));
 
-        foreach ($form->getControls() as $control) {
-            self::assertInstanceOf(BaseControl::class, $control);
-        }
+        $this->assertContainsOnlyInstancesOf(BaseControl::class, iterator_to_array($form->getControls()));
     }
 }

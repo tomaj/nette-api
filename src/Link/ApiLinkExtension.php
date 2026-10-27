@@ -11,7 +11,7 @@ final class ApiLinkExtension extends Extension
     public function getTags(): array
     {
         return [
-            'apiLink' => [ApiLinkNode::class, 'create'],
+            'apiLink' => ApiLinkNode::create(...),
         ];
     }
 }
