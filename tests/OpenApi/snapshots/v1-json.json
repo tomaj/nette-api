@@ -1,0 +1,720 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": "1",
+        "title": "Nette API"
+    },
+    "servers": [
+        {
+            "url": "https://example.com"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "Bearer": {
+                "type": "http",
+                "scheme": "bearer"
+            },
+            "Basic": {
+                "type": "http",
+                "scheme": "basic"
+            },
+            "api_key__query__api_key": {
+                "type": "apiKey",
+                "in": "query",
+                "name": "api_key"
+            },
+            "api_key__header__x_api_key": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Api-Key"
+            },
+            "api_key__cookie__api_token": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "api-token"
+            }
+        },
+        "schemas": {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "Address": {
+                "type": "object",
+                "properties": {
+                    "city": {
+                        "type": "string",
+                        "nullable": true
+                    }
+                }
+            },
+            "ErrorWrongInput": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "error"
+                        ]
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "status",
+                    "message"
+                ]
+            },
+            "ErrorUnauthorized": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "error"
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "enum": [
+                            "Authorization header HTTP_Authorization is not set",
+                            "Authorization header contains invalid structure",
+                            "Authorization header doesn't contain bearer token",
+                            "API key is not set"
+                        ]
+                    }
+                },
+                "required": [
+                    "status",
+                    "message"
+                ]
+            },
+            "InternalServerError": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "error"
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "enum": [
+                            "Internal server error"
+                        ]
+                    }
+                },
+                "required": [
+                    "status",
+                    "message"
+                ]
+            }
+        }
+    },
+    "paths": {
+        "/api/v1/users": {
+            "get": {
+                "summary": "List users",
+                "description": "Returns paginated list of users",
+                "tags": [
+                    "users",
+                    "listing"
+                ],
+                "deprecated": true,
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "blocked"
+                            ]
+                        },
+                        "description": "User status\n * `active` - Active users\n * `blocked` - Blocked users"
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        },
+                        "example": "asc"
+                    },
+                    {
+                        "name": "ids[]",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": "1"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Page number"
+                    },
+                    {
+                        "name": "session",
+                        "in": "cookie",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Session id"
+                    }
+                ],
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorWrongInput"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Operation forbidden",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorUnauthorized"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerError"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "List of users",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "example": {
+                                    "users": [
+                                        {
+                                            "id": 1,
+                                            "email": null
+                                        }
+                                    ],
+                                    "next": null
+                                },
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "users": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/User"
+                                                    }
+                                                },
+                                                "next": {
+                                                    "type": "string",
+                                                    "nullable": true
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "206": {
+                        "description": "Partial",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "examples": {
+                                    "first": {
+                                        "a": 1
+                                    },
+                                    "second": {
+                                        "b": 2
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Redirect",
+                        "headers": {
+                            "Location": {
+                                "description": "Redirect to new listing",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "",
+                "description": "",
+                "tags": [],
+                "parameters": [
+                    {
+                        "name": "dry_run",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        },
+                        "description": " * `0` - 0\n * `1` - 1"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "E-mail"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "user"
+                                        ],
+                                        "description": " * `admin` - Administrator\n * `user` - Regular user"
+                                    },
+                                    "groups[]": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "avatar": {
+                                        "type": "string",
+                                        "description": "Avatar image",
+                                        "format": "binary"
+                                    },
+                                    "attachments[]": {
+                                        "type": "array",
+                                        "description": "",
+                                        "items": {
+                                            "type": "string",
+                                            "format": "binary"
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "groups[]",
+                                    "avatar"
+                                ],
+                                "example": {
+                                    "email": "user@example.com",
+                                    "role": "user"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "Basic": []
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorWrongInput"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Operation forbidden",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorUnauthorized"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerError"
+                                }
+                            }
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/detail": {
+            "put": {
+                "summary": "",
+                "description": "",
+                "tags": [],
+                "requestBody": {
+                    "description": "User data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "address": {
+                                        "$ref": "#/components/schemas/Address"
+                                    },
+                                    "age": {
+                                        "oneOf": [
+                                            {
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "type": "string"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "address"
+                                ],
+                                "examples": {
+                                    "minimal": {
+                                        "address": {
+                                            "city": null
+                                        }
+                                    },
+                                    "full": {
+                                        "address": {
+                                            "city": "Bratislava"
+                                        },
+                                        "age": 30
+                                    }
+                                }
+                            }
+                        },
+                        "text/plain": {
+                            "schema": {
+                                "type": "string",
+                                "examples": {
+                                    "a": "first",
+                                    "b": "second"
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "flag": {
+                                        "type": "string"
+                                    }
+                                },
+                                "example": {
+                                    "flag": "yes"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "api_key__query__api_key": []
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorWrongInput"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Operation forbidden",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorUnauthorized"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import/raw": {
+            "post": {
+                "summary": "Import raw data",
+                "description": "",
+                "tags": [],
+                "requestBody": {
+                    "description": "",
+                    "required": false,
+                    "content": {
+                        "text/plain": {
+                            "schema": {
+                                "type": "string",
+                                "example": "id;name\n1;John"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "example": {
+                                    "source": "upload"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "api_key__header__x_api_key": []
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorWrongInput"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Operation forbidden",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorUnauthorized"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/import/status": {
+            "get": {
+                "summary": "",
+                "description": "",
+                "tags": [],
+                "security": [
+                    {
+                        "api_key__cookie__api_token": []
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Operation forbidden",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorUnauthorized"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerError"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/ping": {
+            "get": {
+                "summary": "",
+                "description": "",
+                "tags": [],
+                "responses": {
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerError"
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/docs/open-api": {
+            "get": {
+                "summary": "",
+                "description": "Open API",
+                "tags": [
+                    "openapi"
+                ],
+                "parameters": [
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "json",
+                                "yaml"
+                            ]
+                        },
+                        "description": "Response format"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorWrongInput"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json; charset=utf-8": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

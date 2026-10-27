@@ -11,6 +11,17 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * `ApiPresenter::setCorsAllowedOrigins()`: opt-in CORS allowlist based on the `Origin` header (with optional credentials and `Vary: Origin`). Existing `setCorsHeader()` values, including `'auto'`, behave exactly as before.
 * README: warning about the `'auto'` CORS mode (any site can make credentialed requests) and a migration path to the allowlist.
 * `ApiPresenter::setMaskedLogHeaders()`: opt-in masking of sensitive request header values (`Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key` by default, or a custom case-insensitive list) before they are passed to `ApiLoggerInterface`. Logging is unchanged unless enabled.
+* `Tomaj\NetteApi\OpenApi` builders (`SpecBuilder`, `PathBuilder`, `ParameterBuilder`, `RequestBodyBuilder`, `ResponseBuilder`, `SecuritySchemeBuilder`) that can be extended and replaced via DI, and helpers `SchemaRegistry` and `EndpointFilter` created per generated spec. `OpenApiHandler` accepts an optional `SpecBuilder` as the last constructor argument; links are always created by the handler's `ApiLink`.
+* Docs (EN + SK): OpenAPI builders and how to replace them via DI.
+
+### Changed
+* `OpenApiHandler` was split into the builders above; it now only selects the output format. The generated spec is unchanged (covered by snapshot tests).
+* Schema definitions are collected per generated spec instead of per `OpenApiHandler` instance.
+
+### Fixed
+* OpenApiHandler: endpoints with version `0` are included in the spec of version `0`.
+* OpenApiHandler: examples of outputs and JSON params that are not strings or arrays (e.g. `42`, `true`) no longer cause `TypeError`.
+* OpenApiHandler: numeric definition names (e.g. `"definitions": {"200": ...}`) are kept in `components/schemas`, so `$ref` to them works.
 
 ## 3.5.0
 
