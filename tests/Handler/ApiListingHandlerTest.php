@@ -17,17 +17,17 @@ use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Handlers\ApiListingHandler;
 use Tomaj\NetteApi\Link\ApiLink;
 
-class ApiListingHandlerTest extends TestCase
+final class ApiListingHandlerTest extends TestCase
 {
     /** @var Container */
-    private $container;
+    private Container $container;
 
     protected function setUp(): void
     {
         $this->container = new Container();
     }
 
-    public function testDefaultHandle()
+    public function testDefaultHandle(): void
     {
         $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $apiLink = new ApiLink($linkGenerator);
@@ -49,12 +49,12 @@ class ApiListingHandlerTest extends TestCase
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);
-        self::assertEquals(200, $response->getCode());
+        $this->assertSame(200, $response->getCode());
         $payload = $response->getPayload();
-        self::assertEquals(2, count($payload['endpoints']));
+        $this->assertCount(2, $payload['endpoints']);
     }
 
-    public function testHandlerWithParam()
+    public function testHandlerWithParam(): void
     {
         $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $apiLink = new ApiLink($linkGenerator);
@@ -76,9 +76,46 @@ class ApiListingHandlerTest extends TestCase
         $handler = $result->getHandler();
 
         $response = $handler->handle([]);
-        self::assertEquals(200, $response->getCode());
+        $this->assertSame(200, $response->getCode());
         $payload = $response->getPayload();
-        self::assertEquals(2, count($payload['endpoints']));
-        self::assertEquals(2, count($payload['endpoints'][0]['params']));
+        $this->assertCount(2, $payload['endpoints']);
+        $this->assertCount(2, $payload['endpoints'][0]['params']);
+    }
+
+    public function testListsOnlyEndpointsOfTheRequestedVersion(): void
+    {
+        $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
+        $apiLink = new ApiLink($linkGenerator);
+
+        $apiDecider = new ApiDecider($this->container);
+        $apiDecider->addApi(
+            new EndpointIdentifier('POST', '2', 'comments', 'list'),
+            new AlwaysOkHandler(),
+            new NoAuthorization()
+        );
+        $apiDecider->addApi(
+            new EndpointIdentifier('GET', '3', 'comments', 'detail'),
+            new AlwaysOkHandler(),
+            new NoAuthorization()
+        );
+        $apiDecider->addApi(
+            new EndpointIdentifier('GET', '2', 'endpoints'),
+            new ApiListingHandler($apiDecider, $apiLink),
+            new NoAuthorization()
+        );
+
+        $response = $apiDecider->getApi('GET', '2', 'endpoints')->getHandler()->handle([]);
+        $payload = $response->getPayload();
+        $this->assertIsArray($payload);
+        $this->assertCount(2, $payload['endpoints']);
+        $this->assertSame([
+            'method' => 'POST',
+            'version' => '2',
+            'package' => 'comments',
+            'api_action' => 'list',
+            'authorization' => NoAuthorization::class,
+            'url' => $apiLink->link(new EndpointIdentifier('POST', '2', 'comments', 'list')),
+            'params' => [],
+        ], array_values($payload['endpoints'])[0]);
     }
 }

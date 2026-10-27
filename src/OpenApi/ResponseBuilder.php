@@ -14,7 +14,7 @@ use Tomaj\NetteApi\Output\RedirectOutput;
 /**
  * Creates operation responses: default error responses and responses from handler outputs
  */
-class ResponseBuilder
+class ResponseBuilder implements ResponseBuilderInterface
 {
     /**
      * Schemas referenced by default error responses, they are added to components/schemas

@@ -14,15 +14,12 @@ use Tomaj\NetteApi\Response\ResponseInterface;
 
 abstract class BaseHandler implements ApiHandlerInterface
 {
-    /**
-     * @var Manager|null
-     */
-    private $fractal;
+    private ?Manager $fractal = null;
 
     /**
      * @var EndpointInterface|null
      */
-    private $endpoint;
+    private ?EndpointInterface $endpoint = null;
 
     /**
      * @var LinkGenerator|null

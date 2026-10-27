@@ -9,41 +9,51 @@ use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
 
-class HeaderApiKeyAuthenticationTest extends TestCase
+final class HeaderApiKeyAuthenticationTest extends TestCase
 {
-    public function testAuthorizedApiKey()
+    public function testAuthorizedApiKey(): void
     {
         $_SERVER['HTTP_X_API_KEY'] = 'sad0f98uwegoihweg09i4hergy';
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        self::assertTrue($authorization->authorized());
+        $this->assertTrue($authorization->authorized());
     }
 
-    public function testUnarizedApiKey()
+    public function testUnarizedApiKey(): void
     {
         $_SERVER['HTTP_X_API_KEY'] = 'asflkhwetiohegedgfsdgwe';
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        self::assertFalse($authorization->authorized());
-        self::assertEquals('Token doesn\'t exists or isn\'t active', $authorization->getErrorMessage());
+        $this->assertFalse($authorization->authorized());
+        $this->assertSame('Token doesn\'t exists or isn\'t active', $authorization->getErrorMessage());
     }
 
-    public function testNoApiKey()
+    public function testNoApiKey(): void
     {
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        self::assertFalse($authorization->authorized());
-        self::assertEquals('API key is not set', $authorization->getErrorMessage());
+        $this->assertFalse($authorization->authorized());
+        $this->assertSame('API key is not set', $authorization->getErrorMessage());
     }
 
-    public function testGetQueryParamName()
+    public function testGetQueryParamName(): void
     {
         $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
         $ipDetector = new StaticIpDetector('34.24.126.44');
         $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
-        self::assertEquals('X-API-KEY', $authorization->getHeaderName());
+        $this->assertSame('X-API-KEY', $authorization->getHeaderName());
+    }
+
+    public function testNonStringApiKeyIsNotSet(): void
+    {
+        $_SERVER['HTTP_X_API_KEY'] = ['sad0f98uwegoihweg09i4hergy'];
+        $tokenRepository = new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']);
+        $ipDetector = new StaticIpDetector('34.24.126.44');
+        $authorization = new HeaderApiKeyAuthentication('X-API-KEY', $tokenRepository, $ipDetector);
+        $this->assertFalse($authorization->authorized());
+        $this->assertSame('API key is not set', $authorization->getErrorMessage());
     }
 }

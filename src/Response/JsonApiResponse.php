@@ -15,32 +15,15 @@ class JsonApiResponse implements ResponseInterface
 {
     use SmartObject;
 
-    /** @var integer */
-    private $code;
-
-    /** @var array<mixed>|JsonSerializable */
-    private $payload;
-
-    /** @var string */
-    private $contentType;
-
-    /** @var string */
-    private $charset;
-
-    /** @var DateTimeInterface|null|false */
-    private $expiration;
+    private string $contentType;
 
     /**
      * @param array<mixed>|JsonSerializable $payload
      * @param DateTimeInterface|null|false $expiration
      */
-    public function __construct(int $code, $payload, string $contentType = 'application/json', string $charset = 'utf-8', $expiration = null)
+    public function __construct(private int $code, private $payload, string $contentType = 'application/json', private string $charset = 'utf-8', private $expiration = null)
     {
-        $this->code = $code;
-        $this->payload = $payload;
         $this->contentType = $contentType ?: 'application/json';
-        $this->charset = $charset;
-        $this->expiration = $expiration;
     }
 
     /**

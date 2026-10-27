@@ -6,17 +6,11 @@ namespace Tomaj\NetteApi\Output;
 
 abstract class AbstractOutput implements OutputInterface
 {
-    protected int $code;
-
-    protected string $description;
-
     /** @var array<string, mixed> */
     protected array $examples = [];
 
-    public function __construct(int $code, string $description = '')
+    public function __construct(protected int $code, protected string $description = '')
     {
-        $this->code = $code;
-        $this->description = $description;
     }
 
     public function getCode(): int

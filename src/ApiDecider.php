@@ -22,7 +22,7 @@ class ApiDecider
     private ?ApiHandlerInterface $globalPreflightHandler = null;
 
     public function __construct(
-        private Container $container,
+        private readonly Container $container,
     ) {
     }
 
@@ -34,7 +34,7 @@ class ApiDecider
      *
      * @return Api
      */
-    public function getApi(string $method, string $version, string $package, ?string $apiAction = null)
+    public function getApi(string $method, string $version, string $package, ?string $apiAction = null): Api
     {
         $method = strtoupper($method);
         $apiAction = $apiAction === '' ? null : $apiAction;
@@ -61,7 +61,7 @@ class ApiDecider
         if (!$corsHandler && !$this->globalPreflightHandler) {
             $corsHandler = new CorsPreflightHandler(new Response());
         }
-        
+
         if ($corsHandler) {
             $this->globalPreflightHandler = $corsHandler;
         }

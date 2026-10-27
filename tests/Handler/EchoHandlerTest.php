@@ -7,19 +7,26 @@ namespace Tomaj\NetteApi\Test\Handler;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Handlers\EchoHandler;
 
-class EchoHandlerTest extends TestCase
+final class EchoHandlerTest extends TestCase
 {
-    public function testResponse()
+    public function testResponse(): void
     {
         $handler = new EchoHandler();
-        self::assertEquals('', $handler->summary());
-        self::assertEquals('', $handler->description());
-        self::assertFalse($handler->deprecated());
-        self::assertEquals([], $handler->tags());
+        $this->assertSame('', $handler->summary());
+        $this->assertSame('', $handler->description());
+        $this->assertFalse($handler->deprecated());
+        $this->assertEquals([], $handler->tags());
         
         $result = $handler->handle(['status' => 'error', 'message' => 'Hello']);
-        self::assertEquals(200, $result->getCode());
+        $this->assertSame(200, $result->getCode());
         
-        self::assertEquals(['status' => 'error', 'params' => ['status' => 'error', 'message' => 'Hello']], $result->getPayload());
+        $this->assertEquals(['status' => 'error', 'params' => ['status' => 'error', 'message' => 'Hello']], $result->getPayload());
+    }
+
+    public function testParams(): void
+    {
+        $params = new EchoHandler()->params();
+        $this->assertCount(2, $params);
+        $this->assertSame(['ok' => 'ok', 'error' => 'error'], $params[0]->getAvailableValues());
     }
 }

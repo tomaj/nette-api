@@ -7,28 +7,28 @@ namespace Tomaj\NetteApi\Test\Params;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
 
-class StaticTokenRepositoryTest extends TestCase
+final class StaticTokenRepositoryTest extends TestCase
 {
-    public function testValidation()
+    public function testValidation(): void
     {
         $repository = new StaticTokenRepository([
             'mytoken' => '*',
         ]);
 
-        self::assertTrue($repository->validToken('mytoken'));
-        self::assertFalse($repository->validToken('mytoken2'));
-        self::assertEquals('*', $repository->ipRestrictions('mytoken'));
+        $this->assertTrue($repository->validToken('mytoken'));
+        $this->assertFalse($repository->validToken('mytoken2'));
+        $this->assertSame('*', $repository->ipRestrictions('mytoken'));
     }
 
-    public function testIpRestrictionsForInvalidToken()
+    public function testIpRestrictionsForInvalidToken(): void
     {
         $repository = new StaticTokenRepository([
             'mytoken' => '*',
         ]);
-        self::assertNull($repository->ipRestrictions('mytoken2'));
+        $this->assertNull($repository->ipRestrictions('mytoken2'));
     }
 
-    public function testMultipleTokens()
+    public function testMultipleTokens(): void
     {
         $repository = new StaticTokenRepository([
             'first' => '*',
@@ -36,25 +36,25 @@ class StaticTokenRepositoryTest extends TestCase
             'third' => '*',
         ]);
 
-        self::assertTrue($repository->validToken('first'));
-        self::assertTrue($repository->validToken('second'));
-        self::assertTrue($repository->validToken('third'));
-        self::assertFalse($repository->validToken('fourth'));
-        self::assertFalse($repository->validToken(''));
-        self::assertFalse($repository->validToken('firs'));
+        $this->assertTrue($repository->validToken('first'));
+        $this->assertTrue($repository->validToken('second'));
+        $this->assertTrue($repository->validToken('third'));
+        $this->assertFalse($repository->validToken('fourth'));
+        $this->assertFalse($repository->validToken(''));
+        $this->assertFalse($repository->validToken('firs'));
     }
 
-    public function testEmptyRepository()
+    public function testEmptyRepository(): void
     {
-        self::assertFalse((new StaticTokenRepository())->validToken('anything'));
+        $this->assertFalse(new StaticTokenRepository()->validToken('anything'));
     }
 
-    public function testNumericTokenIsRejectedAsBefore()
+    public function testNumericTokenIsRejectedAsBefore(): void
     {
         // PHP casts the array key '123' to int 123; the strict in_array() never matched it
         $repository = new StaticTokenRepository(['123' => '*', 'abc' => '*']);
 
-        self::assertFalse($repository->validToken('123'));
-        self::assertTrue($repository->validToken('abc'));
+        $this->assertFalse($repository->validToken('123'));
+        $this->assertTrue($repository->validToken('abc'));
     }
 }

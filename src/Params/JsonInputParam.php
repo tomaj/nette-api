@@ -15,14 +15,11 @@ class JsonInputParam extends InputParam
 {
     protected $type = self::TYPE_POST_JSON;
 
-    private string $schema;
-
     private mixed $rawInput = null;
 
-    public function __construct(string $key, string $schema)
+    public function __construct(string $key, private readonly string $schema)
     {
         parent::__construct($key);
-        $this->schema = $schema;
     }
 
     public function setMulti(): InputParam
@@ -33,9 +30,7 @@ class JsonInputParam extends InputParam
     public function getValue(): mixed
     {
         $input = $this->rawInput = file_get_contents('php://input') ?: $this->default;
-        if ($input === null) {
-            $input = '';
-        }
+        $input ??= '';
 
         return json_decode($input, true);
     }

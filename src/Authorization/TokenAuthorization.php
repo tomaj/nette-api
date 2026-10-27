@@ -90,7 +90,7 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
                 return true;
             }
 
-            if (strpos($whiteIp, '/') !== false) {
+            if (str_contains($whiteIp, '/')) {
                 return $this->ipInRange($ip, $whiteIp);
             }
         }

@@ -6,18 +6,14 @@ namespace Tomaj\NetteApi\Params;
 
 class ParamsProcessor
 {
-    /** @var ParamInterface[] */
-    private $params;
-
     /** @var array<mixed> */
-    private $errors = [];
+    private array $errors = [];
 
     /**
      * @param ParamInterface[] $params
      */
-    public function __construct(array $params)
+    public function __construct(private readonly array $params)
     {
-        $this->params = $params;
     }
 
     public function isError(): bool

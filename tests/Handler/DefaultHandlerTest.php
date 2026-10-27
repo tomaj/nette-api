@@ -12,29 +12,29 @@ use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\SimpleRouter;
 
-class DefaultHandlerTest extends TestCase
+final class DefaultHandlerTest extends TestCase
 {
-    public function testResponse()
+    public function testResponse(): void
     {
         $defaultHandler = new DefaultHandler();
         $result = $defaultHandler->handle([]);
-        self::assertEquals(404, $result->getCode());
-        self::assertEquals('application/json', $result->getContentType());
-        self::assertEquals('utf-8', $result->getCharset());
-        self::assertEquals(['status' => 'error', 'message' => 'Unknown api endpoint'], $result->getPayload());
+        $this->assertSame(404, $result->getCode());
+        $this->assertEquals('application/json', $result->getContentType());
+        $this->assertEquals('utf-8', $result->getCharset());
+        $this->assertEquals(['status' => 'error', 'message' => 'Unknown api endpoint'], $result->getPayload());
     }
 
-    public function testEndpointSetter()
+    public function testEndpointSetter(): void
     {
         $defaultHandler = new DefaultHandler();
-        self::assertNull($defaultHandler->getEndpoint());
+        $this->assertNull($defaultHandler->getEndpoint());
 
         $endpointIdentifier = new EndpointIdentifier('POST', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
-        self::assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
+        $this->assertEquals($endpointIdentifier, $defaultHandler->getEndpoint());
     }
 
-    public function testExceptionWhenCreatingLinkWithoutLinkGenerator()
+    public function testExceptionWhenCreatingLinkWithoutLinkGenerator(): void
     {
         $defaultHandler = new DefaultHandler();
 
@@ -43,7 +43,7 @@ class DefaultHandlerTest extends TestCase
         $defaultHandler->createLink([]);
     }
 
-    public function testExceptionWHenCreatingLinkWithoutEndpoint()
+    public function testExceptionWHenCreatingLinkWithoutEndpoint(): void
     {
         $defaultHandler = new DefaultHandler();
 
@@ -55,7 +55,7 @@ class DefaultHandlerTest extends TestCase
         $defaultHandler->createLink([]);
     }
 
-    public function testCreateLink()
+    public function testCreateLink(): void
     {
         $defaultHandler = new DefaultHandler();
 
@@ -65,6 +65,6 @@ class DefaultHandlerTest extends TestCase
         $endpointIdentifier = new EndpointIdentifier('POST', '1', 'article', 'detail');
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
 
-        self::assertEquals('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
+        $this->assertSame('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
     }
 }

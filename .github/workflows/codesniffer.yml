@@ -6,6 +6,9 @@ on:
       - master
   pull_request: null
 
+permissions:
+  contents: read
+
 jobs:
   codesniffer:
     runs-on: ubuntu-latest
@@ -13,10 +16,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          coverage: none
 
       - name: Composer update
         run: composer update --no-progress --no-interaction
 
       - name: Code sniffer
-        run: vendor/bin/phpcs src --standard=PSR2 -n
+        run: vendor/bin/phpcs

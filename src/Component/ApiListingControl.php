@@ -14,9 +14,6 @@ use Tomaj\NetteApi\ApiDecider;
  */
 class ApiListingControl extends Control
 {
-    /** @var ApiDecider */
-    private $apiDecider;
-
     /**
      * @var array<mixed>
      */
@@ -24,9 +21,8 @@ class ApiListingControl extends Control
 
     private ?string $templateFilePath = null;
 
-    public function __construct(ApiDecider $apiDecider)
+    public function __construct(private readonly ApiDecider $apiDecider)
     {
-        $this->apiDecider = $apiDecider;
     }
 
     public function render(): void
@@ -54,9 +50,7 @@ class ApiListingControl extends Control
         $versionHandlers = [];
         foreach ($handlers as $handler) {
             $endPoint = $handler->getEndpoint();
-            if (!isset($versionHandlers[$endPoint->getVersion()])) {
-                $versionHandlers[$endPoint->getVersion()] = [];
-            }
+            $versionHandlers[$endPoint->getVersion()] ??= [];
 
             $versionHandlers[$endPoint->getVersion()][] = $handler;
         }

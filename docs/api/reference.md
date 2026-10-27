@@ -56,7 +56,6 @@ All classes live under `Tomaj\NetteApi`.
 | `Misc\TokenRepositoryInterface`, `StaticTokenRepository` | tokens and their IPs | [Authorization](/guide/authorization#tokens-and-ip-restrictions) |
 | `Misc\IpDetectorInterface`, `IpDetector`, `StaticIpDetector` | the client IP | [Authorization](/guide/authorization#tokens-and-ip-restrictions) |
 | `RateLimit\RateLimitInterface`, `RateLimitResponse`, `NoRateLimit` | rate limiting | [Rate limiting](/guide/rate-limit) |
-| `Misc\StaticBearerTokenRepository`, `BearerTokenRepositoryInterface` | deprecated, use `StaticTokenRepository` | [Authorization](/guide/authorization) |
 
 ## Logging, links and console
 
@@ -81,7 +80,7 @@ In the source on [GitHub](https://github.com/tomaj/nette-api/tree/master/src); t
 
 ### Which classes are deprecated?
 
-`StaticBearerTokenRepository` and `BearerTokenRepositoryInterface`. Use `StaticTokenRepository` and `TokenRepositoryInterface`, which work the same way.
+Only `setExample()` on params and outputs; use `addExample()`. The old `StaticBearerTokenRepository` and `BearerTokenRepositoryInterface` were removed in 4.0. Use `StaticTokenRepository` and `TokenRepositoryInterface`, which work the same way.
 
 ### Is there a DI extension?
 

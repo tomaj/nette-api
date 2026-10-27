@@ -8,20 +8,20 @@ use Nette\InvalidStateException;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 
-class TestHandlerTest extends TestCase
+final class TestHandlerTest extends TestCase
 {
-    public function testParentConstructCall()
+    public function testParentConstructCall(): void
     {
         $handler = new TestHandler();
-        self::assertEquals('Test handler', $handler->summary());
-        self::assertEquals('This API handler is for test purpose and it is marked as deprecated', $handler->description());
-        self::assertTrue($handler->deprecated());
-        self::assertEquals(['test'], $handler->tags());
+        $this->assertSame('Test handler', $handler->summary());
+        $this->assertSame('This API handler is for test purpose and it is marked as deprecated', $handler->description());
+        $this->assertTrue($handler->deprecated());
+        $this->assertEquals(['test'], $handler->tags());
 
         /** @var JsonApiResponse $result */
         $result = $handler->handle([]);
-        self::assertEquals(200, $result->getCode());
-        self::assertEquals(['hello' => 'world'], $result->getPayload());
+        $this->assertEquals(200, $result->getCode());
+        $this->assertEquals(['hello' => 'world'], $result->getPayload());
 
         $this->expectException(InvalidStateException::class);
         $this->expectExceptionMessage("Fractal manager isn't initialized. Did you call parent::__construct() in your handler constructor?");

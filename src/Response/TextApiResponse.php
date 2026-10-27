@@ -13,19 +13,11 @@ class TextApiResponse implements ResponseInterface
 {
     use SmartObject;
 
-    /** @var int */
-    private $code;
-
-    /** @var mixed */
-    private $data;
-
     /**
      * @param mixed $data
      */
-    public function __construct(int $code, $data)
+    public function __construct(private int $code, private $data)
     {
-        $this->code = $code;
-        $this->data = $data;
     }
 
     /**

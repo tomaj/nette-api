@@ -14,12 +14,11 @@ use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Error\DefaultErrorHandler;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
-use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
 use Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
 
-class ApiPresenterLogTest extends TestCase
+final class ApiPresenterLogTest extends TestCase
 {
     private array $server;
 
@@ -47,7 +46,7 @@ class ApiPresenterLogTest extends TestCase
 
     private function presenter(): ApiPresenter
     {
-        $logger = new class ($this) implements ApiLoggerInterface {
+        $logger = new readonly class ($this) implements ApiLoggerInterface {
             public function __construct(private ApiPresenterLogTest $test)
             {
             }
@@ -60,7 +59,7 @@ class ApiPresenterLogTest extends TestCase
         };
 
         $container = new class ($logger) extends Container {
-            public function __construct(private ApiLoggerInterface $logger)
+            public function __construct(private readonly ApiLoggerInterface $logger)
             {
                 parent::__construct();
             }
@@ -96,75 +95,63 @@ class ApiPresenterLogTest extends TestCase
     private function runApi(ApiPresenter $presenter): string
     {
         $presenter->run(new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'api']));
-        self::assertNotNull($this->loggedHeaders);
+        $this->assertNotNull($this->loggedHeaders);
         return $this->loggedHeaders;
     }
 
-    public function testHeadersAreNotMaskedByDefault()
+    public function testHeadersAreNotMaskedByDefault(): void
     {
-        self::assertSame(
-            "Authorization: Bearer secret-token\nCookie: PHPSESSID=secret-session\nX-Api-Key: secret-key\nX-Custom-Token: custom-secret\nAccept: application/json\n",
-            str_replace(PHP_EOL, "\n", $this->runApi($this->presenter()))
-        );
+        $this->assertSame("Authorization: Bearer secret-token\nCookie: PHPSESSID=secret-session\nX-Api-Key: secret-key\nX-Custom-Token: custom-secret\nAccept: application/json\n", str_replace(PHP_EOL, "\n", $this->runApi($this->presenter())));
     }
 
-    public function testDefaultSensitiveHeadersAreMasked()
+    public function testDefaultSensitiveHeadersAreMasked(): void
     {
         $presenter = $this->presenter();
         $presenter->setMaskedLogHeaders();
 
-        self::assertSame(
-            "Authorization: ***\nCookie: ***\nX-Api-Key: ***\nX-Custom-Token: custom-secret\nAccept: application/json\n",
-            str_replace(PHP_EOL, "\n", $this->runApi($presenter))
-        );
+        $this->assertSame("Authorization: ***\nCookie: ***\nX-Api-Key: ***\nX-Custom-Token: custom-secret\nAccept: application/json\n", str_replace(PHP_EOL, "\n", $this->runApi($presenter)));
     }
 
-    public function testCustomHeadersAreMaskedCaseInsensitive()
+    public function testCustomHeadersAreMaskedCaseInsensitive(): void
     {
         $presenter = $this->presenter();
         $presenter->setMaskedLogHeaders(['x-custom-TOKEN', 'AUTHORIZATION']);
 
-        self::assertSame(
-            "Authorization: ***\nCookie: PHPSESSID=secret-session\nX-Api-Key: secret-key\nX-Custom-Token: ***\nAccept: application/json\n",
-            str_replace(PHP_EOL, "\n", $this->runApi($presenter))
-        );
+        $this->assertSame("Authorization: ***\nCookie: PHPSESSID=secret-session\nX-Api-Key: secret-key\nX-Custom-Token: ***\nAccept: application/json\n", str_replace(PHP_EOL, "\n", $this->runApi($presenter)));
     }
 
-    public function testLastCallReplacesTheList()
+    public function testLastCallReplacesTheList(): void
     {
         $presenter = $this->presenter();
         $presenter->setMaskedLogHeaders();
         $presenter->setMaskedLogHeaders(['Accept']);
 
-        self::assertSame(
-            "Authorization: Bearer secret-token\nCookie: PHPSESSID=secret-session\nX-Api-Key: secret-key\nX-Custom-Token: custom-secret\nAccept: ***\n",
-            str_replace(PHP_EOL, "\n", $this->runApi($presenter))
-        );
+        $this->assertSame("Authorization: Bearer secret-token\nCookie: PHPSESSID=secret-session\nX-Api-Key: secret-key\nX-Custom-Token: custom-secret\nAccept: ***\n", str_replace(PHP_EOL, "\n", $this->runApi($presenter)));
     }
 
-    public function testEmptyListDisablesMasking()
+    public function testEmptyListDisablesMasking(): void
     {
         $presenter = $this->presenter();
         $presenter->setMaskedLogHeaders();
         $presenter->setMaskedLogHeaders([]);
 
-        self::assertStringContainsString('Authorization: Bearer secret-token', $this->runApi($presenter));
+        $this->assertStringContainsString('Authorization: Bearer secret-token', $this->runApi($presenter));
     }
 
-    public function testProxyAuthorizationIsMaskedByDefault()
+    public function testProxyAuthorizationIsMaskedByDefault(): void
     {
         $_SERVER['HTTP_PROXY_AUTHORIZATION'] = 'Basic proxy-secret';
         $presenter = $this->presenter();
         $presenter->setMaskedLogHeaders();
 
         $logged = $this->runApi($presenter);
-        self::assertStringContainsString('Proxy-Authorization: ***', $logged);
-        self::assertStringNotContainsString('proxy-secret', $logged);
+        $this->assertStringContainsString('Proxy-Authorization: ***', $logged);
+        $this->assertStringNotContainsString('proxy-secret', $logged);
     }
 
-    public function testDefaults()
+    public function testDefaults(): void
     {
-        self::assertSame(['Authorization', 'Proxy-Authorization', 'Cookie', 'Set-Cookie', 'X-Api-Key'], ApiPresenter::DEFAULT_MASKED_LOG_HEADERS);
-        self::assertSame('***', ApiPresenter::MASKED_LOG_HEADER_VALUE);
+        $this->assertSame(['Authorization', 'Proxy-Authorization', 'Cookie', 'Set-Cookie', 'X-Api-Key'], ApiPresenter::DEFAULT_MASKED_LOG_HEADERS);
+        $this->assertSame('***', ApiPresenter::MASKED_LOG_HEADER_VALUE);
     }
 }

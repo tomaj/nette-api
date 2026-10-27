@@ -21,17 +21,17 @@ use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
 use Nette\Http\Request;
 
-class OpenApiHandlerTest extends TestCase
+final class OpenApiHandlerTest extends TestCase
 {
     /** @var Container */
-    private $container;
+    private Container $container;
 
     protected function setUp(): void
     {
         $this->container = new Container();
     }
 
-    public function testHandlerWithMultipleResponseSchemas()
+    public function testHandlerWithMultipleResponseSchemas(): void
     {
         $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $apiLink = new ApiLink($linkGenerator);
@@ -54,21 +54,21 @@ class OpenApiHandlerTest extends TestCase
         $handler = $result->getHandler();
 
         $response = $handler->handle(['format' => 'json']);
-        self::assertEquals(200, $response->getCode());
+        $this->assertSame(200, $response->getCode());
         $payload = $response->getPayload();
 
-        self::assertEquals('string', $payload['components']['schemas']['ErrorWrongInput']['properties']['message']['type']);
-        self::assertArrayNotHasKey('enum', $payload['components']['schemas']['ErrorWrongInput']['properties']['message']);
-        self::assertEquals(2, count($payload['paths']));
+        $this->assertEquals('string', $payload['components']['schemas']['ErrorWrongInput']['properties']['message']['type']);
+        $this->assertArrayNotHasKey('enum', $payload['components']['schemas']['ErrorWrongInput']['properties']['message']);
+        $this->assertCount(2, $payload['paths']);
 
         $def = array_values($payload['paths'])[0]; // MultipleOutputTestHandler
-        self::assertEquals(2, count($def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema']['oneOf']));
+        $this->assertCount(2, $def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema']['oneOf']);
 
         $def = array_values($payload['paths'])[1]; // OpenApiHandler
-        self::assertFalse(isset($def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema']['oneOf']));
+        $this->assertArrayNotHasKey('oneOf', $def['get']['responses'][200]['content']['application/json; charset=utf-8']['schema'] ?? []);
     }
 
-    public function testConflictingDefinitionsThrowException()
+    public function testConflictingDefinitionsThrowException(): void
     {
         $linkGenerator = new LinkGenerator(new SimpleRouter([]), new UrlScript('http://test/'));
         $apiDecider = new ApiDecider($this->container);
@@ -88,7 +88,7 @@ class OpenApiHandlerTest extends TestCase
     private function createHandlerWithDefinition(string $definition): BaseHandler
     {
         return new class ($definition) extends BaseHandler {
-            public function __construct(private string $definition)
+            public function __construct(private readonly string $definition)
             {
                 parent::__construct();
             }

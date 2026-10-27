@@ -5,7 +5,7 @@ description: Ktoré vydanie Nette API táto dokumentácia opisuje, ako sa označ
 
 # Verzie tejto dokumentácie
 
-Tento web opisuje **3.x**, aktuálnu radu vydaní; posledné vydanie je 3.6.0. Nainštalujete ho cez `composer require tomaj/nette-api`. Potrebuje PHP 8.3 alebo novšie.
+Tento web opisuje **3.x**, aktuálnu radu vydaní; posledné vydanie je 3.6.0. Nainštalujete ho cez `composer require tomaj/nette-api`. Potrebuje PHP 8.3 alebo novšie. Vetva `master` (`dev-master`) je 4.0 vo vývoji a potrebuje PHP 8.4 alebo novšie; jej nespätne kompatibilné zmeny sú v [UPGRADE-4.0.md](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
 
 <Diagram name="versioning-1" alt="Dnes je 3.x v koreni; keď vyjde 4.x, prevezme koreň a 3.x sa presunie do /3.x/" />
 

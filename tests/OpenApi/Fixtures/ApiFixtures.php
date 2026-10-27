@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Test\OpenApi\Fixtures;
 
 use Nette\Application\LinkGenerator;
-use Nette\Application\Routers\Route;
 use Nette\Application\Routers\RouteList;
 use Nette\DI\Container;
 use Nette\Http\Request;

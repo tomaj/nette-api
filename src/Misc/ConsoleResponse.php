@@ -6,24 +6,6 @@ namespace Tomaj\NetteApi\Misc;
 
 class ConsoleResponse
 {
-    /** @var array<string,mixed> */
-    private array $postFields;
-
-    private ?string $rawPost;
-
-    /** @var array<string,mixed> */
-    private array $getFields;
-
-    /** @var array<string,mixed> */
-    private array $cookieFields;
-
-    private string $url;
-
-    private string $method;
-
-    /** @var array<string,mixed> */
-    private array $headers;
-
     private ?int $responseCode = null;
 
     private ?string $responseBody = null;
@@ -44,15 +26,8 @@ class ConsoleResponse
      * @param array<string,mixed> $cookieFields
      * @param array<string,mixed> $headers
      */
-    public function __construct(string $url, string $method, array $postFields = [], array $getFields = [], array $cookieFields = [], array $headers = [], ?string $rawPost = null)
+    public function __construct(private readonly string $url, private readonly string $method, private readonly array $postFields = [], private readonly array $getFields = [], private readonly array $cookieFields = [], private readonly array $headers = [], private readonly ?string $rawPost = null)
     {
-        $this->url = $url;
-        $this->method = $method;
-        $this->postFields = $postFields;
-        $this->getFields = $getFields;
-        $this->cookieFields = $cookieFields;
-        $this->headers = $headers;
-        $this->rawPost = $rawPost;
     }
 
     public function logRequest(int $responseCode, string $responseBody, string $responseHeaders, int $responseTime): void

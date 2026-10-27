@@ -7,9 +7,9 @@ namespace Tomaj\NetteApi\Test\Params;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Misc\OpenApiTransform;
 
-class SchemaTransformerTest extends TestCase
+final class SchemaTransformerTest extends TestCase
 {
-    public function testSingeTypeRequest()
+    public function testSingeTypeRequest(): void
     {
         $schema = [
             'type' => 'object',
@@ -27,10 +27,10 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        self::assertEquals($expected, $schema);
+        $this->assertEquals($expected, $schema);
     }
 
-    public function testTypePropertyRequest()
+    public function testTypePropertyRequest(): void
     {
         $schema = [
             'type' => 'object',
@@ -48,10 +48,10 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        self::assertEquals($expected, $schema);
+        $this->assertEquals($expected, $schema);
     }
 
-    public function testNullStringRequest()
+    public function testNullStringRequest(): void
     {
         $schema = [
             'type' => 'object',
@@ -70,10 +70,10 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        self::assertEquals($expected, $schema);
+        $this->assertEquals($expected, $schema);
     }
 
-    public function testIntegerStringRequest()
+    public function testIntegerStringRequest(): void
     {
         $schema = [
             'type' => 'object',
@@ -94,10 +94,10 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        self::assertEquals($expected, $schema);
+        $this->assertEquals($expected, $schema);
     }
 
-    public function testNullIntegerStringRequest()
+    public function testNullIntegerStringRequest(): void
     {
         $schema = [
             'type' => 'object',
@@ -119,10 +119,10 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        self::assertEquals($expected, $schema);
+        $this->assertEquals($expected, $schema);
     }
 
-    public function testTypePropertyNullIntegerStringRequest()
+    public function testTypePropertyNullIntegerStringRequest(): void
     {
         $schema = [
             'type' => 'object',
@@ -144,6 +144,6 @@ class SchemaTransformerTest extends TestCase
         ];
 
         OpenApiTransform::transformTypes($schema);
-        self::assertEquals($expected, $schema);
+        $this->assertEquals($expected, $schema);
     }
 }

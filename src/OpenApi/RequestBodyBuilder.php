@@ -12,7 +12,7 @@ use Tomaj\NetteApi\Params\RawInputParam;
 /**
  * Creates operation request body from JSON, raw, POST, PUT and file params of handler
  */
-class RequestBodyBuilder
+class RequestBodyBuilder implements RequestBodyBuilderInterface
 {
     /**
      * @return array<string, mixed>|null null if handler has no body params
@@ -57,8 +57,8 @@ class RequestBodyBuilder
                         $schema['examples'] = $examples;
                     }
                 }
-                $result['description'] = $result['description'] ?? $param->getDescription();
-                $result['required'] = $result['required'] ?? $param->isRequired();
+                $result['description'] ??= $param->getDescription();
+                $result['required'] ??= $param->isRequired();
                 $result['content']['text/plain'] = [
                     'schema' => $schema,
                 ];

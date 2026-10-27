@@ -29,7 +29,7 @@ class FileInputParam extends InputParam
      * @param array<mixed> $files
      * @return array<mixed>
      */
-    private function processMultiFileUploads(array$files): array
+    private function processMultiFileUploads(array $files): array
     {
         $result = [];
         foreach ($files as $key => $values) {

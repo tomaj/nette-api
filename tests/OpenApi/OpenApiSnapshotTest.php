@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Test\OpenApi;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Nette\Application\LinkGenerator;
 use Nette\Application\Routers\RouteList;
 use Nette\Http\Response;
@@ -21,31 +22,29 @@ use Tomaj\NetteApi\Test\OpenApi\Fixtures\ApiFixtures;
 /**
  * Generated spec must stay byte-identical. Regenerate snapshots with UPDATE_SNAPSHOTS=1 only for intentional changes.
  */
-class OpenApiSnapshotTest extends TestCase
+final class OpenApiSnapshotTest extends TestCase
 {
     /**
-     * @return array<string, array{string, string, array<string, mixed>, array<string|int, mixed>}>
+     * @return \Iterator<string, array{string, string, array<string, mixed>, array<(int | string), mixed>}>
      */
-    public static function provideSpecs(): array
+    public static function provideSpecs(): \Iterator
     {
-        return [
-            'v1 json' => ['1', 'json', [], []],
-            'v1 yaml' => ['1', 'yaml', [], []],
-            'v2 json' => ['2', 'json', [], []],
-            'v1 init data and allowed endpoints' => [
-                '1',
-                'json',
-                ['info' => ['title' => 'My API', 'description' => 'Custom'], 'servers' => [['url' => 'https://api.example.com']]],
-                ['users' => ['get', 'PUT'], 'import/*' => 'post', 'ping'],
-            ],
+        yield 'v1 json' => ['1', 'json', [], []];
+        yield 'v1 yaml' => ['1', 'yaml', [], []];
+        yield 'v2 json' => ['2', 'json', [], []];
+        yield 'v1 init data and allowed endpoints' => [
+            '1',
+            'json',
+            ['info' => ['title' => 'My API', 'description' => 'Custom'], 'servers' => [['url' => 'https://api.example.com']]],
+            ['users' => ['get', 'PUT'], 'import/*' => 'post', 'ping'],
         ];
     }
 
     /**
-     * @dataProvider provideSpecs
      * @param array<string, mixed> $initData
      * @param array<string|int, mixed> $allowedEndpoints
      */
+    #[DataProvider('provideSpecs')]
     public function testSpecIsUnchanged(string $version, string $format, array $initData, array $allowedEndpoints): void
     {
         $apiDecider = ApiFixtures::apiDecider();
@@ -56,15 +55,15 @@ class OpenApiSnapshotTest extends TestCase
         );
 
         $response = $apiDecider->getApi('GET', $version, 'docs', 'open-api')->getHandler()->handle(['format' => $format]);
-        self::assertSame(200, $response->getCode());
+        $this->assertSame(200, $response->getCode());
 
         if ($format === 'yaml') {
-            self::assertInstanceOf(TextApiResponse::class, $response);
+            $this->assertInstanceOf(TextApiResponse::class, $response);
             ob_start();
             $response->send(ApiFixtures::request(), new Response());
             $output = (string) ob_get_clean();
         } else {
-            self::assertInstanceOf(JsonApiResponse::class, $response);
+            $this->assertInstanceOf(JsonApiResponse::class, $response);
             $output = json_encode($response->getPayload(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR) . "\n";
         }
 
@@ -93,8 +92,8 @@ class OpenApiSnapshotTest extends TestCase
         $handler = new OpenApiHandler(ApiFixtures::apiDecider(), ApiFixtures::apiLink(), ApiFixtures::request(), [], [], $specBuilder);
         $response = $handler->handle(['format' => 'json']);
 
-        self::assertInstanceOf(JsonApiResponse::class, $response);
-        self::assertSame('custom', $response->getPayload()['info']['x-generated-by']);
+        $this->assertInstanceOf(JsonApiResponse::class, $response);
+        $this->assertSame('custom', $response->getPayload()['info']['x-generated-by']);
     }
 
     public function testApiLinkOfHandlerIsUsedWithInjectedSpecBuilder(): void
@@ -112,7 +111,7 @@ class OpenApiSnapshotTest extends TestCase
 
         $response = $apiDecider->getApi('GET', '2', 'docs', 'open-api')->getHandler()->handle(['format' => 'json']);
 
-        self::assertSame(['/admin-api/v2/ping', '/admin-api/v2/users', '/admin-api/v2/docs/open-api'], array_keys($response->getPayload()['paths']));
+        $this->assertSame(['/admin-api/v2/ping', '/admin-api/v2/users', '/admin-api/v2/docs/open-api'], array_keys($response->getPayload()['paths']));
     }
 
     private function assertMatchesSnapshot(string $name, string $actual): void
@@ -123,7 +122,7 @@ class OpenApiSnapshotTest extends TestCase
             self::markTestIncomplete('Snapshot ' . $name . ' was written, run tests again');
         }
 
-        self::assertFileExists($file, 'Snapshot ' . $name . ' is missing, create it with UPDATE_SNAPSHOTS=1');
-        self::assertSame(file_get_contents($file), $actual);
+        $this->assertFileExists($file, 'Snapshot ' . $name . ' is missing, create it with UPDATE_SNAPSHOTS=1');
+        $this->assertSame(file_get_contents($file), $actual);
     }
 }

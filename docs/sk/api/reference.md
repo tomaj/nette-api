@@ -56,7 +56,6 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 | `Misc\TokenRepositoryInterface`, `StaticTokenRepository` | tokeny a ich IP | [Autorizácia](/sk/guide/authorization#tokeny-a-obmedzenie-ip) |
 | `Misc\IpDetectorInterface`, `IpDetector`, `StaticIpDetector` | IP klienta | [Autorizácia](/sk/guide/authorization#tokeny-a-obmedzenie-ip) |
 | `RateLimit\RateLimitInterface`, `RateLimitResponse`, `NoRateLimit` | obmedzenie požiadaviek | [Obmedzenie požiadaviek](/sk/guide/rate-limit) |
-| `Misc\StaticBearerTokenRepository`, `BearerTokenRepositoryInterface` | zastarané, použite `StaticTokenRepository` | [Autorizácia](/sk/guide/authorization) |
 
 ## Logovanie, odkazy a konzola
 
@@ -81,7 +80,7 @@ V zdrojovom kóde na [GitHube](https://github.com/tomaj/nette-api/tree/master/sr
 
 ### Ktoré triedy sú zastarané?
 
-`StaticBearerTokenRepository` a `BearerTokenRepositoryInterface`. Použite `StaticTokenRepository` a `TokenRepositoryInterface`, ktoré fungujú rovnako.
+Iba `setExample()` pri parametroch a výstupoch; použite `addExample()`. Staré `StaticBearerTokenRepository` a `BearerTokenRepositoryInterface` boli vo verzii 4.0 odstránené. Použite `StaticTokenRepository` a `TokenRepositoryInterface`, ktoré fungujú rovnako.
 
 ### Existuje DI rozšírenie?
 

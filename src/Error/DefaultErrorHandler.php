@@ -11,14 +11,10 @@ use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tracy\Debugger;
 
-final class DefaultErrorHandler implements ErrorHandlerInterface
+final readonly class DefaultErrorHandler implements ErrorHandlerInterface
 {
-    /** @var ConfiguratorInterface */
-    private $outputConfigurator;
-
-    public function __construct(ConfiguratorInterface $outputConfigurator)
+    public function __construct(private ConfiguratorInterface $outputConfigurator)
     {
-        $this->outputConfigurator = $outputConfigurator;
     }
 
     public function handle(Throwable $exception, array $params): JsonApiResponse

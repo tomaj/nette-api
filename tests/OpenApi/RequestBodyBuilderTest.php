@@ -15,24 +15,24 @@ use Tomaj\NetteApi\Params\PutInputParam;
 use Tomaj\NetteApi\Params\RawInputParam;
 use Tomaj\NetteApi\Test\OpenApi\Fixtures\ConfigurableHandler;
 
-class RequestBodyBuilderTest extends TestCase
+final class RequestBodyBuilderTest extends TestCase
 {
     public function testNoBodyParams(): void
     {
-        self::assertNull((new RequestBodyBuilder())->build(new ConfigurableHandler([new GetInputParam('id')]), new SchemaRegistry()));
+        $this->assertNull(new RequestBodyBuilder()->build(new ConfigurableHandler([new GetInputParam('id')]), new SchemaRegistry()));
     }
 
     public function testJsonBodyRegistersDefinitions(): void
     {
         $registry = new SchemaRegistry();
-        $param = (new JsonInputParam('data', '{"$ref": "#/definitions/Item", "definitions": {"Item": {"type": "string"}}}'))
+        $param = new JsonInputParam('data', '{"$ref": "#/definitions/Item", "definitions": {"Item": {"type": "string"}}}')
             ->setRequired()
             ->setDescription('Data')
             ->setExample('"abc"');
 
-        $body = (new RequestBodyBuilder())->build(new ConfigurableHandler([$param]), $registry);
+        $body = new RequestBodyBuilder()->build(new ConfigurableHandler([$param]), $registry);
 
-        self::assertSame([
+        $this->assertSame([
             'description' => 'Data',
             'required' => true,
             'content' => [
@@ -41,34 +41,34 @@ class RequestBodyBuilderTest extends TestCase
                 ],
             ],
         ], $body);
-        self::assertSame(['Item' => ['type' => 'string']], $registry->getDefinitions());
+        $this->assertSame(['Item' => ['type' => 'string']], $registry->getDefinitions());
     }
 
     public function testJsonBodyWithMultipleExamples(): void
     {
-        $param = (new JsonInputParam('data', '{"type": "object"}'))->addExample('a', ['x' => 1])->addExample('b', '{"x": 2}');
-        $body = (new RequestBodyBuilder())->build(new ConfigurableHandler([$param]), new SchemaRegistry());
+        $param = new JsonInputParam('data', '{"type": "object"}')->addExample('a', ['x' => 1])->addExample('b', '{"x": 2}');
+        $body = new RequestBodyBuilder()->build(new ConfigurableHandler([$param]), new SchemaRegistry());
 
-        self::assertSame(['a' => ['x' => 1], 'b' => ['x' => 2]], $body['content']['application/json']['schema']['examples']);
+        $this->assertSame(['a' => ['x' => 1], 'b' => ['x' => 2]], $body['content']['application/json']['schema']['examples']);
     }
 
     public function testJsonBodyWithNonStringExamples(): void
     {
-        $single = (new JsonInputParam('count', '{"type": "integer"}'))->setExample(5);
-        $multiple = (new JsonInputParam('flag', '{"type": "boolean"}'))->addExample('yes', true)->addExample('no', false);
+        $single = new JsonInputParam('count', '{"type": "integer"}')->setExample(5);
+        $multiple = new JsonInputParam('flag', '{"type": "boolean"}')->addExample('yes', true)->addExample('no', false);
 
         $builder = new RequestBodyBuilder();
-        self::assertSame(5, $builder->build(new ConfigurableHandler([$single]), new SchemaRegistry())['content']['application/json']['schema']['example']);
-        self::assertSame(['yes' => true, 'no' => false], $builder->build(new ConfigurableHandler([$multiple]), new SchemaRegistry())['content']['application/json']['schema']['examples']);
+        $this->assertSame(5, $builder->build(new ConfigurableHandler([$single]), new SchemaRegistry())['content']['application/json']['schema']['example']);
+        $this->assertSame(['yes' => true, 'no' => false], $builder->build(new ConfigurableHandler([$multiple]), new SchemaRegistry())['content']['application/json']['schema']['examples']);
     }
 
     public function testRawBody(): void
     {
-        $body = (new RequestBodyBuilder())->build(new ConfigurableHandler([
-            (new RawInputParam('raw'))->setDescription('Raw')->setRequired()->setExample('text'),
+        $body = new RequestBodyBuilder()->build(new ConfigurableHandler([
+            new RawInputParam('raw')->setDescription('Raw')->setRequired()->setExample('text'),
         ]), new SchemaRegistry());
 
-        self::assertSame([
+        $this->assertSame([
             'description' => 'Raw',
             'required' => true,
             'content' => [
@@ -79,12 +79,12 @@ class RequestBodyBuilderTest extends TestCase
 
     public function testFormBody(): void
     {
-        $body = (new RequestBodyBuilder())->build(new ConfigurableHandler([
-            (new PostInputParam('name'))->setRequired()->setExample('John'),
-            (new PutInputParam('tags'))->setMulti()->setAvailableValues(['a' => 'Tag A'])->setDefault('a'),
+        $body = new RequestBodyBuilder()->build(new ConfigurableHandler([
+            new PostInputParam('name')->setRequired()->setExample('John'),
+            new PutInputParam('tags')->setMulti()->setAvailableValues(['a' => 'Tag A'])->setDefault('a'),
         ]), new SchemaRegistry());
 
-        self::assertSame([
+        $this->assertSame([
             'required' => true,
             'content' => [
                 'application/x-www-form-urlencoded' => [
@@ -104,14 +104,14 @@ class RequestBodyBuilderTest extends TestCase
 
     public function testFilesSwitchToMultipart(): void
     {
-        $body = (new RequestBodyBuilder())->build(new ConfigurableHandler([
+        $body = new RequestBodyBuilder()->build(new ConfigurableHandler([
             new PostInputParam('name'),
-            (new FileInputParam('photo'))->setRequired()->setDescription('Photo'),
-            (new FileInputParam('docs'))->setMulti(),
+            new FileInputParam('photo')->setRequired()->setDescription('Photo'),
+            new FileInputParam('docs')->setMulti(),
         ]), new SchemaRegistry());
 
-        self::assertSame(['multipart/form-data'], array_keys($body['content']));
-        self::assertSame([
+        $this->assertSame(['multipart/form-data'], array_keys($body['content']));
+        $this->assertSame([
             'type' => 'object',
             'properties' => [
                 'name' => ['type' => 'string'],
@@ -120,5 +120,17 @@ class RequestBodyBuilderTest extends TestCase
             ],
             'required' => ['photo'],
         ], $body['content']['multipart/form-data']['schema']);
+    }
+
+    public function testRawBodyKeepsDescriptionAndRequiredOfEarlierParam(): void
+    {
+        $json = new JsonInputParam('data', '{"type": "object"}')->setRequired()->setDescription('Json');
+        $raw = new RawInputParam('raw')->setDescription('Raw');
+
+        $body = new RequestBodyBuilder()->build(new ConfigurableHandler([$json, $raw]), new SchemaRegistry());
+
+        $this->assertIsArray($body);
+        $this->assertSame('Json', $body['description']);
+        $this->assertTrue($body['required']);
     }
 }

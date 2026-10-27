@@ -12,11 +12,11 @@ use Tomaj\NetteApi\Link\ApiLink;
 /**
  * Creates the whole OpenAPI spec (info, servers, components and paths) for apis of one version
  */
-class SpecBuilder
+class SpecBuilder implements SpecBuilderInterface
 {
-    protected PathBuilder $pathBuilder;
+    protected PathBuilderInterface $pathBuilder;
 
-    public function __construct(?PathBuilder $pathBuilder = null)
+    public function __construct(?PathBuilderInterface $pathBuilder = null)
     {
         $this->pathBuilder = $pathBuilder ?? new PathBuilder();
     }
@@ -33,9 +33,7 @@ class SpecBuilder
      */
     public function build(array $apis, ?string $version, string $baseUrl, ApiLink $apiLink, array $initData = [], array $allowedEndpoints = []): array
     {
-        $apis = array_filter($apis, function (Api $api) use ($version) {
-            return ($version ?? '') === $api->getEndpoint()->getVersion();
-        });
+        $apis = array_filter($apis, fn(Api $api): bool => ($version ?? '') === $api->getEndpoint()->getVersion());
         $basePath = $this->pathBuilder->buildBasePath($apis, $baseUrl, $apiLink);
         $securitySchemes = $this->pathBuilder->buildSecuritySchemes($apis);
         $schemaRegistry = new SchemaRegistry();

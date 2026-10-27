@@ -10,15 +10,11 @@ use Tomaj\NetteApi\EndpointInterface;
 
 class ApiLink
 {
-    /** @var LinkGenerator */
-    private $linkGenerator;
-
     /**
      * Create ApiLink
      */
-    public function __construct(LinkGenerator $linkGenerator)
+    public function __construct(private readonly LinkGenerator $linkGenerator)
     {
-        $this->linkGenerator = $linkGenerator;
     }
 
     /**

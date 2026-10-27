@@ -12,12 +12,9 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 class JsonOutput extends AbstractOutput
 {
-    private string $schema;
-
-    public function __construct(int $code, string $schema, string $description = '')
+    public function __construct(int $code, private readonly string $schema, string $description = '')
     {
         parent::__construct($code, $description);
-        $this->schema = $schema;
     }
 
     public function validate(ResponseInterface $response): ValidationResultInterface

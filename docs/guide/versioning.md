@@ -5,7 +5,7 @@ description: Which Nette API release this documentation describes, how “Since 
 
 # Versions of this documentation
 
-This site describes **3.x**, the current release line; the latest release is 3.6.0. Install it with `composer require tomaj/nette-api`. It needs PHP 8.3 or newer.
+This site describes **3.x**, the current release line; the latest release is 3.6.0. Install it with `composer require tomaj/nette-api`. It needs PHP 8.3 or newer. The `master` branch (`dev-master`) is 4.0 in development and needs PHP 8.4 or newer; its breaking changes are in [UPGRADE-4.0.md](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
 
 <Diagram name="versioning-1" alt="Today 3.x is at the root; when 4.x ships it takes the root and 3.x moves to /3.x/" />
 

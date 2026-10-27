@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\OpenApi\SchemaRegistry;
 
-class SchemaRegistryTest extends TestCase
+final class SchemaRegistryTest extends TestCase
 {
     public function testTransformMovesDefinitionsToComponents(): void
     {
@@ -21,8 +21,8 @@ class SchemaRegistryTest extends TestCase
             ],
         ]);
 
-        self::assertSame(['type' => 'object', 'properties' => ['item' => ['$ref' => '#/components/schemas/Item']]], $schema);
-        self::assertSame(['Item' => ['type' => 'string', 'nullable' => true]], $registry->getDefinitions());
+        $this->assertSame(['type' => 'object', 'properties' => ['item' => ['$ref' => '#/components/schemas/Item']]], $schema);
+        $this->assertSame(['Item' => ['type' => 'string', 'nullable' => true]], $registry->getDefinitions());
     }
 
     public function testNestedDefinitionsAreRegistered(): void
@@ -38,7 +38,7 @@ class SchemaRegistryTest extends TestCase
             ],
         ]);
 
-        self::assertSame([
+        $this->assertSame([
             'Inner' => ['type' => 'integer'],
             'Outer' => ['$ref' => '#/components/schemas/Inner'],
         ], $registry->getDefinitions());
@@ -49,12 +49,12 @@ class SchemaRegistryTest extends TestCase
         $registry = new SchemaRegistry();
         $registry->transform(json_decode('{"$ref": "#/definitions/200", "definitions": {"200": {"type": "string"}}}', true));
 
-        self::assertSame([200 => ['type' => 'string']], $registry->getDefinitions());
+        $this->assertSame([200 => ['type' => 'string']], $registry->getDefinitions());
     }
 
     public function testSchemaThatCannotBeEncodedIsNull(): void
     {
-        self::assertNull((new SchemaRegistry())->transform(['type' => 'number', 'example' => INF]));
+        $this->assertNull(new SchemaRegistry()->transform(['type' => 'number', 'example' => INF]));
     }
 
     public function testSameDefinitionCanBeAddedTwice(): void
@@ -63,7 +63,7 @@ class SchemaRegistryTest extends TestCase
         $registry->add('Item', ['type' => 'string']);
         $registry->add('Item', ['type' => 'string']);
 
-        self::assertSame(['Item' => ['type' => 'string']], $registry->getDefinitions());
+        $this->assertSame(['Item' => ['type' => 'string']], $registry->getDefinitions());
     }
 
     public function testDifferentDefinitionWithSameNameThrowsException(): void

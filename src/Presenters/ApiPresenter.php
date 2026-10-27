@@ -25,16 +25,16 @@ use Tomaj\NetteApi\Response\JsonApiResponse;
 
 final class ApiPresenter implements IPresenter
 {
-    private const TO_SECONDS = 1000;
+    private const int TO_SECONDS = 1000;
 
-    private const HTTP_PORT = 80;
+    private const int HTTP_PORT = 80;
 
     /**
      * Headers masked in the API log by setMaskedLogHeaders() without arguments
      */
-    public const DEFAULT_MASKED_LOG_HEADERS = ['Authorization', 'Proxy-Authorization', 'Cookie', 'Set-Cookie', 'X-Api-Key'];
+    public const array DEFAULT_MASKED_LOG_HEADERS = ['Authorization', 'Proxy-Authorization', 'Cookie', 'Set-Cookie', 'X-Api-Key'];
 
-    public const MASKED_LOG_HEADER_VALUE = '***';
+    public const string MASKED_LOG_HEADER_VALUE = '***';
 
     #[Inject]
     public ApiDecider $apiDecider;
@@ -104,7 +104,7 @@ final class ApiPresenter implements IPresenter
      */
     public function setMaskedLogHeaders(array $headers = self::DEFAULT_MASKED_LOG_HEADERS): void
     {
-        $this->maskedLogHeaders = array_map('strtolower', $headers);
+        $this->maskedLogHeaders = array_map(strtolower(...), $headers);
     }
 
     public function run(Request $request): IResponse
@@ -239,7 +239,7 @@ final class ApiPresenter implements IPresenter
             $headers = getallheaders();
         } else {
             foreach ($_SERVER as $name => $value) {
-                if (substr($name, 0, 5) === 'HTTP_') {
+                if (str_starts_with($name, 'HTTP_')) {
                     $key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))));
                     $headers[$key] = $value;
                 }

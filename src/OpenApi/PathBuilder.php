@@ -11,21 +11,21 @@ use Tomaj\NetteApi\Link\ApiLink;
 /**
  * Creates paths (operations) of the spec from apis
  */
-class PathBuilder
+class PathBuilder implements PathBuilderInterface
 {
-    private ParameterBuilder $parameterBuilder;
+    private readonly ParameterBuilderInterface $parameterBuilder;
 
-    private RequestBodyBuilder $requestBodyBuilder;
+    private readonly RequestBodyBuilderInterface $requestBodyBuilder;
 
-    private ResponseBuilder $responseBuilder;
+    private readonly ResponseBuilderInterface $responseBuilder;
 
-    private SecuritySchemeBuilder $securitySchemeBuilder;
+    private readonly SecuritySchemeBuilderInterface $securitySchemeBuilder;
 
     public function __construct(
-        ?ParameterBuilder $parameterBuilder = null,
-        ?RequestBodyBuilder $requestBodyBuilder = null,
-        ?ResponseBuilder $responseBuilder = null,
-        ?SecuritySchemeBuilder $securitySchemeBuilder = null,
+        ?ParameterBuilderInterface $parameterBuilder = null,
+        ?RequestBodyBuilderInterface $requestBodyBuilder = null,
+        ?ResponseBuilderInterface $responseBuilder = null,
+        ?SecuritySchemeBuilderInterface $securitySchemeBuilder = null,
     ) {
         $this->parameterBuilder = $parameterBuilder ?? new ParameterBuilder();
         $this->requestBodyBuilder = $requestBodyBuilder ?? new RequestBodyBuilder();

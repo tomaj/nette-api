@@ -16,7 +16,7 @@ class ConfigurableHandler extends BaseHandler
      * @param ParamInterface[] $params
      * @param OutputInterface[] $outputs
      */
-    public function __construct(private array $params = [], private array $outputs = [])
+    public function __construct(private readonly array $params = [], private readonly array $outputs = [])
     {
         parent::__construct();
     }

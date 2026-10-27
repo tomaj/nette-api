@@ -7,7 +7,7 @@ namespace Tomaj\NetteApi\Test\InputValidation;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Validation\JsonSchemaValidator;
 
-class JsonSchemaValidatorTest extends TestCase
+final class JsonSchemaValidatorTest extends TestCase
 {
 	private JsonSchemaValidator $validator;
 
@@ -23,16 +23,16 @@ class JsonSchemaValidatorTest extends TestCase
 			'{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}'
 		);
 
-		self::assertTrue($result->isOk());
-		self::assertSame([], $result->getErrors());
+		$this->assertTrue($result->isOk());
+		$this->assertSame([], $result->getErrors());
 	}
 
 	public function testValidateReturnsRootErrorWithoutPropertyPrefix(): void
 	{
 		$result = $this->validator->validate(['hello', 'world'], '{"type":"object"}');
 
-		self::assertFalse($result->isOk());
-		self::assertSame(['Array value found, but an object is required'], $result->getErrors());
+		$this->assertFalse($result->isOk());
+		$this->assertSame(['Array value found, but an object is required'], $result->getErrors());
 	}
 
 	public function testValidatePrefixesPropertyErrors(): void
@@ -42,11 +42,8 @@ class JsonSchemaValidatorTest extends TestCase
 			'{"type":"object","properties":{"hello":{"type":"string","enum":["world","europe"]}}}'
 		);
 
-		self::assertFalse($result->isOk());
-		self::assertSame(
-			['[Property hello] Does not have a value in the enumeration ["world","europe"]'],
-			$result->getErrors()
-		);
+		$this->assertFalse($result->isOk());
+		$this->assertSame(['[Property hello] Does not have a value in the enumeration ["world","europe"]'], $result->getErrors());
 	}
 
 	public function testValidateCollectsMultiplePropertyErrors(): void
@@ -56,14 +53,11 @@ class JsonSchemaValidatorTest extends TestCase
 			'{"type":"object","properties":{"first":{"type":"string","enum":["valid"]},"second":{"type":"string","enum":["valid"]}}}'
 		);
 
-		self::assertFalse($result->isOk());
-		self::assertCount(2, $result->getErrors());
-		self::assertSame(
-			[
+		$this->assertFalse($result->isOk());
+		$this->assertCount(2, $result->getErrors());
+		$this->assertSame([
 				'[Property first] Does not have a value in the enumeration ["valid"]',
 				'[Property second] Does not have a value in the enumeration ["valid"]',
-			],
-			$result->getErrors()
-		);
+			], $result->getErrors());
 	}
 }

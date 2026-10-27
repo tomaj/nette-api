@@ -13,9 +13,9 @@ class QueryConfigurator implements ConfiguratorInterface
      * @param string $errorDetailParam Name of get parameter to show additional info in error response
      */
     public function __construct(
-        private Request $request,
-        private string $schemaValidateParam = 'schema_validate',
-        private string $errorDetailParam = 'error_detail'
+        private readonly Request $request,
+        private readonly string $schemaValidateParam = 'schema_validate',
+        private readonly string $errorDetailParam = 'error_detail'
     ) {
     }
 

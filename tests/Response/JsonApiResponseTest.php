@@ -10,12 +10,12 @@ use Nette\Http\UrlScript;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 
-class JsonApiResponseTest extends TestCase
+final class JsonApiResponseTest extends TestCase
 {
-    public function testCreatingResponse()
+    public function testCreatingResponse(): void
     {
         $jsonResponse = new JsonApiResponse(200, ['asdasd' => 'asdsd']);
-        self::assertEquals(200, $jsonResponse->getCode());
+        $this->assertSame(200, $jsonResponse->getCode());
 
         $this->expectOutputString('{"asdasd":"asdsd"}');
         $jsonResponse->send(new Request(new UrlScript()), new Response());

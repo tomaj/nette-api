@@ -14,23 +14,11 @@ use Tomaj\NetteApi\Response\ResponseInterface;
 class ApiListingHandler extends BaseHandler
 {
     /**
-     * @var ApiDecider
-     */
-    private $apiDecider;
-
-    /**
-     * @var ApiLink
-     */
-    private $apiLink;
-
-    /**
      * ApiListingHandler constructor.
      */
-    public function __construct(ApiDecider $apiDecider, ApiLink $apiLink)
+    public function __construct(private readonly ApiDecider $apiDecider, private readonly ApiLink $apiLink)
     {
         parent::__construct();
-        $this->apiDecider = $apiDecider;
-        $this->apiLink = $apiLink;
     }
 
     /**
@@ -47,25 +35,21 @@ class ApiListingHandler extends BaseHandler
      * Create handler list for specified version
      *
      *
-     * @return array<string,mixed>
+     * @return array<int|string, array<string, mixed>>
      */
     private function getApiList(string $version): array
     {
-        $versionApis = array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
-            return $version === $api->getEndpoint()->getVersion();
-        });
+        $versionApis = array_filter($this->apiDecider->getApis(), fn(Api $api): bool => $version === $api->getEndpoint()->getVersion());
 
-        return array_map(function (Api $api) {
-            return [
-                'method' => $api->getEndpoint()->getMethod(),
-                'version' => $api->getEndpoint()->getVersion(),
-                'package' => $api->getEndpoint()->getPackage(),
-                'api_action' => $api->getEndpoint()->getApiAction(),
-                'authorization' => get_class($api->getAuthorization()),
-                'url' => $this->apiLink->link($api->getEndpoint()),
-                'params' => $this->createParamsList($api->getHandler()),
-            ];
-        }, $versionApis);
+        return array_map(fn(Api $api): array => [
+            'method' => $api->getEndpoint()->getMethod(),
+            'version' => $api->getEndpoint()->getVersion(),
+            'package' => $api->getEndpoint()->getPackage(),
+            'api_action' => $api->getEndpoint()->getApiAction(),
+            'authorization' => $api->getAuthorization()::class,
+            'url' => $this->apiLink->link($api->getEndpoint()),
+            'params' => $this->createParamsList($api->getHandler()),
+        ], $versionApis);
     }
 
     /**

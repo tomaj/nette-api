@@ -17,23 +17,11 @@ class XmlApiResponse implements ResponseInterface
 {
     use SmartObject;
 
-    /** @var int */
-    private $code;
-
-    /** @var string */
-    private $response = null;
-
-    /** @var DateTimeInterface|null|false */
-    private $expiration;
-
     /**
      * @param DateTimeInterface|null|false $expiration
      */
-    public function __construct(int $code, string $data, $expiration = null)
+    public function __construct(private int $code, private string $data, private $expiration = null)
     {
-        $this->code = $code;
-        $this->response = $data;
-        $this->expiration = $expiration;
     }
 
     /**
@@ -59,8 +47,8 @@ class XmlApiResponse implements ResponseInterface
             $httpResponse->setExpiration($this->getExpiration() ? $this->getExpiration()->format('c') : null);
         }
 
-        $httpResponse->setHeader('Content-Length', (string) strlen($this->response));
+        $httpResponse->setHeader('Content-Length', (string) strlen($this->data));
 
-        echo $this->response;
+        echo $this->data;
     }
 }

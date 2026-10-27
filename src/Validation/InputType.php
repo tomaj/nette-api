@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tomaj\NetteApi\Validation;
 
 class InputType

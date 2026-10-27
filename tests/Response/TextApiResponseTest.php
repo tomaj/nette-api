@@ -11,12 +11,12 @@ use Nette\Http\UrlScript;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Response\TextApiResponse;
 
-class TextApiResponseTest extends TestCase
+final class TextApiResponseTest extends TestCase
 {
-    public function testCreatingResponse()
+    public function testCreatingResponse(): void
     {
         $apiResponse = new TextApiResponse(200, 'hello');
-        self::assertEquals(200, $apiResponse->getCode());
+        $this->assertSame(200, $apiResponse->getCode());
 
         $request = new Request(new UrlScript());
         $response = new Response();
@@ -25,10 +25,10 @@ class TextApiResponseTest extends TestCase
         $apiResponse->send($request, $response);
     }
 
-    public function testRenderingTemplate()
+    public function testRenderingTemplate(): void
     {
         $template = $this->createMock(ITemplate::class);
-        $template->expects(self::once())->method('render');
+        $template->expects($this->once())->method('render');
 
         $apiResponse = new TextApiResponse(200, $template);
 
