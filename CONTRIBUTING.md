@@ -28,5 +28,11 @@ We accept contributions via Pull Requests on [Github](https://github.com/tomaj/n
 $ composer test
 ```
 
+Coverage reports (`build/logs/clover.xml`, `build/coverage/`) are opt-in and need Xdebug:
+
+``` bash
+$ composer coverage
+```
+
 
 **Happy coding**!

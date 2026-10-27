@@ -9,14 +9,14 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\RateLimit\NoRateLimit;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
-class Api
+final readonly class Api
 {
-    private readonly RateLimitInterface $rateLimit;
+    private RateLimitInterface $rateLimit;
 
     public function __construct(
-        private readonly EndpointInterface $endpoint,
-        private readonly ApiHandlerInterface $handler,
-        private readonly ApiAuthorizationInterface $authorization,
+        private EndpointInterface $endpoint,
+        private ApiHandlerInterface $handler,
+        private ApiAuthorizationInterface $authorization,
         ?RateLimitInterface $rateLimit = null,
     ) {
         $this->rateLimit = $rateLimit ?: new NoRateLimit();

@@ -7,9 +7,10 @@ namespace Tomaj\NetteApi\Params;
 use Exception;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
-use Tomaj\NetteApi\Validation\JsonSchemaValidator;
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
+use Tomaj\NetteApi\Validation\JsonSchemaValidator;
 
 class JsonInputParam extends InputParam
 {
@@ -22,19 +23,21 @@ class JsonInputParam extends InputParam
         parent::__construct($key);
     }
 
+    #[\Override]
     public function setMulti(): InputParam
     {
         throw new Exception('Cannot use multi json input param');
     }
 
+    #[\Override]
     public function getValue(): mixed
     {
         $input = $this->rawInput = file_get_contents('php://input') ?: $this->default;
-        $input ??= '';
 
-        return json_decode($input, true);
+        return json_decode(TypeHelper::toString($input), true);
     }
 
+    #[\Override]
     public function validate(): ValidationResultInterface
     {
         $value = $this->getValue();
@@ -60,27 +63,32 @@ class JsonInputParam extends InputParam
         return $this->schema;
     }
 
+    #[\Override]
     protected function addFormInput(Form $form, string $key): BaseControl
     {
-        $fullSchema = json_decode($this->schema, true);
+        $fullSchema = TypeHelper::toArray(json_decode($this->schema, true));
 
         if (!empty($examples = $this->getExamples())) {
             if (count($examples) === 1) {
-                $fullSchema['example'] = is_array($this->getExample()) ? $this->getExample() : json_decode($this->getExample(), true);
+                $example = $this->getExample();
+                $fullSchema['example'] = is_array($example) ? $example : json_decode(TypeHelper::toString($example), true);
             } else {
+                $schemaExamples = [];
                 foreach ($examples as $exampleKey => $example) {
-                    $fullSchema['examples'][$exampleKey] = is_array($example) ? $example : json_decode($example, true);
-                    // pretty formatting of json example if decoded
+                    $schemaExamples[$exampleKey] = is_array($example) ? $example : json_decode(TypeHelper::toString($example), true);
                 }
+
+                $fullSchema['examples'] = $schemaExamples;
             }
         }
 
-        if (!empty($fullSchema['examples'])) {
+        $schemaExamples = $fullSchema['examples'] ?? null;
+        if (is_array($schemaExamples) && $schemaExamples !== []) {
             $this->description .= <<< HTML
                 <div>
                     Select Example:&nbsp; 
 HTML;
-            foreach ($fullSchema['examples'] as $exampleKey => $exampleValue) {
+            foreach ($schemaExamples as $exampleKey => $exampleValue) {
                 $example = htmlentities(json_encode($exampleValue, JSON_PRETTY_PRINT) ?: '');
                 $this->description .= <<< HTML
                 <div class="btn btn-sm" data-example="{$example}" onClick="setExample(this)" >

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\Validation;
 
 use JsonSchema\Validator;
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
-class JsonSchemaValidator
+final class JsonSchemaValidator
 {
     /**
      * @param mixed $data
@@ -24,13 +25,9 @@ class JsonSchemaValidator
 
         $errors = [];
         foreach ($schemaValidator->getErrors() as $error) {
-            $errorMessage = '';
-            if ($error['property']) {
-                $errorMessage .= '[Property ' . $error['property'] . '] ';
-            }
-
-            $errorMessage .= $error['message'];
-            $errors[] = $errorMessage;
+            $error = TypeHelper::toArray($error);
+            $prefix = empty($error['property']) ? '' : '[Property ' . TypeHelper::toString($error['property']) . '] ';
+            $errors[] = $prefix . TypeHelper::toString($error['message'] ?? '');
         }
 
         return new ValidationResult(ValidationResult::STATUS_ERROR, $errors);

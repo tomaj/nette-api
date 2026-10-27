@@ -19,6 +19,7 @@ use Tomaj\NetteApi\EndpointInterface;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Misc\ConsoleRequest;
+use Tomaj\NetteApi\Misc\TypeHelper;
 
 class ApiConsoleControl extends Control
 {
@@ -63,42 +64,55 @@ class ApiConsoleControl extends Control
      */
     public function formSucceeded(Form $form, ArrayHash $values): void
     {
-        $url = $values['api_url'];
+        $url = TypeHelper::toString($values['api_url'] ?? '');
 
         $token = null;
         if (isset($values['token'])) {
-            $token = $values['token'];
+            $token = TypeHelper::toString($values['token']);
             unset($values['token']);
         }
 
-        $method = $values['api_method'];
+        $method = TypeHelper::toString($values['api_method'] ?? '');
         unset($values['api_method']);
 
-        $additionalValues = [];
+        $cookieFields = [];
+        $getFields = [];
+        $headers = [];
         if (isset($values['send_session_id']) && $values['send_session_id']) {
-            $additionalValues['cookieFields'][session_name()] = session_id();
+            $cookieFields[(string) session_name()] = session_id();
             session_write_close();
         }
 
         if (isset($values['custom_headers']) && $values['custom_headers']) {
-            $additionalValues['headers'] = array_filter(array_map(trim(...), explode("\n", $values['custom_headers'])));
+            $headers = array_values(array_filter(array_map(trim(...), explode("\n", TypeHelper::toString($values['custom_headers'])))));
         }
-
-        $additionalValues['timeout'] = $values['timeout'];
 
         if ($this->authorization instanceof QueryApiKeyAuthentication) {
             $queryParamName = $this->authorization->getQueryParamName();
-            $additionalValues['getFields'][$queryParamName] = $values[$queryParamName] ?? null;
+            $getFields[$queryParamName] = $values[$queryParamName] ?? null;
         } elseif ($this->authorization instanceof HeaderApiKeyAuthentication) {
             $headerName = $this->authorization->getHeaderName();
-            $additionalValues['headers'][] = $headerName . ':' . ($values['header_api_key'] ?? null);
+            $headers[] = $headerName . ':' . TypeHelper::toString($values['header_api_key'] ?? null);
         } elseif ($this->authorization instanceof CookieApiKeyAuthentication) {
             $cookieName = $this->authorization->getCookieName();
-            $additionalValues['cookieFields'][$cookieName] = $values['cookie_api_key'] ?? null;
+            $cookieFields[$cookieName] = $values['cookie_api_key'] ?? null;
+        }
+
+        $additionalValues = [
+            'timeout' => is_numeric($values['timeout'] ?? null) ? (int) $values['timeout'] : ConsoleRequest::DEFAULT_TIMEOUT,
+        ];
+        if ($cookieFields !== []) {
+            $additionalValues['cookieFields'] = $cookieFields;
+        }
+        if ($getFields !== []) {
+            $additionalValues['getFields'] = $getFields;
+        }
+        if ($headers !== []) {
+            $additionalValues['headers'] = $headers;
         }
 
         $consoleRequest = new ConsoleRequest($this->handler, $this->endpoint, $this->apiLink);
-        $result = $consoleRequest->makeRequest($url, $method, $this->filterFormValues((array) $values), $additionalValues, $token);
+        $result = $consoleRequest->makeRequest($url, $method, $this->filterFormValues($this->formValuesToArray($values)), $additionalValues, $token);
 
         /** @var DefaultTemplate $template */
         $template = $this->getTemplate();
@@ -130,14 +144,14 @@ class ApiConsoleControl extends Control
     }
 
     /**
-     * @param mixed[] $values
-     * @return mixed[]
-    */
+     * @param array<string, mixed> $values
+     * @return array<string, mixed>
+     */
     private function filterFormValues(array $values): array
     {
         foreach ($this->handler->params() as $param) {
             $key = $param->getKey();
-            if ($values['do_not_send_empty_value_for_' . $key] === true && $values[$key] === '') {
+            if (($values['do_not_send_empty_value_for_' . $key] ?? null) === true && ($values[$key] ?? null) === '') {
                 unset($values[$key]);
             }
 
@@ -145,5 +159,19 @@ class ApiConsoleControl extends Control
         }
 
         return $values;
+    }
+
+    /**
+     * @param ArrayHash<mixed> $values
+     * @return array<string, mixed>
+     */
+    private function formValuesToArray(ArrayHash $values): array
+    {
+        $result = [];
+        foreach ($values as $key => $value) {
+            $result[(string) $key] = $value;
+        }
+
+        return $result;
     }
 }

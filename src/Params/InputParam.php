@@ -7,9 +7,11 @@ namespace Tomaj\NetteApi\Params;
 use Nette\Application\UI\Form;
 use Nette\Forms\Controls\BaseControl;
 use Nette\Utils\Html;
-use Tomaj\NetteApi\Validation\InputValidator;
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
+use Tomaj\NetteApi\Validation\InputType;
+use Tomaj\NetteApi\Validation\InputValidator;
 
 abstract class InputParam implements ParamInterface
 {
@@ -34,7 +36,7 @@ abstract class InputParam implements ParamInterface
     /** @var bool */
     protected $required = self::OPTIONAL;
 
-    /** @var array<string, mixed>|null */
+    /** @var array<array-key, mixed>|null */
     protected $availableValues = null;
 
     /** @var bool */
@@ -49,13 +51,25 @@ abstract class InputParam implements ParamInterface
     /** @var array<string, mixed> */
     protected $examples = [];
 
+    /** @var string|null */
+    protected $valueType;
+
     /**
-     * InputParam constructor.
-     * @param string|null $valueType
+     * @param InputType|string|null $valueType expected value type, see InputType
      */
-    public function __construct(string $key, protected $valueType = null)
+    public function __construct(string $key, InputType|string|null $valueType = null)
     {
         $this->key = $key;
+        $this->valueType = $valueType instanceof InputType ? $valueType->value : $valueType;
+    }
+
+    /**
+     * Returns where the param is read from as an enum (see getType() for the string value),
+     * null for a custom type that is not one of the TYPE_* constants
+     */
+    public function getParamType(): ?ParamType
+    {
+        return ParamType::tryFrom($this->getType());
     }
 
     public function setRequired(): self
@@ -65,12 +79,17 @@ abstract class InputParam implements ParamInterface
     }
 
     /**
-     * @param array<int, mixed> $availableValues
+     * @param array<array-key, mixed> $availableValues
      */
     public function setAvailableValues(array $availableValues): self
     {
         if ($availableValues === array_values($availableValues)) {
-            $availableValues = array_combine($availableValues, $availableValues);
+            $keyed = [];
+            foreach ($availableValues as $availableValue) {
+                $keyed[TypeHelper::toString($availableValue)] = $availableValue;
+            }
+
+            $availableValues = $keyed;
         }
 
         $this->availableValues = $availableValues;
@@ -83,29 +102,34 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
+    #[\Override]
     public function getType(): string
     {
         return $this->type;
     }
 
+    #[\Override]
     public function getKey(): string
     {
         return $this->key;
     }
 
+    #[\Override]
     public function isRequired(): bool
     {
         return $this->required;
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return array<array-key, mixed>|null
      */
+    #[\Override]
     public function getAvailableValues(): ?array
     {
         return $this->availableValues;
     }
 
+    #[\Override]
     public function isMulti(): bool
     {
         return $this->multi;
@@ -117,6 +141,7 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
+    #[\Override]
     public function getDescription(): string
     {
         return $this->description;
@@ -131,6 +156,7 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
+    #[\Override]
     public function getDefault(): mixed
     {
         return $this->default;
@@ -147,17 +173,7 @@ abstract class InputParam implements ParamInterface
         return $this;
     }
 
-    /**
-     * Set default example
-     * @param mixed $example
-     * @deprecated Use addExample instead
-     */
-    public function setExample($example): self
-    {
-        $this->examples['default'] = $example;
-        return $this;
-    }
-
+    #[\Override]
     public function getExample(): mixed
     {
         if (empty($this->examples)) {
@@ -176,6 +192,7 @@ abstract class InputParam implements ParamInterface
         return $this->examples;
     }
 
+    #[\Override]
     public function updateConsoleForm(Form $form): void
     {
         $count = $this->isMulti() ? self::DEFAULT_MULTI_INPUT_COUNT : 1; // TODO moznost nastavit kolko inputov sa ma vygenerovat v konzole, default moze byt 5
@@ -227,6 +244,7 @@ abstract class InputParam implements ParamInterface
     /**
      * Check if actual value from environment is valid
      */
+    #[\Override]
     public function validate(): ValidationResultInterface
     {
         $value = $this->getValue();
@@ -239,7 +257,7 @@ abstract class InputParam implements ParamInterface
         }
 
         if ($this->getAvailableValues() !== null) {
-            $result = empty(array_diff(($this->isMulti() ? $value : [$value]), array_keys($this->getAvailableValues())));
+            $result = empty(array_diff(TypeHelper::toStringList($this->isMulti() && is_array($value) ? $value : [$value]), TypeHelper::toStringList(array_keys($this->getAvailableValues()))));
             if ($result === false) {
                 return new ValidationResult(ValidationResult::STATUS_ERROR, ['Field contains not available value(s)']);
             }

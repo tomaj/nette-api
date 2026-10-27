@@ -26,7 +26,7 @@ npm run docs:links    # check links in the built site
 
 ### How do I run the tests?
 
-`composer test` runs PHPUnit. Each example project also has an `e2e.sh`, see [Examples](/examples/).
+`composer test` runs PHPUnit. `composer coverage` also writes coverage reports to `build/` (needs Xdebug). Each example project also has an `e2e.sh`, see [Examples](/examples/).
 
 ### Do I have to update the documentation with my change?
 

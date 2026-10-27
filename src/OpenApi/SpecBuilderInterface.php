@@ -19,7 +19,7 @@ interface SpecBuilderInterface
      * @param string $baseUrl host url without trailing slash, e.g. https://example.com
      * @param array<string, mixed> $initData structured data merged recursively into the generated spec
      * @param array<string|int, mixed> $allowedEndpoints see EndpointFilter
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      * @throws InvalidLinkException
      * @throws InvalidArgumentException if two schemas contain definition with the same name but different content
      */

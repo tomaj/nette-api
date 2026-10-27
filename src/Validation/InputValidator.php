@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Validation;
 
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\ValidationResult\ValidationResult;
 use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
-class InputValidator
+final class InputValidator
 {
     /**
      * Validate expected type of the input value.
      * @param mixed $value
-     * @param ?string $expectedType
+     * @param InputType|string|null $expectedType
      */
     public function validate($value, $expectedType = null): ValidationResultInterface
     {
+        if ($expectedType instanceof InputType) {
+            $expectedType = $expectedType->value;
+        }
+
         if ($value === null || $expectedType === null) {
             return new ValidationResult(ValidationResult::STATUS_OK);
         }
@@ -27,36 +32,36 @@ class InputValidator
         switch ($expectedType) {
             case InputType::BOOLEAN:
                 if (!is_bool($value)) {
-                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . $value .  ' has invalid type. Expected boolean.']);
+                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . TypeHelper::toString($value) . ' has invalid type. Expected boolean.']);
                 }
                 break;
             case InputType::INTEGER:
                 if (!is_int($value)) {
-                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . $value .  ' has invalid type. Expected integer.']);
+                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . TypeHelper::toString($value) . ' has invalid type. Expected integer.']);
                 }
                 break;
             case InputType::DOUBLE:
                 if (!is_float($value) && !is_int($value)) {
-                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . $value .  ' has invalid type. Expected double.']);
+                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . TypeHelper::toString($value) . ' has invalid type. Expected double.']);
                 }
                 break;
             case InputType::FLOAT:
                 if (!is_float($value) && !is_int($value)) {
-                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . $value .  ' has invalid type. Expected float.']);
+                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . TypeHelper::toString($value) . ' has invalid type. Expected float.']);
                 }
                 break;
             case InputType::STRING:
                 if (!is_string($value)) {
-                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . $value .  ' has invalid type. Expected string.']);
+                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . TypeHelper::toString($value) . ' has invalid type. Expected string.']);
                 }
                 break;
             case InputType::ARRAY:
                 if (!is_array($value)) {
-                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . $value .  ' has invalid type. Expected array.']);
+                    return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . TypeHelper::toString($value) . ' has invalid type. Expected array.']);
                 }
                 break;
             default:
-                return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . $value .  ' has invalid type.']);
+                return new ValidationResult(ValidationResult::STATUS_ERROR, ['Value ' . TypeHelper::toString($value) . ' has invalid type.']);
         }
         return new ValidationResult(ValidationResult::STATUS_OK);
     }
@@ -64,10 +69,14 @@ class InputValidator
     /**
      * Transform the input value to the expected type if possible.
      * @param mixed $value
-     * @param ?string $expectedType
+     * @param InputType|string|null $expectedType
      */
     public function transformType($value, $expectedType = null, bool $isRequired = false): mixed
     {
+        if ($expectedType instanceof InputType) {
+            $expectedType = $expectedType->value;
+        }
+
         if ($value === null || $expectedType === null) {
             return $value;
         }
@@ -78,7 +87,7 @@ class InputValidator
 
         switch ($expectedType) {
             case InputType::BOOLEAN:
-                if ($value === '1' || $value === 1 || $value === true || strtolower((string) $value) === 'true') {
+                if ($value === '1' || $value === 1 || $value === true || strtolower(TypeHelper::toString($value)) === 'true') {
                     return true;
                 } else {
                     return false;

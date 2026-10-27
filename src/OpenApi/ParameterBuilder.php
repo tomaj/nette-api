@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\OpenApi;
 
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Params\InputParam;
 
 /**
@@ -15,6 +16,7 @@ class ParameterBuilder implements ParameterBuilderInterface
     /**
      * @return array<int, array<string, mixed>>
      */
+    #[\Override]
     public function build(ApiHandlerInterface $handler): array
     {
         $parameters = [];
@@ -46,7 +48,7 @@ class ParameterBuilder implements ParameterBuilderInterface
                 $schema['enum'] = array_keys($availableValues);
                 if (array_keys($availableValues) !== array_values($availableValues)) {
                     foreach ($availableValues as $availableKey => $availableValue) {
-                        $descriptionParts[] = ' * `' . $availableKey . '` - ' . $availableValue;
+                        $descriptionParts[] = ' * `' . $availableKey . '` - ' . TypeHelper::toString($availableValue);
                     }
                 }
             }

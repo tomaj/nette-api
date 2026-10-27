@@ -12,6 +12,7 @@ class AlwaysOkHandler extends BaseHandler
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function handle(array $params): ResponseInterface
     {
         return new JsonApiResponse(200, ['status' => 'ok']);

@@ -22,7 +22,7 @@ final class OrderCreateHandler extends BaseHandler
             // the whole request body, decoded to an array and checked against the schema
             (new JsonInputParam('order', (string) file_get_contents(__DIR__ . '/schema/order.json')))
                 ->setRequired()
-                ->setExample(['customer' => 'Ada', 'items' => [['sku' => 'book', 'quantity' => 2]]]),
+                ->addExample('default', ['customer' => 'Ada', 'items' => [['sku' => 'book', 'quantity' => 2]]]),
         ];
     }
 

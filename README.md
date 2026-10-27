@@ -10,6 +10,7 @@
 
 [![PHPunit](https://github.com/tomaj/nette-api/actions/workflows/phpunit.yml/badge.svg)](https://github.com/tomaj/nette-api/actions/workflows/phpunit.yml)
 [![Examples](https://github.com/tomaj/nette-api/actions/workflows/examples.yml/badge.svg)](https://github.com/tomaj/nette-api/actions/workflows/examples.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/tomaj/nette-api/badge)](https://scorecard.dev/viewer/?uri=github.com/tomaj/nette-api)
 [![Latest Stable Version](https://img.shields.io/packagist/v/tomaj/nette-api.svg)](https://packagist.org/packages/tomaj/nette-api)
 
 Robust REST APIs inside your Nette application. Nette API adds a complete API layer to Nette, wired through Nette DI with one handler class per endpoint. You register endpoints and write handlers with your business logic; the library takes care of routing, typed and validated params, authorization, rate limits, output checks, error responses, logging, OpenAPI and a web console for trying the API.
@@ -112,6 +113,8 @@ See [UPGRADE.md](UPGRADE.md) and [CHANGELOG.md](CHANGELOG.md). Documentation for
 composer install
 vendor/bin/phpunit
 ```
+
+Coverage is opt-in: `composer coverage` (needs Xdebug).
 
 ## Contributing
 

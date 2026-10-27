@@ -20,8 +20,8 @@ class RawBodyHandler extends BaseHandler
     public function params(): array
     {
         return [
-            new RawInputParam('csv')->setDescription('CSV content')->setRequired()->setExample("id;name\n1;John"),
-            new JsonInputParam('meta', '{"type": "object"}')->setExample('{"source": "upload"}'),
+            new RawInputParam('csv')->setDescription('CSV content')->setRequired()->addExample('default', "id;name\n1;John"),
+            new JsonInputParam('meta', '{"type": "object"}')->addExample('default', '{"source": "upload"}'),
         ];
     }
 

@@ -8,6 +8,7 @@ class PutInputParam extends InputParam
 {
     protected $type = self::TYPE_PUT;
 
+    #[\Override]
     public function getValue(): mixed
     {
         $values = file_get_contents('php://input');

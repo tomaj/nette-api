@@ -11,19 +11,19 @@ use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Params\ParamInterface;
 
-class ConsoleRequest
+final readonly class ConsoleRequest
 {
-    public const DEFAULT_TIMEOUT = 30;
+    public const int DEFAULT_TIMEOUT = 30;
 
-    public const ELAPSED_MILLISECONDS = 1000;
+    public const int ELAPSED_MILLISECONDS = 1000;
 
-    public function __construct(private readonly ApiHandlerInterface $handler, private readonly ?EndpointInterface $endpoint = null, private readonly ?ApiLink $apiLink = null)
+    public function __construct(private ApiHandlerInterface $handler, private ?EndpointInterface $endpoint = null, private ?ApiLink $apiLink = null)
     {
     }
 
     /**
      * @param array<string,mixed> $values
-     * @param array<string,mixed> $additionalValues
+     * @param array{postFields?: array<string, mixed>, getFields?: array<string, mixed>, cookieFields?: array<string, mixed>, putFields?: array<string, mixed>, headers?: list<string>, timeout?: int} $additionalValues
      */
     public function makeRequest(string $url, string $method, array $values, array $additionalValues = [], ?string $token = null): ConsoleResponse
     {
@@ -43,7 +43,7 @@ class ConsoleRequest
         } elseif ($getFields !== []) {
             $parts = [];
             foreach ($getFields as $key => $value) {
-                $parts[] = sprintf('%s=%s', $key, $value);
+                $parts[] = sprintf('%s=%s', $key, TypeHelper::toString($value));
             }
 
             $parsedUrl = parse_url($url);
@@ -55,7 +55,7 @@ class ConsoleRequest
         if ($putFields !== []) {
             $parts = [];
             foreach ($putFields as $key => $value) {
-                $parts[] = sprintf('%s=%s', $key, $value);
+                $parts[] = sprintf('%s=%s', $key, TypeHelper::toString($value));
             }
 
             $putRawPost = implode('&', $parts);
@@ -85,7 +85,7 @@ class ConsoleRequest
         if ($cookieFields !== []) {
             $parts = [];
             foreach ($cookieFields as $key => $value) {
-                $parts[] = sprintf('%s=%s', $key, $value);
+                $parts[] = sprintf('%s=%s', $key, TypeHelper::toString($value));
             }
 
             $headers[] = 'Cookie: ' . implode('&', $parts);
@@ -102,7 +102,7 @@ class ConsoleRequest
         $basicAuthUsername = $values['basic_authentication_username'] ?? null;
         $basicAuthPassword = $values['basic_authentication_password'] ?? null;
         if ($basicAuthUsername && $basicAuthPassword) {
-            curl_setopt($curl, CURLOPT_USERPWD, sprintf('%s:%s', $basicAuthUsername, $basicAuthPassword));
+            curl_setopt($curl, CURLOPT_USERPWD, sprintf('%s:%s', TypeHelper::toString($basicAuthUsername), TypeHelper::toString($basicAuthPassword)));
         }
 
         $consoleResponse = new ConsoleResponse(
@@ -149,14 +149,10 @@ class ConsoleRequest
     {
         $params = $this->handler->params();
 
-        /** @var array<string,mixed> $postFields */
+        $rawPost = isset($values['post_raw']) ? TypeHelper::toString($values['post_raw']) : null;
         $postFields = [];
-        $rawPost = $values['post_raw'] ?? null;
-        /** @var array<string,mixed> $getFields */
         $getFields = [];
-        /** @var array<string,mixed> $putFields */
         $putFields = [];
-        /** @var array<string,mixed> $cookieFields */
         $cookieFields = [];
 
         foreach ($values as $key => $value) {
@@ -173,13 +169,13 @@ class ConsoleRequest
 
                 if ($param->isMulti()) {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE], true)) {
-                        $postFields[$key][] = $valueData;
+                        $postFields[$key] = $this->appendValue($postFields[$key] ?? null, $valueData);
                     } elseif ($param->getType() === InputParam::TYPE_PUT) {
-                        $putFields[$key][] = $valueData;
+                        $putFields[$key] = $this->appendValue($putFields[$key] ?? null, $valueData);
                     } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
-                        $cookieFields[$key][] = $valueData;
+                        $cookieFields[$key] = $this->appendValue($cookieFields[$key] ?? null, $valueData);
                     } else {
-                        $getFields[$key][] = urlencode((string)$valueData);
+                        $getFields[$key] = $this->appendValue($getFields[$key] ?? null, urlencode(TypeHelper::toString($valueData)));
                     }
                 } else {
                     if (in_array($param->getType(), [InputParam::TYPE_POST, InputParam::TYPE_FILE], true)) {
@@ -189,13 +185,23 @@ class ConsoleRequest
                     } elseif ($param->getType() === InputParam::TYPE_COOKIE) {
                         $cookieFields[$key] = $valueData;
                     } else {
-                        $getFields[$key] = urlencode((string)$valueData);
+                        $getFields[$key] = urlencode(TypeHelper::toString($valueData));
                     }
                 }
             }
         }
 
         return [$postFields, $getFields, $cookieFields, $rawPost, $putFields];
+    }
+
+    /**
+     * @return list<mixed>
+     */
+    private function appendValue(mixed $current, mixed $value): array
+    {
+        $list = is_array($current) ? array_values($current) : [];
+        $list[] = $value;
+        return $list;
     }
 
     /**

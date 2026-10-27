@@ -27,6 +27,7 @@ class XmlApiResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getCode(): int
     {
         return $this->code;
@@ -40,6 +41,7 @@ class XmlApiResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType('text/xml');

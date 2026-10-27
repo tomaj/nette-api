@@ -40,6 +40,7 @@ class PathBuilder implements PathBuilderInterface
      * @param string $baseUrl host url without trailing slash, e.g. https://example.com
      * @throws InvalidLinkException
      */
+    #[\Override]
     public function buildBasePath(array $apis, string $baseUrl, ApiLink $apiLink): string
     {
         $basePath = '';
@@ -56,6 +57,7 @@ class PathBuilder implements PathBuilderInterface
      * @param Api[] $apis
      * @return array<string, array<string, mixed>>
      */
+    #[\Override]
     public function buildSecuritySchemes(array $apis): array
     {
         return $this->securitySchemeBuilder->build($apis);
@@ -66,6 +68,7 @@ class PathBuilder implements PathBuilderInterface
      *
      * @return array<string, array<string, mixed>>
      */
+    #[\Override]
     public function buildErrorSchemas(): array
     {
         return $this->responseBuilder->buildErrorSchemas();
@@ -78,6 +81,7 @@ class PathBuilder implements PathBuilderInterface
      * @return array<string, array<string, array<string, mixed>>> path => method => operation
      * @throws InvalidLinkException
      */
+    #[\Override]
     public function build(array $apis, string $baseUrl, string $basePath, ApiLink $apiLink, EndpointFilter $endpointFilter, SchemaRegistry $schemaRegistry): array
     {
         $list = [];
@@ -97,6 +101,7 @@ class PathBuilder implements PathBuilderInterface
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     public function buildOperation(Api $api, SchemaRegistry $schemaRegistry): array
     {
         $handler = $api->getHandler();

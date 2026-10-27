@@ -9,9 +9,9 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\RateLimit\NoRateLimit;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
-class ApiHolder
+final readonly class ApiHolder
 {
-    private readonly RateLimitInterface $rateLimit;
+    private RateLimitInterface $rateLimit;
 
     /**
      * Allows to define api with handler as a string.
@@ -20,9 +20,9 @@ class ApiHolder
      * Should not be used outside of ApiDecider.
      */
     public function __construct(
-        private readonly EndpointInterface $endpoint,
-        private readonly ApiHandlerInterface|string $handler,
-        private readonly ApiAuthorizationInterface $authorization,
+        private EndpointInterface $endpoint,
+        private ApiHandlerInterface|string $handler,
+        private ApiAuthorizationInterface $authorization,
         ?RateLimitInterface $rateLimit = null,
     ) {
         $this->rateLimit = $rateLimit ?: new NoRateLimit();

@@ -18,6 +18,7 @@ use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
@@ -77,9 +78,9 @@ final class ApiPresenter implements IPresenter
      *
      * See description to property $corsHeader for valid inputs
      */
-    public function setCorsHeader(string $corsHeader): void
+    public function setCorsHeader(CorsMode|string $corsHeader): void
     {
-        $this->corsHeader = $corsHeader;
+        $this->corsHeader = $corsHeader instanceof CorsMode ? $corsHeader->value : $corsHeader;
     }
 
     /**
@@ -107,6 +108,7 @@ final class ApiPresenter implements IPresenter
         $this->maskedLogHeaders = array_map(strtolower(...), $headers);
     }
 
+    #[\Override]
     public function run(Request $request): IResponse
     {
         $start = microtime(true);
@@ -183,9 +185,9 @@ final class ApiPresenter implements IPresenter
     {
         return $this->apiDecider->getApi(
             $request->getMethod() ?? '',
-            $request->getParameter('version'),
-            $request->getParameter('package'),
-            $request->getParameter('apiAction'),
+            TypeHelper::toString($request->getParameter('version')),
+            TypeHelper::toString($request->getParameter('package')),
+            $request->getParameter('apiAction') === null ? null : TypeHelper::toString($request->getParameter('apiAction')),
         );
     }
 
@@ -251,7 +253,7 @@ final class ApiPresenter implements IPresenter
             if (in_array(strtolower($key), $this->maskedLogHeaders, true)) {
                 $value = self::MASKED_LOG_HEADER_VALUE;
             }
-            $requestHeaders .= sprintf('%s: %s%s', $key, $value, PHP_EOL);
+            $requestHeaders .= sprintf('%s: %s%s', $key, TypeHelper::toString($value), PHP_EOL);
         }
 
         $ipDetector = $this->context->getByType(IpDetectorInterface::class);

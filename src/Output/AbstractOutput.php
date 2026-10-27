@@ -34,17 +34,6 @@ abstract class AbstractOutput implements OutputInterface
     }
 
     /**
-     * Set default example
-     * @param mixed $example
-     * @deprecated Use addExample instead
-     */
-    public function setExample($example): self
-    {
-        $this->examples['default'] = $example;
-        return $this;
-    }
-
-    /**
      * Returns first example
      * @return mixed
      */

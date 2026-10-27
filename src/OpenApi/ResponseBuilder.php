@@ -8,6 +8,7 @@ use Nette\Http\IResponse;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\JsonOutput;
 use Tomaj\NetteApi\Output\RedirectOutput;
 
@@ -21,6 +22,7 @@ class ResponseBuilder implements ResponseBuilderInterface
      *
      * @return array<string, array<string, mixed>>
      */
+    #[\Override]
     public function buildErrorSchemas(): array
     {
         return [
@@ -72,6 +74,7 @@ class ResponseBuilder implements ResponseBuilderInterface
      * @param bool $hasInput true if handler has params (adds 400 Bad request response)
      * @return array<int, array<string, mixed>>
      */
+    #[\Override]
     public function build(ApiHandlerInterface $handler, ApiAuthorizationInterface $authorization, bool $hasInput, SchemaRegistry $schemaRegistry): array
     {
         $responses = [];
@@ -114,7 +117,7 @@ class ResponseBuilder implements ResponseBuilderInterface
 
         foreach ($handler->outputs() as $output) {
             if ($output instanceof JsonOutput) {
-                $schema = $schemaRegistry->transform(json_decode($output->getSchema(), true));
+                $schema = $schemaRegistry->transform(TypeHelper::toArray(json_decode($output->getSchema(), true)));
                 if (!isset($responses[$output->getCode()])) {
                     $responses[$output->getCode()] = [
                         'description' => $output->getDescription(),
@@ -136,17 +139,7 @@ class ResponseBuilder implements ResponseBuilderInterface
                         }
                     }
                 } else {
-                    if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
-                        /** @phpstan-ignore-next-line */
-                        $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
-                        unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
-                        $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
-                            'oneOf' => [],
-                        ];
-                        $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $tmp;
-                    }
-
-                    $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $schema;
+                    $responses[$output->getCode()] = $this->appendOneOfSchema($responses[$output->getCode()], $schema);
                 }
             }
 
@@ -166,5 +159,32 @@ class ResponseBuilder implements ResponseBuilderInterface
         }
 
         return $responses;
+    }
+
+    /**
+     * Adds another schema to an already defined JSON response, wrapping the existing schema to `oneOf`.
+     *
+     * @param array<string, mixed> $response
+     * @param array<array-key, mixed>|null $schema
+     * @return array<string, mixed>
+     */
+    private function appendOneOfSchema(array $response, ?array $schema): array
+    {
+        $contentType = 'application/json; charset=utf-8';
+        $content = TypeHelper::toArray($response['content'] ?? []);
+        $jsonContent = TypeHelper::toArray($content[$contentType] ?? []);
+        $existingSchema = $jsonContent['schema'] ?? null;
+
+        if (is_array($existingSchema) && isset($existingSchema['oneOf']) && is_array($existingSchema['oneOf'])) {
+            $existingSchema['oneOf'][] = $schema;
+            $jsonContent['schema'] = $existingSchema;
+        } else {
+            unset($jsonContent['schema']);
+            $jsonContent['schema'] = ['oneOf' => [$existingSchema, $schema]];
+        }
+
+        $content[$contentType] = $jsonContent;
+        $response['content'] = $content;
+        return $response;
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Misc;
 
-class OpenApiTransform
+final class OpenApiTransform
 {
     /**
      * @param array<mixed> $schema
@@ -20,11 +20,14 @@ class OpenApiTransform
                 }
 
                 if (count($value) === 1) {
-                    $value = implode(',', $value);
+                    $value = implode(',', TypeHelper::toStringList($value));
                 } elseif (count($value) > 1) {
-                    foreach ($schema['type'] as $type) {
-                        $schema['oneOf'][] = ['type' => $type];
+                    $oneOf = isset($schema['oneOf']) && is_array($schema['oneOf']) ? $schema['oneOf'] : [];
+                    foreach ($value as $type) {
+                        $oneOf[] = ['type' => $type];
                     }
+
+                    $schema['oneOf'] = $oneOf;
 
                     unset($schema['type']);
                 }

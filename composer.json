@@ -51,6 +51,7 @@
     },
     "scripts": {
         "test": "phpunit",
+        "coverage": "XDEBUG_MODE=develop,coverage phpunit --coverage-clover=build/logs/clover.xml --coverage-html=build/coverage --coverage-text",
         "phpstan": "phpstan analyse",
         "rector": "rector process --dry-run",
         "cs": "phpcs",

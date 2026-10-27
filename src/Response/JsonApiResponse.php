@@ -29,6 +29,7 @@ class JsonApiResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getCode(): int
     {
         return $this->code;
@@ -60,6 +61,7 @@ class JsonApiResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->setContentType($this->getContentType(), $this->getCharset());

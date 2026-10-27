@@ -8,6 +8,7 @@ use Nette\Application\UI\ITemplate;
 use Nette\Http\IRequest;
 use Nette\Http\IResponse;
 use Nette\SmartObject;
+use Tomaj\NetteApi\Misc\TypeHelper;
 
 class TextApiResponse implements ResponseInterface
 {
@@ -23,6 +24,7 @@ class TextApiResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getCode(): int
     {
         return $this->code;
@@ -31,12 +33,13 @@ class TextApiResponse implements ResponseInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         if ($this->data instanceof ITemplate) {
             $this->data->render();
         } else {
-            echo $this->data;
+            echo TypeHelper::toString($this->data);
         }
     }
 }

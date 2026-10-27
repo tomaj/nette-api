@@ -14,6 +14,7 @@ class QueryApiKeyAuthentication extends TokenAuthorization
         parent::__construct($tokenRepository, $ipDetector);
     }
 
+    #[\Override]
     protected function readAuthorizationToken(): ?string
     {
         $apiKey = $_GET[$this->queryParamName] ?? null;

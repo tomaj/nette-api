@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Params;
 
-class ParamsProcessor
+final class ParamsProcessor
 {
     /** @var array<mixed> */
     private array $errors = [];

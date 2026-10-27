@@ -17,6 +17,7 @@ use Tomaj\NetteApi\Error\DefaultErrorHandler;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
 use Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
+use Tomaj\NetteApi\Presenters\CorsMode;
 
 /**
  * Nette sends headers with header(); in CLI they are only observable through xdebug_get_headers().
@@ -117,6 +118,41 @@ final class ApiPresenterCorsTest extends TestCase
         $this->assertSame([
             'Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIONS',
             'Vary: Origin',
+        ], $this->runApi($presenter));
+    }
+
+    public function testCorsModeEnumOff(): void
+    {
+        $presenter = $this->presenter();
+        $presenter->setCorsHeader(CorsMode::Off);
+        $this->assertSame(['Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIONS'], $this->runApi($presenter));
+    }
+
+    public function testCorsModeEnumAny(): void
+    {
+        $presenter = $this->presenter();
+        $presenter->setCorsHeader(CorsMode::Any);
+        $this->assertSame([
+            'Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIONS',
+            'Access-Control-Allow-Origin: *',
+        ], $this->runApi($presenter));
+    }
+
+    public function testCorsModeEnumAuto(): void
+    {
+        // without a Referer visible to filter_input() the auto mode sends no origin header
+        $presenter = $this->presenter();
+        $presenter->setCorsHeader(CorsMode::Auto);
+        $this->assertSame(['Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIONS'], $this->runApi($presenter));
+    }
+
+    public function testCustomCorsHeaderString(): void
+    {
+        $presenter = $this->presenter();
+        $presenter->setCorsHeader('https://fixed.example.com');
+        $this->assertSame([
+            'Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIONS',
+            'Access-Control-Allow-Origin: https://fixed.example.com',
         ], $this->runApi($presenter));
     }
 

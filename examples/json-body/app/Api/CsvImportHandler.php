@@ -20,7 +20,7 @@ final class CsvImportHandler extends BaseHandler
     {
         return [
             // the body as a string, nette-api only checks that it is not empty
-            (new RawInputParam('csv'))->setRequired()->setExample("sku,price\nbook,12.5\npen,1.2"),
+            (new RawInputParam('csv'))->setRequired()->addExample('default', "sku,price\nbook,12.5\npen,1.2"),
         ];
     }
 

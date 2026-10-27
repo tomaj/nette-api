@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\OpenApi;
 
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Params\JsonInputParam;
 use Tomaj\NetteApi\Params\RawInputParam;
@@ -17,6 +18,7 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
     /**
      * @return array<string, mixed>|null null if handler has no body params
      */
+    #[\Override]
     public function build(ApiHandlerInterface $handler, SchemaRegistry $schemaRegistry): ?array
     {
         $requestBody = [
@@ -28,14 +30,17 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
         $result = [];
         foreach ($handler->params() as $param) {
             if ($param instanceof JsonInputParam) {
-                $schema = json_decode($param->getSchema(), true);
+                $schema = TypeHelper::toArray(json_decode($param->getSchema(), true));
                 if (!empty($examples = $param->getExamples())) {
                     if (count($examples) === 1) {
                         $schema['example'] = is_string($param->getExample()) ? json_decode($param->getExample(), true) : $param->getExample();
                     } else {
+                        $schemaExamples = [];
                         foreach ($examples as $exampleKey => $example) {
-                            $schema['examples'][$exampleKey] = is_string($example) ? json_decode($example, true) : $example;
+                            $schemaExamples[$exampleKey] = is_string($example) ? json_decode($example, true) : $example;
                         }
+
+                        $schema['examples'] = $schemaExamples;
                     }
                 }
 
@@ -82,7 +87,7 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
                     $property['enum'] = array_keys($availableValues);
                     if (array_keys($availableValues) !== array_values($availableValues)) {
                         foreach ($availableValues as $availableKey => $availableValue) {
-                            $descriptionParts[] = ' * `' . $availableKey . '` - ' . $availableValue;
+                            $descriptionParts[] = ' * `' . $availableKey . '` - ' . TypeHelper::toString($availableValue);
                         }
                     }
                 }

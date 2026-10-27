@@ -21,7 +21,7 @@ class UserUpdateHandler extends BaseHandler
                 ->addExample('minimal', ['address' => ['city' => null]])
                 ->addExample('full', '{"address": {"city": "Bratislava"}, "age": 30}'),
             new RawInputParam('note')->setDescription('Raw note')->addExample('a', 'first')->addExample('b', 'second'),
-            new PutInputParam('flag')->setExample('yes'),
+            new PutInputParam('flag')->addExample('default', 'yes'),
         ];
     }
 

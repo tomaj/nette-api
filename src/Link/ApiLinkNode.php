@@ -33,11 +33,13 @@ final class ApiLinkNode extends StatementNode
         return $node;
     }
 
+    #[\Override]
     public function print(PrintContext $context): string
     {
         return $context->format('echo ($this->filters->apiLink)(new Tomaj\NetteApi\EndpointIdentifier(%args), %args);', $this->endpointArgs, $this->endpointParams);
     }
 
+    #[\Override]
     public function &getIterator(): Generator
     {
         yield $this->endpointArgs;

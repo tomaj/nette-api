@@ -18,7 +18,7 @@ class UserCreateHandler extends BaseHandler
     {
         return [
             new GetInputParam('dry_run')->setAvailableValues(['0', '1']),
-            new PostInputParam('email')->setRequired()->setDescription('E-mail')->setExample('user@example.com'),
+            new PostInputParam('email')->setRequired()->setDescription('E-mail')->addExample('default', 'user@example.com'),
             new PostInputParam('role')->setAvailableValues(['admin' => 'Administrator', 'user' => 'Regular user'])->setDefault('user'),
             new PostInputParam('groups')->setMulti()->setRequired(),
             new FileInputParam('avatar')->setDescription('Avatar image')->setRequired(),

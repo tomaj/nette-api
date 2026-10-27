@@ -33,6 +33,7 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function authorized(): bool
     {
         $token = $this->readAuthorizationToken();
@@ -57,6 +58,7 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getErrorMessage(): ?string
     {
         return $this->errorMessage;

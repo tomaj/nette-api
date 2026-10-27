@@ -6,13 +6,13 @@ namespace Tomaj\NetteApi\RateLimit;
 
 use Nette\Application\IResponse;
 
-class RateLimitResponse
+final readonly class RateLimitResponse
 {
     public function __construct(
-        private readonly int $limit,
-        private readonly int $remaining,
-        private readonly ?int $retryAfter = null,
-        private readonly ?IResponse $errorResponse = null
+        private int $limit,
+        private int $remaining,
+        private ?int $retryAfter = null,
+        private ?IResponse $errorResponse = null
     ) {
     }
 

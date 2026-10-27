@@ -17,14 +17,22 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * `ApiDecider::getApi()` declares its `Api` return type natively.
 * `BearerTokenAuthorization` treats a non-string `Authorization` header as missing.
 * `OpenApi\SchemaRegistry` and `OpenApi\EndpointFilter` are `final`; `SpecBuilder::$pathBuilder` is typed as `PathBuilderInterface`.
+* Removed deprecated `InputParam::setExample()` and `AbstractOutput::setExample()`. Use `addExample()`.
+* `Validation\InputType` is a string-backed enum; its string constants (`InputType::INTEGER`, ...) are kept. It can no longer be instantiated or extended.
+* Classes not meant for extension are `final`: `Api`, `ApiHolder`, `EndpointIdentifier`, `NoAuthorization`, `NoRateLimit`, `RateLimitResponse`, `IpDetector`, `StaticIpDetector`, `StaticTokenRepository`, `ConsoleRequest`, `ConsoleResponse`, `OpenApiTransform`, `ParamsProcessor`, `InputValidator`, `JsonSchemaValidator`, `ValidationResult`, `DebuggerConfigurator`, `EnvConfigurator`, `QueryConfigurator`. See `UPGRADE-4.0.md`.
+* `TextApiResponse` outputs non-string data as JSON instead of `Array`; non-string values in validation messages, IP headers, console fields and OpenAPI examples are converted to strings instead of raising warnings or `TypeError`.
 
 ### Added
 * Rector config with a CI dry-run job, PHP_CodeSniffer config (PSR-12), Infection mutation testing in CI, lowest-dependency test job.
 * `UPGRADE-4.0.md`.
+* Enums `Validation\InputType`, `Params\ParamType` (`InputParam::getParamType()`) and `Presenters\CorsMode` (accepted by `ApiPresenter::setCorsHeader()`). Constructors and validators accept an enum case or a string.
+* `#[\Override]` on all overriding methods.
+* CodeQL and OpenSSF Scorecard workflows; Scorecard badge in README.
 * OpenAPI builder interfaces (`SpecBuilderInterface`, `PathBuilderInterface`, `ParameterBuilderInterface`, `RequestBodyBuilderInterface`, `ResponseBuilderInterface`, `SecuritySchemeBuilderInterface`). `OpenApiHandler`, `SpecBuilder` and `PathBuilder` accept the interfaces.
 
 ### Changed
-* Dev tools: PHPUnit ^12 || ^13, PHPStan ^2.1 (level max with a baseline), Rector ^2.2, PHP_CodeSniffer ^4.0, Infection; `symfony/yaml` ^7.4.12 || ^8.0.12.
+* Dev tools: PHPUnit ^12 || ^13, PHPStan ^2.1 (level max, no baseline), Rector ^2.2, PHP_CodeSniffer ^4.0, Infection; `symfony/yaml` ^7.4.12 || ^8.0.12.
+* `vendor/bin/phpunit` no longer requires `XDEBUG_MODE=coverage`; coverage reports are opt-in via `composer coverage`.
 
 ## 3.6.0 - 2026-10-27
 

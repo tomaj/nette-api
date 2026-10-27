@@ -6,7 +6,7 @@ namespace Tomaj\NetteApi;
 
 use InvalidArgumentException;
 
-class EndpointIdentifier implements EndpointInterface
+final class EndpointIdentifier implements EndpointInterface
 {
     /**
      * @param string $method example: "GET", "POST", "PUT", "DELETE"
@@ -28,21 +28,25 @@ class EndpointIdentifier implements EndpointInterface
         $this->version = $version;
     }
 
+    #[\Override]
     public function getMethod(): string
     {
         return $this->method;
     }
 
+    #[\Override]
     public function getVersion(): string
     {
         return (string) $this->version;
     }
 
+    #[\Override]
     public function getPackage(): string
     {
         return $this->package;
     }
 
+    #[\Override]
     public function getApiAction(): ?string
     {
         if ($this->apiAction === '') {
@@ -52,6 +56,7 @@ class EndpointIdentifier implements EndpointInterface
         return $this->apiAction;
     }
 
+    #[\Override]
     public function getUrl(): string
     {
         return sprintf('v%s/%s/%s', $this->version, $this->package, $this->apiAction);

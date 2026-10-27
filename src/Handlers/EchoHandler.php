@@ -13,6 +13,7 @@ class EchoHandler extends BaseHandler
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function params(): array
     {
         return [
@@ -25,6 +26,7 @@ class EchoHandler extends BaseHandler
      * {@inheritdoc}
      * @param array<string,mixed> $params
      */
+    #[\Override]
     public function handle(array $params): ResponseInterface
     {
         $status = $params['status'];

@@ -32,6 +32,8 @@ services:
 			- setCorsHeader('https://app.example.com')
 ```
 
+In PHP you can pass the `Presenters\CorsMode` enum instead of the predefined strings: `CorsMode::Any` (`'*'`), `CorsMode::Auto` (`'auto'`) and `CorsMode::Off` (`'off'`).
+
 This is the one `apiPresenter` service from [Getting started](/guide/getting-started#_3-register-the-services): add these `setup:` lines to it, or put the block in another config file under the same name and Nette merges the two. Do not register a second `ApiPresenter` service; two of them fail with "Multiple services of type Tomaj\NetteApi\Presenters\ApiPresenter found".
 
 ## Allowed origins
