@@ -1,0 +1,31 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+parameters:
+	apiKeys:
+		key-a: '*'
+		key-b: '*'
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+	- Tomaj\NetteApi\Misc\IpDetector
+
+	quoteLimit:
+		factory: App\FileRateLimit(storageDir: %tempDir%, limit: 3, window: 3600)
+		autowired: false
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# the fourth argument: a RateLimitInterface checked before the authorization
+			- addApi(
+				Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'quote'),
+				App\Api\QuoteHandler(),
+				Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-Api-Key', Tomaj\NetteApi\Misc\StaticTokenRepository(%apiKeys%)),
+				@quoteLimit
+			)

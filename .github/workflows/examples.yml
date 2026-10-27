@@ -1,0 +1,33 @@
+name: Examples
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: null
+
+permissions:
+  contents: read
+
+jobs:
+  example:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [ hello-world, params-validation, auth, cors, openapi-console, logging-errors, custom-authorization, json-body, file-upload, pagination, versions, rate-limit, testing ]
+
+    name: Example ${{ matrix.example }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: '8.4'
+          tools: composer
+
+      - name: Run the example against this checkout
+        run: examples/ci/example.sh ${{ matrix.example }}

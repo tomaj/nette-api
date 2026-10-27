@@ -1,0 +1,29 @@
+{
+  "name": "nette-api-docs",
+  "version": "1.0.0",
+  "description": "Documentation for tomaj/nette-api",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview",
+    "docs:links": "bash scripts/check-links.sh",
+    "diagrams": "node scripts/render-diagrams.mjs",
+    "diagrams:check": "node scripts/render-diagrams.mjs --check",
+    "check": "python3 scripts/check-locales.py && python3 scripts/check-snippets.py"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@excalidraw/utils": "0.1.5",
+    "esbuild": "0.28.2",
+    "linkinator": "8.1.0",
+    "puppeteer-core": "25.15.0",
+    "vitepress": "1.6.4"
+  },
+  "overrides": {
+    "vite": "^6.4.3"
+  }
+}

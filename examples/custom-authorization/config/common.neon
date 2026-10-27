@@ -1,0 +1,47 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+parameters:
+	# token => user; in a real app this comes from the database
+	users:
+		alice-token: {name: Alice, roles: [admin, staff]}
+		bob-token: {name: Bob, roles: [staff]}
+	apiKeys:
+		partner-key: '*'
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+	- Tomaj\NetteApi\Misc\StaticIpDetector('127.0.0.1')
+
+	- App\CurrentUser
+	- App\Api\MeHandler
+	- App\Api\ReportHandler
+
+	# every authorization is its own service, so one class can be used with different settings
+	anyUser:
+		factory: App\RoleTokenAuthorization(%users%)
+		autowired: false
+	adminOnly:
+		factory: App\RoleTokenAuthorization(%users%, requiredRole: admin)
+		autowired: false
+	partnerKey:
+		factory: Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-API-Key', Tomaj\NetteApi\Misc\StaticTokenRepository(%apiKeys%))
+		autowired: false
+	userOrPartner:
+		factory: App\AnyOfAuthorization(@anyUser, @partnerKey)
+		autowired: false
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# any valid bearer token
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'me'), App\Api\MeHandler, @anyUser)
+			# bearer token of a user with the admin role
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'report'), App\Api\ReportHandler, @adminOnly)
+			# a bearer token or the X-API-Key header
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'me', 'any'), App\Api\MeHandler, @userOrPartner)

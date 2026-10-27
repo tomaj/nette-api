@@ -1,0 +1,237 @@
+{
+  "padding": 0,
+  "elements": [
+    {
+      "t": "rect",
+      "x": 0,
+      "y": 0,
+      "w": 360,
+      "h": 540,
+      "opacity": 0,
+      "round": false
+    },
+    {
+      "t": "rect",
+      "x": 16,
+      "y": 100,
+      "w": 328,
+      "h": 424,
+      "width": 3
+    },
+    {
+      "t": "rect",
+      "x": 34,
+      "y": 124,
+      "w": 292,
+      "h": 326,
+      "width": 2,
+      "fill": "#ffffff"
+    },
+    {
+      "t": "text",
+      "x": 50,
+      "y": 134,
+      "text": "nette-api",
+      "size": 16,
+      "align": "left"
+    },
+    {
+      "t": "text",
+      "x": 32,
+      "y": 464,
+      "text": "Nette application",
+      "size": 21,
+      "align": "left"
+    },
+    {
+      "t": "text",
+      "x": 32,
+      "y": 494,
+      "text": "router \u00b7 DI container \u00b7 config",
+      "size": 13,
+      "align": "left",
+      "color": "muted"
+    },
+    {
+      "t": "rect",
+      "x": 40,
+      "y": 12,
+      "w": 290,
+      "h": 64,
+      "fill": "#ffffff"
+    },
+    {
+      "t": "text",
+      "x": 185,
+      "y": 32,
+      "text": "client",
+      "size": 19,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 100,
+      "y": 170,
+      "w": 80,
+      "h": 34,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 140,
+      "y": 178,
+      "text": "auth",
+      "size": 15,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 100,
+      "y": 228,
+      "w": 80,
+      "h": 34,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 140,
+      "y": 236,
+      "text": "valid",
+      "size": 15,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 56,
+      "y": 318,
+      "w": 248,
+      "h": 110,
+      "width": 2.5,
+      "fill": "#ffffff"
+    },
+    {
+      "t": "text",
+      "x": 180,
+      "y": 360,
+      "text": "Handler",
+      "size": 22,
+      "align": "center"
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          140,
+          78
+        ],
+        [
+          140,
+          167
+        ]
+      ]
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          140,
+          206
+        ],
+        [
+          140,
+          225
+        ]
+      ]
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          140,
+          264
+        ],
+        [
+          140,
+          315
+        ]
+      ]
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          302,
+          315
+        ],
+        [
+          302,
+          80
+        ]
+      ]
+    },
+    {
+      "t": "rect",
+      "x": 188,
+      "y": 168,
+      "w": 84,
+      "h": 28,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 230,
+      "y": 173,
+      "text": "{ JSON }",
+      "size": 14,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 188,
+      "y": 202,
+      "w": 84,
+      "h": 28,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 230,
+      "y": 207,
+      "text": "<XML/>",
+      "size": 14,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 188,
+      "y": 236,
+      "w": 84,
+      "h": 28,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 230,
+      "y": 241,
+      "text": "Latte",
+      "size": 14,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 188,
+      "y": 270,
+      "w": 84,
+      "h": 28,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 230,
+      "y": 275,
+      "text": "\u2026",
+      "size": 14,
+      "align": "center"
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+@font-face {
+  font-family: 'Excalifont';
+  src: url('/fonts/excalifont-latin.woff2') format('woff2');
+  font-display: swap;
+}
+
+/**
+ * Customize default theme styling by overriding CSS variables:
+ * https://github.com/vuejs/vitepress/blob/main/src/client/theme-default/styles/vars.css
+ */
+
+:root {
+  --vp-c-brand-1: #4f46e5;
+  --vp-c-brand-2: #6366f1;
+  --vp-c-brand-3: #818cf8;
+  --vp-c-brand-soft: rgba(79, 70, 229, 0.14);
+
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #ffffff;
+  --vp-button-brand-bg: #4f46e5;
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: #ffffff;
+  --vp-button-brand-hover-bg: #4338ca;
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-text: #ffffff;
+  --vp-button-brand-active-bg: #3730a3;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #4f46e5 0%, #0891b2 100%);
+  --vp-home-hero-image-background-image: radial-gradient(closest-side, #6366f11f, transparent);
+  --vp-home-hero-image-filter: blur(44px);
+}
+
+.dark {
+  --vp-c-brand-1: #a5b4fc;
+  --vp-c-brand-2: #818cf8;
+  --vp-c-brand-3: #6366f1;
+  --vp-c-brand-soft: rgba(165, 180, 252, 0.16);
+
+  --vp-button-brand-bg: #6366f1;
+  --vp-button-brand-hover-bg: #818cf8;
+  --vp-button-brand-active-bg: #4f46e5;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --vp-home-hero-image-filter: blur(56px);
+  }
+}
+
+@media (min-width: 960px) {
+  :root {
+    --vp-home-hero-image-filter: blur(68px);
+  }
+}
+
+.only-dark {
+  display: none;
+}
+
+.dark .only-light {
+  display: none;
+}
+
+.dark .only-dark {
+  display: block;
+}
+
+.theme-img {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  border: 1px solid var(--vp-c-divider);
+}
+
+/* Hand-drawn diagrams. Sources live in docs/diagrams, see contributing. */
+.hand-diagram {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.hand-diagram-zoom {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: zoom-in;
+}
+
+.hand-diagram-zoom:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 4px;
+}
+
+.hand-diagram img {
+  display: inline-block;
+  max-width: 100%;
+  max-height: 420px;
+  width: auto;
+  height: auto;
+}
+
+.hand-diagram-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem 1.5rem;
+  background: var(--vp-c-bg);
+  cursor: zoom-out;
+}
+
+.hand-diagram-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
+.hand-diagram-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 50%;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+img.hand-diagram-dark { display: none; }
+.dark img.hand-diagram-light { display: none; }
+.dark img.hand-diagram-dark { display: inline-block; }
+
+/* Runnable project box on the recipe pages. */
+.project-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--vp-c-brand-soft);
+  border-left: 4px solid var(--vp-c-brand-1);
+  border-radius: 8px;
+  background: var(--vp-c-bg-soft);
+}
+.project-source-text { flex: 1 1 22rem; min-width: 0; }
+.project-source-text p { margin: 0 0 0.5rem; font-size: 14px; line-height: 1.6; }
+.project-source .project-source-title { font-weight: 600; font-size: 15px; color: var(--vp-c-text-1); }
+.project-source-files { display: flex; flex-wrap: wrap; gap: 0.35rem 0.5rem; margin: 0.5rem 0 0 !important; padding: 0 !important; list-style: none; }
+.project-source-files li { margin: 0 !important; }
+.project-source-files a {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12.5px;
+  text-decoration: none;
+}
+.project-source-files a:hover { border-color: var(--vp-c-brand-1); }
+.project-source-button {
+  display: inline-flex;
+  flex: none;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.55rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--vp-button-brand-border);
+  background: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text) !important;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+.project-source-button:hover { background: var(--vp-button-brand-hover-bg); color: var(--vp-button-brand-hover-text) !important; }
+.project-source-button:focus-visible,
+.project-source-files a:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 2px; }
+.vp-doc ul.project-source-files { list-style: none; }
+.vp-doc ul.project-source-files li { list-style: none; }
+.vp-doc ul.project-source-files li::marker { content: none; }
+.project-source .project-source-label { margin: 0.75rem 0 0; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--vp-c-text-2); }
+
+/* Link cards, used on the Drivers overview. */
+.vp-doc ul.link-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+.vp-doc ul.link-cards li { margin: 0; }
+.vp-doc a.link-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  height: 100%;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  text-decoration: none;
+  transition: border-color 0.2s;
+}
+.vp-doc a.link-card:hover { border-color: var(--vp-c-brand-1); }
+.vp-doc a.link-card:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 2px; }
+.link-card-title { font-weight: 600; color: var(--vp-c-brand-1); }
+.link-card-text { font-size: 14px; line-height: 1.5; color: var(--vp-c-text-2); }
+
+
+/* Tables (table-cards.ts): when the table is wider than the
+   content column, not the window, each row becomes a card with the header as labels. */
+table.is-cards,
+table.is-cards tbody,
+table.is-cards tr,
+table.is-cards td { display: block; width: 100%; }
+table.is-cards thead { display: none; }
+.vp-doc table.is-cards { border: 0; overflow: visible; }
+.vp-doc table.is-cards tr {
+  margin: 0 0 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg-soft);
+  padding: 8px 12px;
+}
+.vp-doc table.is-cards td {
+  border: 0;
+  padding: 4px 0;
+  overflow-wrap: anywhere;
+}
+.vp-doc table.is-cards td::before {
+  content: attr(data-label);
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-2);
+}
+.vp-doc table.is-cards td:first-child { font-weight: 600; }
+
+/* Tablets: the full nav bar has to fit next to the search box. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .VPNavBarMenuLink,
+  .VPNavBarMenuGroup .button { padding: 0 8px !important; }
+  .VPNavBar .social-links { display: none; }
+}
+
+/* Feature card icons: inline SVG, same strokes and colours as the logo */
+
+/* Feature icons: duotone glyph on a tinted indigo tile */
+.VPFeature .icon { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(140deg, #eef2ff 0%, #c7d2fe 100%); box-shadow: inset 0 0 0 1px #a5b4fc, 0 1px 2px rgb(30 27 75 / .06); }
+.dark .VPFeature .icon { background: linear-gradient(140deg, rgb(129 140 248 / .38) 0%, rgb(79 70 229 / .14) 100%); box-shadow: inset 0 0 0 1px rgb(129 140 248 / .35); }
+.na-icon { --na-ink: #312e81; --na-soft: #fff; --na-acc: #4f46e5; --na-mark: #fff; --na-tile: #d9dffc; }
+.dark .na-icon { --na-ink: #e0e7ff; --na-soft: rgb(165 180 252 / .22); --na-acc: #818cf8; --na-mark: #1e1b4b; --na-tile: #34345e; }
+.na-icon .na-soft { fill: var(--na-soft); stroke: var(--na-ink); stroke-width: 2.75; stroke-linejoin: round; }
+.na-icon .na-ink, .na-icon .na-acc, .na-icon .na-mark { fill: none; stroke-width: 2.75; stroke-linecap: round; stroke-linejoin: round; }
+.na-icon .na-ink { stroke: var(--na-ink); }
+.na-icon .na-acc { stroke: var(--na-acc); stroke-width: 3.5; }
+.na-icon .na-mark { stroke: var(--na-mark); stroke-width: 3; }
+.na-icon .na-accf { fill: var(--na-acc); }
+.na-icon .na-ink-f { fill: var(--na-ink); }
+.na-icon .na-mark-f { fill: var(--na-mark); }
+.na-icon .na-badge { stroke: var(--na-tile); stroke-width: 2.5; paint-order: stroke; }
+.VPFeatures .VPFeature { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.VPFeatures .VPLink:hover .VPFeature { transform: translateY(-2px); box-shadow: 0 8px 24px -12px rgb(79 70 229 / .35); }
+@media (prefers-reduced-motion: reduce) { .VPFeatures .VPFeature { transition: none; } .VPFeatures .VPLink:hover .VPFeature { transform: none; } }
+
+/* On narrow screens the SVG opens on its own so it can be pinch-zoomed. */
+.hand-diagram-full { display: none; margin-top: 4px; font-size: 13px; text-align: center; }
+@media (max-width: 640px) { .hand-diagram-full { display: block; } }

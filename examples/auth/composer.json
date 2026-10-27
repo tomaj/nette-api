@@ -1,0 +1,15 @@
+{
+    "name": "acme/auth-api",
+    "description": "tomaj/nette-api example: bearer tokens, API keys, HTTP Basic, IP restrictions and a rate limit",
+    "type": "project",
+    "require": {
+        "php": ">=8.3",
+        "tomaj/nette-api": "^3.5",
+        "nette/bootstrap": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}

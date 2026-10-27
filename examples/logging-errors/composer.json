@@ -1,0 +1,15 @@
+{
+    "name": "acme/logging-errors-api",
+    "description": "tomaj/nette-api example: a request logger, error handling and production mode",
+    "type": "project",
+    "require": {
+        "php": ">=8.3",
+        "tomaj/nette-api": "^3.5",
+        "nette/bootstrap": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}

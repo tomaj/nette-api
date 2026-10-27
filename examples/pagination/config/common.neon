@@ -1,0 +1,17 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	# validates output schemas unless APP_ENV is production
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# GET /api/v1/products?page=2&per_page=5
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'products'), App\Api\ProductListHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())

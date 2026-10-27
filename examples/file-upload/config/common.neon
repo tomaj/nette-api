@@ -1,0 +1,18 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# POST /api/v1/avatar, multipart/form-data with avatar and user
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'avatar'), App\Api\AvatarUploadHandler(%tempDir%), Tomaj\NetteApi\Authorization\NoAuthorization())
+			# POST /api/v1/attachments, multipart/form-data with files[]
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'attachments'), App\Api\AttachmentsUploadHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())

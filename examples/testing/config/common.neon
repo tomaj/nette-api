@@ -1,0 +1,27 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+parameters:
+	apiTokens:
+		test-token: '*'
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+	- Tomaj\NetteApi\Misc\IpDetector
+	- App\Api\ArticleRepository
+	- App\Api\ArticleDetailHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# GET /api/v1/articles?id=1 with Authorization: Bearer test-token
+			- addApi(
+				Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'articles'),
+				App\Api\ArticleDetailHandler,
+				Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
+			)

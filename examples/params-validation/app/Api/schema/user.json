@@ -1,0 +1,16 @@
+{
+    "type": "object",
+    "properties": {
+        "user": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "integer" },
+                "name": { "type": "string" },
+                "email": { "type": "string" },
+                "status": { "type": "string", "enum": ["active", "blocked"] }
+            },
+            "required": ["id", "name", "email", "status"]
+        }
+    },
+    "required": ["user"]
+}

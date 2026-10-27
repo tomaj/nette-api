@@ -1,0 +1,263 @@
+{
+  "padding": 0,
+  "elements": [
+    {
+      "t": "rect",
+      "x": 0,
+      "y": 0,
+      "w": 700,
+      "h": 400,
+      "opacity": 0,
+      "round": false
+    },
+    {
+      "t": "rect",
+      "x": 165,
+      "y": 16,
+      "w": 519,
+      "h": 368,
+      "width": 3
+    },
+    {
+      "t": "text",
+      "x": 185,
+      "y": 28,
+      "text": "Nette application",
+      "size": 24,
+      "align": "left"
+    },
+    {
+      "t": "text",
+      "x": 185,
+      "y": 346,
+      "text": "router \u00b7 DI container \u00b7 config",
+      "size": 14,
+      "align": "left",
+      "color": "muted"
+    },
+    {
+      "t": "rect",
+      "x": 190,
+      "y": 68,
+      "w": 474,
+      "h": 266,
+      "width": 2,
+      "fill": "#ffffff"
+    },
+    {
+      "t": "text",
+      "x": 206,
+      "y": 78,
+      "text": "nette-api",
+      "size": 18,
+      "align": "left"
+    },
+    {
+      "t": "rect",
+      "x": 20,
+      "y": 140,
+      "w": 110,
+      "h": 130,
+      "fill": "#ffffff"
+    },
+    {
+      "t": "rect",
+      "x": 47,
+      "y": 158,
+      "w": 56,
+      "h": 38,
+      "width": 1.5
+    },
+    {
+      "t": "line",
+      "points": [
+        [
+          64,
+          204
+        ],
+        [
+          86,
+          204
+        ]
+      ],
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 75,
+      "y": 216,
+      "text": "client",
+      "size": 17,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 220,
+      "y": 153,
+      "w": 80,
+      "h": 34,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 260,
+      "y": 161,
+      "text": "auth",
+      "size": 15,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 328,
+      "y": 153,
+      "w": 80,
+      "h": 34,
+      "width": 1.5
+    },
+    {
+      "t": "text",
+      "x": 368,
+      "y": 161,
+      "text": "valid",
+      "size": 15,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 468,
+      "y": 110,
+      "w": 172,
+      "h": 170,
+      "width": 2.5,
+      "fill": "#ffffff"
+    },
+    {
+      "t": "text",
+      "x": 554,
+      "y": 180,
+      "text": "Handler",
+      "size": 22,
+      "align": "center"
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          132,
+          170
+        ],
+        [
+          217,
+          170
+        ]
+      ]
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          302,
+          170
+        ],
+        [
+          325,
+          170
+        ]
+      ]
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          410,
+          170
+        ],
+        [
+          465,
+          170
+        ]
+      ]
+    },
+    {
+      "t": "arrow",
+      "points": [
+        [
+          465,
+          250
+        ],
+        [
+          134,
+          250
+        ]
+      ]
+    },
+    {
+      "t": "rect",
+      "x": 204,
+      "y": 268,
+      "w": 70,
+      "h": 28,
+      "width": 1.5,
+      "dashed": false
+    },
+    {
+      "t": "text",
+      "x": 239.0,
+      "y": 274,
+      "text": "{ JSON }",
+      "size": 13,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 282,
+      "y": 268,
+      "w": 60,
+      "h": 28,
+      "width": 1.5,
+      "dashed": false
+    },
+    {
+      "t": "text",
+      "x": 312.0,
+      "y": 274,
+      "text": "<XML/>",
+      "size": 13,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 350,
+      "y": 268,
+      "w": 56,
+      "h": 28,
+      "width": 1.5,
+      "dashed": false
+    },
+    {
+      "t": "text",
+      "x": 378.0,
+      "y": 274,
+      "text": "Latte",
+      "size": 13,
+      "align": "center"
+    },
+    {
+      "t": "rect",
+      "x": 414,
+      "y": 268,
+      "w": 34,
+      "h": 28,
+      "width": 1.5,
+      "dashed": false
+    },
+    {
+      "t": "text",
+      "x": 431.0,
+      "y": 274,
+      "text": "\u2026",
+      "size": 13,
+      "align": "center"
+    }
+  ]
+}

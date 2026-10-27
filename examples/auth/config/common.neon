@@ -1,0 +1,44 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+parameters:
+	# token => allowed IPs: '*' for any, one IP, a list, or an IPv4 CIDR range
+	apiTokens:
+		secret-token: '*'
+		office-token: '10.0.0.0/8'
+	apiUsers:
+		admin: change-me
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
+	- Tomaj\NetteApi\Error\DefaultErrorHandler
+
+	# the only IpDetectorInterface service, so it is autowired everywhere
+	- App\RemoteAddrIpDetector
+	tokens: Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%)
+
+	bearer: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@tokens)
+	apiKey: Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-API-Key', @tokens)
+	basic: App\BasicCredentialsAuthorization(%apiUsers%)
+	rateLimit:
+		factory: App\FileRateLimit(directory: %tempDir%)
+		# otherwise Nette DI passes it as the 4th argument of every addApi() call below
+		autowired: false
+
+	- App\Api\WhoAmIHandler
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# Authorization: Bearer secret-token
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'bearer'), App\Api\WhoAmIHandler, @bearer)
+			# X-API-Key: secret-token
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'api-key'), App\Api\WhoAmIHandler, @apiKey)
+			# curl -u admin:change-me
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'basic'), App\Api\WhoAmIHandler, @basic)
+			# no authorization, 3 requests per minute per IP
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'limited'), App\Api\WhoAmIHandler, Tomaj\NetteApi\Authorization\NoAuthorization(), @rateLimit)

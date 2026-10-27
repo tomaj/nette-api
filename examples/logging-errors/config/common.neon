@@ -1,0 +1,33 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+		setup:
+			# since 3.6: the logger gets *** instead of the values of Authorization, Proxy-Authorization,
+			# Cookie, Set-Cookie and X-Api-Key; pass a list to mask other headers instead
+			- setMaskedLogHeaders()
+
+	# error details and output schema validation are on unless APP_ENV=production
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator('APP_ENV', 'production')
+
+	# ApiPresenter uses the one autowired ErrorHandlerInterface, AppErrorHandler wraps the default one
+	defaultErrorHandler:
+		factory: Tomaj\NetteApi\Error\DefaultErrorHandler
+		autowired: false
+	- App\AppErrorHandler(@defaultErrorHandler)
+
+	# with an ApiLoggerInterface service every handled request is logged;
+	# the logger needs an IpDetectorInterface service for the client IP
+	- App\FileApiLogger(%appDir%/../log/api.log)
+	- Tomaj\NetteApi\Misc\IpDetector
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'ping'), App\Api\PingHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'fail'), App\Api\FailHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'broken'), App\Api\BrokenOutputHandler(), Tomaj\NetteApi\Authorization\NoAuthorization())

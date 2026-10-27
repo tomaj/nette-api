@@ -1,0 +1,15 @@
+{
+    "name": "acme/versions-api",
+    "description": "Two versions of the same endpoint, a deprecated v1 and a v2",
+    "type": "project",
+    "require": {
+        "php": ">=8.3",
+        "tomaj/nette-api": "^3.5",
+        "nette/bootstrap": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}

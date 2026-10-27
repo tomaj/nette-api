@@ -1,0 +1,24 @@
+* text=auto
+
+# Keep the Composer dist archive to the library itself.
+/.gitattributes     export-ignore
+/.github            export-ignore
+/.gitignore         export-ignore
+/.scrutinizer.yml   export-ignore
+/.travis.yml        export-ignore
+/CONTRIBUTING.md    export-ignore
+/UPGRADE.md         export-ignore
+/docs               export-ignore
+/examples           export-ignore
+/phpstan.neon       export-ignore
+/phpunit.xml.dist   export-ignore
+/tests              export-ignore
+
+# Documentation site: not counted in GitHub language stats.
+/docs/**                        linguist-documentation
+
+# Generated files, collapsed in GitHub diffs. Diagram sources are docs/diagrams/*.json;
+# `npm run diagrams` writes the .excalidraw scenes and the SVGs.
+/docs/diagrams/*.excalidraw     linguist-generated=true
+/docs/public/diagrams/*.svg     linguist-generated=true
+/docs/package-lock.json         linguist-generated=true
