@@ -5,7 +5,7 @@ description: Ktoré vydanie Nette API táto dokumentácia opisuje, ako sa označ
 
 # Verzie tejto dokumentácie
 
-Tento web opisuje **3.x**, aktuálnu radu vydaní v stave pripravovanej 3.6.0, ktorá ešte nevyšla. Posledné vydanie je 3.5.0; funkcie označené „Od verzie 3.6.0“ v ňom nie sú. Do vydania ich nainštalujete cez `composer require tomaj/nette-api:dev-master`. Potrebuje PHP 8.3 alebo novšie.
+Tento web opisuje **3.x**, aktuálnu radu vydaní; posledné vydanie je 3.6.0. Nainštalujete ho cez `composer require tomaj/nette-api`. Potrebuje PHP 8.3 alebo novšie.
 
 <Diagram name="versioning-1" alt="Dnes je 3.x v koreni; keď vyjde 4.x, prevezme koreň a 3.x sa presunie do /3.x/" />
 
@@ -29,7 +29,7 @@ Na GitHube je otvorený [milník 4.0.0](https://github.com/tomaj/nette-api/miles
 
 ### Označujú stránky novinky novšieho vydania?
 
-Áno, poznámka „Od verzie 3.6.0“ označuje, čo pridá pripravované vydanie 3.6.0; v 3.5.0 to ešte nie je, ako na stránkach [CORS](/sk/guide/cors) a [Logovanie](/sk/guide/logging).
+Áno, poznámka „Od verzie 3.6.0“ označuje, čo pridalo vydanie 3.6.0; staršie vydania ako 3.5.0 to nemajú, ako na stránkach [CORS](/sk/guide/cors) a [Logovanie](/sk/guide/logging).
 
 ### Kde nahlásim chybu v dokumentácii?
 

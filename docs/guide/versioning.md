@@ -5,7 +5,7 @@ description: Which Nette API release this documentation describes, how “Since 
 
 # Versions of this documentation
 
-This site describes **3.x**, the current release line as of the upcoming 3.6.0, which is not released yet. The latest release is 3.5.0; features marked "Since 3.6.0" are not in it. Until the release, install them with `composer require tomaj/nette-api:dev-master`. It needs PHP 8.3 or newer.
+This site describes **3.x**, the current release line; the latest release is 3.6.0. Install it with `composer require tomaj/nette-api`. It needs PHP 8.3 or newer.
 
 <Diagram name="versioning-1" alt="Today 3.x is at the root; when 4.x ships it takes the root and 3.x moves to /3.x/" />
 
@@ -29,7 +29,7 @@ A [4.0.0 milestone](https://github.com/tomaj/nette-api/milestone/9) is open with
 
 ### Do the pages mark features of a newer release?
 
-Yes, a "Since 3.6.0" note marks what the upcoming 3.6.0 release adds; it is not in 3.5.0 yet, as on [CORS](/guide/cors) and [Logging](/guide/logging).
+Yes, a "Since 3.6.0" note marks what the 3.6.0 release added; older releases such as 3.5.0 do not have it, as on [CORS](/guide/cors) and [Logging](/guide/logging).
 
 ### Where do I report a mistake in the docs?
 

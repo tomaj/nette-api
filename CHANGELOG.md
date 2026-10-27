@@ -4,6 +4,8 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+## 3.6.0 - 2026-10-27
+
 ### Security
 * `BasicAuthentication` and `StaticTokenRepository` compare passwords and tokens with `hash_equals()` (constant time) instead of `===` / `in_array()`. Results are unchanged, including for non-string passwords and numeric tokens, which never matched before and still don't.
 
