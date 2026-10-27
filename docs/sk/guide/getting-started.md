@@ -37,14 +37,6 @@ cd my-api
 composer require tomaj/nette-api
 ```
 
-::: tip Funkcie označené „Od verzie 3.6.0“
-V poslednom vydaní (3.5.0) ešte nie sú. Ak ich chcete vyskúšať pred vydaním 3.6.0, nainštalujte namiesto toho vývojovú verziu:
-
-```bash
-composer require tomaj/nette-api:dev-master
-```
-:::
-
 ## 2. Nasmerujte API na ApiPresenter
 
 Všetky endpointy idú do jedného presentera, `Tomaj\NetteApi\Presenters\ApiPresenter`. V súbore `app/Core/RouterFactory.php` pridajte API routu **pred** všeobecnú routu `<presenter>/<action>`. Inak všeobecná routa zachytí `/api/...` skôr a dostanete 404 z error presentera.

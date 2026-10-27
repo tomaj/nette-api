@@ -16,11 +16,7 @@ composer install
 
 ## Verzia knižnice
 
-Príklady vyžadujú `tomaj/nette-api` `^3.5`, takže `composer install` nainštaluje vydanú verziu 3.5.0. Niektoré používajú funkcie zatiaľ nevydanej 3.6.0, napríklad maskované hlavičky v príklade [Logovanie a chyby](/sk/examples/logging-errors). Kým 3.6.0 nevyjde, nainštalujte najprv vývojovú verziu:
-
-```bash
-composer require tomaj/nette-api:dev-master
-```
+Príklady vyžadujú `tomaj/nette-api` `^3.6`, takže `composer install` nainštaluje posledné vydanie 3.x. Niektoré používajú funkcie pridané vo verzii 3.6.0, napríklad maskované hlavičky v príklade [Logovanie a chyby](/sk/examples/logging-errors).
 
 Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa repozitára `examples/ci/example.sh hello-world`.
 
@@ -40,7 +36,7 @@ Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa re
   { title: 'Testovanie', text: 'PHPUnit testy handlera, parametrov, výstupov a autorizácie.', link: '/sk/examples/testing' },
 ]" />
 
-Všetky príklady potrebujú PHP 8.3 alebo novšie a Composer. Ich `composer.json` požaduje `tomaj/nette-api: ^3.5`.
+Všetky príklady potrebujú PHP 8.3 alebo novšie a Composer. Ich `composer.json` požaduje `tomaj/nette-api: ^3.6`.
 
 ## Časté otázky
 

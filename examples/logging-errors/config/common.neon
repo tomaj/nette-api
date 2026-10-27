@@ -7,7 +7,7 @@ services:
 	apiPresenter:
 		factory: Tomaj\NetteApi\Presenters\ApiPresenter
 		setup:
-			# since 3.6: the logger gets *** instead of the values of Authorization, Proxy-Authorization,
+			# since 3.6.0: the logger gets *** instead of the values of Authorization, Proxy-Authorization,
 			# Cookie, Set-Cookie and X-Api-Key; pass a list to mask other headers instead
 			- setMaskedLogHeaders()
 

@@ -16,11 +16,7 @@ composer install
 
 ## Library version
 
-The examples require `tomaj/nette-api` `^3.5`, so `composer install` gets the released 3.5.0. Some of them use features of the unreleased 3.6.0, for example the masked headers in [Logging and errors](/examples/logging-errors). Until 3.6.0 is released, install the development version first:
-
-```bash
-composer require tomaj/nette-api:dev-master
-```
+The examples require `tomaj/nette-api` `^3.6`, so `composer install` gets the latest 3.x release. Some of them use features added in 3.6.0, for example the masked headers in [Logging and errors](/examples/logging-errors).
 
 To run an example against your local checkout, as CI does, use `examples/ci/example.sh hello-world` from the repository root.
 
@@ -40,7 +36,7 @@ To run an example against your local checkout, as CI does, use `examples/ci/exam
   { title: 'Testing', text: 'PHPUnit tests for a handler, params, outputs and authorization.', link: '/examples/testing' },
 ]" />
 
-All examples need PHP 8.3 or newer and Composer. They use `composer.json` with `tomaj/nette-api: ^3.5`.
+All examples need PHP 8.3 or newer and Composer. They use `composer.json` with `tomaj/nette-api: ^3.6`.
 
 ## FAQ
 

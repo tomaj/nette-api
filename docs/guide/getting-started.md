@@ -37,14 +37,6 @@ cd my-api
 composer require tomaj/nette-api
 ```
 
-::: tip Features marked "Since 3.6.0"
-They are not in the latest release (3.5.0) yet. To try them before 3.6.0 is out, install the development version instead:
-
-```bash
-composer require tomaj/nette-api:dev-master
-```
-:::
-
 ## 2. Route the API to ApiPresenter
 
 All endpoints go to one presenter, `Tomaj\NetteApi\Presenters\ApiPresenter`. In `app/Core/RouterFactory.php`, add the API route **before** the catch-all `<presenter>/<action>` route. Otherwise the catch-all route takes `/api/...` first and you get a 404 from the error presenter.
