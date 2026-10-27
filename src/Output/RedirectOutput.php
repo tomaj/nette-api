@@ -11,6 +11,7 @@ use Tomaj\NetteApi\ValidationResult\ValidationResultInterface;
 
 class RedirectOutput extends AbstractOutput
 {
+    #[\Override]
     public function validate(ResponseInterface $response): ValidationResultInterface
     {
         if (!$response instanceof RedirectResponse) {

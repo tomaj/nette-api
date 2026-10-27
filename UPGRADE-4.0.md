@@ -35,6 +35,36 @@ new BearerTokenAuthorization(new StaticTokenRepository(['token' => '*']), $ipDet
 * `Tomaj\NetteApi\OpenApi\SchemaRegistry` and `Tomaj\NetteApi\OpenApi\EndpointFilter` are `final` (`EndpointFilter` is also `readonly`). Use composition instead of extending them.
 * `SpecBuilder::$pathBuilder` is typed as `PathBuilderInterface`. Constructors of `OpenApiHandler`, `SpecBuilder` and `PathBuilder` accept the builder interfaces, so passing the concrete builders still works.
 
+## Removed setExample()
+
+`InputParam::setExample()` and `AbstractOutput::setExample()` were removed. Use `addExample()`:
+
+```php
+// 3.x
+$param->setExample('abc');
+
+// 4.0
+$param->addExample('default', 'abc');
+```
+
+## Enums
+
+* `Tomaj\NetteApi\Validation\InputType` is a string-backed enum (`InputType::Integer`, ...). The old constants (`InputType::INTEGER` = `'integer'`, ...) are kept, so existing code keeps working. It can no longer be instantiated or extended.
+* The `$valueType` constructor argument of `InputParam` and its subclasses is typed `InputType|string|null`; passing another type (e.g. an int) now throws `TypeError`. `InputValidator::validate()` / `transformType()` accept an `InputType` case or a string.
+* New `Params\ParamType` enum and `InputParam::getParamType()`; `getType()` and the `TYPE_*` constants are unchanged.
+* New `Presenters\CorsMode` enum (`Auto`, `Any`, `Off`); `setCorsHeader()` accepts it or a string. `'auto'` is unchanged.
+
+## Final classes
+
+These classes are now `final`: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, `Output\Configurator\DebuggerConfigurator`, `EnvConfigurator` and `QueryConfigurator`. Implement the interface (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, ...) instead of extending them. Extension points stay open: handlers, params, outputs, responses, authorizations, OpenAPI builders, `ApiDecider`, `ApiLink`, console components and `DefaultApiConsoleFormFactory`.
+
+Overriding methods are marked with `#[\Override]`.
+
+## Value conversion
+
+* `TextApiResponse` with non-string data (e.g. an array) now outputs JSON instead of `Array`.
+* Non-string values in validation messages, IP headers, console fields and OpenAPI examples are converted to strings (scalars directly, other values as JSON) instead of raising warnings or `TypeError`.
+
 ## Renamed constructor parameter
 
 `BasicAuthentication::__construct()` parameter `$autentications` is now `$authentications`. This only matters if you pass it as a named argument.
@@ -46,4 +76,3 @@ new BearerTokenAuthorization(new StaticTokenRepository(['token' => '*']), $ipDet
 ## Unchanged
 
 * `ApiPresenter::setCorsHeader('auto')` still works. Prefer `setCorsAllowedOrigins()` for new code.
-* `InputParam::setExample()` is still available (deprecated); use `addExample()`.

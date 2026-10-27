@@ -34,7 +34,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 | --- | --- | --- |
 | `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | každá jeden vstup | [Parametre](/sk/guide/params) |
 | `Params\InputParam`, `ParamInterface`, `ParamsProcessor` | základná trieda a spracovanie | [Parametre](/sk/guide/params) |
-| `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` | kontroly hodnôt | [Parametre](/sk/guide/params#typy) |
+| `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` (enum) | kontroly hodnôt | [Parametre](/sk/guide/params#typy) |
 | `ValidationResult\ValidationResult(Interface)` | výsledok kontroly | [Parametre](/sk/guide/params) |
 
 ## Odpovede a výstupy
@@ -74,13 +74,15 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 
 `Presenters\ApiPresenter`, `Error\DefaultErrorHandler`, Latte triedy `Link\ApiLinkExtension` a `Link\ApiLinkNode` a interná `Misc\CorsOriginAllowlist` sú `final`; namiesto dedenia ich obaľte. Pozrite si [Spracovanie chýb](/sk/guide/errors#vlastny-error-handler).
 
+Od verzie 4.0 sú `final` aj: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, výstupné konfigurátory `DebuggerConfigurator`, `EnvConfigurator` a `QueryConfigurator` a `OpenApi\SchemaRegistry` a `OpenApi\EndpointFilter`. Namiesto dedenia implementujte príslušné rozhranie (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, …). Handlery, parametre, výstupy, odpovede, autorizácie, OpenAPI buildery, `ApiDecider`, `ApiLink`, komponenty konzoly a `DefaultApiConsoleFormFactory` sa dajú ďalej rozširovať.
+
 ### Kde nájdem signatúry metód?
 
 V zdrojovom kóde na [GitHube](https://github.com/tomaj/nette-api/tree/master/src); stránky príručky ukazujú tie, ktoré používate.
 
 ### Ktoré triedy sú zastarané?
 
-Iba `setExample()` pri parametroch a výstupoch; použite `addExample()`. Staré `StaticBearerTokenRepository` a `BearerTokenRepositoryInterface` boli vo verzii 4.0 odstránené. Použite `StaticTokenRepository` a `TokenRepositoryInterface`, ktoré fungujú rovnako.
+Žiadne. `setExample()` pri parametroch a výstupoch bolo vo verzii 4.0 odstránené; použite `addExample()`. Staré `StaticBearerTokenRepository` a `BearerTokenRepositoryInterface` boli vo verzii 4.0 odstránené. Použite `StaticTokenRepository` a `TokenRepositoryInterface`, ktoré fungujú rovnako.
 
 ### Existuje DI rozšírenie?
 

@@ -24,6 +24,7 @@ class ApiListingHandler extends BaseHandler
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function handle(array $params): ResponseInterface
     {
         $version = $this->getEndpoint()?->getVersion();

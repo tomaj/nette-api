@@ -27,10 +27,11 @@ class SpecBuilder implements SpecBuilderInterface
      * @param ApiLink $apiLink creates links (paths) of apis
      * @param array<string, mixed> $initData structured data merged recursively into the generated spec
      * @param array<string|int, mixed> $allowedEndpoints see EndpointFilter
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      * @throws InvalidLinkException
      * @throws InvalidArgumentException if two schemas contain definition with the same name but different content
      */
+    #[\Override]
     public function build(array $apis, ?string $version, string $baseUrl, ApiLink $apiLink, array $initData = [], array $allowedEndpoints = []): array
     {
         $apis = array_filter($apis, fn(Api $api): bool => ($version ?? '') === $api->getEndpoint()->getVersion());

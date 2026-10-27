@@ -8,6 +8,7 @@ use Latte\Extension;
 
 final class ApiLinkExtension extends Extension
 {
+    #[\Override]
     public function getTags(): array
     {
         return [

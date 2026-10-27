@@ -28,6 +28,7 @@ class CorsPreflightHandler extends BaseHandler implements CorsPreflightHandlerIn
     /**
      * @param array<string,mixed> $params
      */
+    #[\Override]
     public function handle(array $params): ResponseInterface
     {
         foreach ($this->headers as $name => $values) {

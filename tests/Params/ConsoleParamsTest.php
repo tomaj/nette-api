@@ -28,7 +28,7 @@ final class ConsoleParamsTest extends TestCase
     public function testUpdateFormPostInputs(): void
     {
         $inputParams = [
-            new PostInputParam('mykey1')->setRequired()->setExample('Hello world'),
+            new PostInputParam('mykey1')->setRequired()->addExample('default', 'Hello world'),
             new PostInputParam('mykey2')->setMulti(),
             new PostInputParam('mykey3')->setRequired()->setAvailableValues(['a', 'b']),
         ];

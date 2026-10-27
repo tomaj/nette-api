@@ -8,6 +8,7 @@ class CookieInputParam extends InputParam
 {
     protected $type = self::TYPE_COOKIE;
 
+    #[\Override]
     public function getValue(): mixed
     {
         if (!filter_has_var(INPUT_COOKIE, $this->key) && isset($_COOKIE[$this->key])) {

@@ -12,16 +12,19 @@ class RawInputParam extends InputParam
 {
     protected $type = self::TYPE_POST_RAW;
 
+    #[\Override]
     public function setMulti(): InputParam
     {
         throw new Exception('Cannot use multi raw input param');
     }
 
+    #[\Override]
     public function getValue(): mixed
     {
         return file_get_contents('php://input') ?: $this->default;
     }
 
+    #[\Override]
     protected function addFormInput(Form $form, string $key): BaseControl
     {
         return $form->addTextArea('post_raw', $this->getParamLabel())

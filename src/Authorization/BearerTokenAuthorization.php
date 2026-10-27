@@ -23,6 +23,7 @@ class BearerTokenAuthorization extends TokenAuthorization
      * Read HTTP reader with authorization token
      * If everything is ok, it return token. In other situations returns false and set errorMessage.
      */
+    #[\Override]
     protected function readAuthorizationToken(): ?string
     {
         $header = $_SERVER['HTTP_AUTHORIZATION'] ?? null;

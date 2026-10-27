@@ -127,7 +127,7 @@ final class SpecBuilderTest extends TestCase
 
     public function testSchemaThatCannotBeEncodedDoesNotBreakSpec(): void
     {
-        $param = new JsonInputParam('data', '{"type": "number"}')->setExample(INF);
+        $param = new JsonInputParam('data', '{"type": "number"}')->addExample('default', INF);
         $apis = [
             new Api(new EndpointIdentifier('POST', '1', 'a'), new ConfigurableHandler([$param]), new NoAuthorization()),
             new Api(new EndpointIdentifier('GET', '1', 'b'), new ConfigurableHandler(), new NoAuthorization()),

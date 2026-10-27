@@ -23,6 +23,7 @@ class SecuritySchemeBuilder implements SecuritySchemeBuilderInterface
      * @param Api[] $apis
      * @return array<string, array<string, mixed>> security schemes used by apis indexed by scheme name
      */
+    #[\Override]
     final public function build(array $apis): array
     {
         $securitySchemes = [];
@@ -38,6 +39,7 @@ class SecuritySchemeBuilder implements SecuritySchemeBuilderInterface
     /**
      * @return array<int, array<string, array<mixed>>>|null security requirement of operation, null if authorization has no security scheme
      */
+    #[\Override]
     final public function buildRequirement(ApiAuthorizationInterface $authorization): ?array
     {
         $scheme = $this->createScheme($authorization);

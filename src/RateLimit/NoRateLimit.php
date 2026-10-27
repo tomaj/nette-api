@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\RateLimit;
 
-class NoRateLimit implements RateLimitInterface
+final class NoRateLimit implements RateLimitInterface
 {
+    #[\Override]
     public function check(): ?RateLimitResponse
     {
         return null;

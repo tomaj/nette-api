@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\OpenApi;
 
+use Tomaj\NetteApi\Misc\TypeHelper;
+
 /**
  * Decides which endpoints are included in the generated spec
  */
@@ -25,7 +27,7 @@ final readonly class EndpointFilter
 
         foreach ($this->allowedEndpoints as $allowedPath => $allowedMethods) {
             if (is_int($allowedPath)) { // ['user/list'] format
-                $pattern = str_replace('*', '.*?', preg_quote(strtolower($allowedMethods)));
+                $pattern = str_replace('*', '.*?', preg_quote(strtolower(TypeHelper::toString($allowedMethods))));
                 if (preg_match("#$pattern#", strtolower($path))) {
                     return true;
                 }
@@ -42,7 +44,7 @@ final readonly class EndpointFilter
                 if (is_string($allowedMethods) && strtolower($allowedMethods) === strtolower($method)) {
                     return true;
                 }
-                if (is_array($allowedMethods) && in_array(strtolower($method), array_map(strtolower(...), $allowedMethods), true)) {
+                if (is_array($allowedMethods) && in_array(strtolower($method), array_map(static fn (mixed $allowedMethod): string => strtolower(TypeHelper::toString($allowedMethod)), $allowedMethods), true)) {
                     return true;
                 }
             }

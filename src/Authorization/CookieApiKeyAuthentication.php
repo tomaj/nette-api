@@ -14,6 +14,7 @@ class CookieApiKeyAuthentication extends TokenAuthorization
         parent::__construct($tokenRepository, $ipDetector);
     }
 
+    #[\Override]
     protected function readAuthorizationToken(): ?string
     {
         $apiKey = $_COOKIE[$this->cookieName] ?? null;

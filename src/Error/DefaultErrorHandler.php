@@ -17,6 +17,7 @@ final readonly class DefaultErrorHandler implements ErrorHandlerInterface
     {
     }
 
+    #[\Override]
     public function handle(Throwable $exception, array $params): JsonApiResponse
     {
         Debugger::log($exception, Debugger::EXCEPTION);
@@ -29,6 +30,7 @@ final readonly class DefaultErrorHandler implements ErrorHandlerInterface
         return $response;
     }
 
+    #[\Override]
     public function handleInputParams(array $errors): JsonApiResponse
     {
         if ($this->outputConfigurator->showErrorDetail()) {
@@ -40,6 +42,7 @@ final readonly class DefaultErrorHandler implements ErrorHandlerInterface
         return $response;
     }
 
+    #[\Override]
     public function handleSchema(array $errors, array $params): JsonApiResponse
     {
         Debugger::log($errors, Debugger::ERROR);
@@ -53,11 +56,13 @@ final readonly class DefaultErrorHandler implements ErrorHandlerInterface
         return $response;
     }
 
+    #[\Override]
     public function handleAuthorization(ApiAuthorizationInterface $auth, array $params): JsonApiResponse
     {
         return new JsonApiResponse(Response::S401_UNAUTHORIZED, ['status' => 'error', 'message' => $auth->getErrorMessage()]);
     }
 
+    #[\Override]
     public function handleAuthorizationException(Throwable $exception, array $params): JsonApiResponse
     {
         return new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, ['status' => 'error', 'message' => $exception->getMessage()]);

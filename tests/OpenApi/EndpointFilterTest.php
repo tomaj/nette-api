@@ -36,4 +36,11 @@ final class EndpointFilterTest extends TestCase
     {
         $this->assertSame($expected, new EndpointFilter($allowedEndpoints)->isAllowed($path, $method));
     }
+
+    public function testPathDotIsLiteral(): void
+    {
+        $filter = new EndpointFilter(['v1.list']);
+        $this->assertTrue($filter->isAllowed('v1.list', 'GET'));
+        $this->assertFalse($filter->isAllowed('v1xlist', 'GET'));
+    }
 }

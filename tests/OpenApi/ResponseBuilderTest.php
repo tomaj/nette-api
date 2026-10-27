@@ -35,7 +35,7 @@ final class ResponseBuilderTest extends TestCase
     public function testJsonOutputWithExampleAndDefinitions(): void
     {
         $registry = new SchemaRegistry();
-        $output = new JsonOutput(200, '{"$ref": "#/definitions/Item", "definitions": {"Item": {"type": ["integer", "null"]}}}', 'Item')->setExample('5');
+        $output = new JsonOutput(200, '{"$ref": "#/definitions/Item", "definitions": {"Item": {"type": ["integer", "null"]}}}', 'Item')->addExample('default', '5');
 
         $responses = new ResponseBuilder()->build(new ConfigurableHandler([], [$output]), new NoAuthorization(), false, $registry);
 
@@ -62,7 +62,7 @@ final class ResponseBuilderTest extends TestCase
     public function testNonStringExamples(): void
     {
         $responses = new ResponseBuilder()->build(new ConfigurableHandler([], [
-            new JsonOutput(200, '{"type": "integer"}')->setExample(42),
+            new JsonOutput(200, '{"type": "integer"}')->addExample('default', 42),
             new JsonOutput(201, '{"type": "boolean"}')->addExample('yes', true)->addExample('no', false),
         ]), new NoAuthorization(), false, new SchemaRegistry());
 

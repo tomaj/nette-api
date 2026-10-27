@@ -18,6 +18,7 @@ class BasicAuthentication implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function authorized(): bool
     {
         $urlScript = $this->httpRequest->getUrl();
@@ -33,6 +34,7 @@ class BasicAuthentication implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getErrorMessage(): ?string
     {
         return 'Incorrect username or password';

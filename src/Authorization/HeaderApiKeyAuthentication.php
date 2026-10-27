@@ -14,6 +14,7 @@ class HeaderApiKeyAuthentication extends TokenAuthorization
         parent::__construct($tokenRepository, $ipDetector);
     }
 
+    #[\Override]
     protected function readAuthorizationToken(): ?string
     {
         $headerName = 'HTTP_' . strtoupper(str_replace('-', '_', $this->headerName));

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Misc;
 
-class StaticTokenRepository implements TokenRepositoryInterface
+final class StaticTokenRepository implements TokenRepositoryInterface
 {
     /**
      *
@@ -28,6 +28,7 @@ class StaticTokenRepository implements TokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function validToken(string $token): bool
     {
         // constant-time comparison; every key is checked so the timing does not reveal which token matched
@@ -45,6 +46,7 @@ class StaticTokenRepository implements TokenRepositoryInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function ipRestrictions(string $token): ?string
     {
         return $this->validTokens[$token] ?? null;

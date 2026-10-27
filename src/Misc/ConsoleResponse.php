@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Misc;
 
-class ConsoleResponse
+final class ConsoleResponse
 {
     private ?int $responseCode = null;
 
@@ -24,7 +24,7 @@ class ConsoleResponse
      * @param array<string,mixed> $postFields
      * @param array<string,mixed> $getFields
      * @param array<string,mixed> $cookieFields
-     * @param array<string,mixed> $headers
+     * @param array<array-key,string> $headers
      */
     public function __construct(private readonly string $url, private readonly string $method, private readonly array $postFields = [], private readonly array $getFields = [], private readonly array $cookieFields = [], private readonly array $headers = [], private readonly ?string $rawPost = null)
     {
@@ -86,7 +86,7 @@ class ConsoleResponse
     }
 
     /**
-     * @return array<string,mixed>
+     * @return array<array-key,string>
      */
     public function getHeaders(): array
     {

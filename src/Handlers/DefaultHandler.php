@@ -14,6 +14,7 @@ class DefaultHandler extends BaseHandler
      * {@inheritdoc}
      * @param array<string,mixed> $params
      */
+    #[\Override]
     public function handle(array $params): ResponseInterface
     {
         return new JsonApiResponse(IResponse::S404_NOT_FOUND, ['status' => 'error', 'message' => 'Unknown api endpoint']);

@@ -21,11 +21,14 @@ description: Declare and validate input in Nette API - GET, POST, PUT, cookie, f
 | `RawInputParam` | the whole request body as a string | `setMulti()` throws |
 | `JsonInputParam` | the whole request body, decoded as JSON | needs a JSON schema; `setMulti()` throws |
 
-The second constructor argument of the first two is the type, one of the `Tomaj\NetteApi\Validation\InputType` constants:
+The second constructor argument of the first two is the type, a case of the `Tomaj\NetteApi\Validation\InputType` enum or its string constant:
 
 ```php
-new GetInputParam('limit', InputType::INTEGER);
+new GetInputParam('limit', InputType::Integer);
+new GetInputParam('limit', InputType::INTEGER); // the string 'integer', works the same
 ```
+
+`$param->getParamType()` returns where the param is read from as a `Params\ParamType` enum (`getType()` still returns the string).
 
 ## Settings
 
@@ -38,7 +41,7 @@ All params share a fluent API:
 | `setAvailableValues([...])` | only these values pass, else `Field contains not available value(s)`. Keys of an associative array are the values, the array values are labels for the console. |
 | `setMulti()` | expects an array, `?id[]=1&id[]=2`; types and allowed values apply to every item |
 | `setDescription()` | shown in OpenAPI and the console |
-| `addExample($name, $value)` / `setExample($value)` | shown in OpenAPI and prefilled in the console |
+| `addExample($name, $value)` | shown in OpenAPI and prefilled in the console |
 
 ## Types
 

@@ -21,11 +21,13 @@ class RedirectResponse implements ResponseInterface
         return $this->url;
     }
 
+    #[\Override]
     public function getCode(): int
     {
         return $this->httpCode;
     }
 
+    #[\Override]
     public function send(IRequest $httpRequest, IResponse $httpResponse): void
     {
         $httpResponse->redirect($this->url, $this->httpCode);

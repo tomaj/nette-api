@@ -6,25 +6,27 @@ namespace Tomaj\NetteApi\Output\Configurator;
 
 use Nette\Http\Request;
 
-class QueryConfigurator implements ConfiguratorInterface
+final readonly class QueryConfigurator implements ConfiguratorInterface
 {
     /**
      * @param string $schemaValidateParam Name of get parameter to enable schema validation
      * @param string $errorDetailParam Name of get parameter to show additional info in error response
      */
     public function __construct(
-        private readonly Request $request,
-        private readonly string $schemaValidateParam = 'schema_validate',
-        private readonly string $errorDetailParam = 'error_detail'
+        private Request $request,
+        private string $schemaValidateParam = 'schema_validate',
+        private string $errorDetailParam = 'error_detail'
     ) {
     }
 
+    #[\Override]
     public function validateSchema(): bool
     {
         $getParam = $this->request->getQuery($this->schemaValidateParam);
         return $getParam !== null && $getParam !== '0' && $getParam !== 'false';
     }
 
+    #[\Override]
     public function showErrorDetail(): bool
     {
         $getParam = $this->request->getQuery($this->errorDetailParam);

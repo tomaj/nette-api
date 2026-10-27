@@ -17,6 +17,7 @@ class JsonOutput extends AbstractOutput
         parent::__construct($code, $description);
     }
 
+    #[\Override]
     public function validate(ResponseInterface $response): ValidationResultInterface
     {
         if (!$response instanceof JsonApiResponse) {

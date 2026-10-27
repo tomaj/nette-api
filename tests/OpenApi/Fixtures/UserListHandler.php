@@ -39,7 +39,7 @@ class UserListHandler extends BaseHandler
         return [
             new GetInputParam('status')->setAvailableValues(['active' => 'Active users', 'blocked' => 'Blocked users'])->setDescription('User status'),
             new GetInputParam('order')->setAvailableValues(['asc', 'desc'])->setDefault('asc'),
-            new GetInputParam('ids')->setMulti()->setRequired()->setExample('1'),
+            new GetInputParam('ids')->setMulti()->setRequired()->addExample('default', '1'),
             new GetInputParam('page')->setDescription('Page number'),
             new CookieInputParam('session')->setDescription('Session id'),
         ];
@@ -49,7 +49,7 @@ class UserListHandler extends BaseHandler
     {
         $schema = '{"type": "object", "properties": {"users": {"type": "array", "items": {"$ref": "#/definitions/User"}}, "next": {"type": ["string", "null"]}}, "definitions": {"User": {"type": "object", "properties": {"id": {"type": "integer"}, "email": {"type": ["string", "null"]}}}}}';
         return [
-            new JsonOutput(200, $schema, 'List of users')->setExample(['users' => [['id' => 1, 'email' => null]], 'next' => null]),
+            new JsonOutput(200, $schema, 'List of users')->addExample('default', ['users' => [['id' => 1, 'email' => null]], 'next' => null]),
             (new JsonOutput(200, '{"type": "string"}', 'Empty list message')),
             new JsonOutput(206, '{"type": "object"}', 'Partial')->addExample('first', '{"a": 1}')->addExample('second', ['b' => 2]),
             new RedirectOutput(302, 'Redirect to new listing'),

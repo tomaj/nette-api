@@ -146,4 +146,11 @@ final class SchemaTransformerTest extends TestCase
         OpenApiTransform::transformTypes($schema);
         $this->assertEquals($expected, $schema);
     }
+
+    public function testMultipleTypesAreAppendedToExistingOneOf(): void
+    {
+        $schema = ['type' => ['string', 'integer'], 'oneOf' => [['type' => 'boolean']]];
+        OpenApiTransform::transformTypes($schema);
+        $this->assertSame(['oneOf' => [['type' => 'boolean'], ['type' => 'string'], ['type' => 'integer']]], $schema);
+    }
 }

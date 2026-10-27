@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Authorization;
 
-class NoAuthorization implements ApiAuthorizationInterface
+final class NoAuthorization implements ApiAuthorizationInterface
 {
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function authorized(): bool
     {
         return true;
@@ -17,6 +18,7 @@ class NoAuthorization implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getErrorMessage(): ?string
     {
         return null;

@@ -32,6 +32,8 @@ services:
 			- setCorsHeader('https://app.example.com')
 ```
 
+V PHP môžete namiesto preddefinovaných reťazcov odovzdať enum `Presenters\CorsMode`: `CorsMode::Any` (`'*'`), `CorsMode::Auto` (`'auto'`) a `CorsMode::Off` (`'off'`).
+
 Toto je jediná služba `apiPresenter` zo stránky [Začíname](/sk/guide/getting-started#_3-zaregistrujte-sluzby): pridajte k nej tieto riadky `setup:`, alebo dajte blok pod rovnakým názvom do iného konfiguračného súboru a Nette ich zlúči. Druhú službu `ApiPresenter` neregistrujte; dve skončia chybou „Multiple services of type Tomaj\NetteApi\Presenters\ApiPresenter found“.
 
 ## Povolené originy

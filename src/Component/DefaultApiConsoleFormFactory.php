@@ -22,6 +22,7 @@ class DefaultApiConsoleFormFactory implements ApiConsoleFormFactoryInterface
 {
     private const int HTTP_PORT = 80;
 
+    #[\Override]
     public function create(
         IRequest $request,
         EndpointInterface $endpoint,
@@ -65,7 +66,7 @@ class DefaultApiConsoleFormFactory implements ApiConsoleFormFactoryInterface
 
         $uri = $request->getUrl();
         $scheme = $uri->scheme;
-        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && is_string($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
             $scheme = $_SERVER['HTTP_X_FORWARDED_PROTO'];
         }
 

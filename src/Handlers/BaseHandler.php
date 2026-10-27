@@ -34,6 +34,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function summary(): string
     {
         return '';
@@ -42,6 +43,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function description(): string
     {
         return '';
@@ -50,6 +52,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function params(): array
     {
         return [];
@@ -59,6 +62,7 @@ abstract class BaseHandler implements ApiHandlerInterface
      * {@inheritdoc}
      * @return string[]
      */
+    #[\Override]
     public function tags(): array
     {
         return [];
@@ -67,6 +71,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function deprecated(): bool
     {
         return false;
@@ -75,6 +80,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function outputs(): array
     {
         return [];
@@ -92,6 +98,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     final public function setEndpointIdentifier(EndpointInterface $endpoint): void
     {
         $this->endpoint = $endpoint;
@@ -142,5 +149,6 @@ abstract class BaseHandler implements ApiHandlerInterface
      * {@inheritdoc}
      * @param array<string,mixed> $params
      */
+    #[\Override]
     abstract public function handle(array $params): ResponseInterface;
 }

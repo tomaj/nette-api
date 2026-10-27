@@ -40,6 +40,7 @@ class OpenApiHandler extends BaseHandler
     /**
      * @return InputParam[]
      */
+    #[\Override]
     public function params(): array
     {
         $availableFormats = ['json'];
@@ -55,6 +56,7 @@ class OpenApiHandler extends BaseHandler
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function description(): string
     {
         return 'Open API';
@@ -64,6 +66,7 @@ class OpenApiHandler extends BaseHandler
      * {@inheritdoc}
      * @return string[]
      */
+    #[\Override]
     public function tags(): array
     {
         return ['openapi'];
@@ -73,6 +76,7 @@ class OpenApiHandler extends BaseHandler
      * {@inheritdoc}
      * @param array<string,mixed> $params
      */
+    #[\Override]
     public function handle(array $params): ResponseInterface
     {
         $this->specBuilder ??= new SpecBuilder();

@@ -4,18 +4,19 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Output\Configurator;
 
-class EnvConfigurator implements ConfiguratorInterface
+final readonly class EnvConfigurator implements ConfiguratorInterface
 {
     /**
      * @param string $envVariable Which environment variable to check for production value
      * @param string $productionValue Value that indicates production environment eg. 'production' or 'prod'...
      */
     public function __construct(
-        private readonly string $envVariable = 'APP_ENV',
-        private readonly string $productionValue = 'production'
+        private string $envVariable = 'APP_ENV',
+        private string $productionValue = 'production'
     ) {
     }
 
+    #[\Override]
     public function validateSchema(): bool
     {
         $appEnv = getenv($this->envVariable);
@@ -26,6 +27,7 @@ class EnvConfigurator implements ConfiguratorInterface
         return true;
     }
 
+    #[\Override]
     public function showErrorDetail(): bool
     {
         $appEnv = getenv($this->envVariable);

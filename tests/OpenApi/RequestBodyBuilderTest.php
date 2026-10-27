@@ -28,7 +28,7 @@ final class RequestBodyBuilderTest extends TestCase
         $param = new JsonInputParam('data', '{"$ref": "#/definitions/Item", "definitions": {"Item": {"type": "string"}}}')
             ->setRequired()
             ->setDescription('Data')
-            ->setExample('"abc"');
+            ->addExample('default', '"abc"');
 
         $body = new RequestBodyBuilder()->build(new ConfigurableHandler([$param]), $registry);
 
@@ -54,7 +54,7 @@ final class RequestBodyBuilderTest extends TestCase
 
     public function testJsonBodyWithNonStringExamples(): void
     {
-        $single = new JsonInputParam('count', '{"type": "integer"}')->setExample(5);
+        $single = new JsonInputParam('count', '{"type": "integer"}')->addExample('default', 5);
         $multiple = new JsonInputParam('flag', '{"type": "boolean"}')->addExample('yes', true)->addExample('no', false);
 
         $builder = new RequestBodyBuilder();
@@ -65,7 +65,7 @@ final class RequestBodyBuilderTest extends TestCase
     public function testRawBody(): void
     {
         $body = new RequestBodyBuilder()->build(new ConfigurableHandler([
-            new RawInputParam('raw')->setDescription('Raw')->setRequired()->setExample('text'),
+            new RawInputParam('raw')->setDescription('Raw')->setRequired()->addExample('default', 'text'),
         ]), new SchemaRegistry());
 
         $this->assertSame([
@@ -80,7 +80,7 @@ final class RequestBodyBuilderTest extends TestCase
     public function testFormBody(): void
     {
         $body = new RequestBodyBuilder()->build(new ConfigurableHandler([
-            new PostInputParam('name')->setRequired()->setExample('John'),
+            new PostInputParam('name')->setRequired()->addExample('default', 'John'),
             new PutInputParam('tags')->setMulti()->setAvailableValues(['a' => 'Tag A'])->setDefault('a'),
         ]), new SchemaRegistry());
 

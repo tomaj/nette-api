@@ -30,7 +30,7 @@ npm run docs:links    # kontrola odkazov v zostavenom webe
 
 ### Ako spustím testy?
 
-`composer test` spustí PHPUnit. Každý projekt príkladu má aj `e2e.sh`, pozrite si [Príklady](/sk/examples/).
+`composer test` spustí PHPUnit. `composer coverage` navyše zapíše reporty pokrytia do `build/` (potrebuje Xdebug). Každý projekt príkladu má aj `e2e.sh`, pozrite si [Príklady](/sk/examples/).
 
 ### Musím so zmenou upraviť aj dokumentáciu?
 

@@ -21,11 +21,14 @@ description: Deklarácia a validácia vstupu v Nette API - GET, POST, PUT, cooki
 | `RawInputParam` | celé telo požiadavky ako reťazec | `setMulti()` vyhodí výnimku |
 | `JsonInputParam` | celé telo požiadavky dekódované ako JSON | potrebuje JSON schému; `setMulti()` vyhodí výnimku |
 
-Druhý argument konštruktora prvých dvoch je typ, jedna z konštánt `Tomaj\NetteApi\Validation\InputType`:
+Druhý argument konštruktora prvých dvoch je typ, prípad enumu `Tomaj\NetteApi\Validation\InputType` alebo jeho reťazcová konštanta:
 
 ```php
-new GetInputParam('limit', InputType::INTEGER);
+new GetInputParam('limit', InputType::Integer);
+new GetInputParam('limit', InputType::INTEGER); // reťazec 'integer', funguje rovnako
 ```
+
+`$param->getParamType()` vráti, odkiaľ sa parameter číta, ako enum `Params\ParamType` (`getType()` stále vracia reťazec).
 
 ## Nastavenia
 
@@ -38,7 +41,7 @@ Všetky parametre majú spoločné fluent API:
 | `setAvailableValues([...])` | prejdú len tieto hodnoty, inak `Field contains not available value(s)`. Pri asociatívnom poli sú hodnotami kľúče, hodnoty poľa sú popisky pre konzolu. |
 | `setMulti()` | očakáva pole, `?id[]=1&id[]=2`; typy a povolené hodnoty platia pre každú položku |
 | `setDescription()` | zobrazí sa v OpenAPI a v konzole |
-| `addExample($name, $value)` / `setExample($value)` | zobrazí sa v OpenAPI a predvyplní v konzole |
+| `addExample($name, $value)` | zobrazí sa v OpenAPI a predvyplní v konzole |
 
 ## Typy
 

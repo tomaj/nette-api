@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Misc;
 
-class IpDetector implements IpDetectorInterface
+final class IpDetector implements IpDetectorInterface
 {
     /**
      * {@inheritdoc}
      */
+    #[\Override]
     public function getRequestIp(): string
     {
         if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
@@ -21,6 +22,6 @@ class IpDetector implements IpDetectorInterface
             $ip = 'cli';
         }
 
-        return $ip;
+        return TypeHelper::toString($ip);
     }
 }

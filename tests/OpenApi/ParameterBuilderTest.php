@@ -34,7 +34,7 @@ final class ParameterBuilderTest extends TestCase
     public function testMultiRequiredParamWithExample(): void
     {
         $parameters = new ParameterBuilder()->build(new ConfigurableHandler([
-            new GetInputParam('ids')->setMulti()->setRequired()->setDescription('Ids')->setExample('5'),
+            new GetInputParam('ids')->setMulti()->setRequired()->setDescription('Ids')->addExample('default', '5'),
         ]));
 
         $this->assertSame([[

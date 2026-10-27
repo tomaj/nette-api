@@ -34,7 +34,7 @@ All classes live under `Tomaj\NetteApi`.
 | --- | --- | --- |
 | `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | one input each | [Params](/guide/params) |
 | `Params\InputParam`, `ParamInterface`, `ParamsProcessor` | the base class and the processing | [Params](/guide/params) |
-| `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` | value checks | [Params](/guide/params#types) |
+| `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` (enum) | value checks | [Params](/guide/params#types) |
 | `ValidationResult\ValidationResult(Interface)` | the result of a check | [Params](/guide/params) |
 
 ## Responses and outputs
@@ -74,13 +74,15 @@ All classes live under `Tomaj\NetteApi`.
 
 `Presenters\ApiPresenter`, `Error\DefaultErrorHandler`, the Latte classes `Link\ApiLinkExtension` and `Link\ApiLinkNode`, and the internal `Misc\CorsOriginAllowlist` are `final`; wrap them instead of extending. See [Error handling](/guide/errors#your-own-error-handler).
 
+Since 4.0 these are `final` too: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, the output configurators `DebuggerConfigurator`, `EnvConfigurator` and `QueryConfigurator`, and `OpenApi\SchemaRegistry` and `OpenApi\EndpointFilter`. Implement the matching interface (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, …) instead of extending them. Handlers, params, outputs, responses, authorizations, the OpenAPI builders, `ApiDecider`, `ApiLink`, the console components and `DefaultApiConsoleFormFactory` stay open for extension.
+
 ### Where are the method signatures?
 
 In the source on [GitHub](https://github.com/tomaj/nette-api/tree/master/src); the guide pages show the ones you use.
 
 ### Which classes are deprecated?
 
-Only `setExample()` on params and outputs; use `addExample()`. The old `StaticBearerTokenRepository` and `BearerTokenRepositoryInterface` were removed in 4.0. Use `StaticTokenRepository` and `TokenRepositoryInterface`, which work the same way.
+None. `setExample()` on params and outputs was removed in 4.0; use `addExample()`. The old `StaticBearerTokenRepository` and `BearerTokenRepositoryInterface` were removed in 4.0. Use `StaticTokenRepository` and `TokenRepositoryInterface`, which work the same way.
 
 ### Is there a DI extension?
 
