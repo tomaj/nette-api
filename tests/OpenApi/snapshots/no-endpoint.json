@@ -1,0 +1,80 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "version": null,
+        "title": "Nette API"
+    },
+    "servers": [
+        {
+            "url": "https://example.com"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "ErrorWrongInput": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "error"
+                        ]
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "status",
+                    "message"
+                ]
+            },
+            "ErrorUnauthorized": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "error"
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "enum": [
+                            "Authorization header HTTP_Authorization is not set",
+                            "Authorization header contains invalid structure",
+                            "Authorization header doesn't contain bearer token",
+                            "API key is not set"
+                        ]
+                    }
+                },
+                "required": [
+                    "status",
+                    "message"
+                ]
+            },
+            "InternalServerError": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "error"
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "enum": [
+                            "Internal server error"
+                        ]
+                    }
+                },
+                "required": [
+                    "status",
+                    "message"
+                ]
+            }
+        }
+    },
+    "paths": []
+}

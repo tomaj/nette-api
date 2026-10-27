@@ -4,27 +4,14 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Handlers;
 
-use InvalidArgumentException;
-use Nette\Application\UI\InvalidLinkException;
 use Nette\Http\IResponse;
 use Nette\Http\Request;
 use Symfony\Component\Yaml\Yaml;
-use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
-use Tomaj\NetteApi\Authorization\BasicAuthentication;
-use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
-use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
-use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
-use Tomaj\NetteApi\Authorization\NoAuthorization;
-use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\Link\ApiLink;
-use Tomaj\NetteApi\Misc\OpenApiTransform;
-use Tomaj\NetteApi\Output\JsonOutput;
-use Tomaj\NetteApi\Output\RedirectOutput;
+use Tomaj\NetteApi\OpenApi\SpecBuilder;
 use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Params\InputParam;
-use Tomaj\NetteApi\Params\JsonInputParam;
-use Tomaj\NetteApi\Params\RawInputParam;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
 use Tomaj\NetteApi\Response\TextApiResponse;
@@ -43,17 +30,18 @@ class OpenApiHandler extends BaseHandler
     /** @var array<string,mixed> */
     private $initData = [];
 
-    /** @var array<string,mixed> */
-    private $definitions = [];
-
     /** @var array<string|int, mixed> */
     private $allowedEndpoints = [];
+
+    /** @var SpecBuilder|null */
+    private $specBuilder;
 
     /**
      * OpenApiHandler constructor.
      * @param array<string,mixed> $initData - structured data for initialization response
      * @param array<string|int, mixed> $allowedEndpoints - list of endpoint (path and methods) which should be included in output, empty means all, wildcard * is supported for path
      *      Example: ['user/*' => ['get', 'post', 'delete'], 'user/list' => 'post', 'user/list' => [], 'user/list']
+     * @param SpecBuilder|null $specBuilder - builder of the spec, default builders are used if not set
      */
     public function __construct(
         ApiDecider $apiDecider,
@@ -61,6 +49,7 @@ class OpenApiHandler extends BaseHandler
         Request $request,
         array $initData = [],
         array $allowedEndpoints = [],
+        ?SpecBuilder $specBuilder = null,
     ) {
         parent::__construct();
         $this->apiDecider = $apiDecider;
@@ -68,6 +57,7 @@ class OpenApiHandler extends BaseHandler
         $this->request = $request;
         $this->initData = $initData;
         $this->allowedEndpoints = $allowedEndpoints;
+        $this->specBuilder = $specBuilder;
     }
 
     /**
@@ -108,621 +98,20 @@ class OpenApiHandler extends BaseHandler
      */
     public function handle(array $params): ResponseInterface
     {
-        $version = $this->getEndpoint()?->getVersion();
-        $apis = $this->getApis($version ?: '');
-        $scheme = $this->request->getUrl()->getScheme();
-        $baseUrl = $this->request->getUrl()->getHostUrl();
-        $basePath = $this->getBasePath($apis, $baseUrl);
-
-        $securitySchemes = [];
-
-        foreach ($apis as $api) {
-            $authorization = $api->getAuthorization();
-            if ($authorization instanceof BasicAuthentication) {
-                $securitySchemes['Basic'] = [
-                    'type' => 'http',
-                    'scheme' => 'basic',
-                ];
-                continue;
-            }
-
-            if ($authorization instanceof BearerTokenAuthorization) {
-                $securitySchemes['Bearer'] = [
-                    'type' => 'http',
-                    'scheme' => 'bearer',
-                ];
-                continue;
-            }
-
-            if ($authorization instanceof QueryApiKeyAuthentication) {
-                $queryParamName = $authorization->getQueryParamName();
-                $securitySchemes[$this->normalizeSecuritySchemeName('query', $queryParamName)] = [
-                    'type' => 'apiKey',
-                    'in' => 'query',
-                    'name' => $queryParamName,
-                ];
-                continue;
-            }
-
-            if ($authorization instanceof HeaderApiKeyAuthentication) {
-                $headerName = $authorization->getHeaderName();
-                $securitySchemes[$this->normalizeSecuritySchemeName('header', $headerName)] = [
-                    'type' => 'apiKey',
-                    'in' => 'header',
-                    'name' => $headerName,
-                ];
-                continue;
-            }
-
-            if ($authorization instanceof CookieApiKeyAuthentication) {
-                $cookieName = $authorization->getCookieName();
-                $securitySchemes[$this->normalizeSecuritySchemeName('cookie', $cookieName)] = [
-                    'type' => 'apiKey',
-                    'in' => 'cookie',
-                    'name' => $cookieName,
-                ];
-                continue;
-            }
-        }
-
-        $data = [
-            'openapi' => '3.0.0',
-            'info' => [
-                'version' => $version,
-                'title' => 'Nette API',
-            ],
-            'servers' => [
-                [
-                    'url' => $baseUrl . $basePath,
-                ],
-            ],
-            'components' => [
-                'securitySchemes' => $securitySchemes,
-                'schemas' => [
-                    'ErrorWrongInput' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'status' => [
-                                'type' => 'string',
-                                'enum' => ['error'],
-                            ],
-                            'message' => [
-                                'type' => 'string',
-                            ],
-                        ],
-                        'required' => ['status', 'message'],
-                    ],
-                    'ErrorUnauthorized' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'status' => [
-                                'type' => 'string',
-                                'enum' => ['error'],
-                            ],
-                            'message' => [
-                                'type' => 'string',
-                                'enum' => ['Authorization header HTTP_Authorization is not set', 'Authorization header contains invalid structure', 'Authorization header doesn\'t contain bearer token', 'API key is not set'],
-                            ],
-                        ],
-                        'required' => ['status', 'message'],
-                    ],
-                    'InternalServerError' => [
-                        'type' => 'object',
-                        'properties' => [
-                            'status' => [
-                                'type' => 'string',
-                                'enum' => ['error'],
-                            ],
-                            'message' => [
-                                'type' => 'string',
-                                'enum' => ['Internal server error'],
-                            ],
-                        ],
-                        'required' => ['status', 'message'],
-                    ],
-                ],
-            ],
-
-            'paths' => $this->getPaths($apis, $baseUrl, $basePath),
-        ];
-
-        if (!$securitySchemes) {
-            unset($data['components']['securitySchemes']);
-        }
-
-        if (!empty($this->definitions)) {
-            $data['components']['schemas'] = array_merge($this->definitions, $data['components']['schemas']);
-        }
-
-        $data = array_replace_recursive($data, $this->initData);
+        $this->specBuilder ??= new SpecBuilder();
+        $data = $this->specBuilder->build(
+            $this->apiDecider->getApis(),
+            $this->getEndpoint()?->getVersion(),
+            $this->request->getUrl()->getHostUrl(),
+            $this->apiLink,
+            $this->initData,
+            $this->allowedEndpoints,
+        );
 
         if ($params['format'] === 'yaml') {
             return new TextApiResponse(IResponse::S200_OK, Yaml::dump($data, PHP_INT_MAX, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE));
         }
 
         return new JsonApiResponse(IResponse::S200_OK, $data);
-    }
-
-    /**
-     * @return Api[]
-     */
-    private function getApis(string $version): array
-    {
-        return array_filter($this->apiDecider->getApis(), function (Api $api) use ($version) {
-            return $version === $api->getEndpoint()->getVersion();
-        });
-    }
-
-    /**
-     * @param Api[] $versionApis
-     * @return array<string,mixed>
-     * @throws InvalidLinkException
-     */
-    private function getPaths(array $versionApis, string $baseUrl, string $basePath): array
-    {
-        $list = [];
-        foreach ($versionApis as $api) {
-            $handler = $api->getHandler();
-            $path = str_replace([$baseUrl, $basePath], '', $this->apiLink->link($api->getEndpoint()));
-            $responses = [];
-            $endpointPath = str_replace('v' . $api->getEndpoint()->getVersion() . '/', '', $api->getEndpoint()->getUrl());
-            if (!$this->isPathAllowed($endpointPath, $api->getEndpoint()->getMethod())) {
-                continue;
-            }
-
-            $settings = [
-                'summary' => $handler->summary(),
-                'description' => $handler->description(),
-                'tags' => $handler->tags(),
-            ];
-
-            if ($handler->deprecated()) {
-                $settings['deprecated'] = true;
-            }
-
-            $parameters = $this->createParamsList($handler);
-            $requestBody = $this->createRequestBody($handler);
-
-            if (!empty($parameters) || !empty($requestBody)) {
-                $responses[IResponse::S400_BAD_REQUEST] = [
-                    'description' => 'Bad request',
-                    'content' => [
-                        'application/json; charset=utf-8' => [
-                            'schema' => [
-                                '$ref' => '#/components/schemas/ErrorWrongInput',
-                            ],
-                        ],
-                    ],
-                ];
-            }
-
-            $authorization = $api->getAuthorization();
-
-            if (!$authorization instanceof NoAuthorization) {
-                $responses[IResponse::S401_Unauthorized] = [
-                    'description' => 'Operation forbidden',
-                    'content' => [
-                        'application/json; charset=utf-8' => [
-                            'schema' => [
-                                '$ref' => '#/components/schemas/ErrorUnauthorized',
-                            ],
-                        ],
-                    ],
-                ];
-            }
-
-            $responses[IResponse::S500_INTERNAL_SERVER_ERROR] = [
-                'description' => 'Internal server error',
-                'content' => [
-                    'application/json; charset=utf-8' => [
-                        'schema' => [
-                            '$ref' => '#/components/schemas/InternalServerError',
-                        ],
-                    ],
-                ],
-            ];
-
-            foreach ($handler->outputs() as $output) {
-                if ($output instanceof JsonOutput) {
-                    $schema = $this->transformSchema(json_decode($output->getSchema(), true));
-                    if (!isset($responses[$output->getCode()])) {
-                        $responses[$output->getCode()] = [
-                            'description' => $output->getDescription(),
-                            'content' => [
-                                'application/json; charset=utf-8' => [
-                                    'schema' => $schema,
-                                ],
-                            ],
-                        ];
-                        if (!empty($examples = $output->getExamples())) {
-                            if (count($examples) === 1) {
-                                $example = is_array($output->getExample()) ? $output->getExample() : json_decode($output->getExample(), true);
-                                $responses[$output->getCode()]['content']['application/json; charset=utf-8']['example'] = $example;
-                            } else {
-                                foreach ($examples as $exampleKey => $example) {
-                                    $example = is_array($example) ? $example : json_decode($example, true);
-                                    $responses[$output->getCode()]['content']['application/json; charset=utf-8']['examples'][$exampleKey] = $example;
-                                }
-                            }
-                        }
-                    } else {
-                        if (!isset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'])) {
-                            /** @phpstan-ignore-next-line */
-                            $tmp = $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'];
-                            unset($responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']);
-                            $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema'] = [
-                                'oneOf' => [],
-                            ];
-                            $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $tmp;
-                        }
-
-                        $responses[$output->getCode()]['content']['application/json; charset=utf-8']['schema']['oneOf'][] = $schema;
-                    }
-                }
-
-                if ($output instanceof RedirectOutput) {
-                    $responses[$output->getCode()] = [
-                        'description' => 'Redirect',
-                        'headers' => [
-                            'Location' => [
-                                'description' => $output->getDescription(),
-                                'schema' => [
-                                    'type' => 'string',
-                                ],
-                            ],
-                        ],
-                    ];
-                }
-            }
-
-            if (!empty($parameters)) {
-                $settings['parameters'] = $parameters;
-            }
-
-            if (!empty($requestBody)) {
-                $settings['requestBody'] = $requestBody;
-            }
-
-            if ($authorization instanceof BearerTokenAuthorization) {
-                $settings['security'] = [
-                    [
-                        'Bearer' => [],
-                    ],
-                ];
-            } elseif ($authorization instanceof BasicAuthentication) {
-                $settings['security'] = [
-                    [
-                        'Basic' => [],
-                    ],
-                ];
-            } elseif ($authorization instanceof QueryApiKeyAuthentication) {
-                $settings['security'] = [
-                    [
-                        $this->normalizeSecuritySchemeName('query', $authorization->getQueryParamName()) => [],
-                    ],
-                ];
-            } elseif ($authorization instanceof HeaderApiKeyAuthentication) {
-                $settings['security'] = [
-                    [
-                        $this->normalizeSecuritySchemeName('header', $authorization->getHeaderName()) => [],
-                    ],
-                ];
-            } elseif ($authorization instanceof CookieApiKeyAuthentication) {
-                $settings['security'] = [
-                    [
-                        $this->normalizeSecuritySchemeName('cookie', $authorization->getCookieName()) => [],
-                    ],
-                ];
-            }
-
-            $settings['responses'] = $responses;
-            $list[$path][strtolower($api->getEndpoint()->getMethod())] = $settings;
-        }
-
-        return $list;
-    }
-
-    private function isPathAllowed(string $path, string $method): bool
-    {
-        if (empty($this->allowedEndpoints)) {
-            return true;
-        }
-
-        foreach ($this->allowedEndpoints as $allowedPath => $allowedMethods) {
-            if (is_int($allowedPath)) { // ['user/list'] format
-                $pattern = str_replace('*', '.*?', preg_quote(strtolower($allowedMethods)));
-                if (preg_match("#$pattern#", strtolower($path))) {
-                    return true;
-                }
-
-                continue;
-            }
-
-            // ['user/*' => ['get', 'post'], 'user/list' => 'post', 'user/list' => [], 'user/list' => '*'] format
-            $pattern = str_replace('*', '.*?', preg_quote(strtolower($allowedPath)));
-            if (preg_match("#$pattern#", strtolower($path))) {
-                if (empty($allowedMethods)) {
-                    return true;
-                }
-                if (is_string($allowedMethods) && strtolower($allowedMethods) === strtolower($method)) {
-                    return true;
-                }
-                if (is_array($allowedMethods) && in_array(strtolower($method), array_map('strtolower', $allowedMethods), true)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @param Api[] $apis
-     */
-    private function getBasePath(array $apis, string $baseUrl): string
-    {
-        $basePath = '';
-        foreach ($apis as $handler) {
-            $basePath = $this->getLongestCommonSubstring($basePath, $this->apiLink->link($handler->getEndpoint()));
-        }
-
-        return rtrim(str_replace($baseUrl, '', $basePath), '/');
-    }
-
-    private function getLongestCommonSubstring(?string $path1, string $path2): string
-    {
-        if ($path1 === null) {
-            return $path2;
-        }
-
-        $commonSubstring = '';
-        $shortest = min(strlen($path1), strlen($path2));
-        for ($i = 0; $i <= $shortest; ++$i) {
-            if (substr($path1, 0, $i) !== substr($path2, 0, $i)) {
-                break;
-            }
-
-            $commonSubstring = substr($path1, 0, $i);
-        }
-
-        return $commonSubstring;
-    }
-
-    /**
-     * Create array with params for specified handler
-     *
-     * @return array<int,array<string,mixed>>
-     */
-    private function createParamsList(ApiHandlerInterface $handler): array
-    {
-        $parameters = [];
-        foreach ($handler->params() as $param) {
-            if ($param->getType() !== InputParam::TYPE_GET && $param->getType() !== InputParam::TYPE_COOKIE) {
-                continue;
-            }
-
-            $parameter = [
-                'name' => $param->getKey() . ($param->isMulti() ? '[]' : ''),
-                'in' => $this->createIn($param->getType()),
-                'required' => $param->isRequired(),
-            ];
-
-            $schema = [
-                'type' => $param->isMulti() ? 'array' : 'string',
-            ];
-            if ($param->isMulti()) {
-                $schema['items'] = ['type' => 'string'];
-            }
-
-            $descriptionParts = [];
-            if ($param->getDescription()) {
-                $descriptionParts[] = $param->getDescription();
-            }
-
-            $availableValues = $param->getAvailableValues();
-            if ($availableValues) {
-                $schema['enum'] = array_keys($availableValues);
-                if (array_keys($availableValues) !== array_values($availableValues)) {
-                    foreach ($availableValues as $availableKey => $availableValue) {
-                        $descriptionParts[] = ' * `' . $availableKey . '` - ' . $availableValue;
-                    }
-                }
-            }
-
-            $parameter['schema'] = $schema;
-            if ($descriptionParts !== []) {
-                $parameter['description'] = implode("\n", $descriptionParts);
-            }
-
-            if ($param->getExample() || $param->getDefault()) {
-                $parameter['example'] = $param->getExample() ?: $param->getDefault();
-            }
-
-            $parameters[] = $parameter;
-        }
-
-        return $parameters;
-    }
-
-    /**
-     * @return array<string,mixed>|null
-     */
-    private function createRequestBody(ApiHandlerInterface $handler)
-    {
-        $requestBody = [
-            'properties' => [],
-            'required' => [],
-        ];
-        $filesInBody = false;
-        $requestBodyExample = [];
-        $result = [];
-        foreach ($handler->params() as $param) {
-            if ($param instanceof JsonInputParam) {
-                $schema = json_decode($param->getSchema(), true);
-                if (!empty($examples = $param->getExamples())) {
-                    if (count($examples) === 1) {
-                        $schema['example'] = is_array($param->getExample()) ? $param->getExample() : json_decode($param->getExample(), true);
-                    } else {
-                        foreach ($examples as $exampleKey => $example) {
-                            $schema['examples'][$exampleKey] = is_array($example) ? $example : json_decode($example, true);
-                        }
-                    }
-                }
-
-                $result['description'] = $param->getDescription();
-                $result['required'] = $param->isRequired();
-                $result['content']['application/json'] = [
-                    'schema' => $this->transformSchema($schema),
-                ];
-            }
-
-            if ($param instanceof RawInputParam) {
-                $schema = [
-                    'type' => 'string',
-                ];
-                if (!empty($examples = $param->getExamples())) {
-                    if (count($examples) === 1) {
-                        $schema['example'] = $param->getExample();
-                    } else {
-                        $schema['examples'] = $examples;
-                    }
-                }
-                $result['description'] = $result['description'] ?? $param->getDescription();
-                $result['required'] = $result['required'] ?? $param->isRequired();
-                $result['content']['text/plain'] = [
-                    'schema' => $schema,
-                ];
-            }
-
-            if ($param->getType() === InputParam::TYPE_POST || $param->getType() === InputParam::TYPE_PUT) {
-                $property = [
-                    'type' => $param->isMulti() ? 'array' : 'string',
-                ];
-                if ($param->isMulti()) {
-                    $property['items'] = ['type' => 'string'];
-                }
-
-                $descriptionParts = [];
-                if ($param->getDescription()) {
-                    $descriptionParts[] = $param->getDescription();
-                }
-
-                $availableValues = $param->getAvailableValues();
-                if ($availableValues) {
-                    $property['enum'] = array_keys($availableValues);
-                    if (array_keys($availableValues) !== array_values($availableValues)) {
-                        foreach ($availableValues as $availableKey => $availableValue) {
-                            $descriptionParts[] = ' * `' . $availableKey . '` - ' . $availableValue;
-                        }
-                    }
-                }
-
-                if ($descriptionParts !== []) {
-                    $property['description'] = implode("\n", $descriptionParts);
-                }
-
-                $requestBody['properties'][$param->getKey() . ($param->isMulti() ? '[]' : '')] = $property;
-                if ($param->isRequired()) {
-                    $requestBody['required'][] = $param->getKey() . ($param->isMulti() ? '[]' : '');
-                }
-
-                if ($param->getExample() || $param->getDefault()) {
-                    $requestBodyExample[$param->getKey()] = $param->getExample() ?: $param->getDefault();
-                }
-            } elseif ($param->getType() === InputParam::TYPE_FILE) {
-                $filesInBody = true;
-                $property = [
-                    'type' => $param->isMulti() ? 'array' : 'string',
-                    'description' => $param->getDescription(),
-                ];
-                if ($param->isMulti()) {
-                    $property['items'] = ['type' => 'string', 'format' => 'binary'];
-                } else {
-                    $property['format'] = 'binary';
-                }
-
-                $requestBody['properties'][$param->getKey() . ($param->isMulti() ? '[]' : '')] = $property;
-                if ($param->isRequired()) {
-                    $requestBody['required'][] = $param->getKey() . ($param->isMulti() ? '[]' : '');
-                }
-            }
-        }
-
-        if (!empty($requestBody['properties'])) {
-            $requestBodySchema = [
-                'type' => 'object',
-                'properties' => $requestBody['properties'],
-            ];
-
-            if ($requestBody['required'] !== []) {
-                $requestBodySchema['required'] = $requestBody['required'];
-            }
-
-            if ($requestBodyExample) {
-                $requestBodySchema['example'] = $requestBodyExample;
-            }
-
-            $contentType = $filesInBody ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
-
-            $result['required'] = true;
-            $result['content'][$contentType] = [
-                'schema' => $requestBodySchema,
-            ];
-        }
-
-        return $result ?: null;
-    }
-
-    /**
-     * @param int|string $type
-     * @return string
-     */
-    private function createIn($type)
-    {
-        if ($type == InputParam::TYPE_GET) {
-            return 'query';
-        }
-
-        if ($type == InputParam::TYPE_COOKIE) {
-            return 'cookie';
-        }
-
-        return 'body';
-    }
-
-    /**
-     * @param array<string,mixed> $schema
-     * @return array<string,mixed>
-     */
-    private function transformSchema(array $schema)
-    {
-        OpenApiTransform::transformTypes($schema);
-
-        if (isset($schema['definitions'])) {
-            foreach ($schema['definitions'] as $name => $definition) {
-                $this->addDefinition($name, $this->transformSchema($definition));
-            }
-
-            unset($schema['definitions']);
-        }
-
-        return json_decode(str_replace('#/definitions/', '#/components/schemas/', json_encode($schema, JSON_UNESCAPED_SLASHES) ?: ''), true);
-    }
-
-    /**
-     * @param string $name
-     * @param array<string,mixed> $definition
-     */
-    private function addDefinition($name, $definition): void
-    {
-        if (isset($this->definitions[$name]) && $this->definitions[$name] !== $definition) {
-            throw new InvalidArgumentException('Definition with name ' . $name . ' already exists. Rename it.');
-        }
-
-        $this->definitions[$name] = $definition;
-    }
-
-    private function normalizeSecuritySchemeName(string $type, string $name): string
-    {
-        return 'api_key__' . $type . '__' . strtolower(str_replace('-', '_', $name));
     }
 }

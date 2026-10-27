@@ -33,11 +33,61 @@ new OpenApiHandler(
     ApiLink $apiLink,
     Nette\Http\Request $request,
     array $initData = [],        // merged into the document, e.g. info.title
-    array $allowedEndpoints = [] // path => methods to include, * in the path; empty means all
+    array $allowedEndpoints = [], // path pattern => methods to include; empty means all
+    ?SpecBuilder $specBuilder = null // custom builder, see below
 )
 ```
 
 `?format=yaml` returns YAML when `symfony/yaml` is installed; otherwise only `json` is allowed.
+
+## allowedEndpoints
+
+Keys (or values in a list) are patterns matched case-insensitively against the endpoint path without version (e.g. `users/list`); values limit HTTP methods, e.g. `['users' => ['get', 'post'], 'orders/list' => 'get']`.
+
+::: warning
+A pattern matches anywhere in the path, so `users` also includes `admin/users-internal`, and `*` is not a wildcard. Use patterns that are unique enough and check the generated document when it is public. See [#211](https://github.com/tomaj/nette-api/issues/211).
+:::
+
+## Builders
+
+The document is created by small builders in `Tomaj\NetteApi\OpenApi`, each responsible for one part:
+
+| Class | Creates |
+|---|---|
+| `SpecBuilder` | whole document: info, servers, components, paths (filters APIs by version) |
+| `PathBuilder` | paths and operations (summary, tags, parameters, request body, security, responses) |
+| `ParameterBuilder` | query and cookie parameters |
+| `RequestBodyBuilder` | JSON, raw, form and multipart request bodies |
+| `ResponseBuilder` | error responses and their schemas, responses from handler outputs |
+| `SecuritySchemeBuilder` | security schemes and requirements from authorizations (override `createScheme()`) |
+
+`SchemaRegistry` (transforms JSON schemas and collects `definitions` into `components/schemas`) and `EndpointFilter` (`allowedEndpoints`) are helpers created for each generated document.
+
+### Replacing a builder via DI
+
+Extend the builder and register it in DI together with `PathBuilder` and `SpecBuilder`. `OpenApiHandler` gets `SpecBuilder` autowired, otherwise the default builders are used. Links are always created by the `ApiLink` of the handler.
+
+```php
+use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
+use Tomaj\NetteApi\OpenApi\ParameterBuilder;
+
+class MyParameterBuilder extends ParameterBuilder
+{
+    public function build(ApiHandlerInterface $handler): array
+    {
+        $parameters = parent::build($handler);
+        $parameters[] = ['name' => 'X-Request-Id', 'in' => 'header', 'required' => false, 'schema' => ['type' => 'string']];
+        return $parameters;
+    }
+}
+```
+
+```neon
+services:
+	- MyParameterBuilder
+	- Tomaj\NetteApi\OpenApi\PathBuilder
+	- Tomaj\NetteApi\OpenApi\SpecBuilder
+```
 
 ## FAQ
 
@@ -47,7 +97,7 @@ Pass `initData: [info: [title: 'My API']]`. It is merged recursively over the ge
 
 ### Can I hide internal endpoints?
 
-Yes, list the public ones in `allowedEndpoints`, or register a second `OpenApiHandler` for a different version.
+Yes, list the public ones in `allowedEndpoints` (mind [the matching rules](#allowedendpoints)), or register a second `OpenApiHandler` for a different version.
 
 ### Why are endpoints of version 2 missing?
 
