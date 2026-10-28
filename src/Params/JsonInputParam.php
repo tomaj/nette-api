@@ -73,7 +73,7 @@ class JsonInputParam extends InputParam
                 $example = $this->getExample();
                 $fullSchema['example'] = is_array($example) ? $example : json_decode(TypeHelper::toString($example), true);
             } else {
-                $schemaExamples = [];
+                $schemaExamples = TypeHelper::toArray($fullSchema['examples'] ?? null);
                 foreach ($examples as $exampleKey => $example) {
                     $schemaExamples[$exampleKey] = is_array($example) ? $example : json_decode(TypeHelper::toString($example), true);
                 }

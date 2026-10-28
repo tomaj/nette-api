@@ -35,7 +35,7 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
                     if (count($examples) === 1) {
                         $schema['example'] = is_string($param->getExample()) ? json_decode($param->getExample(), true) : $param->getExample();
                     } else {
-                        $schemaExamples = [];
+                        $schemaExamples = TypeHelper::toArray($schema['examples'] ?? null);
                         foreach ($examples as $exampleKey => $example) {
                             $schemaExamples[$exampleKey] = is_string($example) ? json_decode($example, true) : $example;
                         }

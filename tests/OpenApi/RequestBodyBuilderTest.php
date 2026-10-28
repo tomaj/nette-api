@@ -52,6 +52,16 @@ final class RequestBodyBuilderTest extends TestCase
         $this->assertSame(['a' => ['x' => 1], 'b' => ['x' => 2]], $body['content']['application/json']['schema']['examples']);
     }
 
+    public function testJsonBodyMultipleExamplesAreMergedWithSchemaExamples(): void
+    {
+        $param = new JsonInputParam('data', '{"type": "object", "examples": {"schema": {"x": 0}, "a": {"x": -1}}}')
+            ->addExample('a', ['x' => 1])
+            ->addExample('b', ['x' => 2]);
+        $body = new RequestBodyBuilder()->build(new ConfigurableHandler([$param]), new SchemaRegistry());
+
+        $this->assertSame(['schema' => ['x' => 0], 'a' => ['x' => 1], 'b' => ['x' => 2]], $body['content']['application/json']['schema']['examples']);
+    }
+
     public function testJsonBodyWithNonStringExamples(): void
     {
         $single = new JsonInputParam('count', '{"type": "integer"}')->addExample('default', 5);
