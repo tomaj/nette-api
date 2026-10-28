@@ -17,9 +17,7 @@ final class InputValidator
      */
     public function validate($value, $expectedType = null): ValidationResultInterface
     {
-        if ($expectedType instanceof InputType) {
-            $expectedType = $expectedType->value;
-        }
+        $expectedType = InputType::toValue($expectedType);
 
         if ($value === null || $expectedType === null) {
             return new ValidationResult(ValidationResult::STATUS_OK);
@@ -73,9 +71,7 @@ final class InputValidator
      */
     public function transformType($value, $expectedType = null, bool $isRequired = false): mixed
     {
-        if ($expectedType instanceof InputType) {
-            $expectedType = $expectedType->value;
-        }
+        $expectedType = InputType::toValue($expectedType);
 
         if ($value === null || $expectedType === null) {
             return $value;

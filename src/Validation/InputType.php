@@ -25,4 +25,12 @@ enum InputType: string
     public const FLOAT = 'float';
     public const STRING = 'string';
     public const ARRAY = 'array';
+
+    /**
+     * Normalizes an enum case or a legacy string type to its string value.
+     */
+    public static function toValue(self|string|null $type): ?string
+    {
+        return $type instanceof self ? $type->value : $type;
+    }
 }

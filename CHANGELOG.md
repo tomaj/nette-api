@@ -20,7 +20,7 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * Removed deprecated `InputParam::setExample()` and `AbstractOutput::setExample()`. Use `addExample()`.
 * `Validation\InputType` is a string-backed enum; its string constants (`InputType::INTEGER`, ...) are kept. It can no longer be instantiated or extended.
 * Classes not meant for extension are `final`: `Api`, `ApiHolder`, `EndpointIdentifier`, `NoAuthorization`, `NoRateLimit`, `RateLimitResponse`, `IpDetector`, `StaticIpDetector`, `StaticTokenRepository`, `ConsoleRequest`, `ConsoleResponse`, `OpenApiTransform`, `ParamsProcessor`, `InputValidator`, `JsonSchemaValidator`, `ValidationResult`, `DebuggerConfigurator`, `EnvConfigurator`, `QueryConfigurator`. See `UPGRADE-4.0.md`.
-* `TextApiResponse` outputs non-string data as JSON instead of `Array`; non-string values in validation messages, IP headers, console fields and OpenAPI examples are converted to strings instead of raising warnings or `TypeError`.
+* `TextApiResponse` throws `InvalidArgumentException` for arrays and non-`Stringable` objects instead of outputting `Array` with a warning (arrays) or failing with an `Error` (objects); non-string values in validation messages, IP headers, console fields and OpenAPI examples are converted to strings instead of raising warnings or `TypeError`.
 
 ### Added
 * Rector config with a CI dry-run job, PHP_CodeSniffer config (PSR-12), Infection mutation testing in CI, lowest-dependency test job.

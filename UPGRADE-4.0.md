@@ -62,7 +62,7 @@ Overriding methods are marked with `#[\Override]`.
 
 ## Value conversion
 
-* `TextApiResponse` with non-string data (e.g. an array) now outputs JSON instead of `Array`.
+* `TextApiResponse` with an array or a non-`Stringable` object now throws `InvalidArgumentException` (the request ends with 500) instead of outputting `Array` (arrays) or failing with an `Error` (objects). Return a `JsonApiResponse` for structured data.
 * Non-string values in validation messages, IP headers, console fields and OpenAPI examples are converted to strings (scalars directly, other values as JSON) instead of raising warnings or `TypeError`.
 
 ## Renamed constructor parameter

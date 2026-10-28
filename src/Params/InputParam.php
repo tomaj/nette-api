@@ -60,7 +60,7 @@ abstract class InputParam implements ParamInterface
     public function __construct(string $key, InputType|string|null $valueType = null)
     {
         $this->key = $key;
-        $this->valueType = $valueType instanceof InputType ? $valueType->value : $valueType;
+        $this->valueType = InputType::toValue($valueType);
     }
 
     /**

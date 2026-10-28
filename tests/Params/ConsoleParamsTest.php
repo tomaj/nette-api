@@ -43,6 +43,17 @@ final class ConsoleParamsTest extends TestCase
         $this->addInputsToForm($inputParams);
     }
 
+    public function testUpdateFormJsonInputMergesSchemaExamples(): void
+    {
+        $param = new JsonInputParam('json', '{"examples": {"schema": {"x": 0}}}')->addExample('a', ['x' => 1])->addExample('b', '{"x": 2}');
+        $param->updateConsoleForm(new Form());
+
+        $description = (string) $param->getDescription();
+        $this->assertStringContainsString('schema', $description);
+        $this->assertStringContainsString('&quot;x&quot;: 0', $description);
+        $this->assertStringContainsString('&quot;x&quot;: 2', $description);
+    }
+
     public function testUpdateFormRawInput(): void
     {
         $inputParams = [
