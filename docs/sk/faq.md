@@ -37,6 +37,14 @@ V 3.x presenter skončí pred loggerom. Pozrite si [Logovanie](/sk/guide/logging
 
 Áno, od verzie 4.0.0 cez [DI rozšírenie](/sk/guide/di-extension): jedna neon sekcia `api:` s endpointmi, autorizáciami, obmedzeniami požiadaviek, CORS a formátom chýb, skontrolovaná pri kompilácii kontajnera.
 
+## Dá sa endpoint zapísať priamo na triedu handlera?
+
+Áno, od verzie 4.0.0: dajte na triedu `#[Get(1, 'users')]` (alebo `Post`, `Put`, `Patch`, `Delete`, `Endpoint`) a DI rozšírenie endpoint zaregistruje. Pozrite [Endpointy z atribútov](/sk/guide/attributes).
+
+## Po zmene sekcie api: sa kontajner neskompiluje. Čo s tým?
+
+Prečítajte si celú správu. [DI rozšírenie](/sk/guide/di-extension) kontroluje konfiguráciu aj [atribúty endpointov](/sk/guide/attributes) pri kompilácii kontajnera a každá správa hovorí, čo je zle, kde (neon kľúč alebo trieda a atribút) a ako to opraviť, často s príkladom alebo s návrhom „Did you mean“. Napríklad `version: v1` zlyhá so správou `the 'v' is added to the URL automatically (/v1/users). Use for example version: 1.` Zlyhajú aj nastavenia, ktoré by potichu nerobili nič, napríklad atribút na metóde namiesto triedy, `cors: mode` popri `allowedOrigins` alebo `'@sluzba'` v úvodzovkách.
+
 ## Ako publikujem OpenAPI?
 
 Zaregistrujte `OpenApiHandler` ako endpoint. Pozrite si [OpenAPI](/sk/guide/openapi).

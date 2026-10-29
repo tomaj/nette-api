@@ -1,6 +1,6 @@
 ---
 title: Príklady
-description: 'Pätnásť spustiteľných projektov Nette API testovaných v CI: parametre, JSON telo, súbory, stránkovanie, autorizácia, limity, CORS, verzie, OpenAPI, logovanie a DI rozšírenie.'
+description: 'Šestnásť spustiteľných projektov Nette API testovaných v CI: parametre, JSON telo, súbory, stránkovanie, autorizácia, limity, CORS, verzie, OpenAPI, logovanie, DI rozšírenie a endpointy z atribútov.'
 ---
 
 # Príklady
@@ -29,6 +29,7 @@ Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa re
   { title: 'Logovanie a chyby', text: 'Log požiadaviek s maskovanými hlavičkami (potrebuje 3.6.0), vlastný error handler, produkčný režim.', link: '/sk/examples/logging-errors' },
   { title: 'Problem Details', text: 'Chyby podľa RFC 9457 pre 400, 401, 404, 409, 429 a 500, výber podľa Accept, schéma v OpenAPI (potrebuje 4.0.0).', link: '/sk/examples/problem-details' },
   { title: 'DI rozšírenie', text: 'Celé API v jednej neon sekcii api:, predvolený token, obmedzenie požiadaviek, CORS (potrebuje 4.0.0).', link: '/sk/examples/di-extension' },
+  { title: 'Endpointy z atribútov', text: '#[Get], #[Post], #[Authorization] a #[RateLimit] priamo na triedach handlerov, nájde ich DI rozšírenie (potrebuje 4.0.0).', link: '/sk/examples/attributes' },
   { title: 'Vlastná autorizácia', text: 'Vlastný ApiAuthorizationInterface s rolami, používateľ v handleri, token alebo API kľúč.', link: '/sk/examples/custom-authorization' },
   { title: 'JSON a surové telo', text: 'JSON telo overené schémou a CSV telo.', link: '/sk/examples/json-body' },
   { title: 'Nahrávanie súborov', text: 'Jeden aj viac súborov, overená veľkosť a skutočný typ.', link: '/sk/examples/file-upload' },
@@ -60,4 +61,4 @@ Nie, dáta sú v pamäti alebo v súboroch, takže jediné nastavenie je `compos
 
 ### Ktoré porty používajú?
 
-8081 až 8087 a 8090 až 8097, jeden na príklad (logovanie a chyby používa dva), takže môžu bežať vedľa seba.
+8081 až 8087 a 8090 až 8098, jeden na príklad (logovanie a chyby používa dva), takže môžu bežať vedľa seba.

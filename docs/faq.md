@@ -37,6 +37,14 @@ Yes, in a new project: RFC 9457 errors have one machine-readable shape. They are
 
 Yes, since 4.0.0 with the [DI extension](/guide/di-extension): one `api:` neon section with the endpoints, authorizations, rate limits, CORS and the error format, checked when the container is compiled.
 
+## Can I declare an endpoint on the handler class?
+
+Yes, since 4.0.0: put `#[Get(1, 'users')]` (or `Post`, `Put`, `Patch`, `Delete`, `Endpoint`) on the class and the DI extension registers it. See [Attribute endpoints](/guide/attributes).
+
+## The container does not compile after I changed the api: section. What now?
+
+Read the whole message. The [DI extension](/guide/di-extension) checks the configuration and the [endpoint attributes](/guide/attributes) when the container is compiled, and each message says what is wrong, where (the neon key, or the class and the attribute) and how to fix it, often with an example or a "Did you mean" suggestion. For example, `version: v1` fails with `the 'v' is added to the URL automatically (/v1/users). Use for example version: 1.` Settings that would silently do nothing also fail, such as an attribute on a method instead of the class, a `cors: mode` next to `allowedOrigins`, or a quoted `'@service'` reference.
+
 ## How do I publish OpenAPI?
 
 Register `OpenApiHandler` as an endpoint. See [OpenAPI](/guide/openapi).

@@ -1,0 +1,44 @@
+extensions:
+	api: Tomaj\NetteApi\DI\NetteApiExtension
+
+parameters:
+	apiTokens:
+		secret-token: '*'
+
+services:
+	router: App\RouterFactory::create
+	# a normal application service, handlers get it through autowiring
+	- App\Model\UserRepository
+	# a handler that needs a scalar argument is a normal service, its attributes are read as well
+	- App\Api\HelloHandler('Hello from attributes')
+
+api:
+	# error details are on unless APP_ENV=production
+	outputConfigurator: Tomaj\NetteApi\Output\Configurator\EnvConfigurator('APP_ENV', 'production')
+
+	errors:
+		format: problemDetails
+		typeBaseUri: https://api.example.com/problems/
+
+	# without cors the extension sends no CORS headers
+	cors:
+		allowedOrigins: [https://app.example.com]
+		preflight: true
+
+	logging:
+		maskHeaders: true
+
+	# named services, #[Authorization] and #[RateLimit] use them by name
+	authorizations:
+		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
+	rateLimits:
+		strict: App\FileRateLimit(storageDir: %tempDir%, limit: 2)
+
+	# every endpoint needs the token unless it says otherwise
+	defaults:
+		authorization: token
+
+	# every class in app/Api with #[Get], #[Post], ... becomes an endpoint
+	discovery:
+		paths: [%appDir%/Api]
+		namespace: App\Api
