@@ -3,7 +3,7 @@ title: Getting started
 description: Create a Nette project, install tomaj/nette-api, route /api to ApiPresenter, register a handler in ApiDecider and call your first endpoint.
 howto:
   totalTime: PT10M
-  tools: [PHP 8.3, Composer]
+  tools: [PHP 8.4, Composer]
 ---
 
 # Getting started
@@ -16,11 +16,16 @@ This page takes you from a new Nette project to a working `GET /api/v1/hello` en
 
 | Package | Version |
 | --- | --- |
-| PHP | 8.3 or newer, with the curl, json, session and filter extensions |
-| nette/application, nette/http | ^3.0 |
-| latte/latte | ^3.0 |
-| tracy/tracy | ^2.6 |
-| justinrainbow/json-schema | ^5.2 |
+| PHP | 8.4 or newer, with the curl, json, session and filter extensions |
+| nette/application | ^3.2 |
+| nette/http | ^3.3 |
+| latte/latte | ^3.0.20 |
+| tracy/tracy | ^2.10 |
+| justinrainbow/json-schema | ^6.0 |
+
+::: tip Nette API 3.x
+These are the 4.0 requirements. Nette API 3.x runs on PHP 8.3 with `nette/application` and `nette/http` ^3.0, `tracy/tracy` ^2.6 and `justinrainbow/json-schema` ^5.2. See [UPGRADE-4.0.md](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
+:::
 
 ## 0. Create a project
 

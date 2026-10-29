@@ -12,7 +12,7 @@ description: 'Presné poradie krokov v Nette API ApiPresenter::run(), od CORS a 
 | Krok | Kód | Výstup |
 | --- | --- | --- |
 | 1. CORS hlavičky | `sendCorsHeaders()` | |
-| 2. Endpoint | `$this->apiDecider->getApi(...)` | `404` cez `DefaultHandler` |
+| 2. Endpoint | `$this->apiDecider->getApi(...)` | `404` cez `DefaultHandler` a `handleNotFound()` |
 | 3. Obmedzenie požiadaviek | `checkRateLimit($rateLimit)` | `429`, neloguje sa |
 | 4. Načítanie parametrov | `new ParamsProcessor($handler->params())` | |
 | 5. Autorizácia | `checkAuth($authorization, $params)` | `401` alebo `500`, neloguje sa |
@@ -27,7 +27,7 @@ Hlavičky idú von ako prvé, takže ich má aj `404` či `401` a prehliadač ch
 
 ## 2. Hľadanie endpointu
 
-Metóda a parametre routy `version`, `package` a `apiAction` idú do `ApiDecider`. Neznáma URL dostane `DefaultHandler`, ktorý prejde zvyšnými krokmi, odpovie `404` a zaloguje sa. Pozrite si [ApiDecider a endpointy](/sk/guide/api-decider).
+Metóda a parametre routy `version`, `package` a `apiAction` idú do `ApiDecider`. Neznáma URL dostane `DefaultHandler`, ktorý prejde zvyšnými krokmi; namiesto jeho volania si presenter vypýta `404` od metódy `handleNotFound()` error handlera a zaloguje ho. Pozrite si [ApiDecider a endpointy](/sk/guide/api-decider).
 
 ## 3. Obmedzenie požiadaviek
 
@@ -35,7 +35,7 @@ Metóda a parametre routy `version`, `package` a `apiAction` idú do `ApiDecider
 $rateLimitResponse = $rateLimit->check();
 // pridá X-RateLimit-Limit a X-RateLimit-Remaining
 if ($remaining === 0) {
-    // 429, Retry-After, vaša chybová odpoveď alebo "Too many requests. Retry after N seconds."
+    // 429, Retry-After, vaša chybová odpoveď alebo errorHandler->handleRateLimit()
 }
 ```
 

@@ -32,6 +32,58 @@ final class ResponseBuilderTest extends TestCase
         $this->assertSame('#/components/schemas/InternalServerError', $responses[500]['content']['application/json; charset=utf-8']['schema']['$ref']);
     }
 
+    public function testProblemDetailsErrorResponses(): void
+    {
+        $builder = new ResponseBuilder(problemDetails: true);
+        $bearer = new BearerTokenAuthorization(new StaticTokenRepository(), new StaticIpDetector('127.0.0.1'));
+
+        $this->assertSame(['ProblemDetails' => ResponseBuilder::problemDetailsSchema()], $builder->buildErrorSchemas());
+        $this->assertSame([
+            'type' => 'object',
+            'description' => 'RFC 9457 problem details',
+            'properties' => [
+                'type' => ['type' => 'string', 'format' => 'uri-reference', 'default' => 'about:blank'],
+                'status' => ['type' => 'integer', 'minimum' => 400, 'maximum' => 599],
+                'title' => ['type' => 'string'],
+                'detail' => ['type' => 'string'],
+                'instance' => ['type' => 'string', 'format' => 'uri-reference'],
+                'errors' => [
+                    'type' => 'array',
+                    'description' => 'Validation errors (400)',
+                    'items' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'parameter' => ['type' => 'string'],
+                            'detail' => ['type' => 'string'],
+                        ],
+                        'required' => ['parameter', 'detail'],
+                    ],
+                ],
+                'outputErrors' => [
+                    'type' => 'array',
+                    'description' => 'Output schema errors, one list per declared output (500 invalid-output, only with error details on)',
+                    'items' => ['type' => 'array', 'items' => ['type' => 'string']],
+                ],
+            ],
+            'required' => ['type', 'status', 'title'],
+        ], ResponseBuilder::problemDetailsSchema());
+
+        $responses = $builder->build(new ConfigurableHandler(), $bearer, true, new SchemaRegistry());
+        $this->assertSame([400, 401, 500], array_keys($responses));
+        foreach ([400 => 'Bad request', 401 => 'Operation forbidden', 500 => 'Internal server error'] as $code => $description) {
+            $this->assertSame([
+                'description' => $description,
+                'content' => [
+                    'application/problem+json; charset=utf-8' => [
+                        'schema' => ['$ref' => '#/components/schemas/ProblemDetails'],
+                    ],
+                ],
+            ], $responses[$code]);
+        }
+        $this->assertArrayHasKey('ErrorWrongInput', new ResponseBuilder()->buildErrorSchemas());
+        $this->assertArrayNotHasKey('ProblemDetails', new ResponseBuilder()->buildErrorSchemas());
+    }
+
     public function testJsonOutputWithExampleAndDefinitions(): void
     {
         $registry = new SchemaRegistry();

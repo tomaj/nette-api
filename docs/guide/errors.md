@@ -15,13 +15,21 @@ description: How Nette API turns exceptions, wrong input, failed authorization a
 | `handleInputParams(array $errors)` | params are invalid | `400 wrong input` |
 | `handleSchema(array $errors, array $params)` | the output check failed | `500 Internal server error`, logs to Tracy |
 | `handleAuthorization(ApiAuthorizationInterface, array $params)` | `authorized()` is false | `401` with `getErrorMessage()` |
-| `handleAuthorizationException(Throwable, array $params)` | `authorized()` threw | `500` with the exception message |
+| `handleAuthorizationException(Throwable, array $params)` | `authorized()` threw | `500 Internal server error`, logs to Tracy |
+| `handleNotFound(EndpointInterface)` | no endpoint matches the URL | `404 Unknown api endpoint` |
+| `handleRateLimit(RateLimitResponse)` | the rate limit is reached and has no own response | `429 Too many requests.`, plus `Retry after N seconds.` when the time is known |
 
-All of them return a `JsonApiResponse` with `status: error` and `message`.
+All of them return a `ResponseInterface`; `DefaultErrorHandler` returns a `JsonApiResponse` with `status: error` and `message`.
+
+::: tip Since 4.0.0
+`handleNotFound()` and `handleRateLimit()` are new, so `404` and `429` can be changed in one place. The methods return `ResponseInterface` instead of `JsonApiResponse`. `handleAuthorizationException()` no longer sends the exception message unless error details are on. See the [upgrade guide](/upgrade).
+:::
+
+For new projects we recommend RFC 9457 `application/problem+json` errors with `ProblemDetailsErrorHandler`, see [Problem Details](/guide/problem-details). `DefaultErrorHandler` stays the default so that clients reading `message` keep working.
 
 ## Error details
 
-`DefaultErrorHandler(ConfiguratorInterface)` adds `detail` when the configurator's `showErrorDetail()` is true: the exception message for `500`, the errors per field for `400`, the schema errors for a broken output.
+`DefaultErrorHandler(ConfiguratorInterface)` adds `detail` when the configurator's `showErrorDetail()` is true: the exception message for `500` (also from `authorized()`), the errors per field for `400`, the schema errors for a broken output.
 
 ```json
 {"status":"error","message":"Internal server error","detail":"Database connection refused"}

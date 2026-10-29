@@ -12,7 +12,7 @@ description: 'The exact order of steps in Nette API ApiPresenter::run(), from CO
 | Step | Code | Exit |
 | --- | --- | --- |
 | 1. CORS headers | `sendCorsHeaders()` | |
-| 2. Endpoint | `$this->apiDecider->getApi(...)` | `404` through `DefaultHandler` |
+| 2. Endpoint | `$this->apiDecider->getApi(...)` | `404` through `DefaultHandler` and `handleNotFound()` |
 | 3. Rate limit | `checkRateLimit($rateLimit)` | `429`, not logged |
 | 4. Read params | `new ParamsProcessor($handler->params())` | |
 | 5. Authorization | `checkAuth($authorization, $params)` | `401` or `500`, not logged |
@@ -27,7 +27,7 @@ Headers go out first, so even a `404` or `401` carries them and the browser can 
 
 ## 2. Endpoint lookup
 
-The method and the `version`, `package` and `apiAction` route parameters go to `ApiDecider`. An unknown URL gets `DefaultHandler`, which goes through the remaining steps and answers `404`, and is logged. See [ApiDecider and endpoints](/guide/api-decider).
+The method and the `version`, `package` and `apiAction` route parameters go to `ApiDecider`. An unknown URL gets `DefaultHandler`, which goes through the remaining steps; instead of calling it the presenter asks the error handler's `handleNotFound()` for the `404`, which is logged. See [ApiDecider and endpoints](/guide/api-decider).
 
 ## 3. Rate limit
 
@@ -35,7 +35,7 @@ The method and the `version`, `package` and `apiAction` route parameters go to `
 $rateLimitResponse = $rateLimit->check();
 // adds X-RateLimit-Limit and X-RateLimit-Remaining
 if ($remaining === 0) {
-    // 429, Retry-After, your error response or "Too many requests. Retry after N seconds."
+    // 429, Retry-After, your error response or errorHandler->handleRateLimit()
 }
 ```
 

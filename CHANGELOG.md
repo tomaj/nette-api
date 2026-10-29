@@ -21,6 +21,9 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * `Validation\InputType` is a string-backed enum; its string constants (`InputType::INTEGER`, ...) are kept. It can no longer be instantiated or extended.
 * Classes not meant for extension are `final`: `Api`, `ApiHolder`, `EndpointIdentifier`, `NoAuthorization`, `NoRateLimit`, `RateLimitResponse`, `IpDetector`, `StaticIpDetector`, `StaticTokenRepository`, `ConsoleRequest`, `ConsoleResponse`, `OpenApiTransform`, `ParamsProcessor`, `InputValidator`, `JsonSchemaValidator`, `ValidationResult`, `DebuggerConfigurator`, `EnvConfigurator`, `QueryConfigurator`. See `UPGRADE-4.0.md`.
 * `TextApiResponse` throws `InvalidArgumentException` for arrays and non-`Stringable` objects instead of outputting `Array` with a warning (arrays) or failing with an `Error` (objects); non-string values in validation messages, IP headers, console fields and OpenAPI examples are converted to strings instead of raising warnings or `TypeError`.
+* `Error\ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has two new methods, `handleNotFound(EndpointInterface)` and `handleRateLimit(RateLimitResponse)`. Own implementations must add them (#196).
+* `ApiPresenter` builds the `404` for an unknown endpoint and the `429` for a reached rate limit (without an own error response) through the error handler. `DefaultErrorHandler` sends the same bodies as before, except that a `429` without a known retry time says only `Too many requests.` instead of `Retry after  seconds.` (#196).
+* `Handlers\DefaultHandler` is `final`. `ApiPresenter` does not call its `handle()`, so a subclass could no longer change the `404`; do it in `ErrorHandlerInterface::handleNotFound()` (#196).
 
 ### Added
 * Rector config with a CI dry-run job, PHP_CodeSniffer config (PSR-12), Infection mutation testing in CI, lowest-dependency test job.
@@ -29,10 +32,16 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * `#[\Override]` on all overriding methods.
 * CodeQL and OpenSSF Scorecard workflows; Scorecard badge in README.
 * OpenAPI builder interfaces (`SpecBuilderInterface`, `PathBuilderInterface`, `ParameterBuilderInterface`, `RequestBodyBuilderInterface`, `ResponseBuilderInterface`, `SecuritySchemeBuilderInterface`). `OpenApiHandler`, `SpecBuilder` and `PathBuilder` accept the interfaces.
+* RFC 9457 Problem Details (#196): `Error\ProblemDetails`, `Response\ProblemDetailsResponse` (`application/problem+json`), `Error\ProblemDetailsErrorHandler` for every framework error (`400` with an `errors` list, `401`, `404`, `429` with `limit` and `retryAfter`, `500`; output schema errors as `outputErrors` only with error details on) and `Error\NegotiatingErrorHandler`, which sends problem details only to clients with `Accept: application/problem+json` and adds `Vary: Accept` to every error response. Opt-in, `DefaultErrorHandler` stays the default.
+* `OpenApi\ResponseBuilder(problemDetails: true)` documents error responses with a `ProblemDetails` schema as `application/problem+json`; `ResponseBuilder::problemDetailsSchema()`.
+* `examples/problem-details` and the Problem Details documentation page.
 
 ### Changed
 * Dev tools: PHPUnit ^12 || ^13, PHPStan ^2.1 (level max, no baseline), Rector ^2.2, PHP_CodeSniffer ^4.0, Infection; `symfony/yaml` ^7.4.12 || ^8.0.12.
 * `vendor/bin/phpunit` no longer requires `XDEBUG_MODE=coverage`; coverage reports are opt-in via `composer coverage`.
+
+### Security
+* `DefaultErrorHandler::handleAuthorizationException()` no longer sends the exception message to the client. It answers `500 Internal server error`, logs the exception to Tracy and adds the message as `detail` only when `showErrorDetail()` is true (#188).
 
 ## 3.6.0 - 2026-10-27
 

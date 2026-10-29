@@ -1,0 +1,7 @@
+services:
+	# replaces the errorHandler service from common.neon:
+	# Accept: application/problem+json gets problem details, every other client the 3.x format
+	errorHandler: Tomaj\NetteApi\Error\NegotiatingErrorHandler(
+		Tomaj\NetteApi\Error\DefaultErrorHandler()
+		Tomaj\NetteApi\Error\ProblemDetailsErrorHandler(typeBaseUri: %problemTypeBaseUri%)
+	)

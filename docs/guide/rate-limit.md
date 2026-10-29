@@ -28,7 +28,7 @@ new RateLimitResponse(int $limit, int $remaining, ?int $retryAfter = null, ?IRes
 | --- | --- |
 | `null` | nothing added, the request continues |
 | `remaining` > 0 | `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers, the request continues |
-| `remaining` = 0 | `429`, the same headers plus `Retry-After`, and `{"status":"error","message":"Too many requests. Retry after N seconds."}` or your `$errorResponse`. A `null` `retryAfter` sends an empty `Retry-After` header and the message `Retry after  seconds.` without a number |
+| `remaining` = 0 | `429`, the same headers plus `Retry-After`, and `{"status":"error","message":"Too many requests. Retry after N seconds."}` or your `$errorResponse`. A `null` `retryAfter` sends an empty `Retry-After` header and, since 4.0.0, the message `Too many requests.` |
 
 Endpoints without a rate limit get `NoRateLimit`, which returns `null`.
 
@@ -67,7 +67,7 @@ No, in 3.x the presenter returns before the logger runs. See [Logging](/guide/lo
 
 ### Can I return my own 429 body?
 
-Yes, pass it as the fourth argument of `RateLimitResponse`.
+Yes, pass it as the fourth argument of `RateLimitResponse`. Since 4.0.0 a limit without its own response gets the `429` from the error handler's `handleRateLimit()`, so one handler can change it for every endpoint; `ProblemDetailsErrorHandler` sends a [problem](/guide/problem-details) with `limit` and `retryAfter`.
 
 ### Which IP should I count by?
 

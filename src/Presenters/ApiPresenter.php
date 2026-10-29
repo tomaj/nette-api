@@ -15,6 +15,7 @@ use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Error\ErrorHandlerInterface;
+use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
@@ -22,7 +23,6 @@ use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
-use Tomaj\NetteApi\Response\JsonApiResponse;
 
 final class ApiPresenter implements IPresenter
 {
@@ -141,7 +141,9 @@ final class ApiPresenter implements IPresenter
         }
 
         try {
-            $response = $handler->handle($params);
+            $response = $handler instanceof DefaultHandler
+                ? $this->errorHandler->handleNotFound($api->getEndpoint())
+                : $handler->handle($params);
             $code = $response->getCode();
 
             if ($this->outputConfigurator->validateSchema()) {
@@ -228,7 +230,7 @@ final class ApiPresenter implements IPresenter
         if ($remaining === 0) {
             $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
             $this->response->addHeader('Retry-After', (string)$retryAfter);
-            return $rateLimitResponse->getErrorResponse() ?: new JsonApiResponse(Response::S429_TOO_MANY_REQUESTS, ['status' => 'error', 'message' => 'Too many requests. Retry after ' . $retryAfter . ' seconds.']);
+            return $rateLimitResponse->getErrorResponse() ?? $this->errorHandler->handleRateLimit($rateLimitResponse);
         }
 
         return null;

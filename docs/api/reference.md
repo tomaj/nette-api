@@ -46,6 +46,7 @@ All classes live under `Tomaj\NetteApi`.
 | `Output\JsonOutput`, `RedirectOutput`, `AbstractOutput`, `OutputInterface` | declared outputs | [Outputs](/guide/outputs#outputs) |
 | `Output\Configurator\ConfiguratorInterface`, `EnvConfigurator`, `QueryConfigurator`, `DebuggerConfigurator` | when to check outputs and show details | [Outputs](/guide/outputs#when-outputs-are-validated) |
 | `Error\ErrorHandlerInterface`, `DefaultErrorHandler` | error responses | [Error handling](/guide/errors) |
+| `Error\ProblemDetailsErrorHandler`, `NegotiatingErrorHandler`, `ProblemDetails`, `Response\ProblemDetailsResponse` | RFC 9457 errors, 4.0.0 | [Problem Details](/guide/problem-details) |
 
 ## Security
 
@@ -74,7 +75,7 @@ All classes live under `Tomaj\NetteApi`.
 
 `Presenters\ApiPresenter`, `Error\DefaultErrorHandler`, the Latte classes `Link\ApiLinkExtension` and `Link\ApiLinkNode`, and the internal `Misc\CorsOriginAllowlist` are `final`; wrap them instead of extending. See [Error handling](/guide/errors#your-own-error-handler).
 
-Since 4.0 these are `final` too: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, the output configurators `DebuggerConfigurator`, `EnvConfigurator` and `QueryConfigurator`, and `OpenApi\SchemaRegistry` and `OpenApi\EndpointFilter`. Implement the matching interface (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, …) instead of extending them. Handlers, params, outputs, responses, authorizations, the OpenAPI builders, `ApiDecider`, `ApiLink`, the console components and `DefaultApiConsoleFormFactory` stay open for extension.
+Since 4.0 these are `final` too: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, the output configurators `DebuggerConfigurator`, `EnvConfigurator` and `QueryConfigurator`, and `OpenApi\SchemaRegistry` and `OpenApi\EndpointFilter`. Implement the matching interface (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, …) instead of extending them. Handlers, params, outputs, responses, authorizations, the OpenAPI builders, `ApiDecider`, `ApiLink`, the console components and `DefaultApiConsoleFormFactory` stay open for extension. The exception is `Handlers\DefaultHandler`, which is `final`; customize the `404` in the error handler's `handleNotFound()`.
 
 ### Where are the method signatures?
 

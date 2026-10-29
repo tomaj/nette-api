@@ -94,7 +94,7 @@ Handler môže byť objekt alebo názov triedy. Názov triedy sa hľadá v DI ko
 
 | Trieda | Čo robí |
 | --- | --- |
-| `DefaultHandler` | Vráti `404 Unknown api endpoint`, používa sa pre neznáme endpointy. |
+| `DefaultHandler` | Zastupuje neznámy endpoint; presenter odpovie `404 Unknown api endpoint` cez metódu `handleNotFound()` error handlera. Od verzie 4.0.0 je `final`. |
 | `AlwaysOkHandler` | Vráti `200 {"status":"ok"}`, hodí sa na health check. |
 | `EchoHandler` | Vráti povinný `status` (`ok` alebo `error`) a všetky svoje parametre, na testovanie. |
 | `CorsPreflightHandler` | Odpovedá na `OPTIONS` požiadavky, pozrite si [CORS](/sk/guide/cors). |

@@ -28,7 +28,7 @@ new RateLimitResponse(int $limit, int $remaining, ?int $retryAfter = null, ?IRes
 | --- | --- |
 | `null` | nič sa nepridá, požiadavka pokračuje |
 | `remaining` > 0 | hlavičky `X-RateLimit-Limit` a `X-RateLimit-Remaining`, požiadavka pokračuje |
-| `remaining` = 0 | `429`, tie isté hlavičky plus `Retry-After` a `{"status":"error","message":"Too many requests. Retry after N seconds."}` alebo vaša `$errorResponse`. Pri `retryAfter` `null` ide prázdna hlavička `Retry-After` a správa `Retry after  seconds.` bez čísla |
+| `remaining` = 0 | `429`, tie isté hlavičky plus `Retry-After` a `{"status":"error","message":"Too many requests. Retry after N seconds."}` alebo vaša `$errorResponse`. Pri `retryAfter` `null` ide prázdna hlavička `Retry-After` a od verzie 4.0.0 správa `Too many requests.` |
 
 Endpointy bez obmedzenia požiadaviek dostanú `NoRateLimit`, ktorý vracia `null`.
 
@@ -67,7 +67,7 @@ Nie, v 3.x presenter skončí skôr, ako sa spustí logger. Pozrite si [Logovani
 
 ### Môžem vrátiť vlastné telo 429?
 
-Áno, odovzdajte ho ako štvrtý argument `RateLimitResponse`.
+Áno, odovzdajte ho ako štvrtý argument `RateLimitResponse`. Od verzie 4.0.0 dostane limit bez vlastnej odpovede `429` z metódy `handleRateLimit()` error handlera, takže jeden handler ju zmení pre všetky endpointy; `ProblemDetailsErrorHandler` pošle [problém](/sk/guide/problem-details) s `limit` a `retryAfter`.
 
 ### Podľa ktorej IP mám počítať?
 

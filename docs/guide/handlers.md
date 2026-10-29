@@ -94,7 +94,7 @@ The handler can be an object or a class name. A class name is looked up in the D
 
 | Class | What it does |
 | --- | --- |
-| `DefaultHandler` | Answers `404 Unknown api endpoint`, used for unknown endpoints. |
+| `DefaultHandler` | Stands for an unknown endpoint; the presenter answers `404 Unknown api endpoint` through the error handler's `handleNotFound()`. `final` since 4.0.0. |
 | `AlwaysOkHandler` | Answers `200 {"status":"ok"}`, handy for health checks. |
 | `EchoHandler` | Returns the required `status` (`ok` or `error`) and all its params, for testing. |
 | `CorsPreflightHandler` | Answers `OPTIONS` requests, see [CORS](/guide/cors). |

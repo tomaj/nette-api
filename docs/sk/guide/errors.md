@@ -15,13 +15,21 @@ description: Ako Nette API mení výnimky, zlý vstup, zlyhanú autorizáciu a p
 | `handleInputParams(array $errors)` | parametre sú neplatné | `400 wrong input` |
 | `handleSchema(array $errors, array $params)` | kontrola výstupu zlyhala | `500 Internal server error`, loguje do Tracy |
 | `handleAuthorization(ApiAuthorizationInterface, array $params)` | `authorized()` je false | `401` s `getErrorMessage()` |
-| `handleAuthorizationException(Throwable, array $params)` | `authorized()` vyhodil výnimku | `500` s textom výnimky |
+| `handleAuthorizationException(Throwable, array $params)` | `authorized()` vyhodil výnimku | `500 Internal server error`, loguje do Tracy |
+| `handleNotFound(EndpointInterface)` | URL nezodpovedá žiadny endpoint | `404 Unknown api endpoint` |
+| `handleRateLimit(RateLimitResponse)` | limit je vyčerpaný a nemá vlastnú odpoveď | `429 Too many requests.`, ak je čas známy, aj `Retry after N seconds.` |
 
-Všetky vracajú `JsonApiResponse` so `status: error` a `message`.
+Všetky vracajú `ResponseInterface`; `DefaultErrorHandler` vracia `JsonApiResponse` so `status: error` a `message`.
+
+::: tip Od verzie 4.0.0
+`handleNotFound()` a `handleRateLimit()` sú nové, takže `404` a `429` sa dajú zmeniť na jednom mieste. Metódy vracajú `ResponseInterface` namiesto `JsonApiResponse`. `handleAuthorizationException()` už nepošle text výnimky, ak nie sú zapnuté detaily. Pozrite si [návod na upgrade](/sk/upgrade).
+:::
+
+Pre nové projekty odporúčame chyby `application/problem+json` podľa RFC 9457 cez `ProblemDetailsErrorHandler`, pozrite si [Problem Details](/sk/guide/problem-details). `DefaultErrorHandler` ostáva predvolený, aby klienti, ktorí čítajú `message`, fungovali ďalej.
 
 ## Detaily chýb
 
-`DefaultErrorHandler(ConfiguratorInterface)` pridá `detail`, keď je `showErrorDetail()` konfigurátora true: text výnimky pre `500`, chyby jednotlivých polí pre `400`, chyby schémy pre pokazený výstup.
+`DefaultErrorHandler(ConfiguratorInterface)` pridá `detail`, keď je `showErrorDetail()` konfigurátora true: text výnimky pre `500` (aj z `authorized()`), chyby jednotlivých polí pre `400`, chyby schémy pre pokazený výstup.
 
 ```json
 {"status":"error","message":"Internal server error","detail":"Database connection refused"}

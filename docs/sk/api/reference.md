@@ -46,6 +46,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 | `Output\JsonOutput`, `RedirectOutput`, `AbstractOutput`, `OutputInterface` | deklarované výstupy | [Výstupy](/sk/guide/outputs#vystupy) |
 | `Output\Configurator\ConfiguratorInterface`, `EnvConfigurator`, `QueryConfigurator`, `DebuggerConfigurator` | kedy kontrolovať výstupy a zobrazovať detaily | [Výstupy](/sk/guide/outputs#kedy-sa-vystupy-validuju) |
 | `Error\ErrorHandlerInterface`, `DefaultErrorHandler` | chybové odpovede | [Spracovanie chýb](/sk/guide/errors) |
+| `Error\ProblemDetailsErrorHandler`, `NegotiatingErrorHandler`, `ProblemDetails`, `Response\ProblemDetailsResponse` | chyby podľa RFC 9457, 4.0.0 | [Problem Details](/sk/guide/problem-details) |
 
 ## Bezpečnosť
 
@@ -74,7 +75,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 
 `Presenters\ApiPresenter`, `Error\DefaultErrorHandler`, Latte triedy `Link\ApiLinkExtension` a `Link\ApiLinkNode` a interná `Misc\CorsOriginAllowlist` sú `final`; namiesto dedenia ich obaľte. Pozrite si [Spracovanie chýb](/sk/guide/errors#vlastny-error-handler).
 
-Od verzie 4.0 sú `final` aj: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, výstupné konfigurátory `DebuggerConfigurator`, `EnvConfigurator` a `QueryConfigurator` a `OpenApi\SchemaRegistry` a `OpenApi\EndpointFilter`. Namiesto dedenia implementujte príslušné rozhranie (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, …). Handlery, parametre, výstupy, odpovede, autorizácie, OpenAPI buildery, `ApiDecider`, `ApiLink`, komponenty konzoly a `DefaultApiConsoleFormFactory` sa dajú ďalej rozširovať.
+Od verzie 4.0 sú `final` aj: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, výstupné konfigurátory `DebuggerConfigurator`, `EnvConfigurator` a `QueryConfigurator` a `OpenApi\SchemaRegistry` a `OpenApi\EndpointFilter`. Namiesto dedenia implementujte príslušné rozhranie (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, …). Handlery, parametre, výstupy, odpovede, autorizácie, OpenAPI buildery, `ApiDecider`, `ApiLink`, komponenty konzoly a `DefaultApiConsoleFormFactory` sa dajú ďalej rozširovať. Výnimkou je `Handlers\DefaultHandler`, ktorý je `final`; vlastnú `404` vráťte z metódy `handleNotFound()` error handlera.
 
 ### Kde nájdem signatúry metód?
 

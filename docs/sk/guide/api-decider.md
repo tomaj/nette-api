@@ -51,7 +51,7 @@ services:
 2. prechádza endpointy **v poradí, v akom boli pridané**;
 3. vráti prvý, kde sa zhoduje metóda, verzia, balík aj akcia;
 4. nastaví handleru endpoint, takže fungujú `getEndpoint()` a `createLink()`;
-5. bez zhody vráti `DefaultHandler` a `NoAuthorization`, ktoré odpovedia `404 Unknown api endpoint`.
+5. bez zhody vráti `DefaultHandler` a `NoAuthorization`, ktoré odpovedia `404 Unknown api endpoint` cez metódu `handleNotFound()` error handlera.
 
 `GET /api/v1/users` a `POST /api/v1/users` sú dva endpointy s dvoma handlermi. Nezaregistrovaná verzia, napríklad `/api/v3/users`, je `404`, ako testuje [príklad verzií](/sk/examples/versions).
 

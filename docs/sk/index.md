@@ -71,7 +71,7 @@ Cez jednu routu na jej `ApiPresenter` a služby zaregistrované v neon konfigur�
 
 ### Aké verzie PHP a Nette potrebuje Nette API 3.x?
 
-PHP 8.3 alebo novšie, `nette/application` a `nette/http` 3.x a Latte 3. Celý zoznam je v časti [Začíname](/sk/guide/getting-started#poziadavky).
+PHP 8.4 alebo novšie, `nette/application` ^3.2, `nette/http` ^3.3 a Latte 3 (Nette API 3.x: PHP 8.3). Celý zoznam je v časti [Začíname](/sk/guide/getting-started#poziadavky).
 
 ### Musím pre endpointy písať presentery?
 

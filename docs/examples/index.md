@@ -1,6 +1,6 @@
 ---
 title: Examples
-description: 'Thirteen runnable Nette API projects tested in CI: params, JSON body, uploads, pagination, authorization, rate limit, CORS, versions, OpenAPI, logging, testing.'
+description: 'Fourteen runnable Nette API projects tested in CI: params, JSON body, uploads, pagination, authorization, rate limit, CORS, versions, OpenAPI, logging, testing.'
 ---
 
 # Examples
@@ -27,6 +27,7 @@ To run an example against your local checkout, as CI does, use `examples/ci/exam
   { title: 'CORS', text: 'A fixed origin and preflight for a browser frontend.', link: '/examples/cors' },
   { title: 'OpenAPI and console', text: 'OpenAPI JSON and YAML, endpoint listing, web console, {apiLink}.', link: '/examples/openapi-console' },
   { title: 'Logging and errors', text: 'Request log with masked headers (needs 3.6.0), own error handler, production mode.', link: '/examples/logging-errors' },
+  { title: 'Problem Details', text: 'RFC 9457 errors for 400, 401, 404, 409, 429 and 500, Accept negotiation, OpenAPI schema (needs 4.0.0).', link: '/examples/problem-details' },
   { title: 'Custom authorization', text: 'Your own ApiAuthorizationInterface with roles, the user in the handler, token or API key.', link: '/examples/custom-authorization' },
   { title: 'JSON and raw body', text: 'A JSON body checked by a schema, and a CSV body.', link: '/examples/json-body' },
   { title: 'File upload', text: 'One file and many files, size and real type checked.', link: '/examples/file-upload' },
