@@ -124,6 +124,10 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 
 **CORS default with the extension (BC break when you move to it):** `ApiPresenter` on its own still sends `Access-Control-Allow-Origin: *`. When the extension configures the presenter and `api: cors: mode` is not set, it sends no CORS headers (`'off'`). If browsers on other origins call your API, set `cors: allowedOrigins: [...]` (recommended) or `cors: mode: '*'` to keep the 3.x behaviour. A `setCorsHeader()` call on an `ApiPresenter` you register in `services:` is kept. See the [documentation](https://tomaj.github.io/nette-api/guide/di-extension) and `examples/di-extension`.
 
+## Attribute endpoints (optional)
+
+With the DI extension you can write `#[Get(1, 'users')]`, `#[Authorization]` and `#[RateLimit]` from `Tomaj\NetteApi\Attribute` on a handler class instead of an `api: endpoints:` entry. The extension reads them from autowired handler services and from `api: discovery: paths`. An autowired handler you already register in `services:` that happens to carry such an attribute becomes an endpoint, so do not add the attributes to handlers that are also listed in `api: endpoints:` (the compilation fails with a duplicate endpoint). See the [documentation](https://tomaj.github.io/nette-api/guide/attributes) and `examples/attributes`.
+
 ## Unchanged
 
 * `ApiPresenter::setCorsHeader('auto')` still works. Prefer `setCorsAllowedOrigins()` for new code.

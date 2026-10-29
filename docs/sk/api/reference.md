@@ -17,6 +17,8 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 | `EndpointIdentifier` / `EndpointInterface` | metóda, verzia, balík, akcia | [Handlery](/sk/guide/handlers#registracia-handlera) |
 | `Presenters\ApiPresenter` | spracuje požiadavku krok po kroku | [Spracovanie v ApiPresenteri](/sk/guide/presenter) |
 | `DI\NetteApiExtension` | zaregistruje služby a endpointy zo sekcie `api:` v neone (4.0.0) | [DI rozšírenie](/sk/guide/di-extension) |
+| `Attribute\Get`, `Post`, `Put`, `Patch`, `Delete`, `Endpoint` | atribúty endpointov na triede handlera (4.0.0) | [Endpointy z atribútov](/sk/guide/attributes) |
+| `Attribute\Authorization`, `Attribute\RateLimit` | autorizácia a obmedzenie požiadaviek pre endpointy triedy z atribútov (4.0.0) | [Endpointy z atribútov](/sk/guide/attributes#autorizacia-a-obmedzenie-poziadaviek) |
 | `DI\EndpointDefinition` | jeden endpoint pre `NetteApiExtension::addEndpoint()` z iného rozšírenia (4.0.0) | [DI rozšírenie](/sk/guide/di-extension#moze-endpointy-pridavat-ine-rozsirenie) |
 
 ## Handlery

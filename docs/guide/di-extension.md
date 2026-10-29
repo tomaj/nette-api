@@ -73,7 +73,7 @@ Endpoints are registered in this order, which is also the order in the [endpoint
 The same method, version, package and action twice stops the compilation:
 
 ```
-Endpoint GET /v1/users is defined twice: in api.endpoints[0] and in api.endpoints[3]. Keep only one of them.
+Endpoint GET /v1/users is defined twice: in api.endpoints[0] and in api.endpoints[3]. Remove one of them, or change the method, version, package or action of one so the URLs differ.
 ```
 
 ### The handler
@@ -165,13 +165,13 @@ Each of the two keys is decided on its own: an endpoint without the key uses the
 A class of the wrong type stops the compilation too, for example a handler class used as an authorization:
 
 ```
-Class 'App\Api\HelloHandler' in api.authorizations.token must implement Tomaj\NetteApi\Authorization\ApiAuthorizationInterface.
+Class 'App\Api\HelloHandler' in api.authorizations.token must implement Tomaj\NetteApi\Authorization\ApiAuthorizationInterface, but it does not. Implement the interface in the class, or use another class.
 ```
 
 A typo in a name stops the compilation and lists the names you defined:
 
 ```
-Unknown value 'tokne' in the authorization of endpoint GET /v1/users (api.endpoints[0]). Use a name defined in the api section, @serviceName, a class name or a statement like App\MyClass(arguments). Defined names: 'token'.
+Unknown authorization 'tokne' in the authorization of endpoint GET /v1/users (api.endpoints[0]), it is not a name from api.authorizations nor an existing class. Did you mean 'token'? Names defined in api.authorizations: 'token'. Or use @serviceName, a class implementing Tomaj\NetteApi\Authorization\ApiAuthorizationInterface, or a statement like App\MyClass(arguments). To add the name, write api: {authorizations: {tokne: App\Api\MyAuthorization}}.
 ```
 
 Read [Authorization](/guide/authorization) and [Rate limiting](/guide/rate-limit) for the classes you can use.
@@ -298,6 +298,33 @@ api:
 
 An unknown key is an error, so a typo such as `cors: {origins: ...}` does not silently do nothing.
 
+## Configuration errors
+
+Every mistake in the `api:` section stops the container compilation with a `Nette\DI\InvalidConfigurationException`. The message names the neon key, says what is wrong and how to fix it, usually with an example. The most common ones:
+
+| Mistake | Example | The error says |
+|---|---|---|
+| Unknown key | `cors: {origins: [...]}`, `pakage: users` | `Unexpected item 'api › cors › origins'`, a "did you mean" and all allowed keys of that section |
+| Wrong type | `endpoints: 5`, `maskHeaders: 5` | what the key expects and an example, e.g. `Use a list of endpoints, for example endpoints: [{...}]` |
+| Missing endpoint key | `- {method: GET, version: 1}` | `The mandatory item ... is missing. Every endpoint needs method, version, package and handler` |
+| Unknown value | `errors: {format: problemdetails}` | `Did you mean 'problemDetails'?` and the allowed values |
+| Class does not exist | `logger: App\Nope`, `logger: App\Nope(1)` | the class, the key, and to check the spelling and the composer autoload |
+| Class of the wrong type | `logger: stdClass` | which interface the class must implement |
+| Service does not exist or has the wrong type | `logger: @nope` | to register the service, or to use a class name |
+| Quoted reference | `handler: '@users'` | to remove the quotes |
+| Unknown authorization or rate limit name | `authorization: berer` | `Did you mean 'bearer'?` and the defined names |
+| Invalid authorization or rate limit name | `authorizations: {my-auth: ...}` | that a name has only letters, digits and underscores |
+| Typo in the HTTP method | `method: GETT` | `Did you mean 'GET'?` and the HTTP methods |
+| Invalid version, package or action | `version: v1`, `package: users/list`, `package: 'u x'` | which characters are allowed, with an example |
+| Duplicate endpoint | two `GET /v1/users` | both places |
+| `errors.handler` with `format` or `typeBaseUri` | `errors: {handler: ..., format: problemDetails}` | to keep only one of them |
+| `typeBaseUri` without a problem details format, or not an absolute URI | `typeBaseUri: example.com/errors` | to add `format: problemDetails`, or to use e.g. `https://example.com/errors/` |
+| Invalid CORS settings | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` without `allowedOrigins` | the valid modes or origins, with an example |
+| Empty or invalid header list | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | to use `true` for the defaults, or to write only header names |
+| Discovery path is missing or is a file | `paths: [%appDir%/Api/UsersHandler.php]` | to use a directory |
+| `discovery.namespace` without `paths`, or matching no class | `discovery: {namespace: App}` | to add the paths, or the namespaces that were found |
+| Option and your own service of the same type | `logger: ...` and a logger in `services:` | to remove one of them |
+
 ## Moving from services
 
 The extension uses the services you already have. Add it, then move one endpoint at a time from `addApi()` to `api.endpoints`:
@@ -332,8 +359,30 @@ Your `apiPresenter` sent `Access-Control-Allow-Origin: *` because that is its de
 Setting an option and having the same service in `services:` is a conflict, because the extension would not know which one you mean:
 
 ```
-You set api.errors, but service 'errorHandler' of type Tomaj\NetteApi\Error\ErrorHandlerInterface is registered in the services section too. Remove one of them.
+api.errors is set, but service 'errorHandler' of type Tomaj\NetteApi\Error\ErrorHandlerInterface is registered in the services section too, and the api extension does not know which one to use. Remove api.errors, or remove the service 'errorHandler'.
 ```
+
+## Design decisions
+
+Deliberate limits of the extension. Each one has a backlog issue with the pros, the cons and when it would be added.
+
+### No short names for rate-limit strategies yet
+
+A rate limit is a service, a class or a statement such as `strict: App\MyRateLimit(60)`.
+
+- **Why:** the only built-in strategy is `NoRateLimit`. Short names like `slidingWindow(60, 60)` would point to classes that do not exist yet.
+- **Why not now:** the names and arguments depend on the design in [#195](https://github.com/tomaj/nette-api/issues/195); aliases added earlier could not change later without a BC break.
+- **When it would make sense:** after #195 is merged. See [#229](https://github.com/tomaj/nette-api/issues/229).
+
+### No `openapi:` option
+
+The OpenAPI endpoint is registered like any other one, in `api: endpoints:` with the arguments of the handler.
+
+- **Why:** the handler has several options (`initData` with info, servers and security, `allowedEndpoints`, `specBuilder`). Copying them into the extension adds a second way to do the same thing.
+- **Why not:** more schema and docs to keep in sync, and it is less obvious where the endpoint comes from.
+- **When it would make sense:** most projects copy the same block, or the extension can fill in useful defaults, such as security schemes from `api: authorizations:`. See [#230](https://github.com/tomaj/nette-api/issues/230).
+
+Decisions about [attribute endpoints](/guide/attributes#design-decisions) are on their page.
 
 ## FAQ
 
@@ -403,3 +452,7 @@ Register it after the API extension in `extensions:`.
 ### Where is a complete project?
 
 In [examples/di-extension](/examples/di-extension). Its `e2e.sh` test runs in CI.
+
+## Can I declare endpoints on the handler classes instead?
+
+Yes, with `#[Get]`, `#[Post]` and the other attributes. The extension reads them at compile time and checks them together with `endpoints`. See [Attribute endpoints](/guide/attributes).

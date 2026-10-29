@@ -1,0 +1,15 @@
+{
+    "name": "acme/attributes-api",
+    "description": "Endpoints declared with PHP attributes on the handler classes (tomaj/nette-api DI extension)",
+    "type": "project",
+    "require": {
+        "php": ">=8.4",
+        "tomaj/nette-api": "^4.0",
+        "nette/bootstrap": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}

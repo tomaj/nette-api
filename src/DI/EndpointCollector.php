@@ -25,7 +25,7 @@ final class EndpointCollector
         $key = $endpoint->describe();
         if (isset($this->sources[$key])) {
             throw new InvalidConfigurationException(sprintf(
-                "Endpoint %s is defined twice: in %s and in %s. Keep only one of them.",
+                "Endpoint %s is defined twice: in %s and in %s. Remove one of them, or change the method, version, package or action of one so the URLs differ.",
                 $endpoint->describe(),
                 $this->sources[$key],
                 $endpoint->source,

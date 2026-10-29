@@ -1,6 +1,6 @@
 ---
 title: Examples
-description: 'Fifteen runnable Nette API projects tested in CI: params, JSON body, uploads, pagination, authorization, rate limit, CORS, versions, OpenAPI, logging, testing, DI extension.'
+description: 'Sixteen runnable Nette API projects tested in CI: params, JSON body, uploads, pagination, authorization, rate limit, CORS, versions, OpenAPI, logging, testing, DI extension, attribute endpoints.'
 ---
 
 # Examples
@@ -29,6 +29,7 @@ To run an example against your local checkout, as CI does, use `examples/ci/exam
   { title: 'Logging and errors', text: 'Request log with masked headers (needs 3.6.0), own error handler, production mode.', link: '/examples/logging-errors' },
   { title: 'Problem Details', text: 'RFC 9457 errors for 400, 401, 404, 409, 429 and 500, Accept negotiation, OpenAPI schema (needs 4.0.0).', link: '/examples/problem-details' },
   { title: 'DI extension', text: 'The whole API in one api: neon section, default token, rate limit, CORS (needs 4.0.0).', link: '/examples/di-extension' },
+  { title: 'Attribute endpoints', text: '#[Get], #[Post], #[Authorization] and #[RateLimit] on the handler classes, found by the DI extension (needs 4.0.0).', link: '/examples/attributes' },
   { title: 'Custom authorization', text: 'Your own ApiAuthorizationInterface with roles, the user in the handler, token or API key.', link: '/examples/custom-authorization' },
   { title: 'JSON and raw body', text: 'A JSON body checked by a schema, and a CSV body.', link: '/examples/json-body' },
   { title: 'File upload', text: 'One file and many files, size and real type checked.', link: '/examples/file-upload' },
@@ -60,4 +61,4 @@ Yes, the config, the router and the bootstrap are a complete application. Read [
 
 ### Which ports do they use?
 
-8081 to 8087 and 8090 to 8097, one per example (logging and errors uses two), so they can run side by side.
+8081 to 8087 and 8090 to 8098, one per example (logging and errors uses two), so they can run side by side.

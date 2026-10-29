@@ -17,6 +17,8 @@ All classes live under `Tomaj\NetteApi`.
 | `EndpointIdentifier` / `EndpointInterface` | method, version, package, action | [Handlers](/guide/handlers#registering-a-handler) |
 | `Presenters\ApiPresenter` | runs a request step by step | [ApiPresenter pipeline](/guide/presenter) |
 | `DI\NetteApiExtension` | registers the services and endpoints from the `api:` neon section (4.0.0) | [DI extension](/guide/di-extension) |
+| `Attribute\Get`, `Post`, `Put`, `Patch`, `Delete`, `Endpoint` | endpoint attributes on a handler class (4.0.0) | [Attribute endpoints](/guide/attributes) |
+| `Attribute\Authorization`, `Attribute\RateLimit` | authorization and rate limit of the attribute endpoints of a class (4.0.0) | [Attribute endpoints](/guide/attributes#authorization-and-rate-limit) |
 | `DI\EndpointDefinition` | one endpoint for `NetteApiExtension::addEndpoint()` from another extension (4.0.0) | [DI extension](/guide/di-extension#can-another-extension-add-endpoints) |
 
 ## Handlers

@@ -73,7 +73,7 @@ Endpointy sa zaregistrujú v tomto poradí, v ktorom sú aj vo [výpise endpoint
 Rovnaká metóda, verzia, package a akcia dvakrát zastaví kompiláciu:
 
 ```
-Endpoint GET /v1/users is defined twice: in api.endpoints[0] and in api.endpoints[3]. Keep only one of them.
+Endpoint GET /v1/users is defined twice: in api.endpoints[0] and in api.endpoints[3]. Remove one of them, or change the method, version, package or action of one so the URLs differ.
 ```
 
 ### Handler
@@ -165,13 +165,13 @@ O každom z dvoch kľúčov sa rozhoduje samostatne: endpoint bez kľúča použ
 Kompiláciu zastaví aj trieda nesprávneho typu, napríklad trieda handlera použitá ako autorizácia:
 
 ```
-Class 'App\Api\HelloHandler' in api.authorizations.token must implement Tomaj\NetteApi\Authorization\ApiAuthorizationInterface.
+Class 'App\Api\HelloHandler' in api.authorizations.token must implement Tomaj\NetteApi\Authorization\ApiAuthorizationInterface, but it does not. Implement the interface in the class, or use another class.
 ```
 
 Preklep v názve zastaví kompiláciu a vypíše názvy, ktoré ste definovali:
 
 ```
-Unknown value 'tokne' in the authorization of endpoint GET /v1/users (api.endpoints[0]). Use a name defined in the api section, @serviceName, a class name or a statement like App\MyClass(arguments). Defined names: 'token'.
+Unknown authorization 'tokne' in the authorization of endpoint GET /v1/users (api.endpoints[0]), it is not a name from api.authorizations nor an existing class. Did you mean 'token'? Names defined in api.authorizations: 'token'. Or use @serviceName, a class implementing Tomaj\NetteApi\Authorization\ApiAuthorizationInterface, or a statement like App\MyClass(arguments). To add the name, write api: {authorizations: {tokne: App\Api\MyAuthorization}}.
 ```
 
 Triedy, ktoré môžete použiť, sú na stránkach [Autorizácia](/sk/guide/authorization) a [Obmedzenie požiadaviek](/sk/guide/rate-limit).
@@ -298,6 +298,33 @@ api:
 
 Neznámy kľúč je chyba, takže preklep ako `cors: {origins: ...}` nemôže potichu nič nerobiť.
 
+## Chyby v konfigurácii
+
+Každá chyba v sekcii `api:` zastaví kompiláciu kontajnera výnimkou `Nette\DI\InvalidConfigurationException`. Správa (v angličtine) uvádza kľúč v neone, čo je zle a ako to opraviť, väčšinou s príkladom. Najčastejšie:
+
+| Chyba | Príklad | Správa hovorí |
+|---|---|---|
+| Neznámy kľúč | `cors: {origins: [...]}`, `pakage: users` | `Unexpected item 'api › cors › origins'`, „did you mean“ a všetky povolené kľúče danej sekcie |
+| Zlý typ | `endpoints: 5`, `maskHeaders: 5` | čo kľúč očakáva a príklad, napr. `Use a list of endpoints, for example endpoints: [{...}]` |
+| Chýbajúci kľúč endpointu | `- {method: GET, version: 1}` | `The mandatory item ... is missing. Every endpoint needs method, version, package and handler` |
+| Neznáma hodnota | `errors: {format: problemdetails}` | `Did you mean 'problemDetails'?` a povolené hodnoty |
+| Trieda neexistuje | `logger: App\Nope`, `logger: App\Nope(1)` | triedu, kľúč a že treba skontrolovať názov a autoload v composer.json |
+| Trieda zlého typu | `logger: stdClass` | aké rozhranie musí trieda implementovať |
+| Služba neexistuje alebo je zlého typu | `logger: @nope` | že treba službu zaregistrovať alebo použiť názov triedy |
+| Referencia v úvodzovkách | `handler: '@users'` | že treba odstrániť úvodzovky |
+| Neznáme meno autorizácie alebo obmedzenia | `authorization: berer` | `Did you mean 'bearer'?` a definované mená |
+| Neplatné meno autorizácie alebo obmedzenia | `authorizations: {my-auth: ...}` | že meno má len písmená, číslice a podčiarkovníky |
+| Preklep v HTTP metóde | `method: GETT` | `Did you mean 'GET'?` a HTTP metódy |
+| Neplatná verzia, balík alebo akcia | `version: v1`, `package: users/list`, `package: 'u x'` | aké znaky sú povolené, s príkladom |
+| Duplicitný endpoint | dvakrát `GET /v1/users` | obe miesta |
+| `errors.handler` spolu s `format` alebo `typeBaseUri` | `errors: {handler: ..., format: problemDetails}` | že treba nechať len jedno |
+| `typeBaseUri` bez formátu problem details alebo nie absolútne URI | `typeBaseUri: example.com/errors` | že treba pridať `format: problemDetails` alebo použiť napr. `https://example.com/errors/` |
+| Neplatné nastavenie CORS | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` bez `allowedOrigins` | platné režimy alebo originy, s príkladom |
+| Prázdny alebo neplatný zoznam hlavičiek | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | že pre predvolené treba `true`, alebo písať len mená hlavičiek |
+| Cesta discovery neexistuje alebo je súbor | `paths: [%appDir%/Api/UsersHandler.php]` | že treba adresár |
+| `discovery.namespace` bez `paths` alebo bez nájdenej triedy | `discovery: {namespace: App}` | že treba pridať cesty, alebo nájdené namespacy |
+| Voľba a vlastná služba rovnakého typu | `logger: ...` a logger v `services:` | že treba jedno z nich odstrániť |
+
 ## Prechod zo services
 
 Rozšírenie použije služby, ktoré už máte. Pridajte ho a potom presúvajte endpointy z `addApi()` do `api.endpoints` po jednom:
@@ -332,8 +359,30 @@ Váš `apiPresenter` posielal `Access-Control-Allow-Origin: *`, lebo to je jeho 
 Nastaviť voľbu a mať rovnakú službu aj v `services:` je konflikt, lebo rozšírenie by nevedelo, ktorú myslíte:
 
 ```
-You set api.errors, but service 'errorHandler' of type Tomaj\NetteApi\Error\ErrorHandlerInterface is registered in the services section too. Remove one of them.
+api.errors is set, but service 'errorHandler' of type Tomaj\NetteApi\Error\ErrorHandlerInterface is registered in the services section too, and the api extension does not know which one to use. Remove api.errors, or remove the service 'errorHandler'.
 ```
+
+## Rozhodnutia v návrhu
+
+Zámerné obmedzenia rozšírenia. Každé má issue v backlogu s výhodami, nevýhodami a tým, kedy by sa doplnilo.
+
+### Zatiaľ žiadne krátke mená pre stratégie obmedzenia požiadaviek
+
+Obmedzenie požiadaviek je služba, trieda alebo výraz, napríklad `strict: App\MyRateLimit(60)`.
+
+- **Prečo:** jediná vstavaná stratégia je `NoRateLimit`. Krátke mená ako `slidingWindow(60, 60)` by ukazovali na triedy, ktoré ešte neexistujú.
+- **Prečo nie teraz:** mená a argumenty závisia od návrhu v [#195](https://github.com/tomaj/nette-api/issues/195); aliasy pridané skôr by sa neskôr nedali zmeniť bez BC zlomu.
+- **Kedy by to dávalo zmysel:** po zlúčení #195. Pozri [#229](https://github.com/tomaj/nette-api/issues/229).
+
+### Žiadna voľba `openapi:`
+
+OpenAPI endpoint sa registruje ako každý iný, v `api: endpoints:` s argumentmi handlera.
+
+- **Prečo:** handler má viac nastavení (`initData` s info, servermi a zabezpečením, `allowedEndpoints`, `specBuilder`). Ich kópia v rozšírení by bola druhým spôsobom na to isté.
+- **Prečo nie:** viac schémy a dokumentácie na udržiavanie a menej jasné, odkiaľ endpoint pochádza.
+- **Kedy by to dávalo zmysel:** väčšina projektov kopíruje ten istý blok, alebo rozšírenie vie doplniť užitočné predvolené hodnoty, napríklad schémy zabezpečenia z `api: authorizations:`. Pozri [#230](https://github.com/tomaj/nette-api/issues/230).
+
+Rozhodnutia o [endpointoch z atribútov](/sk/guide/attributes#rozhodnutia-v-navrhu) sú na ich stránke.
 
 ## Časté otázky
 
@@ -403,3 +452,7 @@ V `extensions:` ho zaregistrujte za API rozšírením.
 ### Kde je celý projekt?
 
 V [examples/di-extension](/sk/examples/di-extension). Jeho test `e2e.sh` beží v CI.
+
+## Dajú sa endpointy zapísať priamo na triedy handlerov?
+
+Áno, atribútmi `#[Get]`, `#[Post]` a ďalšími. Rozšírenie ich prečíta pri kompilácii a skontroluje spolu s `endpoints`. Pozrite [Endpointy z atribútov](/sk/guide/attributes).
