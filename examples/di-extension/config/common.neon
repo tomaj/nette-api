@@ -1,0 +1,46 @@
+extensions:
+	api: Tomaj\NetteApi\DI\NetteApiExtension
+
+parameters:
+	apiTokens:
+		secret-token: '*'
+
+services:
+	router: App\RouterFactory::create
+	# a normal application service, handlers get it through autowiring
+	- App\Model\UserRepository
+
+api:
+	# error details are on unless APP_ENV=production
+	outputConfigurator: Tomaj\NetteApi\Output\Configurator\EnvConfigurator('APP_ENV', 'production')
+
+	errors:
+		format: problemDetails
+		typeBaseUri: https://api.example.com/problems/
+
+	# without cors the extension sends no CORS headers
+	cors:
+		allowedOrigins: [https://app.example.com]
+		preflight: true
+
+	logging:
+		maskHeaders: true
+
+	# named services, endpoints use them by name
+	authorizations:
+		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
+	rateLimits:
+		strict: App\FileRateLimit(storageDir: %tempDir%, limit: 2)
+
+	# every endpoint needs the token unless it says otherwise
+	defaults:
+		authorization: token
+
+	endpoints:
+		# GET /api/v1/hello is public
+		- {method: GET, version: 1, package: hello, handler: App\Api\HelloHandler('Hello from neon'), authorization: false}
+		# GET /api/v1/users and GET /api/v1/users/detail?id=1 need the token
+		- {method: GET, version: 1, package: users, handler: App\Api\UsersListHandler}
+		- {method: GET, version: 1, package: users, action: detail, handler: App\Api\UserDetailHandler}
+		# POST /api/v1/users is limited to 2 calls per minute
+		- {method: POST, version: 1, package: users, handler: App\Api\UserCreateHandler, rateLimit: strict}

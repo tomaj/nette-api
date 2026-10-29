@@ -33,6 +33,10 @@ V 3.x presenter skončí pred loggerom. Pozrite si [Logovanie](/sk/guide/logging
 
 Áno, v novom projekte: chyby podľa RFC 9457 majú jeden strojovo čitateľný tvar. Nie sú predvolené, lebo existujúci klienti čítajú `message`. Pozrite si [Problem Details](/sk/guide/problem-details).
 
+## Dá sa API nastaviť bez zoznamu volaní addApi()?
+
+Áno, od verzie 4.0.0 cez [DI rozšírenie](/sk/guide/di-extension): jedna neon sekcia `api:` s endpointmi, autorizáciami, obmedzeniami požiadaviek, CORS a formátom chýb, skontrolovaná pri kompilácii kontajnera.
+
 ## Ako publikujem OpenAPI?
 
 Zaregistrujte `OpenApiHandler` ako endpoint. Pozrite si [OpenAPI](/sk/guide/openapi).

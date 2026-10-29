@@ -7,8 +7,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 
 ### Changed (BC breaks)
+* With the DI extension, `cors.mode` defaults to `'off'` (no CORS headers) instead of the presenter's `'*'`; set `cors: allowedOrigins` or `cors: mode: '*'` explicitly. `ApiPresenter` without the extension keeps `'*'`. See `UPGRADE-4.0.md`.
 * Minimum PHP version is 8.4. CI runs on PHP 8.4 and 8.5; PHP 8.6 runs as an experimental job.
-* Raised dependency minimums: `nette/application` ^3.2, `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0.
+* Raised dependency minimums: `nette/application` ^3.2, `nette/di` ^3.2 and `nette/schema` ^1.3 (now required, for the DI extension), `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0.
 * Removed deprecated `Tomaj\NetteApi\Misc\BearerTokenRepositoryInterface` and `Tomaj\NetteApi\Misc\StaticBearerTokenRepository`. Use `TokenRepositoryInterface` and `StaticTokenRepository`.
 * All source files declare `strict_types=1`.
 * Constructor-promoted and `readonly` properties, typed class constants (`ApiPresenter::DEFAULT_MASKED_LOG_HEADERS`, `MASKED_LOG_HEADER_VALUE`) and native type declarations replace docblock-only types. Subclasses that reassigned inherited properties, or overrode methods without matching types, must be updated.
@@ -35,6 +36,9 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * RFC 9457 Problem Details (#196): `Error\ProblemDetails`, `Response\ProblemDetailsResponse` (`application/problem+json`), `Error\ProblemDetailsErrorHandler` for every framework error (`400` with an `errors` list, `401`, `404`, `429` with `limit` and `retryAfter`, `500`; output schema errors as `outputErrors` only with error details on) and `Error\NegotiatingErrorHandler`, which sends problem details only to clients with `Accept: application/problem+json` and adds `Vary: Accept` to every error response. Opt-in, `DefaultErrorHandler` stays the default.
 * `OpenApi\ResponseBuilder(problemDetails: true)` documents error responses with a `ProblemDetails` schema as `application/problem+json`; `ResponseBuilder::problemDetailsSchema()`.
 * `examples/problem-details` and the Problem Details documentation page.
+* Nette DI extension `DI\NetteApiExtension` (#200): the whole API in one `api:` neon section, with endpoints (`method`, `version`, `package`, `action`, `handler` as a class, a statement or `@service`), named `authorizations` and `rateLimits`, `defaults`, `errors` (`format: default|problemDetails|negotiating`, `typeBaseUri`, `handler`), `outputConfigurator`, `cors`, `logging.maskHeaders`, `ipDetector` and `logger`. Handlers are created lazily, and mistakes (unknown handler, unknown name, duplicate endpoint, unknown key) fail the container compilation. Services you register yourself are used instead of the extension's ones. Optional, the `services:` setup keeps working.
+* `examples/di-extension` and the DI extension documentation page.
+* The DI extension adds the `Api: Tomaj\NetteApi\Presenters\*Presenter` application mapping unless `application: mapping` already has an `Api` entry.
 
 ### Changed
 * Dev tools: PHPUnit ^12 || ^13, PHPStan ^2.1 (level max, no baseline), Rector ^2.2, PHP_CodeSniffer ^4.0, Infection; `symfony/yaml` ^7.4.12 || ^8.0.12.

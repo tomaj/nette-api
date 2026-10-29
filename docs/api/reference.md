@@ -16,6 +16,8 @@ All classes live under `Tomaj\NetteApi`.
 | `ApiHolder` | used inside `ApiDecider`: how it stores an endpoint before its handler is created; the handler can still be a class or service name | [ApiDecider](/guide/api-decider#three-ways-to-pass-a-handler) |
 | `EndpointIdentifier` / `EndpointInterface` | method, version, package, action | [Handlers](/guide/handlers#registering-a-handler) |
 | `Presenters\ApiPresenter` | runs a request step by step | [ApiPresenter pipeline](/guide/presenter) |
+| `DI\NetteApiExtension` | registers the services and endpoints from the `api:` neon section (4.0.0) | [DI extension](/guide/di-extension) |
+| `DI\EndpointDefinition` | one endpoint for `NetteApiExtension::addEndpoint()` from another extension (4.0.0) | [DI extension](/guide/di-extension#can-another-extension-add-endpoints) |
 
 ## Handlers
 
@@ -87,7 +89,7 @@ None. `setExample()` on params and outputs was removed in 4.0; use `addExample()
 
 ### Is there a DI extension?
 
-No, everything is registered as plain services in NEON, see [Getting started](/guide/getting-started).
+Yes, since 4.0.0: `DI\NetteApiExtension` configures the whole API from one `api:` neon section, see [DI extension](/guide/di-extension). Registering plain services in NEON, as in [Getting started](/guide/getting-started), keeps working.
 
 ### What does a full project look like?
 

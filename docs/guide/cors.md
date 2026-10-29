@@ -19,7 +19,7 @@ Every response gets `Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIO
 
 | Value | Headers sent |
 | --- | --- |
-| `'*'` (the default) | `Access-Control-Allow-Origin: *` |
+| `'*'` (the default; with the [DI extension](/guide/di-extension#cors) the default is `'off'`) | `Access-Control-Allow-Origin: *` |
 | `'https://app.example.com'` | `Access-Control-Allow-Origin: https://app.example.com` |
 | `'auto'` | the scheme, host and port of the `Referer` header (any explicit port except `80` is kept, so `:443` stays), and `Access-Control-Allow-Credentials: true`; nothing when there is no Referer |
 | `'off'` | no `Access-Control-Allow-Origin` |

@@ -87,6 +87,10 @@ services:
 - `ApiPresenter` potrebuje konfigurátor výstupu a obsluhu chýb. `ApiDecider` drží zoznam endpointov.
 - Skeleton odsadzuje neon súbory tabulátormi. Fungujú tabulátory aj medzery, ale v jednom súbore ich nikdy nemiešajte; nette/neon taký súbor nenačíta.
 
+::: tip Kratšie s DI rozšírením (4.0.0)
+Od verzie 4.0.0 môže byť ten istý súbor jedna sekcia `api:` [DI rozšírenia](/sk/guide/di-extension) namiesto `services:` vyššie.
+:::
+
 Potom súbor načítajte v `app/Bootstrap.php`:
 
 ```php [app/Bootstrap.php]
