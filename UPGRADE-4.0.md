@@ -56,7 +56,7 @@ $param->addExample('default', 'abc');
 
 ## Final classes
 
-These classes are now `final`: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, `Output\Configurator\DebuggerConfigurator`, `EnvConfigurator` and `QueryConfigurator`. Implement the interface (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, ...) instead of extending them. Extension points stay open: handlers, params, outputs, responses, authorizations, OpenAPI builders, `ApiDecider`, `ApiLink`, console components and `DefaultApiConsoleFormFactory`.
+These classes are now `final`: `Api`, `ApiHolder`, `EndpointIdentifier`, `Authorization\NoAuthorization`, `RateLimit\NoRateLimit`, `RateLimit\RateLimitResponse`, `Misc\IpDetector`, `Misc\StaticIpDetector`, `Misc\StaticTokenRepository`, `Misc\ConsoleRequest`, `Misc\ConsoleResponse`, `Misc\OpenApiTransform`, `Params\ParamsProcessor`, `Validation\InputValidator`, `Validation\JsonSchemaValidator`, `ValidationResult\ValidationResult`, `Output\Configurator\DebuggerConfigurator`, `EnvConfigurator` and `QueryConfigurator`. Implement the interface (`IpDetectorInterface`, `TokenRepositoryInterface`, `ApiAuthorizationInterface`, `RateLimitInterface`, `ConfiguratorInterface`, ...) instead of extending them. Extension points stay open: handlers (except `Handlers\DefaultHandler`, see [Error handlers](#error-handlers)), params, outputs, responses, authorizations, OpenAPI builders, `ApiDecider`, `ApiLink`, console components and `DefaultApiConsoleFormFactory`.
 
 Overriding methods are marked with `#[\Override]`.
 
@@ -72,6 +72,51 @@ Overriding methods are marked with `#[\Override]`.
 ## API key authentication
 
 `QueryApiKeyAuthentication`, `HeaderApiKeyAuthentication` and `CookieApiKeyAuthentication` now return `false` with the error message `API key is not set` when the key is not a string (for example `?api_key[]=x`). Previously this ended with a `TypeError`. `BearerTokenAuthorization` treats a non-string `Authorization` header as missing.
+
+## Error handlers
+
+`ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has two new methods. An own implementation must add them; a wrapper can delegate to `DefaultErrorHandler`:
+
+```php
+use Tomaj\NetteApi\EndpointInterface;
+use Tomaj\NetteApi\RateLimit\RateLimitResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
+{
+    return $this->inner->handleNotFound($endpoint);
+}
+
+public function handleRateLimit(RateLimitResponse $rateLimit): ResponseInterface
+{
+    return $this->inner->handleRateLimit($rateLimit);
+}
+```
+
+Returning `JsonApiResponse` from the old methods still satisfies the interface. Code that calls an error handler and needs `JsonApiResponse` methods such as `getPayload()` must check the type.
+
+`ApiPresenter` asks the error handler for the `404` of an unknown endpoint and for the `429` of a reached rate limit, unless `RateLimitResponse` has its own error response. With `DefaultErrorHandler` the bodies are unchanged: `{"status":"error","message":"Unknown api endpoint"}` and `{"status":"error","message":"Too many requests. Retry after N seconds."}`, or only `Too many requests.` when the rate limit does not know the retry time.
+
+`Tomaj\NetteApi\Handlers\DefaultHandler` is `final`. `ApiPresenter` no longer calls its `handle()`, so a subclass that changed the `404` would be silently ignored. Move that code to `handleNotFound()` of your error handler:
+
+```php
+use Tomaj\NetteApi\EndpointInterface;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
+{
+    return new JsonApiResponse(404, ['status' => 'error', 'message' => 'No endpoint ' . $endpoint->getUrl()]);
+}
+```
+
+## Exceptions from authorization are not sent to the client
+
+`DefaultErrorHandler::handleAuthorizationException()` answered with the exception message, which could reveal database hosts or internal paths. It now answers `{"status":"error","message":"Internal server error"}`, logs the exception to Tracy and adds the message as `detail` only when the configurator's `showErrorDetail()` is true, the same as `handle()`. Clients that parsed the message must read the log instead.
+
+## Problem Details (optional, recommended)
+
+4.0 can send errors as RFC 9457 `application/problem+json`, the recommended format for new projects. Nothing changes until you register `Tomaj\NetteApi\Error\ProblemDetailsErrorHandler` or `NegotiatingErrorHandler`. See the [documentation](https://tomaj.github.io/nette-api/guide/problem-details) and `examples/problem-details`.
 
 ## Unchanged
 

@@ -1,0 +1,41 @@
+application:
+	mapping:
+		Api: Tomaj\NetteApi\Presenters\*Presenter
+
+parameters:
+	apiTokens:
+		secret-token: '*'
+	# problem "type" is this base + a short name, e.g. https://api.example.com/problems/validation-error
+	problemTypeBaseUri: https://api.example.com/problems/
+
+services:
+	router: App\RouterFactory::create
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+
+	# error details (exception messages) are on unless APP_ENV=production
+	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator('APP_ENV', 'production')
+	- Tomaj\NetteApi\Misc\IpDetector
+
+	# every error (400, 401, 404, 429, 500) is sent as application/problem+json
+	errorHandler: Tomaj\NetteApi\Error\ProblemDetailsErrorHandler(typeBaseUri: %problemTypeBaseUri%)
+
+	# the OpenAPI spec describes the error responses with the ProblemDetails schema
+	- Tomaj\NetteApi\Handlers\OpenApiHandler(
+		initData: [info: [title: 'Orders API', description: 'Errors are RFC 9457 problem details']]
+		specBuilder: Tomaj\NetteApi\OpenApi\SpecBuilder(
+			Tomaj\NetteApi\OpenApi\PathBuilder(responseBuilder: Tomaj\NetteApi\OpenApi\ResponseBuilder(problemDetails: true))
+		)
+	)
+	- Tomaj\NetteApi\Link\ApiLink
+
+	apiDecider:
+		factory: Tomaj\NetteApi\ApiDecider
+		setup:
+			# POST /api/v1/orders: 400 with "errors", 409 from the handler, 500 from an exception
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'orders'), App\Api\OrderCreateHandler(%problemTypeBaseUri%), Tomaj\NetteApi\Authorization\NoAuthorization())
+			# GET /api/v1/me: 401 without a valid bearer token
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'me'), App\Api\MeHandler(), Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%)))
+			# GET /api/v1/limited: always over the limit, 429
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'limited'), App\Api\MeHandler(), Tomaj\NetteApi\Authorization\NoAuthorization(), App\ExhaustedRateLimit())
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'openapi'), Tomaj\NetteApi\Handlers\OpenApiHandler, Tomaj\NetteApi\Authorization\NoAuthorization())

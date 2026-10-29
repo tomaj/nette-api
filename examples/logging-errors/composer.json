@@ -3,8 +3,8 @@
     "description": "tomaj/nette-api example: a request logger, error handling and production mode",
     "type": "project",
     "require": {
-        "php": ">=8.3",
-        "tomaj/nette-api": "^3.6",
+        "php": ">=8.4",
+        "tomaj/nette-api": "^4.0",
         "nette/bootstrap": "^3.2"
     },
     "autoload": {

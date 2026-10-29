@@ -71,7 +71,7 @@ Through one route to its `ApiPresenter` and services registered in your neon con
 
 ### Which versions of PHP and Nette does Nette API 3.x need?
 
-PHP 8.3 or newer, `nette/application` and `nette/http` 3.x, and Latte 3. The full list is in [Getting started](/guide/getting-started#requirements).
+PHP 8.4 or newer, `nette/application` ^3.2, `nette/http` ^3.3 and Latte 3 (Nette API 3.x: PHP 8.3). The full list is in [Getting started](/guide/getting-started#requirements).
 
 ### Do I have to use presenters for my endpoints?
 

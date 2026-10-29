@@ -29,6 +29,10 @@ Set the allowed origin and enable preflight. See [CORS](/guide/cors).
 
 The presenter returns before the logger in 3.x. See [Logging](/guide/logging#what-is-logged).
 
+## Should I use Problem Details?
+
+Yes, in a new project: RFC 9457 errors have one machine-readable shape. They are not the default, because existing clients read `message`. See [Problem Details](/guide/problem-details).
+
 ## How do I publish OpenAPI?
 
 Register `OpenApiHandler` as an endpoint. See [OpenAPI](/guide/openapi).

@@ -8,16 +8,21 @@ use PHPUnit\Framework\Attributes\RequiresFunction;
 use InvalidArgumentException;
 use Nette\Application\Request;
 use Nette\DI\Container;
+use Nette\Http\Request as HttpRequest;
 use Nette\Http\Response as HttpResponse;
+use Nette\Http\UrlScript;
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Error\DefaultErrorHandler;
+use Tomaj\NetteApi\Error\NegotiatingErrorHandler;
+use Tomaj\NetteApi\Error\ProblemDetailsErrorHandler;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
 use Tomaj\NetteApi\Output\Configurator\DebuggerConfigurator;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
 use Tomaj\NetteApi\Presenters\CorsMode;
+use Tomaj\NetteApi\Response\JsonApiResponse;
 
 /**
  * Nette sends headers with header(); in CLI they are only observable through xdebug_get_headers().
@@ -154,6 +159,33 @@ final class ApiPresenterCorsTest extends TestCase
             'Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIONS',
             'Access-Control-Allow-Origin: https://fixed.example.com',
         ], $this->runApi($presenter));
+    }
+
+    public function testNegotiatedErrorVariesByOriginAndAccept(): void
+    {
+        $_SERVER['HTTP_ORIGIN'] = 'https://app.example.com';
+        foreach (['application/problem+json' => 'application/problem+json', 'application/json' => 'application/json'] as $accept => $contentType) {
+            $presenter = $this->presenter();
+            $presenter->setCorsAllowedOrigins(['https://app.example.com']);
+            $presenter->errorHandler = new NegotiatingErrorHandler(
+                new DefaultErrorHandler($presenter->outputConfigurator),
+                new ProblemDetailsErrorHandler($presenter->outputConfigurator),
+                new HttpRequest(new UrlScript('http://localhost/'), headers: ['accept' => $accept]),
+                $presenter->response,
+            );
+
+            $before = count(xdebug_get_headers());
+            $result = $presenter->run(new Request('Api:Api:default', 'GET', ['version' => '1', 'package' => 'test', 'apiAction' => 'unknown']));
+            $this->assertSame(404, $result->getCode());
+            $this->assertInstanceOf(JsonApiResponse::class, $result);
+            $this->assertSame($contentType, $result->getContentType());
+            $this->assertSame([
+                'Access-Control-Allow-Methods: POST, DELETE, PUT, GET, OPTIONS',
+                'Vary: Origin',
+                'Access-Control-Allow-Origin: https://app.example.com',
+                'Vary: Accept',
+            ], array_slice(xdebug_get_headers(), $before), $accept);
+        }
     }
 
     public function testInvalidAllowlistFailsEarly(): void

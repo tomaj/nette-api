@@ -3,7 +3,7 @@ title: Začíname
 description: Vytvorenie Nette projektu, inštalácia tomaj/nette-api, routa /api na ApiPresenter, registrácia handlera v ApiDecider a volanie prvého endpointu.
 howto:
   totalTime: PT10M
-  tools: [PHP 8.3, Composer]
+  tools: [PHP 8.4, Composer]
 ---
 
 # Začíname
@@ -16,11 +16,16 @@ Táto stránka vás prevedie od nového Nette projektu k fungujúcemu endpointu 
 
 | Balík | Verzia |
 | --- | --- |
-| PHP | 8.3 alebo novšie, s rozšíreniami curl, json, session a filter |
-| nette/application, nette/http | ^3.0 |
-| latte/latte | ^3.0 |
-| tracy/tracy | ^2.6 |
-| justinrainbow/json-schema | ^5.2 |
+| PHP | 8.4 alebo novšie, s rozšíreniami curl, json, session a filter |
+| nette/application | ^3.2 |
+| nette/http | ^3.3 |
+| latte/latte | ^3.0.20 |
+| tracy/tracy | ^2.10 |
+| justinrainbow/json-schema | ^6.0 |
+
+::: tip Nette API 3.x
+Toto sú požiadavky verzie 4.0. Nette API 3.x beží na PHP 8.3 s `nette/application` a `nette/http` ^3.0, `tracy/tracy` ^2.6 a `justinrainbow/json-schema` ^5.2. Pozrite si [UPGRADE-4.0.md](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
+:::
 
 ## 0. Vytvorte projekt
 

@@ -17,6 +17,18 @@ use Tomaj\NetteApi\Output\RedirectOutput;
  */
 class ResponseBuilder implements ResponseBuilderInterface
 {
+    private const string JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
+
+    private const string PROBLEM_CONTENT_TYPE = 'application/problem+json; charset=utf-8';
+
+    /**
+     * @param bool $problemDetails describe error responses as RFC 9457 application/problem+json
+     *                             (use together with ProblemDetailsErrorHandler)
+     */
+    public function __construct(private readonly bool $problemDetails = false)
+    {
+    }
+
     /**
      * Schemas referenced by default error responses, they are added to components/schemas
      *
@@ -25,6 +37,10 @@ class ResponseBuilder implements ResponseBuilderInterface
     #[\Override]
     public function buildErrorSchemas(): array
     {
+        if ($this->problemDetails) {
+            return ['ProblemDetails' => self::problemDetailsSchema()];
+        }
+
         return [
             'ErrorWrongInput' => [
                 'type' => 'object',
@@ -79,41 +95,14 @@ class ResponseBuilder implements ResponseBuilderInterface
     {
         $responses = [];
         if ($hasInput) {
-            $responses[IResponse::S400_BAD_REQUEST] = [
-                'description' => 'Bad request',
-                'content' => [
-                    'application/json; charset=utf-8' => [
-                        'schema' => [
-                            '$ref' => '#/components/schemas/ErrorWrongInput',
-                        ],
-                    ],
-                ],
-            ];
+            $responses[IResponse::S400_BAD_REQUEST] = $this->errorResponse('Bad request', 'ErrorWrongInput');
         }
 
         if (!$authorization instanceof NoAuthorization) {
-            $responses[IResponse::S401_Unauthorized] = [
-                'description' => 'Operation forbidden',
-                'content' => [
-                    'application/json; charset=utf-8' => [
-                        'schema' => [
-                            '$ref' => '#/components/schemas/ErrorUnauthorized',
-                        ],
-                    ],
-                ],
-            ];
+            $responses[IResponse::S401_Unauthorized] = $this->errorResponse('Operation forbidden', 'ErrorUnauthorized');
         }
 
-        $responses[IResponse::S500_INTERNAL_SERVER_ERROR] = [
-            'description' => 'Internal server error',
-            'content' => [
-                'application/json; charset=utf-8' => [
-                    'schema' => [
-                        '$ref' => '#/components/schemas/InternalServerError',
-                    ],
-                ],
-            ],
-        ];
+        $responses[IResponse::S500_INTERNAL_SERVER_ERROR] = $this->errorResponse('Internal server error', 'InternalServerError');
 
         foreach ($handler->outputs() as $output) {
             if ($output instanceof JsonOutput) {
@@ -162,6 +151,64 @@ class ResponseBuilder implements ResponseBuilderInterface
     }
 
     /**
+     * RFC 9457 problem details object
+     *
+     * @return array<string, mixed>
+     */
+    public static function problemDetailsSchema(): array
+    {
+        return [
+            'type' => 'object',
+            'description' => 'RFC 9457 problem details',
+            'properties' => [
+                'type' => ['type' => 'string', 'format' => 'uri-reference', 'default' => 'about:blank'],
+                'status' => ['type' => 'integer', 'minimum' => 400, 'maximum' => 599],
+                'title' => ['type' => 'string'],
+                'detail' => ['type' => 'string'],
+                'instance' => ['type' => 'string', 'format' => 'uri-reference'],
+                'errors' => [
+                    'type' => 'array',
+                    'description' => 'Validation errors (400)',
+                    'items' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'parameter' => ['type' => 'string'],
+                            'detail' => ['type' => 'string'],
+                        ],
+                        'required' => ['parameter', 'detail'],
+                    ],
+                ],
+                'outputErrors' => [
+                    'type' => 'array',
+                    'description' => 'Output schema errors, one list per declared output (500 invalid-output, only with error details on)',
+                    'items' => ['type' => 'array', 'items' => ['type' => 'string']],
+                ],
+            ],
+            'required' => ['type', 'status', 'title'],
+        ];
+    }
+
+    /**
+     * @param string $legacySchema schema name used without problem details
+     * @return array<string, mixed>
+     */
+    private function errorResponse(string $description, string $legacySchema): array
+    {
+        $contentType = $this->problemDetails ? self::PROBLEM_CONTENT_TYPE : self::JSON_CONTENT_TYPE;
+        $schema = $this->problemDetails ? 'ProblemDetails' : $legacySchema;
+        return [
+            'description' => $description,
+            'content' => [
+                $contentType => [
+                    'schema' => [
+                        '$ref' => '#/components/schemas/' . $schema,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
      * Adds another schema to an already defined JSON response, wrapping the existing schema to `oneOf`.
      *
      * @param array<string, mixed> $response
@@ -170,7 +217,7 @@ class ResponseBuilder implements ResponseBuilderInterface
      */
     private function appendOneOfSchema(array $response, ?array $schema): array
     {
-        $contentType = 'application/json; charset=utf-8';
+        $contentType = self::JSON_CONTENT_TYPE;
         $content = TypeHelper::toArray($response['content'] ?? []);
         $jsonContent = TypeHelper::toArray($content[$contentType] ?? []);
         $existingSchema = $jsonContent['schema'] ?? null;

@@ -1,6 +1,6 @@
 ---
 title: Príklady
-description: 'Trinásť spustiteľných projektov Nette API testovaných v CI: parametre, JSON telo, súbory, stránkovanie, autorizácia, limity, CORS, verzie, OpenAPI a logovanie.'
+description: 'Štrnásť spustiteľných projektov Nette API testovaných v CI: parametre, JSON telo, súbory, stránkovanie, autorizácia, limity, CORS, verzie, OpenAPI a logovanie.'
 ---
 
 # Príklady
@@ -27,6 +27,7 @@ Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa re
   { title: 'CORS', text: 'Pevný origin a preflight pre frontend v prehliadači.', link: '/sk/examples/cors' },
   { title: 'OpenAPI a konzola', text: 'OpenAPI JSON a YAML, zoznam endpointov, webová konzola, {apiLink}.', link: '/sk/examples/openapi-console' },
   { title: 'Logovanie a chyby', text: 'Log požiadaviek s maskovanými hlavičkami (potrebuje 3.6.0), vlastný error handler, produkčný režim.', link: '/sk/examples/logging-errors' },
+  { title: 'Problem Details', text: 'Chyby podľa RFC 9457 pre 400, 401, 404, 409, 429 a 500, výber podľa Accept, schéma v OpenAPI (potrebuje 4.0.0).', link: '/sk/examples/problem-details' },
   { title: 'Vlastná autorizácia', text: 'Vlastný ApiAuthorizationInterface s rolami, používateľ v handleri, token alebo API kľúč.', link: '/sk/examples/custom-authorization' },
   { title: 'JSON a surové telo', text: 'JSON telo overené schémou a CSV telo.', link: '/sk/examples/json-body' },
   { title: 'Nahrávanie súborov', text: 'Jeden aj viac súborov, overená veľkosť a skutočný typ.', link: '/sk/examples/file-upload' },

@@ -51,7 +51,7 @@ services:
 2. walks the endpoints **in the order they were added**;
 3. returns the first one where method, version, package and action are all equal;
 4. sets the endpoint on the handler, so `getEndpoint()` and `createLink()` work;
-5. with no match returns `DefaultHandler` and `NoAuthorization`, which answer `404 Unknown api endpoint`.
+5. with no match returns `DefaultHandler` and `NoAuthorization`, which answer `404 Unknown api endpoint` through the error handler's `handleNotFound()`.
 
 `GET /api/v1/users` and `POST /api/v1/users` are two endpoints with two handlers. A version that is not registered, such as `/api/v3/users`, is a `404`, as the [versions example](/examples/versions) tests.
 

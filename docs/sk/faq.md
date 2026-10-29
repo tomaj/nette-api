@@ -29,6 +29,10 @@ Nastavte povolený origin a zapnite preflight. Pozrite si [CORS](/sk/guide/cors)
 
 V 3.x presenter skončí pred loggerom. Pozrite si [Logovanie](/sk/guide/logging#co-sa-loguje).
 
+## Mám používať Problem Details?
+
+Áno, v novom projekte: chyby podľa RFC 9457 majú jeden strojovo čitateľný tvar. Nie sú predvolené, lebo existujúci klienti čítajú `message`. Pozrite si [Problem Details](/sk/guide/problem-details).
+
 ## Ako publikujem OpenAPI?
 
 Zaregistrujte `OpenApiHandler` ako endpoint. Pozrite si [OpenAPI](/sk/guide/openapi).

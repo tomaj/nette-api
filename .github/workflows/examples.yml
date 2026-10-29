@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        example: [ hello-world, params-validation, auth, cors, openapi-console, logging-errors, custom-authorization, json-body, file-upload, pagination, versions, rate-limit, testing ]
+        example: [ hello-world, params-validation, auth, cors, openapi-console, logging-errors, custom-authorization, json-body, file-upload, pagination, versions, rate-limit, testing, problem-details ]
 
     name: Example ${{ matrix.example }}
 

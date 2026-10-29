@@ -54,6 +54,8 @@ services:
             - addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'hello'), App\Api\HelloHandler, Tomaj\NetteApi\Authorization\NoAuthorization())
 ```
 
+For new projects we recommend [RFC 9457 Problem Details](https://tomaj.github.io/nette-api/guide/problem-details) errors: register `Tomaj\NetteApi\Error\ProblemDetailsErrorHandler` as `apiErrorHandler`. `DefaultErrorHandler` stays the default, so existing clients that read `message` keep working.
+
 Write the handler:
 
 ```php
@@ -100,8 +102,8 @@ The [getting started guide](https://tomaj.github.io/nette-api/guide/getting-star
 
 ## Examples
 
-Thirteen runnable projects in [`examples/`](examples/), each with an `e2e.sh` test that CI runs against the current code:
-[hello world](examples/hello-world), [params and validation](examples/params-validation), [authorization and rate limit](examples/auth), [CORS](examples/cors), [OpenAPI and console](examples/openapi-console), [logging and errors](examples/logging-errors), [custom authorization](examples/custom-authorization), [JSON and raw body](examples/json-body), [file upload](examples/file-upload), [pagination](examples/pagination), [API versions](examples/versions), [rate limit](examples/rate-limit), [testing](examples/testing).
+Fourteen runnable projects in [`examples/`](examples/), each with an `e2e.sh` test that CI runs against the current code:
+[hello world](examples/hello-world), [params and validation](examples/params-validation), [authorization and rate limit](examples/auth), [CORS](examples/cors), [OpenAPI and console](examples/openapi-console), [logging and errors](examples/logging-errors), [Problem Details](examples/problem-details), [custom authorization](examples/custom-authorization), [JSON and raw body](examples/json-body), [file upload](examples/file-upload), [pagination](examples/pagination), [API versions](examples/versions), [rate limit](examples/rate-limit), [testing](examples/testing).
 
 ## Upgrading
 
