@@ -16,6 +16,8 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 | `ApiHolder` | používa ho `ApiDecider`: ako uchováva endpoint pred vytvorením handlera; handler môže byť ešte názov triedy alebo služby | [ApiDecider](/sk/guide/api-decider#tri-sposoby-ako-odovzdat-handler) |
 | `EndpointIdentifier` / `EndpointInterface` | metóda, verzia, balík, akcia | [Handlery](/sk/guide/handlers#registracia-handlera) |
 | `Presenters\ApiPresenter` | spracuje požiadavku krok po kroku | [Spracovanie v ApiPresenteri](/sk/guide/presenter) |
+| `DI\NetteApiExtension` | zaregistruje služby a endpointy zo sekcie `api:` v neone (4.0.0) | [DI rozšírenie](/sk/guide/di-extension) |
+| `DI\EndpointDefinition` | jeden endpoint pre `NetteApiExtension::addEndpoint()` z iného rozšírenia (4.0.0) | [DI rozšírenie](/sk/guide/di-extension#moze-endpointy-pridavat-ine-rozsirenie) |
 
 ## Handlery
 
@@ -87,7 +89,7 @@ V zdrojovom kóde na [GitHube](https://github.com/tomaj/nette-api/tree/master/sr
 
 ### Existuje DI rozšírenie?
 
-Nie, všetko sa registruje ako bežné služby v NEON, pozrite si [Začíname](/sk/guide/getting-started).
+Áno, od verzie 4.0.0: `DI\NetteApiExtension` nastaví celé API z jednej neon sekcie `api:`, pozrite [DI rozšírenie](/sk/guide/di-extension). Registrácia bežných služieb v NEON ako v [Začíname](/sk/guide/getting-started) funguje ďalej.
 
 ### Ako vyzerá celý projekt?
 

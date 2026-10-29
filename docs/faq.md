@@ -33,6 +33,10 @@ The presenter returns before the logger in 3.x. See [Logging](/guide/logging#wha
 
 Yes, in a new project: RFC 9457 errors have one machine-readable shape. They are not the default, because existing clients read `message`. See [Problem Details](/guide/problem-details).
 
+## Can I configure the API without a list of addApi() calls?
+
+Yes, since 4.0.0 with the [DI extension](/guide/di-extension): one `api:` neon section with the endpoints, authorizations, rate limits, CORS and the error format, checked when the container is compiled.
+
 ## How do I publish OpenAPI?
 
 Register `OpenApiHandler` as an endpoint. See [OpenAPI](/guide/openapi).

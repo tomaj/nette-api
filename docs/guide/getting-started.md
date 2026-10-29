@@ -87,6 +87,10 @@ services:
 - `ApiPresenter` needs an output configurator and an error handler. `ApiDecider` holds the list of endpoints.
 - The skeleton indents its neon files with tabs. Tabs or spaces both work, but never mix them in one file; nette/neon refuses to parse it.
 
+::: tip Shorter with the DI extension (4.0.0)
+Since 4.0.0 the same file can be one `api:` section of the [DI extension](/guide/di-extension) instead of the `services:` above.
+:::
+
 Then load the file in `app/Bootstrap.php`:
 
 ```php [app/Bootstrap.php]

@@ -82,6 +82,17 @@ curl http://localhost:8000/api/v1/hello?name=Nette
 
 The [getting started guide](https://tomaj.github.io/nette-api/guide/getting-started) explains every line.
 
+Since 4.0 you can use the [DI extension](https://tomaj.github.io/nette-api/guide/di-extension) instead of the `services:` above:
+
+```neon
+extensions:
+    api: Tomaj\NetteApi\DI\NetteApiExtension
+
+api:
+    endpoints:
+        - {method: GET, version: 1, package: hello, handler: App\Api\HelloHandler}
+```
+
 ## What is in the documentation
 
 | Topic | Page |
@@ -92,6 +103,7 @@ The [getting started guide](https://tomaj.github.io/nette-api/guide/getting-star
 | Bearer tokens, API keys, HTTP Basic, IP restrictions | [Authorization](https://tomaj.github.io/nette-api/guide/authorization) |
 | Rate limits, CORS, logging, errors | [Rate limiting](https://tomaj.github.io/nette-api/guide/rate-limit), [CORS](https://tomaj.github.io/nette-api/guide/cors), [Logging](https://tomaj.github.io/nette-api/guide/logging), [Error handling](https://tomaj.github.io/nette-api/guide/errors) |
 | OpenAPI, web console, `{apiLink}` | [OpenAPI](https://tomaj.github.io/nette-api/guide/openapi), [Web console](https://tomaj.github.io/nette-api/guide/console), [Links and versions](https://tomaj.github.io/nette-api/guide/links) |
+| One `api:` neon section instead of services (4.0) | [DI extension](https://tomaj.github.io/nette-api/guide/di-extension) |
 | Every class | [Reference](https://tomaj.github.io/nette-api/api/reference) |
 
 ## Security notes
@@ -102,8 +114,8 @@ The [getting started guide](https://tomaj.github.io/nette-api/guide/getting-star
 
 ## Examples
 
-Fourteen runnable projects in [`examples/`](examples/), each with an `e2e.sh` test that CI runs against the current code:
-[hello world](examples/hello-world), [params and validation](examples/params-validation), [authorization and rate limit](examples/auth), [CORS](examples/cors), [OpenAPI and console](examples/openapi-console), [logging and errors](examples/logging-errors), [Problem Details](examples/problem-details), [custom authorization](examples/custom-authorization), [JSON and raw body](examples/json-body), [file upload](examples/file-upload), [pagination](examples/pagination), [API versions](examples/versions), [rate limit](examples/rate-limit), [testing](examples/testing).
+Fifteen runnable projects in [`examples/`](examples/), each with an `e2e.sh` test that CI runs against the current code:
+[hello world](examples/hello-world), [params and validation](examples/params-validation), [authorization and rate limit](examples/auth), [CORS](examples/cors), [OpenAPI and console](examples/openapi-console), [logging and errors](examples/logging-errors), [Problem Details](examples/problem-details), [DI extension](examples/di-extension), [custom authorization](examples/custom-authorization), [JSON and raw body](examples/json-body), [file upload](examples/file-upload), [pagination](examples/pagination), [API versions](examples/versions), [rate limit](examples/rate-limit), [testing](examples/testing).
 
 ## Upgrading
 

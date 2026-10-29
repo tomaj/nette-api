@@ -5,7 +5,7 @@
 ## Requirements
 
 * PHP 8.4 or newer.
-* `nette/application` ^3.2, `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0.
+* `nette/application` ^3.2, `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0, `nette/di` ^3.2, `nette/schema` ^1.3.
 
 ## Removed deprecated bearer token classes
 
@@ -117,6 +117,12 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 ## Problem Details (optional, recommended)
 
 4.0 can send errors as RFC 9457 `application/problem+json`, the recommended format for new projects. Nothing changes until you register `Tomaj\NetteApi\Error\ProblemDetailsErrorHandler` or `NegotiatingErrorHandler`. See the [documentation](https://tomaj.github.io/nette-api/guide/problem-details) and `examples/problem-details`.
+
+## DI extension (optional)
+
+4.0 adds `Tomaj\NetteApi\DI\NetteApiExtension`, which configures the API from one `api:` neon section. Nothing changes until you add it to `extensions:`; the `services:` setup from 3.x keeps working, and the extension uses an `ApiDecider`, `ApiPresenter`, error handler, output configurator or IP detector you already registered. `nette/di` ^3.2 and `nette/schema` ^1.3 are now required dependencies. The extension also adds the `Api: Tomaj\NetteApi\Presenters\*Presenter` application mapping; an `Api` entry you already have in `application: mapping` is kept.
+
+**CORS default with the extension (BC break when you move to it):** `ApiPresenter` on its own still sends `Access-Control-Allow-Origin: *`. When the extension configures the presenter and `api: cors: mode` is not set, it sends no CORS headers (`'off'`). If browsers on other origins call your API, set `cors: allowedOrigins: [...]` (recommended) or `cors: mode: '*'` to keep the 3.x behaviour. A `setCorsHeader()` call on an `ApiPresenter` you register in `services:` is kept. See the [documentation](https://tomaj.github.io/nette-api/guide/di-extension) and `examples/di-extension`.
 
 ## Unchanged
 

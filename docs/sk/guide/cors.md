@@ -19,7 +19,7 @@ Každá odpoveď dostane `Access-Control-Allow-Methods: POST, DELETE, PUT, GET, 
 
 | Hodnota | Posielané hlavičky |
 | --- | --- |
-| `'*'` (predvolené) | `Access-Control-Allow-Origin: *` |
+| `'*'` (predvolené; s [DI rozšírením](/sk/guide/di-extension#cors) je predvolené `'off'`) | `Access-Control-Allow-Origin: *` |
 | `'https://app.example.com'` | `Access-Control-Allow-Origin: https://app.example.com` |
 | `'auto'` | schéma, host a port z hlavičky `Referer` (každý uvedený port okrem `80` ostane, teda aj `:443`) a `Access-Control-Allow-Credentials: true`; bez Referer nič |
 | `'off'` | žiadna `Access-Control-Allow-Origin` |

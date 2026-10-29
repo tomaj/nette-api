@@ -1,0 +1,15 @@
+{
+    "name": "acme/di-extension-api",
+    "description": "The whole API configured in one neon section with the tomaj/nette-api DI extension",
+    "type": "project",
+    "require": {
+        "php": ">=8.4",
+        "tomaj/nette-api": "^4.0",
+        "nette/bootstrap": "^3.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
