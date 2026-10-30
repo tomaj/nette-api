@@ -16,7 +16,7 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class ApiDecider
 {
-    /** @var ApiHolder[] */
+    /** @var list<ApiHolder> */
     private array $apis = [];
 
     private ?ApiHandlerInterface $globalPreflightHandler = null;
@@ -90,6 +90,16 @@ class ApiDecider
         }
 
         return $apis;
+    }
+
+    /**
+     * The authorizations of all registered apis, without creating the handlers
+     *
+     * @return list<ApiAuthorizationInterface>
+     */
+    public function getAuthorizations(): array
+    {
+        return array_map(static fn (ApiHolder $api): ApiAuthorizationInterface => $api->getAuthorization(), $this->apis);
     }
 
     private function getHandler(ApiHolder $api): ApiHandlerInterface

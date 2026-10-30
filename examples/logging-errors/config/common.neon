@@ -7,9 +7,11 @@ services:
 	apiPresenter:
 		factory: Tomaj\NetteApi\Presenters\ApiPresenter
 		setup:
-			# since 3.6.0: the logger gets *** instead of the values of Authorization, Proxy-Authorization,
-			# Cookie, Set-Cookie and X-Api-Key; pass a list to mask other headers instead
-			- setMaskedLogHeaders()
+			# since 4.0.0 the logger gets *** instead of the values of secret headers (Authorization, Cookie,
+			# X-Api-Key, names containing token, secret or key, ...) and query parameters (api_key, token, ...)
+			# without any setup; these lines change the defaults one entry at a time
+			- addMaskedLogHeader(X-Session)
+			- addMaskedLogQueryParam(session_id)
 
 	# error details and output schema validation are on unless APP_ENV=production
 	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator('APP_ENV', 'production')

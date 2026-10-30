@@ -16,7 +16,7 @@ composer install
 
 ## Verzia knižnice
 
-Príklady vyžadujú `tomaj/nette-api` `^3.6`, takže `composer install` nainštaluje posledné vydanie 3.x. Niektoré používajú funkcie pridané vo verzii 3.6.0, napríklad maskované hlavičky v príklade [Logovanie a chyby](/sk/examples/logging-errors).
+Príklady vyžadujú `tomaj/nette-api` `^3.6`, takže `composer install` nainštaluje posledné vydanie 3.x. Niektoré používajú funkcie pridané vo verzii 3.6.0. [Atribúty](/sk/examples/attributes), [DI rozšírenie](/sk/examples/di-extension), [Logovanie a chyby](/sk/examples/logging-errors) a [Problem Details](/sk/examples/problem-details) potrebujú 4.0.0, napríklad kvôli predvolenému maskovaniu logov.
 
 Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa repozitára `examples/ci/example.sh hello-world`.
 
@@ -26,7 +26,7 @@ Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa re
   { title: 'Autorizácia a obmedzenie požiadaviek', text: 'Bearer token, API kľúč, HTTP Basic a 3 požiadavky za minútu.', link: '/sk/examples/auth' },
   { title: 'CORS', text: 'Pevný origin a preflight pre frontend v prehliadači.', link: '/sk/examples/cors' },
   { title: 'OpenAPI a konzola', text: 'OpenAPI JSON a YAML, zoznam endpointov, webová konzola, {apiLink}.', link: '/sk/examples/openapi-console' },
-  { title: 'Logovanie a chyby', text: 'Log požiadaviek s maskovanými hlavičkami (potrebuje 3.6.0), vlastný error handler, produkčný režim.', link: '/sk/examples/logging-errors' },
+  { title: 'Logovanie a chyby', text: 'Log požiadaviek s maskovanými hlavičkami a query parametrami (potrebuje 4.0.0), vlastný error handler, produkčný režim.', link: '/sk/examples/logging-errors' },
   { title: 'Problem Details', text: 'Chyby podľa RFC 9457 pre 400, 401, 404, 409, 429 a 500, výber podľa Accept, schéma v OpenAPI (potrebuje 4.0.0).', link: '/sk/examples/problem-details' },
   { title: 'DI rozšírenie', text: 'Celé API v jednej neon sekcii api:, predvolený token, obmedzenie požiadaviek, CORS (potrebuje 4.0.0).', link: '/sk/examples/di-extension' },
   { title: 'Endpointy z atribútov', text: '#[Get], #[Post], #[Authorization] a #[RateLimit] priamo na triedach handlerov, nájde ich DI rozšírenie (potrebuje 4.0.0).', link: '/sk/examples/attributes' },

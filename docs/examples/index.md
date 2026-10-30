@@ -16,7 +16,7 @@ composer install
 
 ## Library version
 
-The examples require `tomaj/nette-api` `^3.6`, so `composer install` gets the latest 3.x release. Some of them use features added in 3.6.0, for example the masked headers in [Logging and errors](/examples/logging-errors).
+The examples require `tomaj/nette-api` `^3.6`, so `composer install` gets the latest 3.x release. Some of them use features added in 3.6.0. [Attributes](/examples/attributes), [DI extension](/examples/di-extension), [Logging and errors](/examples/logging-errors) and [Problem Details](/examples/problem-details) need 4.0.0, for example the default log masking.
 
 To run an example against your local checkout, as CI does, use `examples/ci/example.sh hello-world` from the repository root.
 
@@ -26,7 +26,7 @@ To run an example against your local checkout, as CI does, use `examples/ci/exam
   { title: 'Authorization and rate limit', text: 'Bearer token, API key, HTTP Basic and 3 requests per minute.', link: '/examples/auth' },
   { title: 'CORS', text: 'A fixed origin and preflight for a browser frontend.', link: '/examples/cors' },
   { title: 'OpenAPI and console', text: 'OpenAPI JSON and YAML, endpoint listing, web console, {apiLink}.', link: '/examples/openapi-console' },
-  { title: 'Logging and errors', text: 'Request log with masked headers (needs 3.6.0), own error handler, production mode.', link: '/examples/logging-errors' },
+  { title: 'Logging and errors', text: 'Request log with masked headers and query parameters (needs 4.0.0), own error handler, production mode.', link: '/examples/logging-errors' },
   { title: 'Problem Details', text: 'RFC 9457 errors for 400, 401, 404, 409, 429 and 500, Accept negotiation, OpenAPI schema (needs 4.0.0).', link: '/examples/problem-details' },
   { title: 'DI extension', text: 'The whole API in one api: neon section, default token, rate limit, CORS (needs 4.0.0).', link: '/examples/di-extension' },
   { title: 'Attribute endpoints', text: '#[Get], #[Post], #[Authorization] and #[RateLimit] on the handler classes, found by the DI extension (needs 4.0.0).', link: '/examples/attributes' },

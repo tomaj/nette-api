@@ -1,6 +1,6 @@
 ---
 title: 'Príklad: logovanie a chyby'
-description: 'Spustiteľný príklad Nette API: log požiadaviek do JSON riadkov s maskovanými hlavičkami, vlastný error handler pre 503, logy v Tracy a chyby v produkcii.'
+description: 'Spustiteľný príklad Nette API: log požiadaviek do JSON riadkov s maskovanými hlavičkami a query parametrami, vlastný error handler pre 503, logy v Tracy a chyby v produkcii.'
 ---
 
 # Príklad: logovanie a chyby
@@ -11,8 +11,8 @@ Tri endpointy, ktoré ukazujú, čo sa loguje a čo vidí klient, pri vývoji aj
 
 <Diagram name="examples-logging-errors-1" alt="ping vráti 200, fail vráti 500, 503 alebo 400, broken vráti 500 pri vývoji a 200 v produkcii; spracované požiadavky idú do api.log, výnimky do Tracy" />
 
-::: tip Od verzie 3.6.0
-Presenter maskuje `Authorization`, `Cookie`, `X-Api-Key` a ďalšie tajné hlavičky cez `setMaskedLogHeaders()`, takže ich logger nikdy nevidí. S 3.5.0 odstráňte tento riadok zo `setup` a maskujte v loggeri. `400`, `401` a `429` sa v 3.x nelogujú. Pozrite si [Logovanie](/sk/guide/logging#maskovanie-hlaviciek).
+::: tip Od verzie 4.0.0
+Presenter predvolene maskuje `Authorization`, `Cookie`, `X-Api-Key`, hlavičky ako `X-Refresh-Token` a query parametre ako `api_key`, takže ich logger nikdy nevidí. Dva riadky v `setup` pridajú `X-Session` a `session_id`. V 3.6.0 sa maskovali len hlavičky, po `setMaskedLogHeaders()`. `400`, `401` a `429` sa nelogujú. Pozrite si [Logovanie](/sk/guide/logging#maskovanie).
 :::
 
 | Požiadavka | Vývoj | Produkcia |
@@ -51,7 +51,7 @@ Presenter maskuje `Authorization`, `Cookie`, `X-Api-Key` a ďalšie tajné hlavi
 
 ### Kde sa hlavičky maskujú?
 
-V presenteri, cez `setMaskedLogHeaders()` v `common.neon`. Test pošle token aj cookie a overí, že `api.log` má `***` a `X-Trace` ostane. Pozrite si [Logovanie](/sk/guide/logging#maskovanie-hlaviciek).
+V presenteri, predvolene; `common.neon` len pridá `X-Session` a `session_id`. Test pošle token, cookie, `X-Session`, `X-Refresh-Token`, `?api_key=` a `?session_id=` a overí, že `api.log` má pri každom `***`, žiadnu tajnú hodnotu, a ponechá `X-Trace` a `page=2`. Pozrite si [Logovanie](/sk/guide/logging#maskovanie).
 
 ### Prečo 400 nie je v api.log?
 

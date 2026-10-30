@@ -26,6 +26,9 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\BaseHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
+use Tomaj\NetteApi\Logger\LogMaskMode;
+use Tomaj\NetteApi\Logger\LogValueMasker;
+use Tomaj\NetteApi\Logger\LogValueMaskerInterface;
 use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
 use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
 use Tomaj\NetteApi\Misc\IpDetector;
@@ -56,7 +59,7 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
  *     logger: ServiceValue|null,
  *     errors: object{format: string|null, typeBaseUri: string|null, handler: ServiceValue|null},
  *     cors: object{mode: string|null, allowedOrigins: list<string>|null, originValidator: ServiceValue|null, allowCredentials: bool, preflight: bool|array<string, string|list<string>>},
- *     logging: object{maskHeaders: bool|list<string>},
+ *     logging: object{maskHeaders: bool|list<string>|object{names: list<string>|null, add: list<string>, remove: list<string>, patterns: bool|list<string>|object{add: list<string>, remove: list<string>}}, maskQueryParams: bool|list<string>|object{names: list<string>|null, add: list<string>, remove: list<string>}, masking: ServiceValue, hashKey: string|Statement|null},
  *     authorizations: array<string, ServiceValue>,
  *     rateLimits: array<string, ServiceValue>,
  *     defaults: object{authorization: ServiceValue|null, rateLimit: ServiceValue|null},
@@ -120,7 +123,22 @@ final class NetteApiExtension extends CompilerExtension
                 'preflight' => Expect::anyOf(Expect::bool(), Expect::arrayOf(Expect::anyOf(Expect::string(), Expect::listOf('string')), 'string'))->default(false),
             ]),
             'logging' => Expect::structure([
-                'maskHeaders' => Expect::anyOf(Expect::bool(), Expect::listOf('string'))->default(false),
+                'maskHeaders' => Expect::anyOf(Expect::bool(), Expect::listOf('string'), Expect::structure([
+                    'names' => Expect::listOf('string')->nullable()->default(null),
+                    'add' => Expect::listOf('string'),
+                    'remove' => Expect::listOf('string'),
+                    'patterns' => Expect::anyOf(Expect::bool(), Expect::listOf('string'), Expect::structure([
+                        'add' => Expect::listOf('string'),
+                        'remove' => Expect::listOf('string'),
+                    ]))->default(true),
+                ]))->default(true),
+                'maskQueryParams' => Expect::anyOf(Expect::bool(), Expect::listOf('string'), Expect::structure([
+                    'names' => Expect::listOf('string')->nullable()->default(null),
+                    'add' => Expect::listOf('string'),
+                    'remove' => Expect::listOf('string'),
+                ]))->default(true),
+                'masking' => $service()->default(LogMaskMode::Full->value),
+                'hashKey' => Expect::anyOf(Expect::string(), Expect::type(Statement::class))->nullable()->default(null),
             ]),
             'authorizations' => Expect::arrayOf($service(), 'string'),
             'rateLimits' => Expect::arrayOf($service(), 'string'),
@@ -506,11 +524,51 @@ final class NetteApiExtension extends CompilerExtension
             throw new InvalidConfigurationException('api.cors.allowCredentials: true needs api.cors.allowedOrigins or api.cors.originValidator, credentials are allowed only for origins you allow. Add the origins, for example cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}, or a validator, for example cors: {originValidator: App\Api\CustomerOrigins, allowCredentials: true}.');
         }
 
-        if ($config->logging->maskHeaders === true) {
-            $presenter->addSetup('setMaskedLogHeaders');
-        } elseif (is_array($config->logging->maskHeaders)) {
-            $presenter->addSetup('setMaskedLogHeaders', [$config->logging->maskHeaders]);
+        $masking = $this->logMasking($config->logging->masking, $config->logging->hashKey);
+        $logging = [
+            'maskHeaders' => LoggingConfig::headers($config->logging->maskHeaders),
+            'maskQueryParams' => LoggingConfig::queryParams($config->logging->maskQueryParams),
+            'masking' => $masking === null ? [] : [['setLogMasking', [$masking]]],
+        ];
+        foreach ($logging as $key => $calls) {
+            if ($calls !== []) {
+                LoggingConfig::checkPresenterSetup($presenter->getSetup(), $key);
+            }
+            foreach ($calls as [$method, $arguments]) {
+                $presenter->addSetup($method, $arguments);
+            }
         }
+    }
+
+    private function logMasking(string|Statement $masking, string|Statement|null $hashKey): Statement|Reference|null
+    {
+        $mode = is_string($masking) ? LogMaskMode::tryFrom($masking) : null;
+        if ($hashKey !== null && $mode !== LogMaskMode::Hash) {
+            throw new InvalidConfigurationException(sprintf(
+                'api.logging.hashKey is set, but api.logging.masking is %s and only hash uses the key. Use masking: hash with the key, or remove hashKey.',
+                is_string($masking) ? "'" . $masking . "'" : 'a statement',
+            ));
+        }
+        if ($hashKey === '') {
+            throw new InvalidConfigurationException("api.logging.hashKey is empty, so it would not protect short secrets. Use a long random secret, for example hashKey: %env.API_LOG_HASH_KEY%, or remove hashKey for a plain SHA-256.");
+        }
+        if ($mode !== null) {
+            if ($mode === LogMaskMode::Full) {
+                return null;
+            }
+            return new Statement(LogValueMasker::class, [new Statement([LogMaskMode::class, 'from'], [$mode->value]), $hashKey]);
+        }
+        $modes = array_map(static fn (LogMaskMode $mode): string => $mode->value, LogMaskMode::cases());
+        if (is_string($masking) && !str_starts_with($masking, '@') && !str_contains($masking, '\\')) {
+            throw new InvalidConfigurationException(sprintf(
+                "api.logging.masking '%s' is not a masking mode.%s Use %s, or a class implementing %s, @serviceName or a statement like App\\Api\\MyMasker(%%tempDir%%) for your own.",
+                $masking,
+                Hint::didYouMean($masking, $modes),
+                Hint::quoted($modes),
+                LogValueMaskerInterface::class,
+            ));
+        }
+        return $this->service($masking, [], 'api.logging.masking', LogValueMaskerInterface::class);
     }
 
     /**
@@ -524,14 +582,6 @@ final class NetteApiExtension extends CompilerExtension
         }
         foreach (is_array($preflight) ? array_keys($preflight) : [] as $header) {
             self::checkHeaderName($header, sprintf("api.cors.preflight key '%s'", $header), "for example preflight: {Access-Control-Max-Age: '600'}");
-        }
-
-        $masked = $config->logging->maskHeaders;
-        if ($masked === []) {
-            throw new InvalidConfigurationException('api.logging.maskHeaders is an empty list, so no header would be masked, the same as false. Use maskHeaders: true for the default sensitive headers, list them, for example maskHeaders: [Authorization, X-Secret], or remove the option.');
-        }
-        foreach (is_array($masked) ? $masked : [] as $index => $header) {
-            self::checkHeaderName($header, sprintf("api.logging.maskHeaders[%d] '%s'", $index, $header), 'for example maskHeaders: [Authorization, X-Secret]');
         }
     }
 

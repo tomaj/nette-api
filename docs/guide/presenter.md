@@ -74,7 +74,7 @@ When `ConfiguratorInterface::validateSchema()` is true, the response is compared
 
 ## 9. Logging
 
-If the container has an `ApiLoggerInterface`, the request is logged with its final code and time. Headers listed by `setMaskedLogHeaders()` are logged as `***`. Steps 3, 5 and 6 returned already, so `429`, `401` and `400` are not logged in 3.x. See [Logging](/guide/logging).
+If the container has an `ApiLoggerInterface`, the request is logged with its final code and time. Secret headers and query parameters are masked first, by default as `***` (`setMaskedLogHeaders()`, `setMaskedLogQueryParams()`, `setLogMasking()`, see [the methods](/guide/logging#presenter-methods)). Steps 3, 5 and 6 returned already, so `429`, `401` and `400` are not logged in 3.x. See [Logging](/guide/logging).
 
 ## Configuring the presenter
 
@@ -84,7 +84,7 @@ services:
 		factory: Tomaj\NetteApi\Presenters\ApiPresenter
 		setup:
 			- setCorsAllowedOrigins(['https://app.example.com'])
-			- setMaskedLogHeaders()
+			- addMaskedLogHeader(X-Session)
 ```
 
 This is the one `apiPresenter` service from [Getting started](/guide/getting-started#_3-register-the-services): add these `setup:` lines to it, or put the block in another config file under the same name and Nette merges the two. Do not register a second `ApiPresenter` service; two of them fail with "Multiple services of type Tomaj\NetteApi\Presenters\ApiPresenter found".

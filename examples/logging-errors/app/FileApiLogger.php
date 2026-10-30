@@ -8,7 +8,7 @@ use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 
 /**
  * Writes one JSON line per API request.
- * The headers arrive as "Name: value" lines; secret values are already *** thanks to setMaskedLogHeaders().
+ * The headers arrive as "Name: value" lines; secret header and query parameter values are already *** because the presenter masks them.
  */
 final class FileApiLogger implements ApiLoggerInterface
 {

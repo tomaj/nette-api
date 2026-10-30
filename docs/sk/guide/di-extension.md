@@ -254,11 +254,25 @@ Bez `mode` rozšírenie neposiela žiadne CORS hlavičky, na rozdiel od samotné
 api:
 	logger: App\Api\DatabaseLogger
 	logging:
-		# true: Authorization, Cookie, X-Api-Key, ... sa zalogujú ako ***
-		maskHeaders: true
+		maskHeaders:                 # true (predvolené) | false | zoznam | mapa
+			add: [X-Session]
+			remove: [Set-Cookie]
+			patterns: {add: [x-signature-*], remove: ['*key*']}
+		maskQueryParams:             # true (predvolené) | false | zoznam | mapa
+			add: [session_id]
+		masking: partial             # full (predvolené) | partial | hash | omit | vlastný masker
 ```
 
-`maskHeaders` prijme aj vlastný zoznam, `[Authorization, X-Secret]`. Pozrite [Logovanie](/sk/guide/logging).
+Tajné hlavičky a query parametre sa maskujú predvolene, aj bez sekcie `logging:`. Každý kľúč je nepovinný:
+
+| Kľúč | Hodnoty |
+| --- | --- |
+| `maskHeaders` | `true` (predvolené), `false` (vypnuté, aj so vzormi a menami z autorizácií), zoznam, ktorý nahradí predvolené mená, alebo `{names, add, remove, patterns}`; `patterns` je `true`, `false`, zoznam alebo `{add, remove}` |
+| `maskQueryParams` | `true` (predvolené), `false`, zoznam, ktorý nahradí predvolené mená, alebo `{names, add, remove}` |
+| `masking` | `full` (predvolené), `partial`, `hash`, `omit` alebo váš `LogValueMaskerInterface` ako `Class`, `Class(args)` či `@service` |
+| `hashKey` | HMAC kľúč pre `masking: hash`, napríklad `%env.API_LOG_HASH_KEY%` |
+
+Mapa použije `names`, potom `add`, potom `remove`. Maskujú sa aj mená, ktoré používajú vaše `HeaderApiKeyAuthentication`, `QueryApiKeyAuthentication` a `CookieApiKeyAuthentication`. To isté nemeňte zároveň v `setup:` vašej služby `ApiPresenter`; rozšírenie by ho nahradilo, takže kompilácia zlyhá. Všetky tvary, predvolené hodnoty, režimy a zalogovaný výstup nájdete v [Logovaní](/sk/guide/logging#referencia-neon).
 
 ## IP detektor
 
@@ -289,7 +303,10 @@ api:
 		allowCredentials: false
 		preflight: false       # true | mapa hlavičiek
 	logging:
-		maskHeaders: false     # true | zoznam hlavičiek
+		maskHeaders: true      # false | zoznam hlavičiek | {names, add, remove, patterns}
+		maskQueryParams: true  # false | zoznam parametrov | {names, add, remove}
+		masking: full          # partial | hash | omit | Class | Class(args) | @service
+		hashKey: null          # reťazec, len s masking: hash
 	authorizations: []         # nazov: Trieda | Trieda(args) | @sluzba
 	rateLimits: []             # nazov: Trieda | Trieda(args) | @sluzba
 	defaults:
@@ -322,7 +339,12 @@ Každá chyba v sekcii `api:` zastaví kompiláciu kontajnera výnimkou `Nette\D
 | `errors.handler` spolu s `format` alebo `typeBaseUri` | `errors: {handler: ..., format: problemDetails}` | že treba nechať len jedno |
 | `typeBaseUri` bez formátu problem details alebo nie absolútne URI | `typeBaseUri: example.com/errors` | že treba pridať `format: problemDetails` alebo použiť napr. `https://example.com/errors/` |
 | Neplatné nastavenie CORS | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` bez `allowedOrigins` či `originValidator`, `originValidator` spolu s `mode` alebo `allowedOrigins`, validátor bez `CorsOriginValidatorInterface` | platné režimy alebo originy, čo odstrániť alebo ktoré rozhranie implementovať, s príkladom |
-| Prázdny alebo neplatný zoznam hlavičiek | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | že pre predvolené treba `true`, alebo písať len mená hlavičiek |
+| Prázdny alebo neplatný zoznam hlavičiek | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | že pre predvolené treba `true`, na vypnutie maskovania `false`, alebo písať len mená hlavičiek |
+| Položka maskovania, ktorá v zozname nie je alebo je chybná | `maskHeaders: {remove: [Set-Cokie]}`, `maskHeaders: {remove: [X-Auth-Token]}`, `maskQueryParams: {add: ['token[]']}` | `Did you mean 'Set-Cookie'?` a aktuálny zoznam, vzor, ktorý hlavičku maskuje, alebo písať len meno |
+| Rovnaká položka v `add` aj `remove`, alebo prázdna mapa | `maskHeaders: {add: [X-A], remove: [X-A]}`, `maskHeaders: {}`, `patterns: {}` | nechať ju len v jednom, alebo použiť `true` či `false` |
+| Neplatný vzor hlavičky | `patterns: [token]`, `patterns: {add: ['*']}`, `patterns: ['x auth*']` | použiť `*` alebo ho pridať ako meno, že by zodpovedal každej hlavičke, alebo ktoré znaky sú povolené |
+| Neznámy režim maskovania alebo zlý `hashKey` | `masking: hashed`, `hashKey` s `masking: full`, `hashKey: ''` | `Did you mean 'hash'?` a režimy, použiť `masking: hash`, alebo dlhý náhodný kľúč |
+| Kľúč `logging:` a setup `ApiPresenter` menia to isté | `maskHeaders: false` a `- addMaskedLogHeader(X-A)` v `services:` | že rozšírenie by setup nahradilo a ako volanie presunúť do kľúča |
 | Cesta discovery neexistuje alebo je súbor | `paths: [%appDir%/Api/UsersHandler.php]` | že treba adresár |
 | `discovery.namespace` bez `paths` alebo bez nájdenej triedy | `discovery: {namespace: App}` | že treba pridať cesty, alebo nájdené namespacy |
 | Voľba a vlastná služba rovnakého typu | `logger: ...` a logger v `services:` | že treba jedno z nich odstrániť |
