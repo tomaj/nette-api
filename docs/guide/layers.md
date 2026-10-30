@@ -118,7 +118,7 @@ See [Error handling](/guide/errors).
 
 ## Logger: what happened
 
-With an `ApiLoggerInterface` service in the container, every request that reached the handler is logged with code, method, headers, URI, IP, user agent and time. `setMaskedLogHeaders()` hides secret headers. See [Logging](/guide/logging).
+With an `ApiLoggerInterface` service in the container, every request that reached the handler is logged with code, method, headers, URI, IP, user agent and time. Secret headers and query parameters are masked by default. See [Logging](/guide/logging).
 
 ## FAQ
 

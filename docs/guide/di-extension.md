@@ -254,11 +254,25 @@ Without `mode` the extension sends no CORS headers, unlike `ApiPresenter` on its
 api:
 	logger: App\Api\DatabaseLogger
 	logging:
-		# true: Authorization, Cookie, X-Api-Key, ... are logged as ***
-		maskHeaders: true
+		maskHeaders:                 # true (default) | false | a list | a map
+			add: [X-Session]
+			remove: [Set-Cookie]
+			patterns: {add: [x-signature-*], remove: ['*key*']}
+		maskQueryParams:             # true (default) | false | a list | a map
+			add: [session_id]
+		masking: partial             # full (default) | partial | hash | omit | your masker
 ```
 
-`maskHeaders` also takes your own list, `[Authorization, X-Secret]`. See [Logging](/guide/logging).
+Secret headers and query parameters are masked by default, also without the `logging:` section. Each key is optional:
+
+| Key | Values |
+| --- | --- |
+| `maskHeaders` | `true` (default), `false` (off, with the patterns and the authorization names), a list that replaces the default names, or `{names, add, remove, patterns}`; `patterns` is `true`, `false`, a list or `{add, remove}` |
+| `maskQueryParams` | `true` (default), `false`, a list that replaces the default names, or `{names, add, remove}` |
+| `masking` | `full` (default), `partial`, `hash`, `omit`, or your `LogValueMaskerInterface` as `Class`, `Class(args)` or `@service` |
+| `hashKey` | the HMAC key for `masking: hash`, for example `%env.API_LOG_HASH_KEY%` |
+
+A map applies `names`, then `add`, then `remove`. The names used by your `HeaderApiKeyAuthentication`, `QueryApiKeyAuthentication` and `CookieApiKeyAuthentication` are masked too. Do not change the same thing in the `setup:` of your `ApiPresenter` service as well; the extension would replace it, so compiling fails. See [Logging](/guide/logging#neon-reference) for every form, the defaults, the modes and the logged output.
 
 ## IP detector
 
@@ -289,7 +303,10 @@ api:
 		allowCredentials: false
 		preflight: false       # true | map of headers
 	logging:
-		maskHeaders: false     # true | list of headers
+		maskHeaders: true      # false | list of headers | {names, add, remove, patterns}
+		maskQueryParams: true  # false | list of parameters | {names, add, remove}
+		masking: full          # partial | hash | omit | Class | Class(args) | @service
+		hashKey: null          # string, only with masking: hash
 	authorizations: []         # name: Class | Class(args) | @service
 	rateLimits: []             # name: Class | Class(args) | @service
 	defaults:
@@ -322,7 +339,12 @@ Every mistake in the `api:` section stops the container compilation with a `Nett
 | `errors.handler` with `format` or `typeBaseUri` | `errors: {handler: ..., format: problemDetails}` | to keep only one of them |
 | `typeBaseUri` without a problem details format, or not an absolute URI | `typeBaseUri: example.com/errors` | to add `format: problemDetails`, or to use e.g. `https://example.com/errors/` |
 | Invalid CORS settings | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` without `allowedOrigins` or `originValidator`, `originValidator` together with `mode` or `allowedOrigins`, a validator without `CorsOriginValidatorInterface` | the valid modes or origins, what to remove or which interface to implement, with an example |
-| Empty or invalid header list | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | to use `true` for the defaults, or to write only header names |
+| Empty or invalid header list | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | to use `true` for the defaults, `false` to turn the masking off, or to write only header names |
+| Masking entry that is not there or is malformed | `maskHeaders: {remove: [Set-Cokie]}`, `maskHeaders: {remove: [X-Auth-Token]}`, `maskQueryParams: {add: ['token[]']}` | `Did you mean 'Set-Cookie'?` and the current list, the pattern that masks the header, or to write only the name |
+| Same entry in `add` and `remove`, or an empty map | `maskHeaders: {add: [X-A], remove: [X-A]}`, `maskHeaders: {}`, `patterns: {}` | to keep it in one of them, or to use `true` or `false` |
+| Invalid header pattern | `patterns: [token]`, `patterns: {add: ['*']}`, `patterns: ['x auth*']` | to use `*` or add it as a name, that it would match every header, or which characters are allowed |
+| Unknown masking mode or wrong `hashKey` | `masking: hashed`, `hashKey` with `masking: full`, `hashKey: ''` | `Did you mean 'hash'?` and the modes, to use `masking: hash`, or a long random key |
+| `logging:` key and `ApiPresenter` setup change the same thing | `maskHeaders: false` and `- addMaskedLogHeader(X-A)` in `services:` | that the extension would replace the setup, and how to move the call into the key |
 | Discovery path is missing or is a file | `paths: [%appDir%/Api/UsersHandler.php]` | to use a directory |
 | `discovery.namespace` without `paths`, or matching no class | `discovery: {namespace: App}` | to add the paths, or the namespaces that were found |
 | Option and your own service of the same type | `logger: ...` and a logger in `services:` | to remove one of them |

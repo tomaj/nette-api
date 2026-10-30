@@ -1,6 +1,6 @@
 ---
 title: 'Example: logging and errors'
-description: 'Runnable Nette API example: JSON lines request log with masked secret headers, an own error handler for 503, Tracy logs and error responses in production.'
+description: 'Runnable Nette API example: JSON lines request log with masked secret headers and query parameters, an own error handler for 503, Tracy logs and error responses in production.'
 ---
 
 # Example: logging and errors
@@ -11,8 +11,8 @@ Three endpoints that show what is logged and what the client sees, in developmen
 
 <Diagram name="examples-logging-errors-1" alt="ping answers 200, fail answers 500, 503 or 400, broken answers 500 in development and 200 in production; handled requests go to api.log, exceptions to Tracy" />
 
-::: tip Since 3.6.0
-The presenter masks `Authorization`, `Cookie`, `X-Api-Key` and the other secret headers through `setMaskedLogHeaders()`, so the logger never sees them. With 3.5.0 remove that `setup` line and mask in the logger. `400`, `401` and `429` are not logged in 3.x. See [Logging](/guide/logging#masking-headers).
+::: tip Since 4.0.0
+The presenter masks `Authorization`, `Cookie`, `X-Api-Key`, headers like `X-Refresh-Token` and query parameters like `api_key` by default, so the logger never sees them. The two `setup` lines add `X-Session` and `session_id`. In 3.6.0 only headers were masked, after `setMaskedLogHeaders()`. `400`, `401` and `429` are not logged. See [Logging](/guide/logging#masking).
 :::
 
 | Request | Development | Production |
@@ -51,7 +51,7 @@ The presenter masks `Authorization`, `Cookie`, `X-Api-Key` and the other secret 
 
 ### Where are the headers masked?
 
-In the presenter, by `setMaskedLogHeaders()` in `common.neon`. The test sends a token and a cookie and checks that `api.log` has `***` and keeps `X-Trace`. See [Logging](/guide/logging#masking-headers).
+In the presenter, by default; `common.neon` only adds `X-Session` and `session_id`. The test sends a token, a cookie, `X-Session`, `X-Refresh-Token`, `?api_key=` and `?session_id=`, and checks that `api.log` has `***` for each, no secret value, and keeps `X-Trace` and `page=2`. See [Logging](/guide/logging#masking).
 
 ### Why is the 400 not in api.log?
 

@@ -146,6 +146,33 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 
 `DefaultErrorHandler::handleAuthorizationException()` answered with the exception message, which could reveal database hosts or internal paths. It now answers `{"status":"error","message":"Internal server error"}`, logs the exception to Tracy and adds the message as `detail` only when the configurator's `showErrorDetail()` is true, the same as `handle()`. Clients that parsed the message must read the log instead.
 
+## Logs are masked by default
+
+`ApiLoggerInterface::log()` got the request headers and the URI exactly as they arrived, so API keys, bearer tokens and cookies ended up in the log unless you called `setMaskedLogHeaders()` (#187). In 4.0 the presenter masks them before `log()`, with or without the DI extension:
+
+* headers `Authorization`, `Proxy-Authorization`, `Cookie`, `Set-Cookie`, `X-Api-Key` (`ApiPresenter::DEFAULT_MASKED_LOG_HEADERS`) and every header whose name contains `token`, `secret` or `key`, or starts with `X-Auth-` (`DEFAULT_MASKED_LOG_HEADER_PATTERNS`);
+* query parameters `api_key`, `apikey`, `key`, `token`, `access_token`, `refresh_token`, `id_token`, `auth`, `password`, `secret`, `signature`, `sig`, `code`, `client_secret` (`DEFAULT_MASKED_LOG_QUERY_PARAMS`) in `$requestUri`;
+* the header, query parameter and cookie names of your `HeaderApiKeyAuthentication`, `QueryApiKeyAuthentication` and `CookieApiKeyAuthentication`.
+
+The value becomes `***`, the name stays: `GET /v1/users?api_key=***&page=2`, `Authorization: ***`. If your logger already masked these, it now sees `***` and can stop. If you need a value in the log (for example a non-secret `X-Request-Key`), remove it:
+
+```neon
+services:
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+		setup:
+			- removeMaskedLogHeaderPattern('*key*')
+			- removeMaskedLogQueryParam(code)
+```
+
+or with the extension `api: logging: {maskHeaders: {patterns: {remove: ['*key*']}}, maskQueryParams: {remove: [code]}}`. To log everything as in 3.x, use `setMaskedLogHeaders([])` and `setMaskedLogQueryParams([])`, or `api: logging: {maskHeaders: false, maskQueryParams: false}`.
+
+* `setMaskedLogHeaders()` keeps its name and its no-argument call (the defaults); `setMaskedLogHeaders([])` still turns header masking off, now with the patterns and the authorization names.
+* The extension's `logging: maskHeaders` defaults to `true` (was `false`).
+* Change each list in one place. A `logging:` key that is not left at its default, together with a masking call in the `setup:` of your `ApiPresenter` service for the same list, fails when the container is compiled; before, the extension silently replaced the setup.
+* New: one-entry `add*`/`remove*` methods, getters, `maskQueryParams`, and `setLogMasking()` / `logging: masking` with `full`, `partial`, `hash`, `omit` or your own `LogValueMaskerInterface`. See the [documentation](https://tomaj.github.io/nette-api/guide/logging#masking).
+* The request body was never passed to the logger and still is not. The console and Tracy show raw values; keep Tracy in production mode.
+
 ## Problem Details (optional, recommended)
 
 4.0 can send errors as RFC 9457 `application/problem+json`, the recommended format for new projects. Nothing changes until you register `Tomaj\NetteApi\Error\ProblemDetailsErrorHandler` or `NegotiatingErrorHandler`. See the [documentation](https://tomaj.github.io/nette-api/guide/problem-details) and `examples/problem-details`.

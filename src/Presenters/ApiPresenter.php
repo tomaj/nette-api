@@ -14,9 +14,16 @@ use Throwable;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
+use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
 use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
+use Tomaj\NetteApi\Logger\LogMaskMode;
+use Tomaj\NetteApi\Logger\LogMasking;
+use Tomaj\NetteApi\Logger\LogValueMasker;
+use Tomaj\NetteApi\Logger\LogValueMaskerInterface;
 use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
 use Tomaj\NetteApi\Misc\CorsOriginCallback;
 use Tomaj\NetteApi\Misc\CorsOriginPolicy;
@@ -41,11 +48,21 @@ final class ApiPresenter implements IPresenter
     public const string AUTO_RENAMED = "The CORS mode 'auto' was renamed to 'reflect-unsafe' in 4.0. It is unsafe: it sends the origin of the Referer header back in Access-Control-Allow-Origin with Access-Control-Allow-Credentials: true, so any website can make requests with the user's cookies and read the responses. ";
 
     /**
-     * Headers masked in the API log by setMaskedLogHeaders() without arguments
+     * Headers masked in the API log by default and by setMaskedLogHeaders() without arguments
      */
-    public const array DEFAULT_MASKED_LOG_HEADERS = ['Authorization', 'Proxy-Authorization', 'Cookie', 'Set-Cookie', 'X-Api-Key'];
+    public const array DEFAULT_MASKED_LOG_HEADERS = LogMasking::DEFAULT_HEADERS;
 
-    public const string MASKED_LOG_HEADER_VALUE = '***';
+    /**
+     * Header name patterns masked in the API log by default and by setMaskedLogHeaderPatterns() without arguments
+     */
+    public const array DEFAULT_MASKED_LOG_HEADER_PATTERNS = LogMasking::DEFAULT_HEADER_PATTERNS;
+
+    /**
+     * Query parameters masked in the logged URI by default and by setMaskedLogQueryParams() without arguments
+     */
+    public const array DEFAULT_MASKED_LOG_QUERY_PARAMS = LogMasking::DEFAULT_QUERY_PARAMS;
+
+    public const string MASKED_LOG_HEADER_VALUE = LogValueMasker::MASK;
 
     #[Inject]
     public ApiDecider $apiDecider;
@@ -80,8 +97,7 @@ final class ApiPresenter implements IPresenter
     /** setCorsAllowedOrigins() or setCorsOriginValidator() */
     private ?CorsOriginPolicy $corsAllowlist = null;
 
-    /** @var string[] lowercase names of headers whose values are masked in the API log */
-    private array $maskedLogHeaders = [];
+    private ?LogMasking $logMasking = null;
 
     /**
      * Set cors header
@@ -144,15 +160,123 @@ final class ApiPresenter implements IPresenter
     }
 
     /**
-     * Mask values of sensitive request headers before they are passed to ApiLoggerInterface.
+     * Replace the names of request headers masked before they are passed to ApiLoggerInterface.
      *
-     * Header names are case-insensitive. Masking is off by default in 3.x.
+     * Masking is on by default with DEFAULT_MASKED_LOG_HEADERS and DEFAULT_MASKED_LOG_HEADER_PATTERNS; the header names of
+     * registered HeaderApiKeyAuthentication are always added. Names are case-insensitive. The patterns stay; an empty list
+     * turns header masking off, including the patterns and the authorization names.
      *
      * @param string[] $headers
      */
     public function setMaskedLogHeaders(array $headers = self::DEFAULT_MASKED_LOG_HEADERS): void
     {
-        $this->maskedLogHeaders = array_map(strtolower(...), $headers);
+        $this->logMasking()->setHeaders($headers, __FUNCTION__);
+    }
+
+    public function addMaskedLogHeader(string $header): void
+    {
+        $this->logMasking()->addHeader($header, __FUNCTION__);
+    }
+
+    /**
+     * @throws \InvalidArgumentException when the header is not in the list
+     */
+    public function removeMaskedLogHeader(string $header): void
+    {
+        $this->logMasking()->removeHeader($header, __FUNCTION__);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getMaskedLogHeaders(): array
+    {
+        return $this->logMasking()->getHeaders();
+    }
+
+    /**
+     * Replace the header name patterns masked in the API log, * stands for any characters: *token*, x-auth-*.
+     * An empty list removes only the patterns.
+     *
+     * @param string[] $patterns
+     */
+    public function setMaskedLogHeaderPatterns(array $patterns = self::DEFAULT_MASKED_LOG_HEADER_PATTERNS): void
+    {
+        $this->logMasking()->setHeaderPatterns($patterns, __FUNCTION__);
+    }
+
+    public function addMaskedLogHeaderPattern(string $pattern): void
+    {
+        $this->logMasking()->addHeaderPattern($pattern, __FUNCTION__);
+    }
+
+    /**
+     * @throws \InvalidArgumentException when the pattern is not in the list
+     */
+    public function removeMaskedLogHeaderPattern(string $pattern): void
+    {
+        $this->logMasking()->removeHeaderPattern($pattern, __FUNCTION__);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getMaskedLogHeaderPatterns(): array
+    {
+        return $this->logMasking()->getHeaderPatterns();
+    }
+
+    /**
+     * Replace the names of query parameters whose values are masked in the logged URI.
+     *
+     * Masking is on by default with DEFAULT_MASKED_LOG_QUERY_PARAMS; the parameter names of registered
+     * QueryApiKeyAuthentication are always added. Names are case-insensitive and also match name[] and name[key].
+     * An empty list turns query masking off, including the authorization names.
+     *
+     * @param string[] $params
+     */
+    public function setMaskedLogQueryParams(array $params = self::DEFAULT_MASKED_LOG_QUERY_PARAMS): void
+    {
+        $this->logMasking()->setQueryParams($params, __FUNCTION__);
+    }
+
+    public function addMaskedLogQueryParam(string $param): void
+    {
+        $this->logMasking()->addQueryParam($param, __FUNCTION__);
+    }
+
+    /**
+     * @throws \InvalidArgumentException when the parameter is not in the list
+     */
+    public function removeMaskedLogQueryParam(string $param): void
+    {
+        $this->logMasking()->removeQueryParam($param, __FUNCTION__);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getMaskedLogQueryParams(): array
+    {
+        return $this->logMasking()->getQueryParams();
+    }
+
+    /**
+     * How masked values are written: LogMaskMode::Full (***, the default), Partial, Hash or Omit, or your own masker
+     */
+    public function setLogMasking(LogMaskMode|LogValueMaskerInterface $masking): void
+    {
+        $this->logMasking()->setMasker($masking instanceof LogMaskMode ? new LogValueMasker($masking) : $masking);
+    }
+
+    public function getLogMasking(): LogValueMaskerInterface
+    {
+        return $this->logMasking()->getMasker();
+    }
+
+    private function logMasking(): LogMasking
+    {
+        return $this->logMasking ??= new LogMasking();
     }
 
     #[\Override]
@@ -297,20 +421,24 @@ final class ApiPresenter implements IPresenter
             }
         }
 
-        $requestHeaders = '';
-        foreach ($headers as $key => $value) {
-            if (in_array(strtolower($key), $this->maskedLogHeaders, true)) {
-                $value = self::MASKED_LOG_HEADER_VALUE;
+        $authHeaders = $authCookies = $authParams = [];
+        foreach ($this->apiDecider->getAuthorizations() as $authorization) {
+            if ($authorization instanceof HeaderApiKeyAuthentication) {
+                $authHeaders[] = $authorization->getHeaderName();
+            } elseif ($authorization instanceof CookieApiKeyAuthentication) {
+                $authCookies[] = $authorization->getCookieName();
+            } elseif ($authorization instanceof QueryApiKeyAuthentication) {
+                $authParams[] = $authorization->getQueryParamName();
             }
-            $requestHeaders .= sprintf('%s: %s%s', $key, TypeHelper::toString($value), PHP_EOL);
         }
+        $masking = $this->logMasking();
 
         $ipDetector = $this->context->getByType(IpDetectorInterface::class);
         $logger->log(
             $code,
             $request->getMethod() ?? '',
-            $requestHeaders,
-            (string)filter_input(INPUT_SERVER, 'REQUEST_URI'),
+            $masking->headers($headers, $authHeaders, $authCookies),
+            $masking->uri(is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '', $authParams),
             $ipDetector->getRequestIp(),
             (string)filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
             (int)($elapsed * self::TO_SECONDS),

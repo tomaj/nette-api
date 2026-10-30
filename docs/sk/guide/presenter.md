@@ -74,7 +74,7 @@ Keď `ConfiguratorInterface::validateSchema()` vráti true, odpoveď sa porovná
 
 ## 9. Logovanie
 
-Ak má kontajner `ApiLoggerInterface`, požiadavka sa zaloguje s konečným kódom a časom. Hlavičky zo `setMaskedLogHeaders()` sa zalogujú ako `***`. Kroky 3, 5 a 6 už skončili, takže `429`, `401` a `400` sa v 3.x nelogujú. Pozrite si [Logovanie](/sk/guide/logging).
+Ak má kontajner `ApiLoggerInterface`, požiadavka sa zaloguje s konečným kódom a časom. Tajné hlavičky a query parametre sa predtým zamaskujú, predvolene na `***` (`setMaskedLogHeaders()`, `setMaskedLogQueryParams()`, `setLogMasking()`, pozrite [metódy](/sk/guide/logging#metody-presentera)). Kroky 3, 5 a 6 už skončili, takže `429`, `401` a `400` sa v 3.x nelogujú. Pozrite si [Logovanie](/sk/guide/logging).
 
 ## Nastavenie presentera
 
@@ -84,7 +84,7 @@ services:
 		factory: Tomaj\NetteApi\Presenters\ApiPresenter
 		setup:
 			- setCorsAllowedOrigins(['https://app.example.com'])
-			- setMaskedLogHeaders()
+			- addMaskedLogHeader(X-Session)
 ```
 
 Toto je jediná služba `apiPresenter` zo stránky [Začíname](/sk/guide/getting-started#_3-zaregistrujte-sluzby): pridajte k nej tieto riadky `setup:`, alebo dajte blok pod rovnakým názvom do iného konfiguračného súboru a Nette ich zlúči. Druhú službu `ApiPresenter` neregistrujte; dve skončia chybou „Multiple services of type Tomaj\NetteApi\Presenters\ApiPresenter found“.

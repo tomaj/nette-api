@@ -10,7 +10,7 @@ rm -f log/api.log log/exception.log log/error.log
 APP_ENV= serve 8086
 DEV="$BASE"
 
-request -H 'Authorization: Bearer top-secret' -H 'Cookie: session=cookie-secret' -H 'X-Trace: visible-value' -A 'e2e/1.0' "$DEV/api/v1/ping"
+request -H 'Authorization: Bearer top-secret' -H 'Cookie: session=cookie-secret' -H 'X-Session: session-secret' -H 'X-Refresh-Token: pattern-secret' -H 'X-Trace: visible-value' -A 'e2e/1.0' "$DEV/api/v1/ping?api_key=query-secret&session_id=sid-secret&page=2"
 expect_status 200 "ping"
 ok "GET /api/v1/ping works"
 
@@ -18,8 +18,14 @@ grep -qF '"code":200' log/api.log || { echo "fail: log/api.log has no line for t
 grep -qF '"Authorization":"***"' log/api.log || { echo "fail: the Authorization header is not masked" >&2; cat log/api.log >&2; exit 1; }
 if grep -qF 'top-secret' log/api.log; then echo "fail: the token leaked into log/api.log" >&2; exit 1; fi
 grep -qF '"Cookie":"***"' log/api.log && ! grep -qF 'cookie-secret' log/api.log || { echo "fail: the Cookie header is not masked" >&2; exit 1; }
+grep -qF '"X-Session":"***"' log/api.log || { echo "fail: the added X-Session header is not masked" >&2; exit 1; }
+grep -qF '"X-Refresh-Token":"***"' log/api.log || { echo "fail: the *token* pattern did not mask X-Refresh-Token" >&2; exit 1; }
+grep -qF '"uri":"/api/v1/ping?api_key=***&session_id=***&page=2"' log/api.log || { echo "fail: the query parameters are not masked" >&2; cat log/api.log >&2; exit 1; }
+for secret in session-secret pattern-secret query-secret sid-secret; do
+	if grep -qF "$secret" log/api.log; then echo "fail: $secret leaked into log/api.log" >&2; exit 1; fi
+done
 grep -qF '"X-Trace":"visible-value"' log/api.log || { echo "fail: a header that is not on the list was masked" >&2; exit 1; }
-ok "the request is in log/api.log, Authorization and Cookie masked, other headers kept"
+ok "the request is in log/api.log, secret headers and query parameters masked, other values kept"
 
 request "$DEV/api/v1/fail?kind=crash"
 expect_status 500 "exception"

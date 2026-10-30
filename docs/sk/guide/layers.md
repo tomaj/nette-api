@@ -118,7 +118,7 @@ Pozrite si [Spracovanie chýb](/sk/guide/errors).
 
 ## Logger: čo sa stalo
 
-So službou `ApiLoggerInterface` v kontajneri sa zaloguje každá požiadavka, ktorá sa dostala k handleru, s kódom, metódou, hlavičkami, URI, IP, user agentom a časom. `setMaskedLogHeaders()` skryje tajné hlavičky. Pozrite si [Logovanie](/sk/guide/logging).
+So službou `ApiLoggerInterface` v kontajneri sa zaloguje každá požiadavka, ktorá sa dostala k handleru, s kódom, metódou, hlavičkami, URI, IP, user agentom a časom. Tajné hlavičky a query parametre sa predvolene maskujú. Pozrite si [Logovanie](/sk/guide/logging).
 
 ## Časté otázky
 

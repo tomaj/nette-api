@@ -27,6 +27,10 @@ use Tomaj\NetteApi\Error\ProblemDetailsErrorHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
+use Tomaj\NetteApi\Logger\LogMaskMode;
+use Tomaj\NetteApi\Logger\LogValueMasker;
+use Tomaj\NetteApi\Logger\LogValueMaskerInterface;
+use Tomaj\NetteApi\Test\DI\Fixtures\UpperMasker;
 use Tomaj\NetteApi\Misc\CorsOriginCallback;
 use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
@@ -66,7 +70,10 @@ final class NetteApiExtensionTest extends TestCase
         $this->assertSame($container->getByType(ConfiguratorInterface::class), $presenter->outputConfigurator);
         $this->assertSame('off', $this->property($presenter, 'corsHeader'), 'no CORS headers unless cors.mode says so');
         $this->assertNull($this->property($presenter, 'corsAllowlist'));
-        $this->assertSame([], $this->property($presenter, 'maskedLogHeaders'));
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_HEADERS, $presenter->getMaskedLogHeaders(), 'logs are masked by default');
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_HEADER_PATTERNS, $presenter->getMaskedLogHeaderPatterns());
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_QUERY_PARAMS, $presenter->getMaskedLogQueryParams());
+        $this->assertSame(LogMaskMode::Full, $presenter->getLogMasking()->getMode());
         $this->assertNull($this->property($container->getByType(ApiDecider::class), 'globalPreflightHandler'));
         $this->assertNull($container->getByType(ApiPresenter::class, false), 'the presenter is not autowired');
     }
@@ -355,9 +362,39 @@ final class NetteApiExtensionTest extends TestCase
         yield 'version space' => [sprintf($endpoint, "'1 0'", 'users', 'a'), sprintf($url, 'version', '1 0', 'version: 1')];
         yield 'package query' => [sprintf($endpoint, '1', "'u?x'", 'a'), sprintf($url, 'package', 'u?x', 'package: users')];
         yield 'action hash' => [sprintf($endpoint, '1', 'users', "'a#b'"), sprintf($url, 'action', 'a#b', 'action: detail')];
-        yield 'maskHeaders empty' => ['logging: {maskHeaders: []}', 'api.logging.maskHeaders is an empty list, so no header would be masked, the same as false. Use maskHeaders: true'];
-        yield 'maskHeaders bad name' => ["logging: {maskHeaders: [Authorization, 'X Secret']}", "api.logging.maskHeaders[1] 'X Secret' is not an HTTP header name, a header name has no spaces, colons or other separators. Write only the name, for example maskHeaders: [Authorization, X-Secret]."];
-        yield 'maskHeaders colon' => ["logging: {maskHeaders: ['Authorization:']}", "api.logging.maskHeaders[0] 'Authorization:' is not an HTTP header name"];
+        $headers = 'Authorization, Proxy-Authorization, Cookie, Set-Cookie, X-Api-Key';
+        $params = 'api_key, apikey, key, token, access_token, refresh_token, id_token, auth, password, secret, signature, sig, code, client_secret';
+        yield 'maskHeaders add bad' => ["logging: {maskHeaders: {add: [X-A, 'X Secret']}}", "api.logging.maskHeaders.add[1] 'X Secret': it is not an HTTP header name"];
+        yield 'maskHeaders names bad' => ["logging: {maskHeaders: {names: ['X-*']}}", "api.logging.maskHeaders.names[0] 'X-*': it contains *, which is only for header patterns."];
+        yield 'maskHeaders remove typo' => ['logging: {maskHeaders: {remove: [Set-Cokie]}}', "api.logging.maskHeaders.remove[0]: 'Set-Cokie' is not in the masked headers ($headers), so there is nothing to remove. Did you mean 'Set-Cookie'? Entries compare case-insensitively; fix the spelling or leave the entry out."];
+        yield 'maskHeaders remove by pattern' => ['logging: {maskHeaders: {remove: [X-Foo-Token]}}', "api.logging.maskHeaders.remove[0]: 'X-Foo-Token' is not in the masked headers ($headers), so there is nothing to remove. It is masked by the pattern '*token*'; remove the pattern, or replace the patterns with a narrower list."];
+        yield 'maskHeaders remove from names' => ['logging: {maskHeaders: {names: [X-A], remove: [Cookie]}}', "api.logging.maskHeaders.remove[0]: 'Cookie' is not in the masked headers (X-A), so there is nothing to remove."];
+        yield 'maskHeaders remove pattern list' => ["logging: {maskHeaders: {remove: [X-Foo-Token], patterns: ['x-*']}}", "is masked by the pattern 'x-*'"];
+        yield 'maskHeaders remove patterns off' => ['logging: {maskHeaders: {remove: [X-Foo-Token], patterns: false}}', "api.logging.maskHeaders.remove[0]: 'X-Foo-Token' is not in the masked headers ($headers), so there is nothing to remove. Entries compare"];
+        yield 'maskHeaders add and remove' => ['logging: {maskHeaders: {add: [x-a], remove: [X-A]}}', "api.logging.maskHeaders.remove[0] 'X-A' is also in api.logging.maskHeaders.add, so it would be added and removed again. Keep it in one of them."];
+        yield 'maskHeaders empty map' => ['logging: {maskHeaders: {add: []}}', 'api.logging.maskHeaders is an empty map, so it changes nothing. Use true for the defaults, false to turn the masking off, or names, add or remove, for example maskHeaders: {add: [X-Session], remove: [Set-Cookie]}.'];
+        yield 'patterns empty map' => ['logging: {maskHeaders: {patterns: {add: []}}}', 'api.logging.maskHeaders.patterns is an empty map, so it changes nothing.'];
+        yield 'query empty map' => ['logging: {maskQueryParams: {remove: []}}', 'api.logging.maskQueryParams is an empty map, so it changes nothing.'];
+        yield 'maskHeaders names empty' => ['logging: {maskHeaders: {names: []}}', 'api.logging.maskHeaders.names is an empty list. To turn the masking off write false'];
+        yield 'maskHeaders remove bad' => ["logging: {maskHeaders: {remove: ['X Y']}}", "api.logging.maskHeaders.remove[0] 'X Y': it is not an HTTP header name"];
+        yield 'maskHeaders add and remove case' => ['logging: {maskHeaders: {add: [X-A], remove: [x-A]}}', "api.logging.maskHeaders.remove[0] 'x-A' is also in"];
+        yield 'maskHeaders remove after re-add' => ['logging: {maskHeaders: {add: [COOKIE], remove: [Cokie]}}', "'Cokie' is not in the masked headers (Authorization, Proxy-Authorization, COOKIE, Set-Cookie, X-Api-Key), so"];
+        yield 'patterns no star' => ['logging: {maskHeaders: {patterns: [token]}}', "api.logging.maskHeaders.patterns[0] 'token': it has no *, so it matches only one header."];
+        yield 'patterns add bad' => ["logging: {maskHeaders: {patterns: {add: ['**']}}}", "api.logging.maskHeaders.patterns.add[0] '**': it matches every header"];
+        yield 'patterns remove typo' => ["logging: {maskHeaders: {patterns: {remove: ['*tokn*']}}}", "api.logging.maskHeaders.patterns.remove[0]: '*tokn*' is not in the masked header patterns (*token*, *secret*, *key*, x-auth-*), so there is nothing to remove. Did you mean '*token*'?"];
+        yield 'patterns empty list' => ['logging: {maskHeaders: {patterns: []}}', 'api.logging.maskHeaders.patterns is an empty list.'];
+        yield 'query empty' => ['logging: {maskQueryParams: []}', 'api.logging.maskQueryParams is an empty list. To turn the masking off write false; to change the defaults use add or remove, for example maskQueryParams: {add: [session_id], remove: [code]}.'];
+        yield 'query bad' => ["logging: {maskQueryParams: ['a=b']}", "api.logging.maskQueryParams[0] 'a=b': it is not a query parameter name."];
+        yield 'query add bad' => ["logging: {maskQueryParams: {add: ['x[]']}}", "api.logging.maskQueryParams.add[0] 'x[]': it is not a query parameter name."];
+        yield 'query remove typo' => ['logging: {maskQueryParams: {remove: [cod]}}', "api.logging.maskQueryParams.remove[0]: 'cod' is not in the masked query parameters ($params), so there is nothing to remove. Did you mean 'code'?"];
+        yield 'masking typo' => ['logging: {masking: parital}', "api.logging.masking 'parital' is not a masking mode. Did you mean 'partial'? Use 'full', 'partial', 'hash', 'omit', or a class implementing Tomaj\\NetteApi\\Logger\\LogValueMaskerInterface"];
+        yield 'hashKey without hash' => ['logging: {masking: partial, hashKey: abc}', "api.logging.hashKey is set, but api.logging.masking is 'partial' and only hash uses the key. Use masking: hash with the key, or remove hashKey."];
+        yield 'hashKey default masking' => ['logging: {hashKey: abc}', "api.logging.hashKey is set, but api.logging.masking is 'full'"];
+        yield 'hashKey empty' => ["logging: {masking: hash, hashKey: ''}", 'api.logging.hashKey'];
+        yield 'masking class missing' => ['logging: {masking: App\\NoMasker}', "Class 'App\\NoMasker' in api.logging.masking does not exist."];
+        yield 'maskHeaders empty' => ['logging: {maskHeaders: []}', 'api.logging.maskHeaders is an empty list. To turn the masking off write false; to change the defaults use add or remove, for example maskHeaders: {add: [X-Session], remove: [Set-Cookie]}.'];
+        yield 'maskHeaders bad name' => ["logging: {maskHeaders: [Authorization, 'X Secret']}", "api.logging.maskHeaders[1] 'X Secret': it is not an HTTP header name, a header name has no spaces, colons or other separators. Write only the name, for example X-Session."];
+        yield 'maskHeaders colon' => ["logging: {maskHeaders: ['Authorization:']}", "api.logging.maskHeaders[0] 'Authorization:': it is not an HTTP header name"];
         yield 'preflight empty' => ['cors: {preflight: {}}', 'api.cors.preflight is an empty map, so the preflight response would send no CORS headers. Use preflight: true'];
         yield 'preflight bad name' => ["cors: {preflight: {'Max Age': '600'}}", "api.cors.preflight key 'Max Age' is not an HTTP header name, a header name has no spaces, colons or other separators. Write only the name, for example preflight: {Access-Control-Max-Age: '600'}."];
         yield 'authorization name' => ["authorizations:\n        'my-auth': Tomaj\\NetteApi\\Authorization\\NoAuthorization", "api.authorizations: the name 'my-auth' is not valid, a name has only letters, digits and underscores. Use for example authorizations: {bearer: App\\Api\\MyAuthorization}."];
@@ -379,6 +416,12 @@ final class NetteApiExtensionTest extends TestCase
      */
     public static function neonErrors(): iterable
     {
+        yield 'maskHeaders map typo' => ["api:\n    logging: {maskHeaders: {ad: [X-A]}}", "Unexpected item 'api › logging › maskHeaders › ad', did you mean 'add'? Allowed keys in api.logging.maskHeaders: names, add, remove, patterns."];
+        yield 'patterns typo' => ["api:\n    logging: {maskHeaders: {patterns: {remvoe: [x]}}}", "Unexpected item 'api › logging › maskHeaders › patterns › remvoe', did you mean 'remove'? Allowed keys in api.logging.maskHeaders.patterns: add, remove."];
+        yield 'maskQueryParams typo' => ["api:\n    logging: {maskQueryParams: {patterns: [x]}}", "Unexpected item 'api › logging › maskQueryParams › patterns'. Allowed keys in api.logging.maskQueryParams: names, add, remove."];
+        yield 'maskQueryParams type' => ["api:\n    logging: {maskQueryParams: 5}", "The item 'api › logging › maskQueryParams' expects to be bool|list|array, 5 given. Use true (the default), false, a list of parameter names that replaces the defaults, or a map, for example maskQueryParams: {add: [session_id], remove: [code]}."];
+        yield 'masking type' => ["api:\n    logging: {masking: 5}", "The item 'api › logging › masking' expects to be string|Nette\\DI\\Definitions\\Statement, 5 given. Use 'full', 'partial', 'hash', 'omit', a class implementing Tomaj\\NetteApi\\Logger\\LogValueMaskerInterface, @serviceName, or a statement like App\\MyClass(arguments)."];
+        yield 'hashKey type' => ["api:\n    logging: {masking: hash, hashKey: [a]}", "The item 'api › logging › hashKey' expects to be string|Nette\\DI\\Definitions\\Statement|null, array given. Use a string, for example hashKey: %env.API_LOG_HASH_KEY%."];
         yield 'api scalar' => ['api: 5', 'The item \'api\' expects to be array, 5 given. The api section is a map, for example api: {endpoints: [{method: GET, version: 1, package: users, handler: App\\Api\\UsersHandler}]}.'];
         yield 'top typo' => ['api:
     loger: x', 'Unexpected item \'api › loger\', did you mean \'logger\'? Allowed keys in api: outputConfigurator, ipDetector, logger, errors, cors, logging, authorizations, rateLimits, defaults, discovery, endpoints.'];
@@ -387,7 +430,7 @@ final class NetteApiExtensionTest extends TestCase
         yield 'cors typo' => ['api:
     cors: {mod: off}', 'Unexpected item \'api › cors › mod\', did you mean \'mode\'? Allowed keys in api.cors: mode, allowedOrigins, originValidator, allowCredentials, preflight.'];
         yield 'logging typo' => ['api:
-    logging: {mask: true}', 'Unexpected item \'api › logging › mask\'. Allowed keys in api.logging: maskHeaders.'];
+    logging: {mask: true}', 'Unexpected item \'api › logging › mask\'. Allowed keys in api.logging: maskHeaders, maskQueryParams, masking, hashKey.'];
         yield 'defaults typo' => ['api:
     defaults: {authorisation: x}', 'Unexpected item \'api › defaults › authorisation\', did you mean \'authorization\'? Allowed keys in api.defaults: authorization, rateLimit.'];
         yield 'discovery typo' => ['api:
@@ -426,7 +469,7 @@ final class NetteApiExtensionTest extends TestCase
         yield 'preflight value' => ['api:
     cors: {preflight: {X-A: {a: b}}}', 'The item \'api › cors › preflight › X-A\' expects to be string|list, array given. A header value is a string or a list of strings, for example Access-Control-Allow-Headers: [Content-Type, Authorization].'];
         yield 'maskHeaders str' => ['api:
-    logging: {maskHeaders: 5}', 'The item \'api › logging › maskHeaders\' expects to be bool|list, 5 given. Use true, false, or a list of header names, for example maskHeaders: [Authorization, X-Secret].'];
+    logging: {maskHeaders: 5}', 'The item \'api › logging › maskHeaders\' expects to be bool|list|array, 5 given. Use true (the default), false, a list of header names that replaces the defaults, or a map, for example maskHeaders: {add: [X-Session], remove: [Set-Cookie], patterns: {add: [x-signature-*]}}.'];
         yield 'auths list' => ['api:
     authorizations: 5', 'The item \'api › authorizations\' expects to be array, 5 given. Use a map of name: class, for example authorizations: {bearer: App\\Api\\MyAuthorization}.'];
         yield 'rate list' => ['api:
@@ -632,7 +675,7 @@ api:
         $this->assertIsObject($allowlist);
         $this->assertSame(['https://app.example.com'], $this->property($allowlist, 'origins'));
         $this->assertTrue($this->property($allowlist, 'allowCredentials'));
-        $this->assertSame(array_map(strtolower(...), ApiPresenter::DEFAULT_MASKED_LOG_HEADERS), $this->property($presenter, 'maskedLogHeaders'));
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_HEADERS, $presenter->getMaskedLogHeaders());
         $this->assertInstanceOf(CorsPreflightHandler::class, $this->property($container->getByType(ApiDecider::class), 'globalPreflightHandler'));
     }
 
@@ -654,7 +697,8 @@ api:
         $allowlist = $this->property($presenter, 'corsAllowlist');
         $this->assertIsObject($allowlist);
         $this->assertFalse($this->property($allowlist, 'allowCredentials'));
-        $this->assertSame(['x-secret'], $this->property($presenter, 'maskedLogHeaders'));
+        $this->assertSame(['X-Secret'], $presenter->getMaskedLogHeaders());
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_HEADER_PATTERNS, $presenter->getMaskedLogHeaderPatterns(), 'a list replaces only the names');
         $preflight = $this->property($container->getByType(ApiDecider::class), 'globalPreflightHandler');
         $this->assertInstanceOf(CorsPreflightHandler::class, $preflight);
         $this->assertSame(['Access-Control-Allow-Headers' => ['Content-Type'], 'Access-Control-Max-Age' => '600'], $this->property($preflight, 'headers'));
@@ -959,4 +1003,116 @@ api:
     {
         return new ReflectionProperty($object, $name)->getValue($object);
     }
+
+    public function testLoggingMaskingForms(): void
+    {
+        $presenter = static fn (string $neon): ApiPresenter => ContainerFactory::create("api:\n    logging: " . $neon)->getService('api.presenter');
+
+        $p = $presenter('{maskHeaders: false, maskQueryParams: false}');
+        $this->assertSame([[], [], []], [$p->getMaskedLogHeaders(), $p->getMaskedLogHeaderPatterns(), $p->getMaskedLogQueryParams()]);
+
+        $p = $presenter('{maskHeaders: {add: [X-Session], remove: [set-cookie], patterns: {add: [x-signature-*], remove: [*KEY*]}}, maskQueryParams: {add: [session_id], remove: [code]}}');
+        $this->assertSame(['Authorization', 'Proxy-Authorization', 'Cookie', 'X-Api-Key', 'X-Session'], $p->getMaskedLogHeaders());
+        $this->assertSame(['*token*', '*secret*', 'x-auth-*', 'x-signature-*'], $p->getMaskedLogHeaderPatterns());
+        $this->assertSame(['api_key', 'apikey', 'key', 'token', 'access_token', 'refresh_token', 'id_token', 'auth', 'password', 'secret', 'signature', 'sig', 'client_secret', 'session_id'], $p->getMaskedLogQueryParams());
+
+        $p = $presenter('{maskHeaders: {names: [X-A], add: [X-B], patterns: false}, maskQueryParams: [a, b]}');
+        $this->assertSame(['X-A', 'X-B'], $p->getMaskedLogHeaders());
+        $this->assertSame([], $p->getMaskedLogHeaderPatterns());
+        $this->assertSame(['a', 'b'], $p->getMaskedLogQueryParams());
+
+        $p = $presenter('{maskHeaders: {patterns: [x-*]}, maskQueryParams: {names: [a], remove: [a]}}');
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_HEADERS, $p->getMaskedLogHeaders());
+        $this->assertSame(['x-*'], $p->getMaskedLogHeaderPatterns());
+        $this->assertSame([], $p->getMaskedLogQueryParams());
+
+        $p = $presenter('{maskHeaders: {names: [X-A], remove: [X-A]}}');
+        $this->assertSame([], $p->getMaskedLogHeaders());
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_HEADER_PATTERNS, $p->getMaskedLogHeaderPatterns(), 'removing the last name keeps the patterns');
+
+        $p = $presenter('{maskHeaders: {patterns: false}}');
+        $this->assertSame(ApiPresenter::DEFAULT_MASKED_LOG_HEADERS, $p->getMaskedLogHeaders());
+        $this->assertSame([], $p->getMaskedLogHeaderPatterns());
+    }
+
+    public function testLoggingMaskingModes(): void
+    {
+        $masker = static fn (string $neon): LogValueMaskerInterface => ContainerFactory::create("api:\n    logging: " . $neon)->getService('api.presenter')->getLogMasking();
+
+        foreach (LogMaskMode::cases() as $mode) {
+            $m = $masker('{masking: ' . $mode->value . '}');
+            $this->assertInstanceOf(LogValueMasker::class, $m);
+            $this->assertSame($mode, $m->getMode());
+        }
+        $this->assertSame('hash:' . substr(hash_hmac('sha256', 'v', 'k3y'), 0, 16), $masker('{masking: hash, hashKey: k3y}')->mask('v'));
+        $this->assertSame('hash:' . substr(hash('sha256', 'v'), 0, 16), $masker('{masking: hash}')->mask('v'));
+        $this->assertInstanceOf(UpperMasker::class, $masker('{masking: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\UpperMasker}'));
+        $this->assertSame('[X]', $masker("{masking: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\UpperMasker('[%s]')}")->mask('x'));
+    }
+
+
+    /**
+     * The extension adds its calls after the presenter's setup, so a key that would replace the setup fails instead
+     */
+    #[DataProvider('maskingSetupConflicts')]
+    public function testMaskingSetupAndLoggingKeyConflict(string $setup, string $logging, string $message): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage($message);
+        ContainerFactory::compile("services:\n    own:\n        create: Tomaj\\NetteApi\\Presenters\\ApiPresenter\n        setup:\n            - @http.request::getUrl()\n            - " . $setup . "\napi:\n    logging: " . $logging);
+    }
+
+    public static function maskingSetupConflicts(): iterable
+    {
+        $presenter = ApiPresenter::class;
+        foreach (['setMaskedLogHeaders([])', 'addMaskedLogHeader(X-A)', 'removeMaskedLogHeader(Cookie)', 'setMaskedLogHeaderPatterns([])', "addMaskedLogHeaderPattern('x-*')", "removeMaskedLogHeaderPattern('*key*')"] as $call) {
+            yield $call => [$call, '{maskHeaders: false}', 'api.logging.maskHeaders and the setup of the ' . $presenter . ' service call ' . strstr($call, '(', true) . '() both change the masked headers. The extension runs after the setup and would replace it. Keep one place: move the setup call into api.logging.maskHeaders (for example addMaskedLogHeader(X-Session) is maskHeaders: {add: [X-Session]}), or leave api.logging.maskHeaders out.'];
+        }
+        foreach (['setMaskedLogQueryParams([])', 'addMaskedLogQueryParam(sid)', 'removeMaskedLogQueryParam(code)'] as $call) {
+            yield $call => [$call, '{maskQueryParams: [a]}', 'api.logging.maskQueryParams and the setup of the ' . $presenter . ' service call ' . strstr($call, '(', true) . '() both change the masked query parameters. The extension runs after the setup and would replace it. Keep one place: move the setup call into api.logging.maskQueryParams (for example addMaskedLogQueryParam(session_id) is maskQueryParams: {add: [session_id]}), or leave api.logging.maskQueryParams out.'];
+        }
+        yield 'setLogMasking' => ['setLogMasking(Tomaj\\NetteApi\\Logger\\LogMaskMode::Omit)', '{masking: hash}', 'api.logging.masking and the setup of the ' . $presenter . ' service call setLogMasking() both change the masking mode. The extension runs after the setup and would replace it. Keep one place: move the setup call into api.logging.masking (for example setLogMasking(Tomaj\\NetteApi\\Logger\\LogMaskMode::Partial) is masking: partial), or leave api.logging.masking out.'];
+    }
+
+    public function testMaskingSetupWorksWithOtherOrDefaultLoggingKeys(): void
+    {
+        $container = ContainerFactory::create(<<<'NEON'
+            services:
+                own:
+                    create: Tomaj\NetteApi\Presenters\ApiPresenter
+                    setup:
+                        - @http.request::getUrl()
+                        - addMaskedLogHeader(X-A)
+                        - addMaskedLogQueryParam(sid)
+                        - setLogMasking(Tomaj\NetteApi\Logger\LogMaskMode::Omit)
+            api:
+                logging: {maskHeaders: true, maskQueryParams: true, masking: full}
+            NEON);
+        $presenter = $container->getService('own');
+        $this->assertContains('X-A', $presenter->getMaskedLogHeaders());
+        $this->assertContains('sid', $presenter->getMaskedLogQueryParams());
+        $this->assertSame(LogMaskMode::Omit, $presenter->getLogMasking()->getMode());
+
+        $container = ContainerFactory::create(<<<'NEON'
+            services:
+                own:
+                    create: Tomaj\NetteApi\Presenters\ApiPresenter
+                    setup:
+                        - addMaskedLogHeader(X-A)
+                        - setLogMasking(Tomaj\NetteApi\Logger\LogMaskMode::Omit)
+            api:
+                logging: {maskQueryParams: [a]}
+            NEON);
+        $presenter = $container->getService('own');
+        $this->assertContains('X-A', $presenter->getMaskedLogHeaders(), 'only the keys that are set must not meet the setup');
+        $this->assertSame(['a'], $presenter->getMaskedLogQueryParams());
+    }
+
+    public function testDefaultMaskingAddsNoSetup(): void
+    {
+        $this->assertStringNotContainsString('setLogMasking', ContainerFactory::compile("api:\n    logging: {masking: full}"));
+        $this->assertStringNotContainsString('setMaskedLog', ContainerFactory::compile('api: {}'), 'the defaults live in the presenter');
+        $this->assertStringContainsString('setLogMasking', ContainerFactory::compile("api:\n    logging: {masking: omit}"));
+    }
+
 }
