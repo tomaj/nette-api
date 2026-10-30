@@ -18,6 +18,9 @@ use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
+use Tomaj\NetteApi\Misc\CorsOriginCallback;
+use Tomaj\NetteApi\Misc\CorsOriginPolicy;
+use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
@@ -29,6 +32,13 @@ final class ApiPresenter implements IPresenter
     private const int TO_SECONDS = 1000;
 
     private const int HTTP_PORT = 80;
+
+    /**
+     * Start of the error for the renamed 'auto' CORS mode, shared with NetteApiExtension
+     *
+     * @internal
+     */
+    public const string AUTO_RENAMED = "The CORS mode 'auto' was renamed to 'reflect-unsafe' in 4.0. It is unsafe: it sends the origin of the Referer header back in Access-Control-Allow-Origin with Access-Control-Allow-Credentials: true, so any website can make requests with the user's cookies and read the responses. ";
 
     /**
      * Headers masked in the API log by setMaskedLogHeaders() without arguments
@@ -56,19 +66,19 @@ final class ApiPresenter implements IPresenter
      * CORS header settings
      *
      * Available values:
-     *   'auto'  - send back header Access-Control-Allow-Origin with domain taken from the Referer header
-     *             together with Access-Control-Allow-Credentials: true. This allows credentialed requests
-     *             (cookies) from ANY website, use setCorsAllowedOrigins() instead
-     *   '*'     - send header with '*' - this will workf fine if you dont need to send cookies via ajax calls to api
-     *             with jquery $.ajax with xhrFields: { withCredentials: true } settings
-     *   'off'   - will not send any CORS header
-     *   other   - any other value will be send in Access-Control-Allow-Origin header
+     *   'off'   - no CORS header (the default), use setCorsAllowedOrigins() or setCorsOriginValidator() to allow browsers on other origins
+     *   'reflect-unsafe' - UNSAFE: sends back the origin of the Referer header with
+     *             Access-Control-Allow-Credentials: true and Vary: Origin, Referer, so ANY website can read responses with the user's cookies
+     *             (the 'auto' mode of 3.x), use setCorsAllowedOrigins() instead
+     *   '*'     - Access-Control-Allow-Origin: *, for public APIs called without cookies
+     *   other   - one origin sent as Access-Control-Allow-Origin, for example 'https://app.example.com'
      *
      * @var string
      */
-    protected $corsHeader = '*';
+    protected $corsHeader = 'off';
 
-    private ?CorsOriginAllowlist $corsAllowlist = null;
+    /** setCorsAllowedOrigins() or setCorsOriginValidator() */
+    private ?CorsOriginPolicy $corsAllowlist = null;
 
     /** @var string[] lowercase names of headers whose values are masked in the API log */
     private array $maskedLogHeaders = [];
@@ -80,7 +90,17 @@ final class ApiPresenter implements IPresenter
      */
     public function setCorsHeader(CorsMode|string $corsHeader): void
     {
-        $this->corsHeader = $corsHeader instanceof CorsMode ? $corsHeader->value : $corsHeader;
+        $corsHeader = $corsHeader instanceof CorsMode ? $corsHeader->value : $corsHeader;
+        if (strtolower($corsHeader) === 'auto') {
+            throw new \InvalidArgumentException(self::AUTO_RENAMED . "Safe replacement: setCorsAllowedOrigins(['https://app.example.com'], true) listing the origins that call the API; pass true only when the browser sends cookies or uses withCredentials. To keep the old behaviour anyway, use setCorsHeader(CorsMode::ReflectUnsafe) or setCorsHeader('reflect-unsafe'). See UPGRADE-4.0.md.");
+        }
+        if (CorsMode::tryFrom($corsHeader) === null && !CorsOriginAllowlist::isOrigin($corsHeader)) {
+            throw new \InvalidArgumentException(sprintf(
+                "setCorsHeader('%s'): the value is neither a CORS mode nor an origin, it would be sent as Access-Control-Allow-Origin and no browser would accept it. Use 'off', '*', 'reflect-unsafe' (or a CorsMode case), or one origin in the form scheme://host[:port] without a path or trailing slash, for example setCorsHeader('https://app.example.com'); for more origins use setCorsAllowedOrigins().",
+                $corsHeader,
+            ));
+        }
+        $this->corsHeader = $corsHeader;
     }
 
     /**
@@ -93,7 +113,34 @@ final class ApiPresenter implements IPresenter
      */
     public function setCorsAllowedOrigins(array $origins, bool $allowCredentials = false): void
     {
+        $this->checkCorsPolicyConflict(CorsOriginAllowlist::class);
         $this->corsAllowlist = new CorsOriginAllowlist($origins, $allowCredentials);
+    }
+
+    /**
+     * Allow CORS for origins accepted by a validator called on each request with the request Origin header,
+     * for origins not known in advance (for example customer domains stored in a database).
+     *
+     * The validator gets only an origin in the form scheme://host[:port] and must return a bool; an allowed origin
+     * is reflected in Access-Control-Allow-Origin with Vary: Origin. When set, it takes precedence over setCorsHeader().
+     *
+     * @param CorsOriginValidatorInterface|callable(string): bool $validator
+     * @param bool $allowCredentials send Access-Control-Allow-Credentials: true for allowed origins
+     */
+    public function setCorsOriginValidator(mixed $validator, bool $allowCredentials = false): void
+    {
+        $this->checkCorsPolicyConflict(CorsOriginCallback::class);
+        $this->corsAllowlist = new CorsOriginCallback($validator, $allowCredentials);
+    }
+
+    /**
+     * @param class-string<CorsOriginPolicy> $policy
+     */
+    private function checkCorsPolicyConflict(string $policy): void
+    {
+        if ($this->corsAllowlist !== null && !$this->corsAllowlist instanceof $policy) {
+            throw new \LogicException('setCorsAllowedOrigins() and setCorsOriginValidator() are both called, but only one of them can decide which origins are allowed. Keep one: list fixed origins with setCorsAllowedOrigins(), or check them in the validator, for example fn (string $origin): bool => in_array($origin, $fixedOrigins, true) || $this->isCustomerDomain($origin).');
+        }
     }
 
     /**
@@ -283,7 +330,9 @@ final class ApiPresenter implements IPresenter
             return;
         }
 
-        if ($this->corsHeader === 'auto') {
+        if ($this->corsHeader === 'reflect-unsafe') {
+            // the reflected value differs per request (it comes from the Referer), so shared caches must not reuse it for another site
+            $this->response->addHeader('Vary', 'Origin, Referer');
             $domain = $this->getRequestDomain();
             if ($domain !== null) {
                 $this->response->addHeader('Access-Control-Allow-Origin', $domain);
@@ -305,12 +354,14 @@ final class ApiPresenter implements IPresenter
 
     private function getRequestDomain(): ?string
     {
-        if (!filter_input(INPUT_SERVER, 'HTTP_REFERER')) {
+        // read like HTTP_ORIGIN in sendCorsHeaders(), from $_SERVER
+        $referer = $_SERVER['HTTP_REFERER'] ?? null;
+        if (!is_string($referer) || $referer === '') {
             return null;
         }
 
-        $refererParsedUrl = parse_url(filter_input(INPUT_SERVER, 'HTTP_REFERER'));
-        if (!(isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host']))) {
+        $refererParsedUrl = parse_url($referer);
+        if (!is_array($refererParsedUrl) || !(isset($refererParsedUrl['scheme']) && isset($refererParsedUrl['host']))) {
             return null;
         }
 

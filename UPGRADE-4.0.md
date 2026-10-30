@@ -7,6 +7,30 @@
 * PHP 8.4 or newer.
 * `nette/application` ^3.2, `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0, `nette/di` ^3.2, `nette/schema` ^1.3.
 
+## CORS: 'auto' renamed to 'reflect-unsafe', no CORS headers by default
+
+`'auto'` sent the origin of the `Referer` header with `Access-Control-Allow-Credentials: true`, so any website could call the API with the user's cookies and read the response (#186). In 4.0:
+
+* `'auto'` is renamed to `'reflect-unsafe'` (`CorsMode::Auto` to `CorsMode::ReflectUnsafe`) with the same behaviour plus `Vary: Origin, Referer` (so shared caches do not reuse the reflected origin for another site), so the risk is visible in the config. `setCorsHeader('auto')` throws `InvalidArgumentException`, and `api: cors: mode: auto` fails the container compilation; the message shows the allowlist to use instead and the new name.
+* `ApiPresenter` sends no `Access-Control-Allow-Origin` until you configure it (default `'off'`, before `'*'`), the same as with the DI extension.
+* `setCorsHeader()` accepts only `'off'`, `'*'`, `'reflect-unsafe'` (or a `CorsMode` case) or one origin like `'https://app.example.com'`. Other values (`'OFF'`, a trailing slash, a list) were sent as a header browsers reject; now they throw `InvalidArgumentException` with the valid values, the same check as `api: cors: mode`.
+* `setCorsAllowedOrigins()` errors name the method and the fix; do not match the old wording (`CORS allowlist must contain at least one origin`, `Invalid CORS origin ...`).
+
+List the origins that call the API from a browser:
+
+```neon
+services:
+	apiPresenter:
+		factory: Tomaj\NetteApi\Presenters\ApiPresenter
+		setup:
+			# was: - setCorsHeader('auto')
+			- setCorsAllowedOrigins(['https://app.example.com', 'http://localhost:3000'], true)
+```
+
+or with the extension `api: cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}`. Pass `true` / `allowCredentials` only when the browser sends cookies or uses `withCredentials`. If you relied on the old default `'*'`, add `setCorsHeader('*')` (or `cors: {mode: '*'}`). To keep the old behaviour anyway (an API without cookies, or during the migration), use `setCorsHeader('reflect-unsafe')` or `cors: {mode: reflect-unsafe}`; any website can still read responses made with the user's cookies.
+
+If the origins are not known in advance (for example customer domains in a database), use the new `setCorsOriginValidator()` with a callable or a `CorsOriginValidatorInterface` (`api: cors: {originValidator: App\Api\CustomerOrigins}`) instead of reflecting every origin. See [dynamic origins](https://tomaj.github.io/nette-api/guide/cors#dynamic-origins).
+
 ## BasicAuthentication reads the Authorization header
 
 `BasicAuthentication` takes the user and password from the `Authorization: Basic` header, which `nette/http` fills from `PHP_AUTH_USER` and `PHP_AUTH_PW`. In 3.x it read the request URL, which `nette/http` 3.2 and newer leaves empty, so it rejected every request there. If you wrote your own class for that (like `BasicCredentialsAuthorization` in the auth example), you can use `BasicAuthentication` again. Credentials written into the URL (`https://user:pass@host/`) are no longer used.
@@ -60,7 +84,7 @@ $param->addExample('default', 'abc');
 * `Tomaj\NetteApi\Validation\InputType` is a string-backed enum (`InputType::Integer`, ...). The old constants (`InputType::INTEGER` = `'integer'`, ...) are kept, so existing code keeps working. It can no longer be instantiated or extended.
 * The `$valueType` constructor argument of `InputParam` and its subclasses is typed `InputType|string|null`; passing another type (e.g. an int) now throws `TypeError`. `InputValidator::validate()` / `transformType()` accept an `InputType` case or a string.
 * New `Params\ParamType` enum and `InputParam::getParamType()`; `getType()` and the `TYPE_*` constants are unchanged.
-* New `Presenters\CorsMode` enum (`Auto`, `Any`, `Off`); `setCorsHeader()` accepts it or a string. `'auto'` is unchanged.
+* New `Presenters\CorsMode` enum (`Any`, `Off`, `ReflectUnsafe`); `setCorsHeader()` accepts it or a string. See [CORS](#cors-auto-renamed-to-reflect-unsafe-no-cors-headers-by-default) for the renamed `'auto'`.
 
 ## Final classes
 
@@ -130,12 +154,8 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 
 4.0 adds `Tomaj\NetteApi\DI\NetteApiExtension`, which configures the API from one `api:` neon section. Nothing changes until you add it to `extensions:`; the `services:` setup from 3.x keeps working, and the extension uses an `ApiDecider`, `ApiPresenter`, error handler, output configurator or IP detector you already registered. `nette/di` ^3.2 and `nette/schema` ^1.3 are now required dependencies. The extension also adds the `Api: Tomaj\NetteApi\Presenters\*Presenter` application mapping; an `Api` entry you already have in `application: mapping` is kept.
 
-**CORS default with the extension (BC break when you move to it):** `ApiPresenter` on its own still sends `Access-Control-Allow-Origin: *`. When the extension configures the presenter and `api: cors: mode` is not set, it sends no CORS headers (`'off'`). If browsers on other origins call your API, set `cors: allowedOrigins: [...]` (recommended) or `cors: mode: '*'` to keep the 3.x behaviour. A `setCorsHeader()` call on an `ApiPresenter` you register in `services:` is kept. See the [documentation](https://tomaj.github.io/nette-api/guide/di-extension) and `examples/di-extension`.
+**CORS default with the extension:** when `api: cors: mode` is not set, the presenter sends no CORS headers (`'off'`), the same as `ApiPresenter` on its own in 4.0. If browsers on other origins call your API, set `cors: allowedOrigins: [...]` (recommended) or `cors: mode: '*'` to keep the 3.x behaviour. A `setCorsHeader()` call on an `ApiPresenter` you register in `services:` is kept. See the [documentation](https://tomaj.github.io/nette-api/guide/di-extension) and `examples/di-extension`.
 
 ## Attribute endpoints (optional)
 
 With the DI extension you can write `#[Get(1, 'users')]`, `#[Authorization]` and `#[RateLimit]` from `Tomaj\NetteApi\Attribute` on a handler class instead of an `api: endpoints:` entry. The extension reads them from autowired handler services and from `api: discovery: paths`. An autowired handler you already register in `services:` that happens to carry such an attribute becomes an endpoint, so do not add the attributes to handlers that are also listed in `api: endpoints:` (the compilation fails with a duplicate endpoint). See the [documentation](https://tomaj.github.io/nette-api/guide/attributes) and `examples/attributes`.
-
-## Unchanged
-
-* `ApiPresenter::setCorsHeader('auto')` still works. Prefer `setCorsAllowedOrigins()` for new code.

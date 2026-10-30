@@ -66,6 +66,9 @@ jobs:
   infection:
     runs-on: ubuntu-latest
     name: Infection
+    env:
+      # keep Xdebug in the mutant runs, the CORS header tests read xdebug_get_headers()
+      INFECTION_ALLOW_XDEBUG: '1'
 
     steps:
       - name: Checkout code

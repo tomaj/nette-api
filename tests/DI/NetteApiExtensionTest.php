@@ -27,6 +27,7 @@ use Tomaj\NetteApi\Error\ProblemDetailsErrorHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\EchoHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
+use Tomaj\NetteApi\Misc\CorsOriginCallback;
 use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
@@ -384,7 +385,7 @@ final class NetteApiExtensionTest extends TestCase
         yield 'errors typo' => ['api:
     errors: {fromat: default}', 'Unexpected item \'api › errors › fromat\', did you mean \'format\'? Allowed keys in api.errors: format, typeBaseUri, handler.'];
         yield 'cors typo' => ['api:
-    cors: {mod: auto}', 'Unexpected item \'api › cors › mod\', did you mean \'mode\'? Allowed keys in api.cors: mode, allowedOrigins, allowCredentials, preflight.'];
+    cors: {mod: off}', 'Unexpected item \'api › cors › mod\', did you mean \'mode\'? Allowed keys in api.cors: mode, allowedOrigins, originValidator, allowCredentials, preflight.'];
         yield 'logging typo' => ['api:
     logging: {mask: true}', 'Unexpected item \'api › logging › mask\'. Allowed keys in api.logging: maskHeaders.'];
         yield 'defaults typo' => ['api:
@@ -411,9 +412,13 @@ final class NetteApiExtensionTest extends TestCase
         yield 'errors scalar' => ['api:
     errors: 5', 'The item \'api › errors\' expects to be array, 5 given. errors is a map, for example errors: {format: problemDetails}.'];
         yield 'cors mode int' => ['api:
-    cors: {mode: 5}', 'The item \'api › cors › mode\' expects to be null or string, 5 given. Use \'auto\', \'*\', \'off\', or one origin like https://app.example.com.'];
+    cors: {mode: 5}', 'The item \'api › cors › mode\' expects to be null or string, 5 given. Use \'*\', \'off\', \'reflect-unsafe\', or one origin like https://app.example.com.'];
+        yield 'cors mode boolean' => ['api:
+    cors: {mode: false}', 'The item \'api › cors › mode\' expects to be null or string, false given. Neon read the mode as a boolean (an unquoted off, no, on or yes), write it in quotes, for example mode: \'off\'. Use \'*\', \'off\', \'reflect-unsafe\', or one origin like https://app.example.com.'];
+        yield 'cors mode true' => ['api:
+    cors: {mode: true}', 'The item \'api › cors › mode\' expects to be null or string, true given. Neon read the mode as a boolean (an unquoted off, no, on or yes), write it in quotes, for example mode: \'off\'. Use \'*\', \'off\', \'reflect-unsafe\', or one origin like https://app.example.com.'];
         yield 'cors mode empty' => ['api:
-    cors: {mode: \'\'}', 'api.cors.mode \'\' is not valid. It is empty. Use \'auto\', \'*\', \'off\', or one origin like https://app.example.com (for more origins use api.cors.allowedOrigins).'];
+    cors: {mode: \'\'}', 'api.cors.mode \'\' is not valid. It is empty. Use \'*\', \'off\', \'reflect-unsafe\', or one origin like https://app.example.com (for more origins use api.cors.allowedOrigins).'];
         yield 'origins scalar' => ['api:
     cors: {allowedOrigins: 5}', 'The item \'api › cors › allowedOrigins\' expects to be null or list, 5 given. Use a list, for example allowedOrigins: [https://app.example.com].'];
         yield 'preflight int' => ['api:
@@ -663,10 +668,10 @@ api:
                     create: Tomaj\NetteApi\Presenters\ApiPresenter
                     setup:
                         - @http.request::getUrl()
-                        - setCorsHeader(auto)
+                        - setCorsHeader('*')
             api:
             NEON);
-        $this->assertSame('auto', $this->property($container->getService('withMode'), 'corsHeader'));
+        $this->assertSame('*', $this->property($container->getService('withMode'), 'corsHeader'));
 
         $container = ContainerFactory::create("services:\n    plain: Tomaj\\NetteApi\\Presenters\\ApiPresenter\napi:");
         $this->assertSame('off', $this->property($container->getService('plain'), 'corsHeader'));
@@ -698,10 +703,16 @@ api:
         $this->assertSame('off', $this->property($container->getService('api.presenter'), 'corsHeader'));
     }
 
+    public function testCorsModeReflectUnsafe(): void
+    {
+        $container = ContainerFactory::create("api:\n    cors: {mode: reflect-unsafe}");
+        $this->assertSame('reflect-unsafe', $this->property($container->getService('api.presenter'), 'corsHeader'));
+    }
+
     public function testCredentialsWithoutOriginsFail(): void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage('api.cors.allowCredentials: true needs api.cors.allowedOrigins, credentials are allowed only for listed origins. Add the origins, for example cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}.');
+        $this->expectExceptionMessage('api.cors.allowCredentials: true needs api.cors.allowedOrigins or api.cors.originValidator, credentials are allowed only for origins you allow. Add the origins, for example cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}, or a validator, for example cors: {originValidator: App\\Api\\CustomerOrigins, allowCredentials: true}.');
         ContainerFactory::compile("api:\n    cors: {allowCredentials: true}");
     }
 
@@ -732,7 +743,7 @@ api:
                 errorHandler: Tomaj\NetteApi\Error\ProblemDetailsErrorHandler
                 ipDetector: Tomaj\NetteApi\Misc\StaticIpDetector('127.0.0.1')
             api:
-                cors: {mode: auto}
+                cors: {mode: '*'}
                 endpoints:
                     - {method: GET, version: 1, package: neon, handler: Tomaj\NetteApi\Handlers\EchoHandler}
             NEON);
@@ -746,7 +757,7 @@ api:
         $this->assertSame(['v1/manual/', 'v1/neon/'], array_map(static fn (Api $api): string => $api->getEndpoint()->getUrl(), $decider->getApis()));
         $presenter = $container->getService('apiPresenter');
         $this->assertInstanceOf(ApiPresenter::class, $presenter);
-        $this->assertSame('auto', $this->property($presenter, 'corsHeader'));
+        $this->assertSame('*', $this->property($presenter, 'corsHeader'));
         $this->assertSame($container->getService('errorHandler'), $container->getByType(ErrorHandlerInterface::class));
         $this->assertSame($container->getService('configurator'), $container->getByType(ConfiguratorInterface::class));
         $this->assertSame($container->getService('ipDetector'), $container->getByType(IpDetectorInterface::class));
@@ -847,9 +858,18 @@ api:
      */
     public static function provideInvalidCors(): iterable
     {
-        yield 'unknown mode' => ["{mode: atuo}", 'api.cors.mode \'atuo\' is not valid. Did you mean \'auto\'? Use \'auto\', \'*\', \'off\', or one origin like https://app.example.com (for more origins use api.cors.allowedOrigins).'];
-        yield 'mode with a path' => ["{mode: 'https://app.example.com/'}", 'api.cors.mode \'https://app.example.com/\' is not valid. Use \'auto\', \'*\', \'off\', or one origin like https://app.example.com (for more origins use api.cors.allowedOrigins).'];
+        yield 'renamed auto' => ["{mode: auto}", "The CORS mode 'auto' was renamed to 'reflect-unsafe' in 4.0. It is unsafe: it sends the origin of the Referer header back in Access-Control-Allow-Origin with Access-Control-Allow-Credentials: true, so any website can make requests with the user's cookies and read the responses. Safe replacement: list the origins that call the API, for example cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}; set allowCredentials only when the browser sends cookies or uses withCredentials. To keep the old behaviour anyway, use cors: {mode: reflect-unsafe}. See UPGRADE-4.0.md."];
+        yield 'renamed auto uppercase' => ["{mode: Auto}", "The CORS mode 'auto' was renamed to 'reflect-unsafe' in 4.0."];
+        yield 'unknown mode' => ["{mode: of}", 'api.cors.mode \'of\' is not valid. Did you mean \'off\'? Use \'*\', \'off\', \'reflect-unsafe\', or one origin like https://app.example.com (for more origins use api.cors.allowedOrigins).'];
+        yield 'mode with a path' => ["{mode: 'https://app.example.com/'}", 'api.cors.mode \'https://app.example.com/\' is not valid. Use \'*\', \'off\', \'reflect-unsafe\', or one origin like https://app.example.com (for more origins use api.cors.allowedOrigins).'];
         yield 'mode and origins' => ["{mode: '*', allowedOrigins: [https://app.example.com]}", 'api.cors.mode \'*\' and api.cors.allowedOrigins are both set, but allowedOrigins replaces mode, so mode does nothing. Remove mode.'];
+        yield 'validator and mode' => ["{mode: '*', originValidator: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\CustomerOrigins}", 'api.cors.originValidator and api.cors.mode are both set, but only one of them can decide which origins are allowed. Remove mode, the validator replaces it.'];
+        yield 'validator and origins' => ["{allowedOrigins: [https://app.example.com], originValidator: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\CustomerOrigins}", 'api.cors.originValidator and api.cors.allowedOrigins are both set, but only one of them can decide which origins are allowed. Remove allowedOrigins and allow the fixed origins in the validator too, for example return in_array($origin, $fixedOrigins, true) || ...;'];
+        yield 'validator not implementing' => ["{originValidator: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\MemoryLogger}", "Class 'Tomaj\\NetteApi\\Test\\DI\\Fixtures\\MemoryLogger' in api.cors.originValidator must implement Tomaj\\NetteApi\\Misc\\CorsOriginValidatorInterface, but it does not. Implement the interface in the class, or use another class."];
+        yield 'validator invokable' => ["{originValidator: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\InvokableOrigins}", "Class 'Tomaj\\NetteApi\\Test\\DI\\Fixtures\\InvokableOrigins' in api.cors.originValidator must implement Tomaj\\NetteApi\\Misc\\CorsOriginValidatorInterface, but it does not. The class has __invoke(), but the extension needs the interface: add implements CorsOriginValidatorInterface with isAllowedOrigin(string \$origin): bool, or pass the callable to ApiPresenter::setCorsOriginValidator() in PHP."];
+        yield 'validator missing class' => ["{originValidator: App\\Api\\CustomerOrigins}", "Class 'App\\Api\\CustomerOrigins' in api.cors.originValidator does not exist. Check the spelling and the autoload section of composer.json. Use a class implementing Tomaj\\NetteApi\\Misc\\CorsOriginValidatorInterface, @serviceName, or a statement like App\\MyClass(arguments)."];
+        yield 'validator quoted reference' => ["{originValidator: '@origins'}", "'@origins' in api.cors.originValidator is quoted, and in neon a quoted '@name' is a plain string, not a service reference. Write it without quotes: @origins."];
+        yield 'validator missing service' => ["{originValidator: @origins}", "Service 'origins' used as @origins in api.cors.originValidator does not exist."];
         yield 'empty origins' => ["{allowedOrigins: []}", 'api.cors.allowedOrigins is an empty list, so no origin could call the API. Add the origins, for example allowedOrigins: [https://app.example.com], or remove the option.'];
         yield 'origin with a path' => ["{allowedOrigins: [https://a.example.com, 'https://app.example.com/']}", 'api.cors.allowedOrigins[1] \'https://app.example.com/\' is not an origin, it would never match the Origin header a browser sends. Write the scheme and host (and port) without a path or trailing slash, for example https://app.example.com or \'http://localhost:3000\'.'];
     }
@@ -860,6 +880,45 @@ api:
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage($message);
         ContainerFactory::compile("api:\n    cors: $cors");
+    }
+
+    public function testCorsOriginValidator(): void
+    {
+        $container = ContainerFactory::create(<<<NEON
+            api:
+                cors:
+                    originValidator: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\CustomerOrigins('https://shop.example.com')
+                    allowCredentials: true
+            NEON);
+
+        $policy = $this->property($container->getService('api.presenter'), 'corsAllowlist');
+        $this->assertInstanceOf(CorsOriginCallback::class, $policy);
+        $this->assertTrue($this->property($policy, 'allowCredentials'));
+        $this->assertSame(['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://shop.example.com', 'Access-Control-Allow-Credentials' => 'true'], $policy->headers('https://shop.example.com'));
+        $this->assertSame(['Vary' => 'Origin'], $policy->headers('https://customer.example.com'));
+    }
+
+    public function testCorsOriginValidatorService(): void
+    {
+        $container = ContainerFactory::create(<<<NEON
+            services:
+                origins: Tomaj\\NetteApi\\Test\\DI\\Fixtures\\CustomerOrigins
+            api:
+                cors:
+                    originValidator: @origins
+            NEON);
+
+        $policy = $this->property($container->getService('api.presenter'), 'corsAllowlist');
+        $this->assertInstanceOf(CorsOriginCallback::class, $policy);
+        $this->assertFalse($this->property($policy, 'allowCredentials'));
+        $this->assertSame(['Vary' => 'Origin', 'Access-Control-Allow-Origin' => 'https://customer.example.com'], $policy->headers('https://customer.example.com'));
+    }
+
+    public function testCorsOriginValidatorSchemaError(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage("5 given. Use a class implementing Tomaj\\NetteApi\\Misc\\CorsOriginValidatorInterface, @serviceName, or a statement like App\\MyClass(arguments).");
+        ContainerFactory::compile("api:\n    cors: {originValidator: 5}");
     }
 
     public function testCorsModeWithOneOrigin(): void

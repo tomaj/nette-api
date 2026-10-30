@@ -231,9 +231,10 @@ api:
 
 | Key | Same as | Default |
 | --- | --- | --- |
-| `mode` | `setCorsHeader()`: `'*'`, `'off'`, `'auto'` or one origin | `'off'` |
+| `mode` | `setCorsHeader()`: `'*'`, `'off'`, `'reflect-unsafe'` ([unsafe](/guide/cors#can-i-keep-the-auto-behaviour-in-4-0), the old `'auto'`) or one origin (`'auto'` fails the compilation with the allowlist to use instead) | `'off'` |
 | `allowedOrigins` | `setCorsAllowedOrigins()` | not set |
-| `allowCredentials` | the second argument of `setCorsAllowedOrigins()`, needs `allowedOrigins` | `false` |
+| `originValidator` | `setCorsOriginValidator()`: a class, `@service` or statement implementing `CorsOriginValidatorInterface` ([dynamic origins](/guide/cors#dynamic-origins)), cannot be combined with `mode` or `allowedOrigins` | not set |
+| `allowCredentials` | the second argument of `setCorsAllowedOrigins()` / `setCorsOriginValidator()`, needs `allowedOrigins` or `originValidator` | `false` |
 | `preflight` | `enableGlobalPreflight()`: `true`, or a map of headers for `CorsPreflightHandler` | `false` |
 
 ```yaml
@@ -282,8 +283,9 @@ api:
 		typeBaseUri: null      # with problemDetails or negotiating
 		handler: null          # Class | Class(args) | @service, instead of format
 	cors:
-		mode: null             # '*' | 'off' | auto | an origin, default 'off'
+		mode: null             # '*' | 'off' | 'reflect-unsafe' (unsafe) | an origin, default 'off'
 		allowedOrigins: null   # list of origins
+		originValidator: null  # Class | Class(args) | @service implementing CorsOriginValidatorInterface
 		allowCredentials: false
 		preflight: false       # true | map of headers
 	logging:
@@ -319,7 +321,7 @@ Every mistake in the `api:` section stops the container compilation with a `Nett
 | Duplicate endpoint | two `GET /v1/users` | both places |
 | `errors.handler` with `format` or `typeBaseUri` | `errors: {handler: ..., format: problemDetails}` | to keep only one of them |
 | `typeBaseUri` without a problem details format, or not an absolute URI | `typeBaseUri: example.com/errors` | to add `format: problemDetails`, or to use e.g. `https://example.com/errors/` |
-| Invalid CORS settings | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` without `allowedOrigins` | the valid modes or origins, with an example |
+| Invalid CORS settings | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` without `allowedOrigins` or `originValidator`, `originValidator` together with `mode` or `allowedOrigins`, a validator without `CorsOriginValidatorInterface` | the valid modes or origins, what to remove or which interface to implement, with an example |
 | Empty or invalid header list | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | to use `true` for the defaults, or to write only header names |
 | Discovery path is missing or is a file | `paths: [%appDir%/Api/UsersHandler.php]` | to use a directory |
 | `discovery.namespace` without `paths`, or matching no class | `discovery: {namespace: App}` | to add the paths, or the namespaces that were found |

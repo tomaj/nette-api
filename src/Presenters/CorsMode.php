@@ -6,17 +6,10 @@ namespace Tomaj\NetteApi\Presenters;
 
 /**
  * Predefined CORS modes for ApiPresenter::setCorsHeader().
- * Any other string passed to setCorsHeader() is sent as the Access-Control-Allow-Origin value.
+ * ApiPresenter::setCorsHeader() also accepts one origin (scheme://host[:port]), sent as the Access-Control-Allow-Origin value.
  */
 enum CorsMode: string
 {
-    /**
-     * Sends back Access-Control-Allow-Origin with the domain taken from the Referer header together with
-     * Access-Control-Allow-Credentials: true. This allows credentialed requests from ANY website,
-     * prefer ApiPresenter::setCorsAllowedOrigins().
-     */
-    case Auto = 'auto';
-
     /**
      * Sends Access-Control-Allow-Origin: *
      */
@@ -26,4 +19,11 @@ enum CorsMode: string
      * Sends no CORS header
      */
     case Off = 'off';
+
+    /**
+     * UNSAFE: sends back Access-Control-Allow-Origin with the origin taken from the Referer header together with
+     * Access-Control-Allow-Credentials: true (and Vary: Origin, Referer), so ANY website can read responses with the user's cookies.
+     * This is the 'auto' mode of 3.x; prefer ApiPresenter::setCorsAllowedOrigins().
+     */
+    case ReflectUnsafe = 'reflect-unsafe';
 }

@@ -27,6 +27,7 @@ use Tomaj\NetteApi\Handlers\BaseHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
+use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
 use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
@@ -54,7 +55,7 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
  *     ipDetector: ServiceValue|null,
  *     logger: ServiceValue|null,
  *     errors: object{format: string|null, typeBaseUri: string|null, handler: ServiceValue|null},
- *     cors: object{mode: string|null, allowedOrigins: list<string>|null, allowCredentials: bool, preflight: bool|array<string, string|list<string>>},
+ *     cors: object{mode: string|null, allowedOrigins: list<string>|null, originValidator: ServiceValue|null, allowCredentials: bool, preflight: bool|array<string, string|list<string>>},
  *     logging: object{maskHeaders: bool|list<string>},
  *     authorizations: array<string, ServiceValue>,
  *     rateLimits: array<string, ServiceValue>,
@@ -114,6 +115,7 @@ final class NetteApiExtension extends CompilerExtension
             'cors' => Expect::structure([
                 'mode' => Expect::string()->nullable()->default(null),
                 'allowedOrigins' => Expect::listOf('string')->nullable()->default(null),
+                'originValidator' => $service()->nullable()->default(null),
                 'allowCredentials' => Expect::bool(false),
                 'preflight' => Expect::anyOf(Expect::bool(), Expect::arrayOf(Expect::anyOf(Expect::string(), Expect::listOf('string')), 'string'))->default(false),
             ]),
@@ -481,11 +483,6 @@ final class NetteApiExtension extends CompilerExtension
         return is_array($entity) && in_array($method, $entity, true);
     }
 
-    private static function hasSetup(ServiceDefinition $definition, string $method): bool
-    {
-        return array_any($definition->getSetup(), fn(Statement $setup): bool => self::isCall($setup, $method));
-    }
-
     /**
      * @param Config $config
      */
@@ -496,14 +493,17 @@ final class NetteApiExtension extends CompilerExtension
 
         if ($config->cors->mode !== null) {
             $presenter->addSetup('setCorsHeader', [$config->cors->mode]);
-        } elseif (!self::hasSetup($presenter, 'setCorsHeader')) {
-            $presenter->addSetup('setCorsHeader', ['off']);
         }
 
         if ($config->cors->allowedOrigins !== null) {
             $presenter->addSetup('setCorsAllowedOrigins', [$config->cors->allowedOrigins, $config->cors->allowCredentials]);
+        } elseif ($config->cors->originValidator !== null) {
+            $presenter->addSetup('setCorsOriginValidator', [
+                $this->service($config->cors->originValidator, [], 'api.cors.originValidator', CorsOriginValidatorInterface::class),
+                $config->cors->allowCredentials,
+            ]);
         } elseif ($config->cors->allowCredentials) {
-            throw new InvalidConfigurationException('api.cors.allowCredentials: true needs api.cors.allowedOrigins, credentials are allowed only for listed origins. Add the origins, for example cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}.');
+            throw new InvalidConfigurationException('api.cors.allowCredentials: true needs api.cors.allowedOrigins or api.cors.originValidator, credentials are allowed only for origins you allow. Add the origins, for example cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}, or a validator, for example cors: {originValidator: App\Api\CustomerOrigins, allowCredentials: true}.');
         }
 
         if ($config->logging->maskHeaders === true) {
@@ -547,18 +547,35 @@ final class NetteApiExtension extends CompilerExtension
     }
 
     /**
-     * @param object{mode: string|null, allowedOrigins: list<string>|null} $cors
+     * @param object{mode: string|null, allowedOrigins: list<string>|null, originValidator: string|Statement|null} $cors
      */
     private function checkCors(object $cors): void
     {
+        if ($cors->mode !== null && strtolower($cors->mode) === 'auto') {
+            throw new InvalidConfigurationException(ApiPresenter::AUTO_RENAMED . 'Safe replacement: list the origins that call the API, for example cors: {allowedOrigins: [https://app.example.com], allowCredentials: true}; set allowCredentials only when the browser sends cookies or uses withCredentials. To keep the old behaviour anyway, use cors: {mode: reflect-unsafe}. See UPGRADE-4.0.md.');
+        }
         $modes = array_map(static fn (CorsMode $mode): string => $mode->value, CorsMode::cases());
-        if ($cors->mode !== null && !in_array($cors->mode, $modes, true) && !self::isOrigin($cors->mode)) {
+        if ($cors->mode !== null && !in_array($cors->mode, $modes, true) && !CorsOriginAllowlist::isOrigin($cors->mode)) {
             throw new InvalidConfigurationException(sprintf(
                 "api.cors.mode '%s' is not valid.%s Use %s, or one origin like https://app.example.com (for more origins use api.cors.allowedOrigins).",
                 $cors->mode,
                 $cors->mode === '' ? ' It is empty.' : Hint::didYouMean($cors->mode, $modes),
                 Hint::quoted($modes),
             ));
+        }
+
+        if ($cors->originValidator !== null) {
+            foreach (['mode' => $cors->mode, 'allowedOrigins' => $cors->allowedOrigins] as $key => $value) {
+                if ($value !== null) {
+                    throw new InvalidConfigurationException(sprintf(
+                        'api.cors.originValidator and api.cors.%s are both set, but only one of them can decide which origins are allowed. %s',
+                        $key,
+                        $key === 'mode'
+                            ? 'Remove mode, the validator replaces it.'
+                            : 'Remove allowedOrigins and allow the fixed origins in the validator too, for example return in_array($origin, $fixedOrigins, true) || ...;',
+                    ));
+                }
+            }
         }
 
         if ($cors->allowedOrigins === null) {
@@ -577,23 +594,13 @@ final class NetteApiExtension extends CompilerExtension
         }
 
         foreach ($cors->allowedOrigins as $index => $origin) {
-            if (!self::isOrigin($origin)) {
+            if (!CorsOriginAllowlist::isOrigin($origin)) {
                 throw new InvalidConfigurationException(sprintf(
                     "api.cors.allowedOrigins[%d] '%s' is not an origin, it would never match the Origin header a browser sends. Write the scheme and host (and port) without a path or trailing slash, for example https://app.example.com or 'http://localhost:3000'.",
                     $index,
                     $origin,
                 ));
             }
-        }
-    }
-
-    private static function isOrigin(string $value): bool
-    {
-        try {
-            new CorsOriginAllowlist([$value]);
-            return true;
-        } catch (\InvalidArgumentException) {
-            return false;
         }
     }
 
@@ -878,7 +885,9 @@ final class NetteApiExtension extends CompilerExtension
                 $type,
                 $type === ApiHandlerInterface::class
                     ? sprintf(' Extend %s (or implement the interface), or use another class.', BaseHandler::class)
-                    : ' Implement the interface in the class, or use another class.',
+                    : ($type === CorsOriginValidatorInterface::class && method_exists($class, '__invoke')
+                        ? ' The class has __invoke(), but the extension needs the interface: add implements CorsOriginValidatorInterface with isAllowedOrigin(string $origin): bool, or pass the callable to ApiPresenter::setCorsOriginValidator() in PHP.'
+                        : ' Implement the interface in the class, or use another class.'),
             ));
         }
     }

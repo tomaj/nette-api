@@ -111,7 +111,7 @@ Or put `#[Get(1, 'hello')]` on the handler class and let the extension find it w
 
 ## Security notes
 
-* **CORS:** `setCorsHeader('auto')` reflects any site from the `Referer` header and allows credentials. Use `setCorsAllowedOrigins([...])` (since 3.6.0) or one fixed origin. See [CORS](https://tomaj.github.io/nette-api/guide/cors).
+* **CORS:** `setCorsHeader('auto')` reflects any site from the `Referer` header and allows credentials. Use `setCorsAllowedOrigins([...])` (since 3.6.0) or one fixed origin. 4.0 renames it to `'reflect-unsafe'` (`'auto'` throws) and sends no CORS headers until you configure them, and adds `setCorsOriginValidator()` for origins not known in advance. See [CORS](https://tomaj.github.io/nette-api/guide/cors).
 * **Logs:** request headers reach `ApiLoggerInterface` as they arrived. Call `setMaskedLogHeaders()` on `ApiPresenter` (since 3.6.0) to log `***` instead of `Authorization`, `Cookie`, `X-Api-Key` and other secrets. See [Logging](https://tomaj.github.io/nette-api/guide/logging#masking-headers).
 * **Tokens and passwords:** `BasicAuthentication` and `StaticTokenRepository` compare with `hash_equals()` (since 3.6.0). See [Authorization](https://tomaj.github.io/nette-api/guide/authorization).
 
