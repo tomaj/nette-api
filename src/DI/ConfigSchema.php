@@ -20,7 +20,7 @@ final readonly class ConfigSchema implements Schema
     private const array KEYS = [
         '' => ['outputConfigurator', 'ipDetector', 'logger', 'errors', 'cors', 'logging', 'authorizations', 'rateLimits', 'defaults', 'discovery', 'endpoints'],
         'errors' => ['format', 'typeBaseUri', 'handler'],
-        'cors' => ['mode', 'allowedOrigins', 'allowCredentials', 'preflight'],
+        'cors' => ['mode', 'allowedOrigins', 'originValidator', 'allowCredentials', 'preflight'],
         'logging' => ['maskHeaders'],
         'defaults' => ['authorization', 'rateLimit'],
         'discovery' => ['paths', 'namespace'],
@@ -32,6 +32,7 @@ final readonly class ConfigSchema implements Schema
         'ipDetector' => 'a class implementing Tomaj\NetteApi\Misc\IpDetectorInterface',
         'logger' => 'a class implementing Tomaj\NetteApi\Logger\ApiLoggerInterface',
         'errors.handler' => 'a class implementing Tomaj\NetteApi\Error\ErrorHandlerInterface',
+        'cors.originValidator' => 'a class implementing Tomaj\NetteApi\Misc\CorsOriginValidatorInterface',
         'authorizations.*' => 'a class implementing Tomaj\NetteApi\Authorization\ApiAuthorizationInterface',
         'rateLimits.*' => 'a class implementing Tomaj\NetteApi\RateLimit\RateLimitInterface',
         'defaults.authorization' => 'a name from api.authorizations (leave it out for no default), a class implementing Tomaj\NetteApi\Authorization\ApiAuthorizationInterface',
@@ -47,7 +48,7 @@ final readonly class ConfigSchema implements Schema
         'errors.format' => "Use one of 'default', 'problemDetails', 'negotiating'.",
         'errors.typeBaseUri' => 'Use an absolute URI, for example typeBaseUri: https://example.com/errors/.',
         'cors' => 'cors is a map, for example cors: {allowedOrigins: [https://app.example.com]}.',
-        'cors.mode' => "Use 'auto', '*', 'off', or one origin like https://app.example.com.",
+        'cors.mode' => "Use '*', 'off', 'reflect-unsafe', or one origin like https://app.example.com.",
         'cors.allowedOrigins' => 'Use a list, for example allowedOrigins: [https://app.example.com].',
         'cors.allowCredentials' => 'Use true or false.',
         'cors.preflight' => "Use true, false, or a map of headers, for example preflight: {Access-Control-Max-Age: '600'}.",
@@ -164,6 +165,10 @@ final readonly class ConfigSchema implements Schema
         $value = $message->variables['value'] ?? null;
         if ($key === 'errors.format' && is_string($value)) {
             $hint = ltrim(Hint::didYouMean($value, ['default', 'problemDetails', 'negotiating']) . ' ' . $hint);
+        }
+        if ($key === 'cors.mode' && is_bool($value)) {
+            // neon 3.x reads an unquoted off, no, on or yes as a boolean
+            $hint = "Neon read the mode as a boolean (an unquoted off, no, on or yes), write it in quotes, for example mode: 'off'. " . $hint;
         }
         return $hint;
     }

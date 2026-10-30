@@ -78,7 +78,7 @@ final class CorsOriginAllowlistTest extends TestCase
     public function testEmptyListIsRejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('CORS allowlist must contain at least one origin');
+        $this->expectExceptionMessage("setCorsAllowedOrigins() got an empty list, so no origin could call the API. Pass the origins, for example setCorsAllowedOrigins(['https://app.example.com']), or do not call it.");
         new CorsOriginAllowlist([]);
     }
 
@@ -86,7 +86,7 @@ final class CorsOriginAllowlistTest extends TestCase
     public function testInvalidOriginIsRejected(string $origin): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid CORS origin "' . $origin . '", expected scheme://host[:port] without path, e.g. "https://app.example.com"');
+        $this->expectExceptionMessage("setCorsAllowedOrigins(): '" . $origin . "' is not an origin, it would never match the Origin header a browser sends. Write the scheme and host (and port) without a path or trailing slash, for example 'https://app.example.com' or 'http://localhost:3000'.");
         new CorsOriginAllowlist(['https://ok.example.com', $origin]);
     }
 

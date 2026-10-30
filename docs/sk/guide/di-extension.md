@@ -231,9 +231,10 @@ api:
 
 | Kľúč | To isté ako | Predvolene |
 | --- | --- | --- |
-| `mode` | `setCorsHeader()`: `'*'`, `'off'`, `'auto'` alebo jeden origin | `'off'` |
+| `mode` | `setCorsHeader()`: `'*'`, `'off'`, `'reflect-unsafe'` ([nebezpečné](/sk/guide/cors#mozem-si-vo-4-0-nechat-spravanie-auto), pôvodné `'auto'`) alebo jeden origin (`'auto'` zastaví kompiláciu s ukážkou zoznamu originov na náhradu) | `'off'` |
 | `allowedOrigins` | `setCorsAllowedOrigins()` | nenastavené |
-| `allowCredentials` | druhý argument `setCorsAllowedOrigins()`, potrebuje `allowedOrigins` | `false` |
+| `originValidator` | `setCorsOriginValidator()`: trieda, `@service` alebo statement, ktorý implementuje `CorsOriginValidatorInterface` ([dynamické originy](/sk/guide/cors#dynamicke-originy)), nedá sa kombinovať s `mode` ani `allowedOrigins` | nenastavené |
+| `allowCredentials` | druhý argument `setCorsAllowedOrigins()` / `setCorsOriginValidator()`, potrebuje `allowedOrigins` alebo `originValidator` | `false` |
 | `preflight` | `enableGlobalPreflight()`: `true` alebo mapa hlavičiek pre `CorsPreflightHandler` | `false` |
 
 ```yaml
@@ -282,8 +283,9 @@ api:
 		typeBaseUri: null      # s problemDetails alebo negotiating
 		handler: null          # Trieda | Trieda(args) | @sluzba, namiesto format
 	cors:
-		mode: null             # '*' | 'off' | auto | origin, predvolene 'off'
+		mode: null             # '*' | 'off' | 'reflect-unsafe' (nebezpečné) | origin, predvolene 'off'
 		allowedOrigins: null   # zoznam originov
+		originValidator: null  # Trieda | Trieda(args) | @sluzba s CorsOriginValidatorInterface
 		allowCredentials: false
 		preflight: false       # true | mapa hlavičiek
 	logging:
@@ -319,7 +321,7 @@ Každá chyba v sekcii `api:` zastaví kompiláciu kontajnera výnimkou `Nette\D
 | Duplicitný endpoint | dvakrát `GET /v1/users` | obe miesta |
 | `errors.handler` spolu s `format` alebo `typeBaseUri` | `errors: {handler: ..., format: problemDetails}` | že treba nechať len jedno |
 | `typeBaseUri` bez formátu problem details alebo nie absolútne URI | `typeBaseUri: example.com/errors` | že treba pridať `format: problemDetails` alebo použiť napr. `https://example.com/errors/` |
-| Neplatné nastavenie CORS | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` bez `allowedOrigins` | platné režimy alebo originy, s príkladom |
+| Neplatné nastavenie CORS | `mode: ''`, `mode: https://a.com/path`, `allowedOrigins: []`, `allowCredentials` bez `allowedOrigins` či `originValidator`, `originValidator` spolu s `mode` alebo `allowedOrigins`, validátor bez `CorsOriginValidatorInterface` | platné režimy alebo originy, čo odstrániť alebo ktoré rozhranie implementovať, s príkladom |
 | Prázdny alebo neplatný zoznam hlavičiek | `preflight: {}`, `maskHeaders: []`, `maskHeaders: ['X Secret']` | že pre predvolené treba `true`, alebo písať len mená hlavičiek |
 | Cesta discovery neexistuje alebo je súbor | `paths: [%appDir%/Api/UsersHandler.php]` | že treba adresár |
 | `discovery.namespace` bez `paths` alebo bez nájdenej triedy | `discovery: {namespace: App}` | že treba pridať cesty, alebo nájdené namespacy |

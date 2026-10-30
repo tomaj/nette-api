@@ -7,7 +7,7 @@ namespace Tomaj\NetteApi\Misc;
 use InvalidArgumentException;
 
 /**
- * @internal used by ApiPresenter::setCorsAllowedOrigins(), may change in 4.0
+ * @internal used by ApiPresenter::setCorsAllowedOrigins() and NetteApiExtension, may change in 4.x
  *
  * Explicit list of origins allowed to call the API from a browser.
  *
@@ -15,7 +15,7 @@ use InvalidArgumentException;
  * Default ports (http :80, https :443) are dropped from the configured origins, as browsers do.
  * Only a matching origin is reflected in `Access-Control-Allow-Origin`; any other origin gets no CORS header.
  */
-final class CorsOriginAllowlist
+final class CorsOriginAllowlist implements CorsOriginPolicy
 {
     /** @var string[] normalized (lowercase) origins */
     private array $origins = [];
@@ -27,7 +27,7 @@ final class CorsOriginAllowlist
     public function __construct(array $origins, private readonly bool $allowCredentials = false)
     {
         if ($origins === []) {
-            throw new InvalidArgumentException('CORS allowlist must contain at least one origin');
+            throw new InvalidArgumentException("setCorsAllowedOrigins() got an empty list, so no origin could call the API. Pass the origins, for example setCorsAllowedOrigins(['https://app.example.com']), or do not call it.");
         }
 
         foreach ($origins as $origin) {
@@ -40,6 +40,7 @@ final class CorsOriginAllowlist
      *
      * @return array<string, string>
      */
+    #[\Override]
     public function headers(?string $requestOrigin): array
     {
         if ($requestOrigin === null || !in_array(strtolower($requestOrigin), $this->origins, true)) {
@@ -59,14 +60,35 @@ final class CorsOriginAllowlist
     private const string ORIGIN_PATTERN = '~^([a-z][a-z0-9+.-]*)://([a-z0-9.-]+|\\[[0-9a-f:.]+\\])(?::([1-9][0-9]{0,4}))?$~iD';
 
     /**
+     * Whether the value is an origin in the form scheme://host[:port], as browsers send it in the Origin header
+     */
+    public static function isOrigin(string $value): bool
+    {
+        return self::parse($value) !== null;
+    }
+
+    /**
+     * @return array{string, string, string, 3?: string}|null scheme, host and port of an origin
+     */
+    private static function parse(string $value): ?array
+    {
+        if (preg_match(self::ORIGIN_PATTERN, $value, $match) !== 1 || (isset($match[3]) && $match[3] > 65535)) {
+            return null;
+        }
+
+        return $match;
+    }
+
+    /**
      * Normalize to the form browsers send in the Origin header (lowercase, no default port).
      * Hosts must be ASCII (use punycode for IDN), trailing whitespace or slash is rejected.
      */
     private static function normalize(string $origin): string
     {
-        if (preg_match(self::ORIGIN_PATTERN, $origin, $match) !== 1 || (isset($match[3]) && $match[3] > 65535)) {
+        $match = self::parse($origin);
+        if ($match === null) {
             throw new InvalidArgumentException(sprintf(
-                'Invalid CORS origin "%s", expected scheme://host[:port] without path, e.g. "https://app.example.com"',
+                "setCorsAllowedOrigins(): '%s' is not an origin, it would never match the Origin header a browser sends. Write the scheme and host (and port) without a path or trailing slash, for example 'https://app.example.com' or 'http://localhost:3000'.",
                 $origin,
             ));
         }

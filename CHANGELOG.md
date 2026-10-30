@@ -7,7 +7,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 
 ### Changed (BC breaks)
-* With the DI extension, `cors.mode` defaults to `'off'` (no CORS headers) instead of the presenter's `'*'`; set `cors: allowedOrigins` or `cors: mode: '*'` explicitly. `ApiPresenter` without the extension keeps `'*'`. See `UPGRADE-4.0.md`.
+* Renamed the unsafe CORS mode `'auto'` (any website can make credentialed requests) to `'reflect-unsafe'` (`CorsMode::ReflectUnsafe`) with the same behaviour plus `Vary: Origin, Referer`: `setCorsHeader('auto')` throws and `api: cors: mode: auto` fails the compilation, both with the allowlist to use instead and the new name (#186).
+* `ApiPresenter` sends no CORS headers by default (`'off'` instead of `'*'`), with or without the DI extension; set `setCorsAllowedOrigins()` / `cors: allowedOrigins` or `'*'` explicitly. See `UPGRADE-4.0.md` (#186).
+* `setCorsHeader()` throws `InvalidArgumentException` for a value that is neither a mode nor a `scheme://host[:port]` origin (before it was sent as the header, for example `'OFF'` or `'https://app.example.com/'`), and `setCorsAllowedOrigins()` errors say what is wrong and how to fix it (#186).
 * Minimum PHP version is 8.4. CI runs on PHP 8.4 and 8.5; PHP 8.6 runs as an experimental job.
 * Raised dependency minimums: `nette/application` ^3.2, `nette/di` ^3.2 and `nette/schema` ^1.3 (now required, for the DI extension), `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0.
 * Removed deprecated `Tomaj\NetteApi\Misc\BearerTokenRepositoryInterface` and `Tomaj\NetteApi\Misc\StaticBearerTokenRepository`. Use `TokenRepositoryInterface` and `StaticTokenRepository`.
@@ -29,6 +31,7 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * `Handlers\DefaultHandler` is `final`. `ApiPresenter` does not call its `handle()`, so a subclass could no longer change the `404`; do it in `ErrorHandlerInterface::handleNotFound()` (#196).
 
 ### Added
+* `ApiPresenter::setCorsOriginValidator()` and `Misc\CorsOriginValidatorInterface` for origins not known in advance (for example customer domains in a database): a callable or the interface decides per request, the allowed origin is reflected with `Vary: Origin` and optional credentials. Only a valid `scheme://host[:port]` origin reaches the validator. Also `api: cors: originValidator` in the DI extension. Misconfigurations (not callable, wrong signature, a non-bool result, combined with `setCorsAllowedOrigins()` / `mode` / `allowedOrigins`) throw a message with the fix (#186).
 * Rector config with a CI dry-run job, PHP_CodeSniffer config (PSR-12), Infection mutation testing in CI, lowest-dependency test job.
 * `UPGRADE-4.0.md`.
 * Enums `Validation\InputType`, `Params\ParamType` (`InputParam::getParamType()`) and `Presenters\CorsMode` (accepted by `ApiPresenter::setCorsHeader()`). Constructors and validators accept an enum case or a string.

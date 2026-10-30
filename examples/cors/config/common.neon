@@ -16,8 +16,8 @@ services:
 		factory: Tomaj\NetteApi\Presenters\ApiPresenter
 		setup:
 			# sent as Access-Control-Allow-Origin on every response.
-			# Other values: '*' (the default), 'auto' (the origin of the Referer header,
-			# with Access-Control-Allow-Credentials: true) and 'off' (no header)
+			# Other values: '*' and 'off' (no header, the default in 4.0).
+			# For more origins use setCorsAllowedOrigins([...])
 			- setCorsHeader(%frontendOrigin%)
 
 	apiDecider:
