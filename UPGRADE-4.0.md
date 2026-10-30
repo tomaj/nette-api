@@ -7,6 +7,14 @@
 * PHP 8.4 or newer.
 * `nette/application` ^3.2, `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0, `nette/di` ^3.2, `nette/schema` ^1.3.
 
+## BasicAuthentication reads the Authorization header
+
+`BasicAuthentication` takes the user and password from the `Authorization: Basic` header, which `nette/http` fills from `PHP_AUTH_USER` and `PHP_AUTH_PW`. In 3.x it read the request URL, which `nette/http` 3.2 and newer leaves empty, so it rejected every request there. If you wrote your own class for that (like `BasicCredentialsAuthorization` in the auth example), you can use `BasicAuthentication` again. Credentials written into the URL (`https://user:pass@host/`) are no longer used.
+
+## JSON schemas are checked when defined
+
+`new JsonInputParam($key, $schema)` and `new JsonOutput($code, $schema)` throw `InvalidArgumentException` when `$schema` is not valid JSON or is not a JSON object (or `true`/`false`). Before, such a schema accepted every value. The message names the parameter or output and shows a valid schema. Validation messages come from `justinrainbow/json-schema` 6, so their wording may differ from 5.x; do not match them exactly in clients.
+
 ## Removed deprecated bearer token classes
 
 | Removed | Replacement |

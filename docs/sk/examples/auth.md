@@ -34,7 +34,7 @@ Vstavaný `IpDetector` dôveruje hlavičkám klienta. Tento číta len `REMOTE_A
 
 <<< @/../examples/auth/app/BasicCredentialsAuthorization.php
 
-Vstavaná `BasicAuthentication` nefunguje s `nette/http` 3.2 a novším; táto trieda číta hlavičku `Authorization` a porovnáva cez `hash_equals()`.
+V 3.x vstavaná `BasicAuthentication` nefunguje s `nette/http` 3.2 a novším (4.0 to opravuje); táto trieda číta hlavičku `Authorization` a porovnáva cez `hash_equals()`.
 
 ## Obmedzenie požiadaviek
 

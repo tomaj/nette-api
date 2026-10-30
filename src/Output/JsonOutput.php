@@ -15,6 +15,7 @@ class JsonOutput extends AbstractOutput
     public function __construct(int $code, private readonly string $schema, string $description = '')
     {
         parent::__construct($code, $description);
+        JsonSchemaValidator::checkSchema($schema, sprintf('JsonOutput %d', $code));
     }
 
     #[\Override]
