@@ -14,6 +14,8 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * All source files declare `strict_types=1`.
 * Constructor-promoted and `readonly` properties, typed class constants (`ApiPresenter::DEFAULT_MASKED_LOG_HEADERS`, `MASKED_LOG_HEADER_VALUE`) and native type declarations replace docblock-only types. Subclasses that reassigned inherited properties, or overrode methods without matching types, must be updated.
 * `QueryApiKeyAuthentication`, `HeaderApiKeyAuthentication` and `CookieApiKeyAuthentication` reject a non-string API key (e.g. `?api_key[]=x`) with `API key is not set` instead of throwing a `TypeError`.
+* `BasicAuthentication` reads the user and password from the `Authorization: Basic` header (where `nette/http` puts `PHP_AUTH_USER`/`PHP_AUTH_PW`) instead of the request URL, which `nette/http` 3.2 and newer leaves empty, so it now works with the supported Nette versions. Credentials in the URL are ignored (#191).
+* `JsonInputParam` and `JsonOutput` check their JSON schema in the constructor and throw `InvalidArgumentException` saying what is wrong and how to fix it, instead of accepting every value when the schema is not valid JSON or not an object (#191).
 * `BasicAuthentication` constructor parameter `$autentications` was renamed to `$authentications` (affects named arguments only).
 * `ApiDecider::getApi()` declares its `Api` return type natively.
 * `BearerTokenAuthorization` treats a non-string `Authorization` header as missing.

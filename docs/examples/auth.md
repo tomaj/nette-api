@@ -34,7 +34,7 @@ The bundled `IpDetector` trusts client headers. This one reads only `REMOTE_ADDR
 
 <<< @/../examples/auth/app/BasicCredentialsAuthorization.php
 
-The bundled `BasicAuthentication` does not work with `nette/http` 3.2 and newer; this class reads the `Authorization` header and compares with `hash_equals()`.
+In 3.x the bundled `BasicAuthentication` does not work with `nette/http` 3.2 and newer (4.0 fixes it); this class reads the `Authorization` header and compares with `hash_equals()`.
 
 ## Rate limit
 

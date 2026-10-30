@@ -27,6 +27,10 @@ This page takes you from a new Nette project to a working `GET /api/v1/hello` en
 These are the 4.0 requirements. Nette API 3.x runs on PHP 8.3 with `nette/application` and `nette/http` ^3.0, `tracy/tracy` ^2.6 and `justinrainbow/json-schema` ^5.2. See [UPGRADE-4.0.md](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
 :::
 
+::: info Nette 4 is not supported yet
+Nette API 4.0 requires Nette 3 (`nette/application` ^3.2, `nette/http` ^3.3). Nette 4 is not in the constraints yet, because no stable Nette 4 is released and nothing in CI tests against it; allowing it now would promise support we cannot check. It makes sense once stable `nette/application` and `nette/http` 4 are released, at which point CI gets a Nette 4 job and the constraints become `^3.x || ^4.0`. Tracked in [#233](https://github.com/tomaj/nette-api/issues/233).
+:::
+
 ## 0. Create a project
 
 Skip this step if you already have a Nette application. The file paths below are those of the `nette/web-project` skeleton.

@@ -20,7 +20,7 @@ Keď `authorized()` vráti false, `error handler` odpovie `401` s `{"status":"er
 | `HeaderApiKeyAuthentication` | hlavičky, napríklad `X-API-Key` | `(string $headerName, TokenRepositoryInterface, IpDetectorInterface)` |
 | `QueryApiKeyAuthentication` | query parametra, napríklad `?api_key=` | `(string $queryParamName, TokenRepositoryInterface, IpDetectorInterface)` |
 | `CookieApiKeyAuthentication` | cookie | `(string $cookieName, TokenRepositoryInterface, IpDetectorInterface)` |
-| `BasicAuthentication` | mena a hesla v URL požiadavky | `(array $users, IRequest $httpRequest)` |
+| `BasicAuthentication` | hlavičky `Authorization: Basic` (v 3.x URL požiadavky, pozrite nižšie) | `(array $users, IRequest $httpRequest)` |
 
 Tokenové triedy zdieľajú `TokenAuthorization`: token musí byť platný v repozitári a potom IP klienta musí prejsť obmedzením IP tokenu.
 
@@ -41,10 +41,10 @@ Tokenové triedy zdieľajú `TokenAuthorization`: token musí byť platný v rep
 V reálnej aplikácii implementujte `TokenRepositoryInterface` nad vašou databázou.
 
 ::: warning Známe obmedzenia v 3.x
-- **Detekciu IP sa dá podvrhnúť.** Vstavaný `IpDetector` uprednostňuje hlavičky `Client-IP` a `X-Forwarded-For`, ktoré môže poslať ktorýkoľvek klient. Používajte ho len za proxy, ktorá ich prepisuje, alebo vlastný detektor ako `RemoteAddrIpDetector` z [príkladu autorizácie](/sk/examples/auth).
+- **Detekciu IP sa dá podvrhnúť.** Vstavaný `IpDetector` uprednostňuje hlavičky `Client-IP` a `X-Forwarded-For`, ktoré môže poslať ktorýkoľvek klient. Používajte ho len za proxy, ktorá ich prepisuje, alebo vlastný detektor ako `RemoteAddrIpDetector` z [príkladu autorizácie](/sk/examples/auth). Platí to aj v 4.0: keby `IpDetector` hlavičky ignoroval, potichu by zmenil zistenú IP pre každú aplikáciu za proxy, preto to potrebuje nastavenie dôveryhodných proxy a krok s deprecation, nie zmenu v rámci upgradu závislostí. Má to zmysel v minor verzii, ktorá najprv pridá možnosť dôveryhodných proxy. Sleduje to [#234](https://github.com/tomaj/nette-api/issues/234).
 - **Počíta sa len prvý rozsah.** V zozname kontrola skončí pri prvej položke s `/`, takže `10.0.0.0/8, 192.168.0.0/16` sa s druhým rozsahom nikdy nezhoduje. Dajte rozsah na koniec, alebo jeden rozsah na token.
+- **BasicAuthentication číta meno z URL požiadavky**, ktorú `nette/http` 3.2 a novší nechá prázdnu, takže v 3.x tam nikdy neprejde. Napíšte triedu, ktorá číta `$request->getBasicCredentials()`. 4.0 číta hlavičku `Authorization: Basic`.
 - **Číselné tokeny sa nikdy nezhodujú** v `StaticTokenRepository`: PHP zmení kľúč ako `'12345'` na celé číslo, ktoré sa s reťazcovým tokenom nikdy nerovná. Používajte kľúče s písmenom.
-- **BasicAuthentication číta meno z URL požiadavky**, ktorú `nette/http` 3.2 a novší nechá prázdnu, takže tam nikdy neprejde. Príklad obsahuje `BasicCredentialsAuthorization`, ktorý číta hlavičku `Authorization`.
 
 Od verzie 3.6.0 porovnávajú `BasicAuthentication` a `StaticTokenRepository` heslá a tokeny cez `hash_equals()`, v konštantnom čase, takže čas odpovede neprezradí, aká časť tokenu bola správna. Ktoré hodnoty sa zhodujú, je rovnaké ako predtým. Vo vlastnom [repozitári tokenov](#vlastna-autorizacia) alebo autorizácii porovnávajte tajomstvá tiež cez `hash_equals()`.
 :::

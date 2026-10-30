@@ -27,6 +27,10 @@ Táto stránka vás prevedie od nového Nette projektu k fungujúcemu endpointu 
 Toto sú požiadavky verzie 4.0. Nette API 3.x beží na PHP 8.3 s `nette/application` a `nette/http` ^3.0, `tracy/tracy` ^2.6 a `justinrainbow/json-schema` ^5.2. Pozrite si [UPGRADE-4.0.md](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
 :::
 
+::: info Nette 4 zatiaľ nie je podporované
+Nette API 4.0 vyžaduje Nette 3 (`nette/application` ^3.2, `nette/http` ^3.3). Nette 4 v obmedzeniach zatiaľ nie je, pretože stabilné Nette 4 ešte nevyšlo a CI ho netestuje; povoliť ho teraz by sľubovalo podporu, ktorú nevieme overiť. Má to zmysel, keď vyjdú stabilné `nette/application` a `nette/http` 4; vtedy CI dostane Nette 4 job a obmedzenia budú `^3.x || ^4.0`. Sleduje to [#233](https://github.com/tomaj/nette-api/issues/233).
+:::
+
 ## 0. Vytvorte projekt
 
 Ak už Nette aplikáciu máte, tento krok preskočte. Cesty k súborom nižšie sú tie zo skeletonu `nette/web-project`.

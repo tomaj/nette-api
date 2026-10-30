@@ -20,7 +20,7 @@ When `authorized()` returns false, the error handler answers `401` with `{"statu
 | `HeaderApiKeyAuthentication` | a header, for example `X-API-Key` | `(string $headerName, TokenRepositoryInterface, IpDetectorInterface)` |
 | `QueryApiKeyAuthentication` | a query param, for example `?api_key=` | `(string $queryParamName, TokenRepositoryInterface, IpDetectorInterface)` |
 | `CookieApiKeyAuthentication` | a cookie | `(string $cookieName, TokenRepositoryInterface, IpDetectorInterface)` |
-| `BasicAuthentication` | the user and password of the request URL | `(array $users, IRequest $httpRequest)` |
+| `BasicAuthentication` | the `Authorization: Basic` header (in 3.x the request URL, see below) | `(array $users, IRequest $httpRequest)` |
 
 The token classes share `TokenAuthorization`: the token must be valid in the repository, then the client IP must pass the token's IP restriction.
 
@@ -41,10 +41,10 @@ The token classes share `TokenAuthorization`: the token must be valid in the rep
 For a real app, implement `TokenRepositoryInterface` on top of your database.
 
 ::: warning Known limits in 3.x
-- **IP detection can be spoofed.** The bundled `IpDetector` prefers the `Client-IP` and `X-Forwarded-For` headers, which any client can send. Use it only behind a proxy that overwrites them, or use your own detector like `RemoteAddrIpDetector` in the [authorization example](/examples/auth).
+- **IP detection can be spoofed.** The bundled `IpDetector` prefers the `Client-IP` and `X-Forwarded-For` headers, which any client can send. Use it only behind a proxy that overwrites them, or use your own detector like `RemoteAddrIpDetector` in the [authorization example](/examples/auth). This remains in 4.0: making `IpDetector` ignore the headers would silently change the detected IP for every app behind a proxy, so it needs a trusted-proxy setting and a deprecation step rather than a change inside a dependency upgrade. It makes sense in a minor release that adds the trusted-proxy option first. Tracked in [#234](https://github.com/tomaj/nette-api/issues/234).
 - **Only the first range counts.** In a list, checking stops at the first entry with a `/`, so `10.0.0.0/8, 192.168.0.0/16` never matches the second range. Put the range last, or one range per token.
+- **BasicAuthentication reads the user from the request URL**, which `nette/http` 3.2 and newer leaves empty, so in 3.x it never passes there. Write a class that reads `$request->getBasicCredentials()`. 4.0 reads the `Authorization: Basic` header.
 - **Numeric tokens never match** in `StaticTokenRepository`: PHP turns a key like `'12345'` into an integer, which is never equal to the string token. Use keys with a letter.
-- **BasicAuthentication reads the user from the request URL**, which `nette/http` 3.2 and newer leaves empty, so it never passes there. The example ships `BasicCredentialsAuthorization`, which reads the `Authorization` header.
 
 Since 3.6.0, `BasicAuthentication` and `StaticTokenRepository` compare passwords and tokens with `hash_equals()`, in constant time, so the response time does not reveal how much of a token was right. Which values match is the same as before. In your own [token repository](#your-own-authorization) or authorization, compare secrets with `hash_equals()` too.
 :::

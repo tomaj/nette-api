@@ -21,6 +21,7 @@ class JsonInputParam extends InputParam
     public function __construct(string $key, private readonly string $schema)
     {
         parent::__construct($key);
+        JsonSchemaValidator::checkSchema($schema, sprintf("JsonInputParam '%s'", $key));
     }
 
     #[\Override]
