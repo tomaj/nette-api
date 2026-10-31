@@ -722,7 +722,7 @@
    "t": "text",
    "x": 434.20125,
    "y": 457.25,
-   "text": "FileRateLimit,\n3 a minute",
+   "text": "fixedWindow,\n3 a minute",
    "size": 18,
    "align": "left"
   },

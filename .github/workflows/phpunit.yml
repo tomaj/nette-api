@@ -24,6 +24,14 @@ jobs:
 
     name: PHPunit PHP ${{ matrix.php }}
 
+    services:
+      # RedisStorage and the Redis clients are tested against a real Redis
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -33,6 +41,7 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: xdebug
+          extensions: redis
 
       - name: Composer update
         run: composer update --no-progress --no-interaction ${{ matrix.experimental && '--ignore-platform-req=php+' || '' }}
@@ -44,6 +53,14 @@ jobs:
     runs-on: ubuntu-latest
     name: PHPunit PHP 8.4 lowest dependencies
 
+    services:
+      # RedisStorage and the Redis clients are tested against a real Redis
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -53,6 +70,7 @@ jobs:
         with:
           php-version: '8.4'
           coverage: xdebug
+          extensions: redis
 
       - name: Composer update
         run: composer update --prefer-lowest --prefer-stable --no-progress --no-interaction
@@ -70,6 +88,14 @@ jobs:
       # keep Xdebug in the mutant runs, the CORS header tests read xdebug_get_headers()
       INFECTION_ALLOW_XDEBUG: '1'
 
+    services:
+      # RedisStorage and the Redis clients are tested against a real Redis
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -81,6 +107,7 @@ jobs:
         with:
           php-version: '8.4'
           coverage: xdebug
+          extensions: redis
 
       - name: Composer update
         run: composer update --no-progress --no-interaction

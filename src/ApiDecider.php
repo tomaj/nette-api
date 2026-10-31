@@ -12,6 +12,8 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
+use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
+use Nette\DI\MissingServiceException;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class ApiDecider
@@ -69,9 +71,20 @@ class ApiDecider
 
     /**
      * Register new api handler
+     *
+     * @param RateLimiterInterface|RateLimitInterface|null $rateLimit a RateLimitInterface (deprecated) still works through LegacyRateLimitAdapter.
+     *        Left out, an autowired RateLimitInterface service is used like in 3.x; null means no rate limit.
      */
-    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, ?RateLimitInterface $rateLimit = null): self
+    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, RateLimiterInterface|RateLimitInterface|null $rateLimit = null): self
     {
+        if (func_num_args() < 4) {
+            // Nette DI does not autowire a union type, without this a limiter of 3.x would be dropped silently
+            try {
+                $rateLimit = $this->container->getByType(RateLimitInterface::class, false);
+            } catch (MissingServiceException) {
+                $rateLimit = null; // more of them: which one is not known, and 3.x did not use them for a call from PHP either
+            }
+        }
         $this->apis[] = new ApiHolder($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
     }

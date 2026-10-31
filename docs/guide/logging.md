@@ -428,7 +428,7 @@ They return early in 3.x, see the table. Log them in your own [error handler](/g
 
 ### Do I need an IP detector for logging?
 
-Yes, the presenter takes `IpDetectorInterface` from the container. Prefer one that reads only `REMOTE_ADDR`; see [Authorization](/guide/authorization#tokens-and-ip-restrictions).
+Yes, the presenter takes `IpDetectorInterface` from the container. The bundled `IpDetector` cannot be forged with headers; behind a reverse proxy list it in `http: proxy:`, see [Authorization](/guide/authorization#tokens-and-ip-restrictions).
 
 ### Where do exceptions go?
 

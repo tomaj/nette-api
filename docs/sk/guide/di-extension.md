@@ -117,7 +117,7 @@ api:
 		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
 		admin: Tomaj\NetteApi\Authorization\BasicAuthentication([admin: %adminPassword%])
 	rateLimits:
-		strict: App\FileRateLimit(storageDir: %tempDir%, limit: 2)
+		strict: {algorithm: fixedWindow, limit: 2, interval: 1 minute}
 
 	endpoints:
 		- {method: GET, version: 1, package: users, handler: App\Api\UsersListHandler, authorization: token}
@@ -129,6 +129,7 @@ api:
 | Hodnota | Význam |
 | --- | --- |
 | názov z `api.authorizations` / `api.rateLimits` | ten objekt, spoločný pre všetky endpointy s týmto názvom |
+| len `rateLimit`: zoznam názvov alebo `{limit, interval, ...}` | politiky sa kontrolujú postupne, kým niektorá požiadavku neodmietne; vlastný limit tohto endpointu, pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit) |
 | `@sluzba` | služba zo `services:` |
 | trieda alebo `Trieda(argumenty)` | nový objekt pre tento endpoint |
 | `false` | žiadna, aj keď je nastavená predvolená |
@@ -144,8 +145,8 @@ api:
 		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
 		admin: Tomaj\NetteApi\Authorization\BasicAuthentication([admin: %adminPassword%])
 	rateLimits:
-		normal: App\Api\MyRateLimit(limit: 100)
-		strict: App\Api\MyRateLimit(limit: 5)
+		normal: {algorithm: slidingWindow, limit: 100, interval: 1 minute}
+		strict: {algorithm: fixedWindow, limit: 5, interval: 1 minute}
 	defaults:
 		authorization: token
 		rateLimit: normal
@@ -281,7 +282,7 @@ api:
 	ipDetector: App\Api\ProxyIpDetector
 ```
 
-Predvolený `IpDetector` číta `REMOTE_ADDR`.
+Predvolený `IpDetector` berie adresu z `Nette\Http\IRequest::getRemoteAddress()`, ktorá verí preposlaným hlavičkám len od proxy v `http: proxy:`. Pozrite si [Ktorá IP sa počíta?](/sk/guide/rate-limit#ktora-ip-sa-pocita).
 
 ## Prehľad nastavení
 
@@ -308,10 +309,16 @@ api:
 		masking: full          # partial | hash | omit | Class | Class(args) | @service
 		hashKey: null          # reťazec, len s masking: hash
 	authorizations: []         # nazov: Trieda | Trieda(args) | @sluzba
-	rateLimits: []             # nazov: Trieda | Trieda(args) | @sluzba
+	rateLimits: []             # nazov: {algorithm, limit, interval, key, name} | Trieda | Trieda(args) | @sluzba
+	rateLimiting:
+		storage: cache         # memory | redis | Trieda | Trieda(args) | @sluzba
+		redis: null            # @sluzba s Redis (ext-redis) alebo Predis\Client, potrebné pre storage: redis
+		prefix: 'nette-api:rate-limit:'
+		clock: null            # Trieda | Trieda(args) | @sluzba implementujúca Psr\Clock\ClockInterface
+		logger: null           # Trieda | Trieda(args) | @sluzba implementujúca Tracy\ILogger, predvolene Tracy log
 	defaults:
 		authorization: null    # názov | Trieda | Trieda(args) | @sluzba
-		rateLimit: null        # názov | Trieda | Trieda(args) | @sluzba
+		rateLimit: null        # názov | zoznam názvov | {limit, interval, ...} | Trieda | Trieda(args) | @sluzba
 	endpoints: []              # {method, version, package, action, handler, authorization, rateLimit}
 ```
 
@@ -333,6 +340,9 @@ Každá chyba v sekcii `api:` zastaví kompiláciu kontajnera výnimkou `Nette\D
 | Referencia v úvodzovkách | `handler: '@users'` | že treba odstrániť úvodzovky |
 | Neznáme meno autorizácie alebo obmedzenia | `authorization: berer` | `Did you mean 'bearer'?` a definované mená |
 | Neplatné meno autorizácie alebo obmedzenia | `authorizations: {my-auth: ...}` | že meno má len písmená, číslice a podčiarkovníky |
+| Dve obmedzenia s rovnakým `name` | `a: {limit: 5, interval: 60, name: x}`, `b: {limit: 9, interval: 60, name: x}` | že by zdieľali počítadlá, a aby ste každému dali vlastné meno |
+| Vlastný limit s `name` pomenovanej politiky | `rateLimits: {perIp: {limit: 5, interval: 60}}`, `rateLimit: {limit: 1, interval: 60, name: perIp}` | pomenovanú politiku, a aby ste vlastnému limitu dali iné meno alebo použili `rateLimit: perIp` |
+| Zlý Redis klient | `rateLimiting: {storage: redis, redis: redis}` | že to nie je `@služba` ani Redis klient, a ako to napísať |
 | Preklep v HTTP metóde | `method: GETT` | `Did you mean 'GET'?` a HTTP metódy |
 | Neplatná verzia, balík alebo akcia | `version: v1`, `package: users/list`, `package: 'u x'` | aké znaky sú povolené, s príkladom |
 | Duplicitný endpoint | dvakrát `GET /v1/users` | obe miesta |
@@ -389,14 +399,6 @@ api.errors is set, but service 'errorHandler' of type Tomaj\NetteApi\Error\Error
 ## Rozhodnutia v návrhu
 
 Zámerné obmedzenia rozšírenia. Každé má issue v backlogu s výhodami, nevýhodami a tým, kedy by sa doplnilo.
-
-### Zatiaľ žiadne krátke mená pre stratégie obmedzenia požiadaviek
-
-Obmedzenie požiadaviek je služba, trieda alebo výraz, napríklad `strict: App\MyRateLimit(60)`.
-
-- **Prečo:** jediná vstavaná stratégia je `NoRateLimit`. Krátke mená ako `slidingWindow(60, 60)` by ukazovali na triedy, ktoré ešte neexistujú.
-- **Prečo nie teraz:** mená a argumenty závisia od návrhu v [#195](https://github.com/tomaj/nette-api/issues/195); aliasy pridané skôr by sa neskôr nedali zmeniť bez BC zlomu.
-- **Kedy by to dávalo zmysel:** po zlúčení #195. Pozri [#229](https://github.com/tomaj/nette-api/issues/229).
 
 ### Žiadna voľba `openapi:`
 

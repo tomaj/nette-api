@@ -6,8 +6,10 @@ namespace Tomaj\NetteApi\Authorization;
 
 use Nette\Http\IRequest;
 
-class BasicAuthentication implements ApiAuthorizationInterface
+class BasicAuthentication implements ApiAuthorizationInterface, AuthorizationIdentityInterface
 {
+    private ?string $identity = null;
+
     /**
      * @param array<array-key, mixed> $authentications - available username - password pairs (only string passwords can match)
      */
@@ -25,11 +27,14 @@ class BasicAuthentication implements ApiAuthorizationInterface
         [$user, $password] = $this->credentials() ?? ['', ''];
         $authentication = $this->authentications[$user] ?? null;
         if (!$authentication) {
+            $this->identity = null;
             return false;
         }
 
         // non-string passwords (e.g. integers from neon) never matched with ===, keep that outcome
-        return is_string($authentication) && hash_equals($authentication, $password);
+        $authorized = is_string($authentication) && hash_equals($authentication, $password);
+        $this->identity = $authorized ? $user : null;
+        return $authorized;
     }
 
     /**
@@ -52,6 +57,15 @@ class BasicAuthentication implements ApiAuthorizationInterface
     /**
      * {@inheritdoc}
      */
+    /**
+     * The user name of the last successful authorized()
+     */
+    #[\Override]
+    public function getIdentity(): ?string
+    {
+        return $this->identity;
+    }
+
     #[\Override]
     public function getErrorMessage(): ?string
     {

@@ -117,7 +117,7 @@ api:
 		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
 		admin: Tomaj\NetteApi\Authorization\BasicAuthentication([admin: %adminPassword%])
 	rateLimits:
-		strict: App\FileRateLimit(storageDir: %tempDir%, limit: 2)
+		strict: {algorithm: fixedWindow, limit: 2, interval: 1 minute}
 
 	endpoints:
 		- {method: GET, version: 1, package: users, handler: App\Api\UsersListHandler, authorization: token}
@@ -129,6 +129,7 @@ api:
 | Value | Meaning |
 | --- | --- |
 | a name from `api.authorizations` / `api.rateLimits` | that object, shared by all endpoints that use the name |
+| `rateLimit` only: a list of names, or `{limit, interval, ...}` | the policies are checked in order until one rejects the request; an inline limit of this endpoint, see [Rate limiting](/guide/rate-limit) |
 | `@service` | a service from `services:` |
 | a class or `Class(arguments)` | a new object for this endpoint |
 | `false` | none, even when there is a default |
@@ -144,8 +145,8 @@ api:
 		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
 		admin: Tomaj\NetteApi\Authorization\BasicAuthentication([admin: %adminPassword%])
 	rateLimits:
-		normal: App\Api\MyRateLimit(limit: 100)
-		strict: App\Api\MyRateLimit(limit: 5)
+		normal: {algorithm: slidingWindow, limit: 100, interval: 1 minute}
+		strict: {algorithm: fixedWindow, limit: 5, interval: 1 minute}
 	defaults:
 		authorization: token
 		rateLimit: normal
@@ -281,7 +282,7 @@ api:
 	ipDetector: App\Api\ProxyIpDetector
 ```
 
-The default `IpDetector` reads `REMOTE_ADDR`.
+The default `IpDetector` takes the address from `Nette\Http\IRequest::getRemoteAddress()`, which trusts forwarded headers only from the proxies in `http: proxy:`. See [Which IP is counted?](/guide/rate-limit#which-ip-is-counted).
 
 ## Configuration reference
 
@@ -308,10 +309,16 @@ api:
 		masking: full          # partial | hash | omit | Class | Class(args) | @service
 		hashKey: null          # string, only with masking: hash
 	authorizations: []         # name: Class | Class(args) | @service
-	rateLimits: []             # name: Class | Class(args) | @service
+	rateLimits: []             # name: {algorithm, limit, interval, key, name} | Class | Class(args) | @service
+	rateLimiting:
+		storage: cache         # memory | redis | Class | Class(args) | @service
+		redis: null            # @service with Redis (ext-redis) or Predis\Client, needed by storage: redis
+		prefix: 'nette-api:rate-limit:'
+		clock: null            # Class | Class(args) | @service implementing Psr\Clock\ClockInterface
+		logger: null           # Class | Class(args) | @service implementing Tracy\ILogger, the Tracy log by default
 	defaults:
 		authorization: null    # a name | Class | Class(args) | @service
-		rateLimit: null        # a name | Class | Class(args) | @service
+		rateLimit: null        # a name | a list of names | {limit, interval, ...} | Class | Class(args) | @service
 	endpoints: []              # {method, version, package, action, handler, authorization, rateLimit}
 ```
 
@@ -333,6 +340,9 @@ Every mistake in the `api:` section stops the container compilation with a `Nett
 | Quoted reference | `handler: '@users'` | to remove the quotes |
 | Unknown authorization or rate limit name | `authorization: berer` | `Did you mean 'bearer'?` and the defined names |
 | Invalid authorization or rate limit name | `authorizations: {my-auth: ...}` | that a name has only letters, digits and underscores |
+| Two rate limits with the same `name` | `a: {limit: 5, interval: 60, name: x}`, `b: {limit: 9, interval: 60, name: x}` | that they would share their counters, to give each its own name |
+| An inline limit with the `name` of a named policy | `rateLimits: {perIp: {limit: 5, interval: 60}}`, `rateLimit: {limit: 1, interval: 60, name: perIp}` | the named policy, to give the inline limit its own name or to use `rateLimit: perIp` |
+| A wrong Redis client | `rateLimiting: {storage: redis, redis: redis}` | that it is not a `@service` nor a Redis client, and how to write it |
 | Typo in the HTTP method | `method: GETT` | `Did you mean 'GET'?` and the HTTP methods |
 | Invalid version, package or action | `version: v1`, `package: users/list`, `package: 'u x'` | which characters are allowed, with an example |
 | Duplicate endpoint | two `GET /v1/users` | both places |
@@ -389,14 +399,6 @@ api.errors is set, but service 'errorHandler' of type Tomaj\NetteApi\Error\Error
 ## Design decisions
 
 Deliberate limits of the extension. Each one has a backlog issue with the pros, the cons and when it would be added.
-
-### No short names for rate-limit strategies yet
-
-A rate limit is a service, a class or a statement such as `strict: App\MyRateLimit(60)`.
-
-- **Why:** the only built-in strategy is `NoRateLimit`. Short names like `slidingWindow(60, 60)` would point to classes that do not exist yet.
-- **Why not now:** the names and arguments depend on the design in [#195](https://github.com/tomaj/nette-api/issues/195); aliases added earlier could not change later without a BC break.
-- **When it would make sense:** after #195 is merged. See [#229](https://github.com/tomaj/nette-api/issues/229).
 
 ### No `openapi:` option
 

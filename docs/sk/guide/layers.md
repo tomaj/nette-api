@@ -19,7 +19,7 @@ Jedna požiadavka, ktorá prejde, jedna bez tokenu a jedna so zlým vstupom:
 | Presenter | `ApiPresenter` | Spustí vrstvy nižšie v poradí | |
 | CORS | `setCorsHeader()`, `setCorsAllowedOrigins()` | Pridá hlavičky `Access-Control-*` | |
 | Hľadanie endpointu | `ApiDecider`, `EndpointIdentifier` | Nájde handler, autorizáciu a obmedzenie požiadaviek | `404` |
-| Obmedzenie požiadaviek | `RateLimitInterface` | Počíta volania klienta | `429` |
+| Obmedzenie požiadaviek | `RateLimiterInterface` | Počíta volania klienta | `429` |
 | Parametre | `InputParam`, `ParamsProcessor` | Načíta a overí vstup; chyby počkajú na autorizáciu | |
 | Autorizácia | `ApiAuthorizationInterface` | Rozhodne, kto smie volať | `401` |
 | Chyby parametrov | `ErrorHandlerInterface::handleInputParams()` | Nahlási neplatný vstup | `400` |
@@ -52,7 +52,7 @@ $router->addRoute('/api/v<version>/<package>[/<apiAction>][/<params>]', 'Api:Api
 
 ## Obmedzenie požiadaviek: ako často
 
-`RateLimitInterface::check()` vráti `null` pre žiadny limit, alebo `RateLimitResponse` s limitom a zvyškom. Pri `0` presenter odpovie `429`. Beží pred autorizáciou, takže obmedzený je aj klient, ktorý hádá tokeny. Pozrite si [Obmedzenie počtu požiadaviek](/sk/guide/rate-limit) a [príklad obmedzenia požiadaviek](/sk/examples/rate-limit).
+`RateLimiterInterface::consume()` vráti jeden `RateLimitResult` pre každú politiku, s limitom a zvyškom. Keď niektorý nie je prijatý, presenter odpovie `429`. Politiky podľa IP alebo endpointu bežia pred autorizáciou, takže obmedzený je aj klient, ktorý háda tokeny; politiky podľa identity bežia po nej. Pozrite si [Obmedzenie počtu požiadaviek](/sk/guide/rate-limit) a [príklad obmedzenia požiadaviek](/sk/examples/rate-limit).
 
 ## Autorizácia: kto
 

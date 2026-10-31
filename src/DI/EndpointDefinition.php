@@ -30,7 +30,8 @@ final readonly class EndpointDefinition
         ?string $action,
         public string|Statement $handler,
         public string|Statement|false|null $authorization,
-        public string|Statement|false|null $rateLimit,
+        /** @var string|Statement|list<string>|array<string, mixed>|false|null a list of names, or an inline limit {algorithm, limit, interval, key, name} */
+        public string|Statement|array|false|null $rateLimit,
         public string $source,
     ) {
         $this->method = strtoupper(trim($method));

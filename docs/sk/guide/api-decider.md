@@ -16,7 +16,7 @@ public function addApi(
     EndpointInterface $endpointIdentifier,
     ApiHandlerInterface|string $handler,
     ApiAuthorizationInterface $apiAuthorization,
-    ?RateLimitInterface $rateLimit = null
+    RateLimiterInterface|RateLimitInterface|null $rateLimit = null
 ): self
 ```
 
@@ -31,6 +31,8 @@ services:
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users'), '@userCreateHandler', @bearer, @writeLimit)
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 2, 'users', 'detail'), App\Api\UserDetailV2Handler(), @bearer)
 ```
+
+Štvrtý argument je obmedzenie požiadaviek, `null` znamená žiadne. Keď chýba, použije sa autowirovaná služba `RateLimitInterface` z 3.x; `RateLimiterInterface` sa neautowiruje. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit#bez-di-rozsirenia).
 
 ## EndpointIdentifier
 

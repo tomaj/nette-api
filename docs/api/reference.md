@@ -60,7 +60,9 @@ All classes live under `Tomaj\NetteApi`.
 | `Authorization\ApiAuthorizationInterface`, `TokenAuthorization` | your own | [Authorization](/guide/authorization#your-own-authorization) |
 | `Misc\TokenRepositoryInterface`, `StaticTokenRepository` | tokens and their IPs | [Authorization](/guide/authorization#tokens-and-ip-restrictions) |
 | `Misc\IpDetectorInterface`, `IpDetector`, `StaticIpDetector` | the client IP | [Authorization](/guide/authorization#tokens-and-ip-restrictions) |
-| `RateLimit\RateLimitInterface`, `RateLimitResponse`, `NoRateLimit` | rate limiting | [Rate limiting](/guide/rate-limit) |
+| `RateLimit\RateLimiterInterface`, `RateLimitResult`, `FixedWindowLimiter`, `SlidingWindowLimiter`, `TokenBucketLimiter`, `AlgorithmLimiter`, `RateLimiterChain`, `NoRateLimit` | rate limiting (4.0.0) |
+| `RateLimit\Algorithm\RateLimitAlgorithmInterface`, `Storage\RateLimitStorageInterface`, `Key\RateLimitKeyInterface`, `Redis\RedisClientInterface`, `Storage\KeyValueStorage`, `Authorization\AuthorizationIdentityInterface` | own algorithms, storages, keys, Redis clients and the identity of a caller (4.0.0) |
+| `RateLimit\RateLimitInterface`, `RateLimitResponse` | the 3.x rate limit, deprecated, removed in 5.0 | [Rate limiting](/guide/rate-limit) |
 
 ## Logging, links and console
 

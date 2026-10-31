@@ -19,7 +19,7 @@ One request that passes, one without a token and one with wrong input:
 | Presenter | `ApiPresenter` | Runs the layers below in order | |
 | CORS | `setCorsHeader()`, `setCorsAllowedOrigins()` | Adds `Access-Control-*` headers | |
 | Endpoint lookup | `ApiDecider`, `EndpointIdentifier` | Finds the handler, authorization and rate limit | `404` |
-| Rate limit | `RateLimitInterface` | Counts calls per client | `429` |
+| Rate limit | `RateLimiterInterface` | Counts calls per client | `429` |
 | Params | `InputParam`, `ParamsProcessor` | Reads and validates input; errors wait for authorization | |
 | Authorization | `ApiAuthorizationInterface` | Decides who may call | `401` |
 | Param errors | `ErrorHandlerInterface::handleInputParams()` | Reports invalid input | `400` |
@@ -52,7 +52,7 @@ So **who may call** and **how often** belong to the endpoint, not to the handler
 
 ## Rate limit: how often
 
-`RateLimitInterface::check()` returns `null` for no limit, or a `RateLimitResponse` with the limit and what remains. At `0` the presenter answers `429`. It runs before authorization, so a client guessing tokens is limited too. See [Rate limiting](/guide/rate-limit) and the [rate limit example](/examples/rate-limit).
+`RateLimiterInterface::consume()` returns one `RateLimitResult` per policy, with the limit and what remains. When one is not accepted the presenter answers `429`. Policies by IP or endpoint run before authorization, so a client guessing tokens is limited too; policies by identity run after it. See [Rate limiting](/guide/rate-limit) and the [rate limit example](/examples/rate-limit).
 
 ## Authorization: who
 

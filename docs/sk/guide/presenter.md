@@ -32,14 +32,14 @@ Metóda a parametre routy `version`, `package` a `apiAction` idú do `ApiDecider
 ## 3. Obmedzenie požiadaviek
 
 ```php
-$rateLimitResponse = $rateLimit->check();
-// pridá X-RateLimit-Limit a X-RateLimit-Remaining
-if ($remaining === 0) {
+$results = $rateLimit->consume(new RateLimitContext($api, $request, RateLimitStage::BeforeAuthorization, $ip));
+// pridá RateLimit-Policy a RateLimit pre každý výsledok
+if (/* niektorý výsledok nie je prijatý */) {
     // 429, Retry-After, vaša chybová odpoveď alebo errorHandler->handleRateLimit()
 }
 ```
 
-Pred autorizáciou, takže neúspešné prihlásenia sa rátajú. Pozrite si [Obmedzenie počtu požiadaviek](/sk/guide/rate-limit).
+Pred autorizáciou, takže sa počítajú aj neúspešné prihlásenia. Po úspešnej autorizácii (krok 5) presenter zavolá `consume()` znova s `RateLimitStage::AfterAuthorization` a identitou, pre politiky s kľúčom `identity`. Výnimka limitera ide do `ErrorHandlerInterface::handle()`; výpadok úložiska nie, požiadavka prejde. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit).
 
 ## 4. Načítanie parametrov
 
@@ -103,7 +103,7 @@ Handler vrátil `400`, ale žiadny výstup s kódom `400` nezodpovedá. Pridajte
 
 ### Vidí obmedzenie požiadaviek autorizovaného používateľa?
 
-Nie, beží pred autorizáciou. Klienta rozlíšte podľa kľúča alebo IP, ako [príklad obmedzenia požiadaviek](/sk/examples/rate-limit).
+Áno, politika s `key: identity` beží po autorizácii a počíta podľa identity z `AuthorizationIdentityInterface`. Ostatné politiky bežia pred ňou, podľa IP alebo endpointu. Pozrite si [príklad obmedzenia požiadaviek](/sk/examples/rate-limit).
 
 ### Loguje sa čas odpovede aj pri obmedzení požiadaviek alebo autorizácii?
 

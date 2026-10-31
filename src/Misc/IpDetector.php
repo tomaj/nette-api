@@ -4,24 +4,27 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Misc;
 
-final class IpDetector implements IpDetectorInterface
+use Nette\Http\IRequest;
+
+/**
+ * The address of the client from Nette\Http\IRequest::getRemoteAddress(). Nette trusts the forwarded headers
+ * (Forwarded, X-Forwarded-For) only from the proxies listed in http: proxy: of the Nette configuration,
+ * so a client cannot forge its address. Without the request, the address of the TCP connection.
+ */
+final readonly class IpDetector implements IpDetectorInterface
 {
+    public function __construct(private ?IRequest $request = null)
+    {
+    }
+
     /**
      * {@inheritdoc}
      */
     #[\Override]
     public function getRequestIp(): string
     {
-        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-            $ip = $_SERVER['HTTP_CLIENT_IP'];
-        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'] !== '127.0.0.1') {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } elseif (!empty($_SERVER['REMOTE_ADDR'])) {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        } else {
-            $ip = 'cli';
-        }
+        $ip = $this->request?->getRemoteAddress() ?? ($_SERVER['REMOTE_ADDR'] ?? null);
 
-        return TypeHelper::toString($ip);
+        return is_string($ip) && $ip !== '' ? $ip : 'cli';
     }
 }

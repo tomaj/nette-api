@@ -41,7 +41,7 @@ Tokenové triedy zdieľajú `TokenAuthorization`: token musí byť platný v rep
 V reálnej aplikácii implementujte `TokenRepositoryInterface` nad vašou databázou.
 
 ::: warning Známe obmedzenia v 3.x
-- **Detekciu IP sa dá podvrhnúť.** Vstavaný `IpDetector` uprednostňuje hlavičky `Client-IP` a `X-Forwarded-For`, ktoré môže poslať ktorýkoľvek klient. Používajte ho len za proxy, ktorá ich prepisuje, alebo vlastný detektor ako `RemoteAddrIpDetector` z [príkladu autorizácie](/sk/examples/auth). Platí to aj v 4.0: keby `IpDetector` hlavičky ignoroval, potichu by zmenil zistenú IP pre každú aplikáciu za proxy, preto to potrebuje nastavenie dôveryhodných proxy a krok s deprecation, nie zmenu v rámci upgradu závislostí. Má to zmysel v minor verzii, ktorá najprv pridá možnosť dôveryhodných proxy. Sleduje to [#234](https://github.com/tomaj/nette-api/issues/234).
+- **Detekciu IP sa dá podvrhnúť.** `IpDetector` z 3.x uprednostňuje hlavičky `Client-IP` a `X-Forwarded-For`, ktoré môže poslať ktorýkoľvek klient. Od 4.0 berie adresu z `Nette\Http\IRequest::getRemoteAddress()`, ktorá verí preposlaným hlavičkám len od proxy v `http: proxy:`, takže **za reverse proxy ju tam uveďte**, inak má každý klient adresu proxy. Pozrite si [návod na upgrade](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
 - **Počíta sa len prvý rozsah.** V zozname kontrola skončí pri prvej položke s `/`, takže `10.0.0.0/8, 192.168.0.0/16` sa s druhým rozsahom nikdy nezhoduje. Dajte rozsah na koniec, alebo jeden rozsah na token.
 - **BasicAuthentication číta meno z URL požiadavky**, ktorú `nette/http` 3.2 a novší nechá prázdnu, takže v 3.x tam nikdy neprejde. Napíšte triedu, ktorá číta `$request->getBasicCredentials()`. 4.0 číta hlavičku `Authorization: Basic`.
 - **Číselné tokeny sa nikdy nezhodujú** v `StaticTokenRepository`: PHP zmení kľúč ako `'12345'` na celé číslo, ktoré sa s reťazcovým tokenom nikdy nerovná. Používajte kľúče s písmenom.
@@ -76,6 +76,8 @@ final class AdminOnlyAuthorization implements ApiAuthorizationInterface
     }
 }
 ```
+
+Pre obmedzenie s `key: identity` implementujte aj `AuthorizationIdentityInterface`: `getIdentity()` vráti, kto volá (id používateľa, token), alebo `null` pred úspešným `authorized()`. Vstavané tokenové autorizácie vracajú token a `BasicAuthentication` meno používateľa. Potomok, ktorý prepíše ich `authorized()` bez volania rodiča, musí prepísať aj `getIdentity()`. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit#pred-autorizaciou-a-po-nej).
 
 ## Časté otázky
 

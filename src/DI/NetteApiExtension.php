@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\DI;
 
 use Nette\Application\IPresenterFactory;
+use Nette\Caching\Storage as CacheStorage;
 use Nette\DI\CompilerExtension;
 use Nette\DI\ContainerBuilder;
 use Nette\DI\Definitions\Reference;
@@ -14,8 +15,11 @@ use Nette\DI\Extensions\InjectExtension;
 use Nette\DI\InvalidConfigurationException;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
+use Predis\ClientInterface as PredisClientInterface;
+use Psr\Clock\ClockInterface;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Authorization\AuthorizationIdentityInterface;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Error\DefaultErrorHandler;
@@ -39,7 +43,28 @@ use Tomaj\NetteApi\Output\Configurator\EnvConfigurator;
 use Tomaj\NetteApi\Output\Configurator\QueryConfigurator;
 use Tomaj\NetteApi\Presenters\ApiPresenter;
 use Tomaj\NetteApi\Presenters\CorsMode;
+use Tomaj\NetteApi\RateLimit\FixedWindowLimiter;
+use Tomaj\NetteApi\RateLimit\Interval;
+use Tomaj\NetteApi\RateLimit\Key\RateLimitKeys;
+use Tomaj\NetteApi\RateLimit\LegacyRateLimitAdapter;
+use Tomaj\NetteApi\RateLimit\RateLimitAlgorithm;
+use Tomaj\NetteApi\RateLimit\AlgorithmLimiter;
+use Tomaj\NetteApi\RateLimit\Algorithm\FixedWindow;
+use Tomaj\NetteApi\RateLimit\Algorithm\RateLimitAlgorithmInterface;
+use Tomaj\NetteApi\RateLimit\Algorithm\RedisScriptAlgorithmInterface;
+use Tomaj\NetteApi\RateLimit\RateLimiterChain;
+use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\RateLimit\SlidingWindowLimiter;
+use Tomaj\NetteApi\RateLimit\Storage\InMemoryStorage;
+use Tomaj\NetteApi\RateLimit\Storage\NetteCacheStorage;
+use Tomaj\NetteApi\RateLimit\Storage\RateLimitStorageInterface;
+use Tomaj\NetteApi\RateLimit\Storage\LazyStorage;
+use Tomaj\NetteApi\RateLimit\Storage\RedisStorage;
+use Nette\PhpGenerator\Literal;
+use Tomaj\NetteApi\RateLimit\Redis\RedisClientInterface;
+use Tomaj\NetteApi\RateLimit\TokenBucketLimiter;
+use Tracy\ILogger;
 
 /**
  * Registers the API services and endpoints from the "api:" neon section:
@@ -52,6 +77,8 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
  * IP detector) is used instead of the one from the extension.
  *
  * @phpstan-type ServiceValue string|Statement
+ * @phpstan-type RateLimitDefinition array{algorithm: string, limit: int, interval: int|string, key: string|list<string>, name: string|null}
+ * @phpstan-type RateLimitValue string|Statement|list<string>|RateLimitDefinition
  * @phpstan-type EndpointValue string|Statement|false|null
  * @phpstan-type Config object{
  *     outputConfigurator: ServiceValue|null,
@@ -61,10 +88,11 @@ use Tomaj\NetteApi\RateLimit\RateLimitInterface;
  *     cors: object{mode: string|null, allowedOrigins: list<string>|null, originValidator: ServiceValue|null, allowCredentials: bool, preflight: bool|array<string, string|list<string>>},
  *     logging: object{maskHeaders: bool|list<string>|object{names: list<string>|null, add: list<string>, remove: list<string>, patterns: bool|list<string>|object{add: list<string>, remove: list<string>}}, maskQueryParams: bool|list<string>|object{names: list<string>|null, add: list<string>, remove: list<string>}, masking: ServiceValue, hashKey: string|Statement|null},
  *     authorizations: array<string, ServiceValue>,
- *     rateLimits: array<string, ServiceValue>,
- *     defaults: object{authorization: ServiceValue|null, rateLimit: ServiceValue|null},
+ *     rateLimits: array<string, ServiceValue|RateLimitDefinition>,
+ *     rateLimiting: object{storage: ServiceValue, redis: ServiceValue|null, prefix: string, clock: ServiceValue|null, logger: ServiceValue|null},
+ *     defaults: object{authorization: ServiceValue|null, rateLimit: RateLimitValue|null},
  *     discovery: object{paths: list<string>, namespace: string|null},
- *     endpoints: list<object{method: string, version: string|int|float, package: string, action: string|null, handler: ServiceValue, authorization: EndpointValue, rateLimit: EndpointValue}>
+ *     endpoints: list<object{method: string, version: string|int|float, package: string, action: string|null, handler: ServiceValue, authorization: EndpointValue, rateLimit: RateLimitValue|false|null}>
  * }
  */
 final class NetteApiExtension extends CompilerExtension
@@ -72,6 +100,19 @@ final class NetteApiExtension extends CompilerExtension
     private const string PRESENTER_MAPPING = 'Tomaj\\NetteApi\\Presenters\\*Presenter';
 
     private const array ERROR_FORMATS = ['default', 'problemDetails', 'negotiating'];
+
+    private const array RATE_LIMITERS = [
+        'fixedWindow' => FixedWindowLimiter::class,
+        'slidingWindow' => SlidingWindowLimiter::class,
+        'tokenBucket' => TokenBucketLimiter::class,
+    ];
+
+    private const array RATE_LIMIT_STORAGES = ['cache', 'memory', 'redis'];
+
+    private const array REDIS_CLIENTS = [\Redis::class, \RedisCluster::class, PredisClientInterface::class, RedisClientInterface::class];
+
+    /** not under rateLimit., where the policies from api.rateLimits are */
+    private const string RATE_LIMIT_STORAGE = 'rateLimiting.storage';
 
     private const array OUTPUT_CONFIGURATORS = [
         'env' => EnvConfigurator::class,
@@ -89,6 +130,12 @@ final class NetteApiExtension extends CompilerExtension
     /** @var list<array{string, class-string, string}> "@name" references checked once all services are registered */
     private array $references = [];
 
+    /** @var list<\Closure(): void> checks of the rate limits that need the types of all services */
+    private array $rateLimitChecks = [];
+
+    /** @var array<string, string> policy names of api.rateLimits => where they are defined */
+    private array $ratePolicies = [];
+
     /** @var list<class-string> handler classes with endpoint attributes found in api.discovery.paths */
     private array $discovered = [];
 
@@ -105,6 +152,14 @@ final class NetteApiExtension extends CompilerExtension
     {
         $service = static fn (): Schema => Expect::anyOf(Expect::string(), Expect::type(Statement::class));
         $endpointService = static fn (): Schema => Expect::anyOf(Expect::string(), Expect::type(Statement::class), false);
+        $limit = static fn (): Schema => Expect::structure([
+            'algorithm' => Expect::anyOf(Expect::string(), Expect::type(Statement::class))->default(RateLimitAlgorithm::SlidingWindow->value),
+            'limit' => Expect::int()->required(),
+            'interval' => Expect::anyOf(Expect::int(), Expect::string())->required(),
+            'key' => Expect::anyOf(Expect::string(), Expect::listOf('string'))->default('ip'),
+            'name' => Expect::string()->nullable()->default(null),
+        ])->castTo('array');
+        $rateLimit = static fn (): Schema => Expect::anyOf(Expect::string(), Expect::type(Statement::class), Expect::listOf('string')->min(1), $limit());
 
         return new ConfigSchema(Expect::structure([
             'outputConfigurator' => $service()->nullable()->default(null),
@@ -141,10 +196,17 @@ final class NetteApiExtension extends CompilerExtension
                 'hashKey' => Expect::anyOf(Expect::string(), Expect::type(Statement::class))->nullable()->default(null),
             ]),
             'authorizations' => Expect::arrayOf($service(), 'string'),
-            'rateLimits' => Expect::arrayOf($service(), 'string'),
+            'rateLimits' => Expect::arrayOf(Expect::anyOf(Expect::string(), Expect::type(Statement::class), $limit()), 'string'),
+            'rateLimiting' => Expect::structure([
+                'storage' => $service()->default('cache'),
+                'redis' => $service()->nullable()->default(null),
+                'prefix' => Expect::string(RedisStorage::PREFIX),
+                'clock' => $service()->nullable()->default(null),
+                'logger' => $service()->nullable()->default(null),
+            ]),
             'defaults' => Expect::structure([
                 'authorization' => $service()->nullable()->default(null),
-                'rateLimit' => $service()->nullable()->default(null),
+                'rateLimit' => $rateLimit()->nullable()->default(null),
             ]),
             'discovery' => Expect::structure([
                 'paths' => Expect::listOf('string'),
@@ -157,7 +219,7 @@ final class NetteApiExtension extends CompilerExtension
                 'action' => Expect::string()->nullable()->default(null),
                 'handler' => $service()->required(),
                 'authorization' => $endpointService()->nullable()->default(null),
-                'rateLimit' => $endpointService()->nullable()->default(null),
+                'rateLimit' => Expect::anyOf($rateLimit(), false)->nullable()->default(null),
             ])),
         ]));
     }
@@ -186,11 +248,12 @@ final class NetteApiExtension extends CompilerExtension
             $this->addOwnService('logger', ApiLoggerInterface::class, $this->service($config->logger, [], 'api.logger', ApiLoggerInterface::class));
         }
 
+        $policies = [];
         foreach (['authorizations' => $config->authorizations, 'rateLimits' => $config->rateLimits] as $section => $named) {
             $prefix = $section === 'authorizations' ? 'authorization' : 'rateLimit';
-            $type = $section === 'authorizations' ? ApiAuthorizationInterface::class : RateLimitInterface::class;
+            $type = $section === 'authorizations' ? ApiAuthorizationInterface::class : RateLimiterInterface::class;
             foreach ($named as $name => $value) {
-                if (preg_match('~^\w+$~', $name) !== 1) {
+                if (preg_match('~^[A-Za-z0-9_]+$~D', $name) !== 1) {
                     throw new InvalidConfigurationException(sprintf(
                         "api.%s: the name '%s' is not valid, a name has only letters, digits and underscores. Use for example %s: {%s: App\\Api\\My%s}.",
                         $section,
@@ -200,18 +263,36 @@ final class NetteApiExtension extends CompilerExtension
                         ucfirst($prefix),
                     ));
                 }
-                $builder->addDefinition($this->prefix($prefix . '.' . $name))
-                    ->setType($type)
-                    ->setFactory($this->service($value, [], sprintf('api.%s.%s', $section, $name), $type))
-                    ->setAutowired(false);
+                $where = sprintf('api.%s.%s', $section, $name);
+                $definition = $builder->addDefinition($this->prefix($prefix . '.' . $name))->setAutowired(false);
+                if (is_array($value)) {
+                    $policy = is_string($value['name'] ?? null) ? $value['name'] : $name;
+                    if (isset($policies[$policy])) {
+                        throw new InvalidConfigurationException(sprintf(
+                            "%s and %s both use the policy name '%s', so they would share their counters. Give each one its own name.",
+                            $policies[$policy],
+                            $where,
+                            $policy,
+                        ));
+                    }
+                    $policies[$policy] = $where;
+                    $this->ratePolicies[$policy] = $where;
+                    $definition->setFactory($this->limiter($value, $policy, $where));
+                } elseif ($type === RateLimiterInterface::class) {
+                    // a RateLimitInterface of 3.x becomes LegacyRateLimitAdapter, so the service has one type
+                    $definition->setType($type)->setFactory(new Statement([LegacyRateLimitAdapter::class, 'wrap'], [$this->service($value, [], $where, $type)]));
+                } else {
+                    $definition->setType($type)->setFactory($this->service($value, [], $where, $type));
+                }
             }
         }
 
         // checked here too, so a typo fails even before any endpoint uses the default
-        foreach (['authorization' => $config->defaults->authorization, 'rateLimit' => $config->defaults->rateLimit] as $kind => $default) {
-            if ($default !== null) {
-                $this->service($default, $this->namedServices($kind), 'api.defaults.' . $kind, $kind === 'authorization' ? ApiAuthorizationInterface::class : RateLimitInterface::class, $kind);
-            }
+        if ($config->defaults->authorization !== null) {
+            $this->service($config->defaults->authorization, $this->namedServices('authorization'), 'api.defaults.authorization', ApiAuthorizationInterface::class, 'authorization');
+        }
+        if ($config->defaults->rateLimit !== null) {
+            $this->rateLimit($config->defaults->rateLimit, 'api.defaults.rateLimit', 'default');
         }
 
         foreach ($config->endpoints as $index => $endpoint) {
@@ -312,9 +393,14 @@ final class NetteApiExtension extends CompilerExtension
                 $this->handlerService($endpoint),
                 $this->endpointService($endpoint->authorization, $config->defaults->authorization, 'authorization', $endpoint)
                     ?? new Statement(NoAuthorization::class),
-                $this->endpointService($endpoint->rateLimit, $config->defaults->rateLimit, 'rateLimit', $endpoint),
+                $this->endpointRateLimit($endpoint, $config->defaults->rateLimit),
             ]);
         }
+
+        foreach ($this->rateLimitChecks as $check) {
+            $check();
+        }
+        $this->checkRateLimitStorage();
     }
 
     /**
@@ -782,9 +868,371 @@ final class NetteApiExtension extends CompilerExtension
             $value,
             $this->namedServices($kind),
             sprintf('the %s of endpoint %s (%s)', $kind, $endpoint->describe(), $endpoint->source),
-            $kind === 'authorization' ? ApiAuthorizationInterface::class : RateLimitInterface::class,
+            ApiAuthorizationInterface::class,
             $kind,
         );
+    }
+
+    /**
+     * @param string|Statement|array<mixed>|null $default
+     */
+    private function endpointRateLimit(EndpointDefinition $endpoint, string|Statement|array|null $default): Statement|Reference|null
+    {
+        $value = $endpoint->rateLimit ?? $default;
+        if ($value === false || $value === null) {
+            return null;
+        }
+
+        // an inline limit has its own counters per endpoint, a named one is shared by all endpoints that use the name
+        $policy = trim((string) preg_replace('~[^A-Za-z0-9_.-]+~', '.', $endpoint->method . '.' . 'v' . $endpoint->version . '.' . $endpoint->package . '.' . ($endpoint->action ?? '')), '.');
+        $where = sprintf('the rateLimit of endpoint %s (%s)', $endpoint->describe(), $endpoint->source);
+        $rateLimit = $this->rateLimit($value, $where, $policy);
+        // only an own rate limit: a default one with identity may be shared by endpoints with and without the authorization
+        if ($endpoint->rateLimit !== null) {
+            $this->checkIdentityPolicy($value, $endpoint, $where);
+        }
+        return $rateLimit;
+    }
+
+    /**
+     * An identity key on an endpoint whose authorization gives no identity would never limit anything
+     *
+     * @param string|Statement|array<mixed> $value
+     */
+    private function checkIdentityPolicy(string|Statement|array $value, EndpointDefinition $endpoint, string $where): void
+    {
+        $policy = $this->identityPolicy($value);
+        if ($policy === null) {
+            return;
+        }
+        $authorization = $endpoint->authorization === false
+            ? NoAuthorization::class
+            : $endpoint->authorization ?? $this->config()->defaults->authorization ?? NoAuthorization::class;
+        if (is_string($authorization) && isset($this->config()->authorizations[$authorization])) {
+            $authorization = $this->config()->authorizations[$authorization];
+        }
+        $class = $this->classOf($authorization);
+        // an interface type of a service is not known, the service can still implement the identity
+        if ($class === null || !class_exists($class) || is_a($class, AuthorizationIdentityInterface::class, true)) {
+            return;
+        }
+        throw new InvalidConfigurationException(sprintf(
+            '%s uses %s keyed by identity, but its authorization %s does not implement %s, so the limit would never apply. '
+            . 'Use key: ip, or give the endpoint an authorization that implements it (for example BearerTokenAuthorization).',
+            $where,
+            $policy,
+            $class,
+            AuthorizationIdentityInterface::class,
+        ));
+    }
+
+    /**
+     * The built-in policy in a rate limit value that needs the identity, null when there is none or it is not known
+     *
+     * @param string|Statement|array<mixed> $value
+     */
+    private function identityPolicy(string|Statement|array $value): ?string
+    {
+        if (is_string($value)) {
+            $named = $this->config()->rateLimits[$value] ?? null;
+            return is_array($named) && self::needsIdentity($named) ? sprintf('api.rateLimits.%s', $value) : null;
+        }
+        if (!is_array($value)) {
+            return null;
+        }
+        if (!array_is_list($value)) {
+            return self::needsIdentity($value) ? 'an inline limit' : null;
+        }
+        foreach ($value as $item) {
+            $policy = is_string($item) ? $this->identityPolicy($item) : null;
+            if ($policy !== null) {
+                return $policy;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param array<mixed> $definition already checked by limiter()
+     */
+    private static function needsIdentity(array $definition): bool
+    {
+        /** @var string|array<mixed> $key */
+        $key = $definition['key'] ?? 'ip';
+        return RateLimitKeys::fromName($key)->needsIdentity();
+    }
+
+    /**
+     * A rate limit value: a name from api.rateLimits, @service, a class, a statement, a list of them, or an inline limit
+     *
+     * @param string|Statement|array<mixed> $value
+     */
+    private function rateLimit(string|Statement|array $value, string $where, string $policy): Statement|Reference
+    {
+        if (!is_array($value)) {
+            return $this->service($value, $this->namedServices('rateLimit'), $where, RateLimiterInterface::class, 'rateLimit');
+        }
+        if (!array_is_list($value)) {
+            // an inline limit always counts per endpoint, also with an own name, which changes only the policy in the headers
+            $name = $value['name'] ?? null;
+            if (is_string($name) && isset($this->ratePolicies[$name])) {
+                throw new InvalidConfigurationException(sprintf(
+                    "%s uses the policy name '%s' of %s. Give the inline limit its own name, or use rateLimit: %s to share the counters.",
+                    $where,
+                    $name,
+                    $this->ratePolicies[$name],
+                    $name,
+                ));
+            }
+            $key = (array) ($value['key'] ?? 'ip');
+            return $this->limiter(['key' => in_array('endpoint', $key, true) ? $key : [...$key, 'endpoint']] + $value, is_string($name) ? $name : $policy, $where);
+        }
+        if ($value === []) {
+            throw new InvalidConfigurationException(sprintf('The list of rate limits in %s is empty. Use names from api.rateLimits, for example rateLimit: [perIp, perUser], or false for no rate limit.', $where));
+        }
+
+        $limiters = [];
+        $named = $this->namedServices('rateLimit');
+        foreach ($value as $index => $item) {
+            if (!is_string($item)) {
+                throw new InvalidConfigurationException(sprintf('Item %d of the rate limit list in %s is %s, but it must be a name from api.rateLimits, @service or a class, for example rateLimit: [perIp, perUser] or #[RateLimit([\'perIp\', \'perUser\'])].', $index, $where, get_debug_type($item)));
+            }
+            $limiter = $this->service($item, $named, sprintf('%s[%d]', $where, $index), RateLimiterInterface::class, 'rateLimit');
+            // a named one is adapted already, a RateLimitInterface of 3.x in the list cannot go to the chain as it is
+            $limiters[] = isset($named[$item]) ? $limiter : new Statement([LegacyRateLimitAdapter::class, 'wrap'], [$limiter]);
+        }
+        return new Statement(RateLimiterChain::class, $limiters);
+    }
+
+    /**
+     * A built-in limiter from {algorithm, limit, interval, key}, checked here so a typo fails the container compilation
+     *
+     * @param array<mixed> $definition
+     */
+    private function limiter(array $definition, string $policy, string $where): Statement
+    {
+        $algorithm = $definition['algorithm'] ?? RateLimitAlgorithm::SlidingWindow->value;
+        $class = is_string($algorithm) ? self::RATE_LIMITERS[$algorithm] ?? null : null;
+        $custom = $class === null ? $this->customAlgorithm($algorithm, $where) : null;
+        [$limit, $interval, $key] = self::limitValues($definition, $where);
+        try {
+            $class === null
+                ? new AlgorithmLimiter(new FixedWindow(), $policy, $limit, $interval, RateLimitKeys::fromName($key, $where), new InMemoryStorage())
+                : new $class($policy, $limit, $interval, RateLimitKeys::fromName($key, $where), new InMemoryStorage());
+        } catch (\InvalidArgumentException $e) {
+            throw new InvalidConfigurationException($e->getMessage(), previous: $e);
+        }
+
+        $rateLimiting = $this->config()->rateLimiting;
+        return new Statement($class ?? AlgorithmLimiter::class, [
+            ...($custom === null ? [] : [$custom]),
+            $policy,
+            $limit,
+            Interval::toSeconds($interval, $where),
+            new Statement([RateLimitKeys::class, 'fromName'], [$key, $where]),
+            $this->rateLimitStorage(),
+            $rateLimiting->clock === null ? null : $this->service($rateLimiting->clock, [], 'api.rateLimiting.clock', ClockInterface::class),
+            // not autowired, more ILogger services in an application must not fail the compilation
+            $rateLimiting->logger === null ? null : $this->service($rateLimiting->logger, [], 'api.rateLimiting.logger', ILogger::class),
+        ]);
+    }
+
+    /**
+     * The config schema and #[RateLimit] already guarantee these types, the check only narrows them
+     *
+     * @infection-ignore-all
+     * @param array<mixed> $definition
+     * @return array{int, int|string, string|array<mixed>}
+     */
+    private static function limitValues(array $definition, string $where): array
+    {
+        $limit = $definition['limit'] ?? null;
+        $interval = $definition['interval'] ?? null;
+        $key = $definition['key'] ?? 'ip';
+        if (!is_int($limit) || (!is_int($interval) && !is_string($interval)) || (!is_string($key) && !is_array($key))) {
+            throw new InvalidConfigurationException(sprintf(
+                'The rate limit in %s needs limit and interval, for example {algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}.',
+                $where,
+            ));
+        }
+        return [$limit, $interval, $key];
+    }
+
+    /**
+     * An own algorithm in rateLimits.*.algorithm: a class or @service implementing RateLimitAlgorithmInterface
+     */
+    private function customAlgorithm(mixed $algorithm, string $where): Statement|Reference
+    {
+        if ($algorithm instanceof Statement || (is_string($algorithm) && str_starts_with($algorithm, '@'))) {
+            $service = $this->service($algorithm, [], $where . '.algorithm', RateLimitAlgorithmInterface::class);
+            $this->rateLimitChecks[] = function () use ($algorithm, $where): void {
+                $class = $this->classOf($algorithm);
+                if ($class !== null) {
+                    $this->checkRedisAlgorithm($class, $where);
+                }
+            };
+            return $service;
+        }
+        if (!is_string($algorithm) || !class_exists($algorithm)) {
+            throw new InvalidConfigurationException(sprintf(
+                "The rate limit in %s has an unknown algorithm '%s'.%s Use one of %s, or a class implementing %s.",
+                $where,
+                is_scalar($algorithm) ? $algorithm : get_debug_type($algorithm),
+                Hint::didYouMean(is_string($algorithm) ? $algorithm : '', array_keys(self::RATE_LIMITERS)),
+                Hint::quoted(array_keys(self::RATE_LIMITERS)),
+                RateLimitAlgorithmInterface::class,
+            ));
+        }
+        if (!is_subclass_of($algorithm, RateLimitAlgorithmInterface::class)) {
+            throw new InvalidConfigurationException(sprintf(
+                'The rate limit algorithm %s in %s does not implement %s. Implement step(), and also %s to use it with Redis.',
+                $algorithm,
+                $where,
+                RateLimitAlgorithmInterface::class,
+                RedisScriptAlgorithmInterface::class,
+            ));
+        }
+        $this->rateLimitChecks[] = fn () => $this->checkRedisAlgorithm($algorithm, $where);
+        return new Statement($algorithm);
+    }
+
+    /**
+     * Redis needs the decision as one Lua script, without it every request would fail open at runtime
+     */
+    private function checkRedisAlgorithm(string $algorithm, string $where): void
+    {
+        if ($this->usesRedis() && !is_a($algorithm, RedisScriptAlgorithmInterface::class, true)) {
+            throw new InvalidConfigurationException(sprintf(
+                'The rate limit algorithm %s in %s cannot run in Redis (api.rateLimiting.storage: %s), which needs the decision as one atomic Lua script. Implement %s in it, or use another storage.',
+                ltrim($algorithm, '\\'),
+                $where,
+                self::describe($this->config()->rateLimiting->storage),
+                RedisScriptAlgorithmInterface::class,
+            ));
+        }
+    }
+
+    /**
+     * api.rateLimiting.storage is redis, or an own RedisStorage (@service, a class or a statement)
+     */
+    private function usesRedis(): bool
+    {
+        $storage = $this->config()->rateLimiting->storage;
+        if ($storage === 'redis') {
+            return true;
+        }
+        $class = $this->classOf($storage);
+        return $class !== null && is_a($class, RedisStorage::class, true);
+    }
+
+    /**
+     * The class of a class name, a statement like App\MyClass(arguments) or a @service with a known type, null when it is not known yet
+     */
+    private function classOf(mixed $value): ?string
+    {
+        if ($value instanceof Statement) {
+            $value = $value->getEntity();
+        }
+        if (!is_string($value)) {
+            return null;
+        }
+        if (str_starts_with($value, '@')) {
+            $builder = $this->getContainerBuilder();
+            $name = substr($value, 1);
+            return $builder->hasDefinition($name) ? $builder->getDefinition($name)->getType() : null;
+        }
+        return class_exists($value) ? $value : null;
+    }
+
+    private static function describe(mixed $value): string
+    {
+        if ($value instanceof Statement) {
+            $entity = $value->getEntity();
+            return (is_string($entity) ? $entity : get_debug_type($entity)) . '(...)';
+        }
+        return is_string($value) ? $value : get_debug_type($value);
+    }
+
+    /**
+     * The storage of the built-in limiters, created on the first use: api.rateLimiting.storage
+     */
+    private function rateLimitStorage(): Reference
+    {
+        $name = $this->prefix(self::RATE_LIMIT_STORAGE);
+        $builder = $this->getContainerBuilder();
+        if ($builder->hasDefinition($name)) {
+            return new Reference($name);
+        }
+
+        $rateLimiting = $this->config()->rateLimiting;
+        $storage = $rateLimiting->storage;
+        $factory = match ($storage) {
+            // the lock files go to %tempDir% of the application, not to a temp directory shared with other users
+            'cache' => new Statement(NetteCacheStorage::class, is_string($builder->parameters['tempDir'] ?? null) ? ['lockDirectory' => $builder->parameters['tempDir'] . '/nette-api-rate-limit'] : []),
+            'memory' => new Statement(InMemoryStorage::class),
+            'redis' => new Statement(RedisStorage::class, [
+                $rateLimiting->redis === null
+                    ? throw new InvalidConfigurationException("api.rateLimiting.storage is redis, but api.rateLimiting.redis is not set. Add the Redis client service, for example rateLimiting: {storage: redis, redis: @redis} with services: {redis: Redis()} (ext-redis, call connect() in the setup) or Predis\Client('tcp://127.0.0.1:6379') (predis/predis).")
+                    : $this->redisClient($rateLimiting->redis),
+                $rateLimiting->prefix,
+            ]),
+            default => is_string($storage) && !str_starts_with($storage, '@') && !class_exists($storage)
+                ? throw new InvalidConfigurationException(sprintf(
+                    "api.rateLimiting.storage '%s' is not known.%s Use cache (Nette cache, the default, atomic only on one server), memory (one PHP process only, for tests), redis (atomic, needs rateLimiting.redis), @service or a class implementing %s.",
+                    $storage,
+                    Hint::didYouMean($storage, self::RATE_LIMIT_STORAGES),
+                    RateLimitStorageInterface::class,
+                ))
+                : $this->service($storage, [], 'api.rateLimiting.storage', RateLimitStorageInterface::class),
+        };
+        // the real storage is created on the first request with a rate limit, a Redis outage then fails open instead of the API
+        $builder->addDefinition($name . 'Factory')
+            ->setType(RateLimitStorageInterface::class)
+            ->setFactory($factory)
+            ->setAutowired(false);
+        $builder->addDefinition($name)
+            ->setType(LazyStorage::class)
+            ->setFactory(new Statement(LazyStorage::class, [new Literal('fn() => $this->getService(?)', [$name . 'Factory'])]))
+            ->setAutowired(false);
+
+        return new Reference($name);
+    }
+
+    private function redisClient(string|Statement $client): Statement|Reference
+    {
+        $class = $this->classOf($client);
+        $expected = sprintf('Use @service with a Redis client, or a class: %s.', implode(', ', self::REDIS_CLIENTS));
+        $this->rateLimitChecks[] = function () use ($client, $expected): void {
+            $class = $this->classOf($client);
+            if ($class !== null && !array_any(self::REDIS_CLIENTS, fn(string $type): bool => is_a($class, $type, true))) {
+                throw new InvalidConfigurationException(sprintf('api.rateLimiting.redis %s is %s, which is not a Redis client. %s', self::describe($client), $class, $expected));
+            }
+        };
+        if (is_string($client) && !str_starts_with($client, '@') && ($class === null || !class_exists($class) || new \ReflectionClass($class)->getName() !== ltrim($client, '\\'))) {
+            // 'redis' without @ would be the class \Redis: a client without connect(), so every request would pass without a limit
+            throw new InvalidConfigurationException(sprintf("api.rateLimiting.redis '%s' is not a @service nor a class, for a service write @%s. %s", $client, $client, $expected));
+        }
+        if (is_string($client) && str_starts_with($client, '@')) {
+            return new Reference(substr($client, 1));
+        }
+        return $client instanceof Statement ? $client : new Statement($client);
+    }
+
+    /**
+     * The cache storage needs a Nette\Caching\Storage service, nette/bootstrap registers one (cache.storage)
+     */
+    private function checkRateLimitStorage(): void
+    {
+        $builder = $this->getContainerBuilder();
+        if ($this->config()->rateLimiting->storage !== 'cache' || !$builder->hasDefinition($this->prefix(self::RATE_LIMIT_STORAGE))) {
+            return;
+        }
+        if ($builder->findByType(CacheStorage::class) === []) {
+            throw new InvalidConfigurationException(sprintf(
+                'The rate limits in api.rateLimits use api.rateLimiting.storage cache (the default), but no %s service exists. Register the cache extension (extensions: {cache: Nette\Bridges\CacheDI\CacheExtension(%%tempDir%%)}, nette/bootstrap does it for you), or choose another storage, for example rateLimiting: {storage: redis, redis: @redis}.',
+                CacheStorage::class,
+            ));
+        }
     }
 
     /**
@@ -846,7 +1294,7 @@ final class NetteApiExtension extends CompilerExtension
 
         $section = $kind === 'authorization' ? 'authorizations' : 'rateLimits';
         throw new InvalidConfigurationException(sprintf(
-            "Unknown %s '%s' in %s, it is not a name from api.%s nor an existing class.%s %s Or use @serviceName, a class implementing %s, or a statement like App\\MyClass(arguments). To add the name, write api: {%s: {%s: App\\Api\\My%s}}.",
+            "Unknown %s '%s' in %s, it is not a name from api.%s nor an existing class.%s %s Or use @serviceName, a class implementing %s, or a statement like App\\MyClass(arguments). To add the name, write api: {%s: {%s: %s}}.",
             $kind,
             $value,
             $where,
@@ -856,7 +1304,7 @@ final class NetteApiExtension extends CompilerExtension
             $type,
             $section,
             $value,
-            ucfirst($kind),
+            $kind === 'authorization' ? 'App\\Api\\MyAuthorization' : '{algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}',
         ));
     }
 
@@ -927,6 +1375,10 @@ final class NetteApiExtension extends CompilerExtension
      */
     private function checkType(string $class, string $type, string $where): void
     {
+        if ($type === RateLimiterInterface::class && is_a($class, RateLimitInterface::class, true)) {
+            // deprecated, works through LegacyRateLimitAdapter
+            return;
+        }
         if (!is_a($class, $type, true)) {
             throw new InvalidConfigurationException(sprintf(
                 "Class '%s' in %s must implement %s, but it does not.%s",

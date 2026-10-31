@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Test\DI;
 
-use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
 use Nette\Application\PresenterFactory;
 use Nette\Application\Request;
 use Tomaj\NetteApi\Response\JsonApiResponse;
@@ -269,7 +269,7 @@ final class NetteApiExtensionTest extends TestCase
         $this->assertSame(7, $rateLimit->limit);
 
         $this->assertNull($container->getByType(BasicAuthentication::class, false), 'named services are not autowired');
-        $this->assertNull($container->getByType(RateLimitInterface::class, false));
+        $this->assertNull($container->getByType(RateLimiterInterface::class, false));
         $this->assertSame(['strictLimit'], $container->findByType(FixedRateLimit::class));
     }
 
@@ -290,7 +290,7 @@ final class NetteApiExtensionTest extends TestCase
     public function testUnknownDefaultRateLimitFails(): void
     {
         $this->expectException(InvalidConfigurationException::class);
-        $this->expectExceptionMessage("Unknown rateLimit 'strict' in api.defaults.rateLimit, it is not a name from api.rateLimits nor an existing class. No names are defined in api.rateLimits yet. Or use @serviceName, a class implementing Tomaj\\NetteApi\\RateLimit\\RateLimitInterface, or a statement like App\\MyClass(arguments). To add the name, write api: {rateLimits: {strict: App\\Api\\MyRateLimit}}.");
+        $this->expectExceptionMessage("Unknown rateLimit 'strict' in api.defaults.rateLimit, it is not a name from api.rateLimits nor an existing class. No names are defined in api.rateLimits yet. Or use @serviceName, a class implementing Tomaj\\NetteApi\\RateLimit\\RateLimiterInterface, or a statement like App\\MyClass(arguments). To add the name, write api: {rateLimits: {strict: {algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}}}.");
         ContainerFactory::compile(<<<NEON
             api:
                 defaults: {rateLimit: strict}
@@ -307,9 +307,9 @@ final class NetteApiExtensionTest extends TestCase
         $handler = EchoHandler::class;
         $endpoint = "\n    endpoints:\n        - {method: GET, version: 1, package: users, handler: $handler, %s}";
         yield 'named authorization' => ["authorizations:\n        bearer: $handler", "Class '$handler' in api.authorizations.bearer must implement Tomaj\NetteApi\Authorization\ApiAuthorizationInterface, but it does not. Implement the interface in the class, or use another class."];
-        yield 'named rate limit statement' => ["rateLimits:\n        fixed: $handler()", "Class '$handler' in api.rateLimits.fixed must implement Tomaj\NetteApi\RateLimit\RateLimitInterface, but it does not."];
+        yield 'named rate limit statement' => ["rateLimits:\n        fixed: $handler()", "Class '$handler' in api.rateLimits.fixed must implement Tomaj\NetteApi\RateLimit\RateLimiterInterface, but it does not."];
         yield 'endpoint authorization' => [sprintf($endpoint, "authorization: $handler"), "Class '$handler' in the authorization of endpoint GET /v1/users (api.endpoints[0]) must implement"];
-        yield 'default rate limit' => ["defaults:\n        rateLimit: $handler" . sprintf($endpoint, 'action: x'), "Class '$handler' in api.defaults.rateLimit must implement Tomaj\NetteApi\RateLimit\RateLimitInterface, but it does not."];
+        yield 'default rate limit' => ["defaults:\n        rateLimit: $handler" . sprintf($endpoint, 'action: x'), "Class '$handler' in api.defaults.rateLimit must implement Tomaj\NetteApi\RateLimit\RateLimiterInterface, but it does not."];
         yield 'handler statement' => [sprintf($endpoint, 'action: y') . "\n        - {method: GET, version: 1, package: z, handler: Tomaj\\NetteApi\\Misc\\IpDetector()}", "Class 'Tomaj\\NetteApi\\Misc\\IpDetector' in the handler of endpoint GET /v1/z (api.endpoints[1]) must implement Tomaj\\NetteApi\\Handlers\\ApiHandlerInterface, but it does not. Extend Tomaj\\NetteApi\\Handlers\\BaseHandler (or implement the interface), or use another class."];
         yield 'ip detector' => ["ipDetector: $handler", "Class '$handler' in api.ipDetector must implement Tomaj\NetteApi\Misc\IpDetectorInterface, but it does not."];
         yield 'logger' => ["logger: \\$handler", "Class '$handler' in api.logger must implement"];
@@ -398,6 +398,8 @@ final class NetteApiExtensionTest extends TestCase
         yield 'preflight empty' => ['cors: {preflight: {}}', 'api.cors.preflight is an empty map, so the preflight response would send no CORS headers. Use preflight: true'];
         yield 'preflight bad name' => ["cors: {preflight: {'Max Age': '600'}}", "api.cors.preflight key 'Max Age' is not an HTTP header name, a header name has no spaces, colons or other separators. Write only the name, for example preflight: {Access-Control-Max-Age: '600'}."];
         yield 'authorization name' => ["authorizations:\n        'my-auth': Tomaj\\NetteApi\\Authorization\\NoAuthorization", "api.authorizations: the name 'my-auth' is not valid, a name has only letters, digits and underscores. Use for example authorizations: {bearer: App\\Api\\MyAuthorization}."];
+        yield 'non-ASCII name' => ["rateLimits:\n        'stríct': Tomaj\\NetteApi\\RateLimit\\NoRateLimit", "api.rateLimits: the name 'stríct' is not valid"];
+        yield 'name with a new line' => ["rateLimits:\n        \"strict\\n\": Tomaj\\NetteApi\\RateLimit\\NoRateLimit", "api.rateLimits: the name 'strict\n' is not valid"];
         yield 'rate limit name' => ["rateLimits:\n        '': Tomaj\\NetteApi\\RateLimit\\NoRateLimit", "api.rateLimits: the name '' is not valid, a name has only letters, digits and underscores. Use for example rateLimits: {strict: App\\Api\\MyRateLimit}."];
         yield 'typeBaseUri no scheme' => ['errors: {format: problemDetails, typeBaseUri: example.com/errors}', "api.errors.typeBaseUri 'example.com/errors' is not an absolute URI, the type of a problem is a URI. Use for example typeBaseUri: https://example.com/errors/."];
         yield 'typeBaseUri space' => ["errors: {format: problemDetails, typeBaseUri: 'https://x/a b'}", "api.errors.typeBaseUri 'https://x/a b' is not an absolute URI"];
@@ -424,7 +426,7 @@ final class NetteApiExtensionTest extends TestCase
         yield 'hashKey type' => ["api:\n    logging: {masking: hash, hashKey: [a]}", "The item 'api › logging › hashKey' expects to be string|Nette\\DI\\Definitions\\Statement|null, array given. Use a string, for example hashKey: %env.API_LOG_HASH_KEY%."];
         yield 'api scalar' => ['api: 5', 'The item \'api\' expects to be array, 5 given. The api section is a map, for example api: {endpoints: [{method: GET, version: 1, package: users, handler: App\\Api\\UsersHandler}]}.'];
         yield 'top typo' => ['api:
-    loger: x', 'Unexpected item \'api › loger\', did you mean \'logger\'? Allowed keys in api: outputConfigurator, ipDetector, logger, errors, cors, logging, authorizations, rateLimits, defaults, discovery, endpoints.'];
+    loger: x', 'Unexpected item \'api › loger\', did you mean \'logger\'? Allowed keys in api: outputConfigurator, ipDetector, logger, errors, cors, logging, authorizations, rateLimits, rateLimiting, defaults, discovery, endpoints.'];
         yield 'errors typo' => ['api:
     errors: {fromat: default}', 'Unexpected item \'api › errors › fromat\', did you mean \'format\'? Allowed keys in api.errors: format, typeBaseUri, handler.'];
         yield 'cors typo' => ['api:
@@ -473,7 +475,7 @@ final class NetteApiExtensionTest extends TestCase
         yield 'auths list' => ['api:
     authorizations: 5', 'The item \'api › authorizations\' expects to be array, 5 given. Use a map of name: class, for example authorizations: {bearer: App\\Api\\MyAuthorization}.'];
         yield 'rate list' => ['api:
-    rateLimits: 5', 'The item \'api › rateLimits\' expects to be array, 5 given. Use a map of name: class, for example rateLimits: {strict: App\\Api\\MyRateLimit}.'];
+    rateLimits: 5', 'The item \'api › rateLimits\' expects to be array, 5 given. Use a map of name: limit, for example rateLimits: {perIp: {algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}}.'];
         yield 'logger int' => ['api:
     logger: 5', 'The item \'api › logger\' expects to be string|Nette\\DI\\Definitions\\Statement|null, 5 given. Use a class implementing Tomaj\\NetteApi\\Logger\\ApiLoggerInterface, @serviceName, or a statement like App\\MyClass(arguments).'];
         yield 'logger missing service' => ['api:
@@ -1114,5 +1116,4 @@ api:
         $this->assertStringNotContainsString('setMaskedLog', ContainerFactory::compile('api: {}'), 'the defaults live in the presenter');
         $this->assertStringContainsString('setLogMasking', ContainerFactory::compile("api:\n    logging: {masking: omit}"));
     }
-
 }

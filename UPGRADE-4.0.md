@@ -142,6 +142,49 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 }
 ```
 
+## Rate limits
+
+4.0 has built-in rate limits (#195), see the [documentation](https://tomaj.github.io/nette-api/guide/rate-limit).
+
+**Headers:** `X-RateLimit-Limit` and `X-RateLimit-Remaining` are replaced by `RateLimit-Policy: "name";q=60;w=60` and `RateLimit: "name";r=59;t=60` (the IETF draft). Update clients that read the old headers. `Retry-After` on `429` is unchanged.
+
+**RateLimitInterface is deprecated:** an own `RateLimitInterface` still works; `ApiDecider::addApi()`, `Api` and `ApiHolder` wrap it in `LegacyRateLimitAdapter`, which triggers a silenced `E_USER_DEPRECATED` (Tracy and error handlers still see it). It is removed in 5.0. Replace it with a built-in limiter:
+
+```yaml
+api:
+	rateLimits:
+		perIp: {algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}
+	defaults:
+		rateLimit: perIp
+```
+
+or implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array`, which returns a `RateLimitResult` per policy.
+
+**Return types:** `Api::getRateLimit()` and `ApiHolder::getRateLimit()` return `RateLimiterInterface` instead of `RateLimitInterface`. Code that called `->check()` on it must call `->consume()`.
+
+**Redis keys:** `RedisStorage` stores a counter under `prefix` + `{policy:key}` (default prefix `nette-api:rate-limit:`), with the braces as a Redis Cluster hash tag.
+
+**Reverse proxy:** `key: ip` counts the address from `IpDetector`. Behind a reverse proxy list it in `http: proxy:`, otherwise all clients share the quota of the proxy, see [IpDetector](#ipdetector-does-not-trust-headers-from-any-client).
+
+**getIdentity():** `TokenAuthorization` and `BasicAuthentication` implement `AuthorizationIdentityInterface` with `public function getIdentity(): ?string`. A subclass with its own `getIdentity()` must use this signature, otherwise PHP fails with a fatal error when the class loads. A subclass that overrides `authorized()` without calling the parent must override `getIdentity()` too, or limits keyed by `identity` are skipped with a warning in the log.
+
+**Autowiring:** an autowired `RateLimitInterface` service still goes to `addApi()` calls without the 4th argument, also to calls from your PHP code; pass `null` for no limit. With more such services none is used, pass the one you want. A `RateLimiterInterface` is not autowired.
+
+**Dependencies:** `nette/caching` ^3.2 and `psr/clock` ^1.0 are required. For Redis install `ext-redis` or `predis/predis`.
+
+## IpDetector does not trust headers from any client
+
+`Misc\IpDetector` preferred the `Client-IP` and `X-Forwarded-For` headers, so any client could forge its address: pass an IP restriction of a token, get a new rate limit quota, write another address to the log. It now returns `Nette\Http\IRequest::getRemoteAddress()`, which trusts forwarded headers only from the proxies you list. `Client-IP` is not used any more.
+
+**Behind a reverse proxy or a load balancer you have to list it,** otherwise every client has the address of the proxy: IP restrictions of tokens stop matching, logs show the proxy and all clients share one rate limit quota.
+
+```yaml
+http:
+	proxy: 10.0.0.0/8      # one range or a list of them
+```
+
+A detector of your own that reads the headers keeps working; if it only read `REMOTE_ADDR` to avoid the forged headers, you can remove it. `new IpDetector()` without the request reads `REMOTE_ADDR`.
+
 ## Exceptions from authorization are not sent to the client
 
 `DefaultErrorHandler::handleAuthorizationException()` answered with the exception message, which could reveal database hosts or internal paths. It now answers `{"status":"error","message":"Internal server error"}`, logs the exception to Tracy and adds the message as `detail` only when the configurator's `showErrorDetail()` is true, the same as `handle()`. Clients that parsed the message must read the log instead.
