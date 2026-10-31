@@ -7,7 +7,7 @@ description: 'Spustiteľný príklad Nette API: bearer token, hlavička X-API-Ke
 
 Štyri endpointy s rovnakým handlerom, každý chránený inak.
 
-<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'app/RemoteAddrIpDetector.php', 'app/FileRateLimit.php', 'e2e.sh']" />
+<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'app/RemoteAddrIpDetector.php', 'e2e.sh']" />
 
 <Diagram name="examples-auth-1" alt="Štyri endpointy: bearer, api-key a basic kontrolujú prihlasovacie údaje a pri chybe vrátia 401, limited vráti 429 po troch požiadavkách" />
 
@@ -16,7 +16,7 @@ description: 'Spustiteľný príklad Nette API: bearer token, hlavička X-API-Ke
 | `/api/v1/bearer` | `BearerTokenAuthorization` | `-H 'Authorization: Bearer secret-token'` |
 | `/api/v1/api-key` | `HeaderApiKeyAuthentication` | `-H 'X-API-Key: secret-token'` |
 | `/api/v1/basic` | `BasicCredentialsAuthorization` z príkladu | `-u admin:change-me` |
-| `/api/v1/limited` | `NoAuthorization` a `FileRateLimit` | štyri volania za minútu |
+| `/api/v1/limited` | `NoAuthorization` a `FixedWindowLimiter` s `NetteCacheStorage` | štyri volania za minútu |
 
 ## Služby
 
@@ -35,10 +35,6 @@ Vstavaný `IpDetector` dôveruje hlavičkám klienta. Tento číta len `REMOTE_A
 <<< @/../examples/auth/app/BasicCredentialsAuthorization.php
 
 V 3.x vstavaná `BasicAuthentication` nefunguje s `nette/http` 3.2 a novším (4.0 to opravuje); táto trieda číta hlavičku `Authorization` a porovnáva cez `hash_equals()`.
-
-## Obmedzenie požiadaviek
-
-<<< @/../examples/auth/app/FileRateLimit.php
 
 ## Test
 

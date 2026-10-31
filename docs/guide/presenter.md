@@ -32,14 +32,14 @@ The method and the `version`, `package` and `apiAction` route parameters go to `
 ## 3. Rate limit
 
 ```php
-$rateLimitResponse = $rateLimit->check();
-// adds X-RateLimit-Limit and X-RateLimit-Remaining
-if ($remaining === 0) {
+$results = $rateLimit->consume(new RateLimitContext($api, $request, RateLimitStage::BeforeAuthorization, $ip));
+// adds RateLimit-Policy and RateLimit for every result
+if (/* a result is not accepted */) {
     // 429, Retry-After, your error response or errorHandler->handleRateLimit()
 }
 ```
 
-Before authorization, so failed logins count. See [Rate limiting](/guide/rate-limit).
+Before authorization, so failed logins count. After a successful authorization (step 5) the presenter calls `consume()` again with `RateLimitStage::AfterAuthorization` and the identity, for the policies keyed by `identity`. See [Rate limiting](/guide/rate-limit).
 
 ## 4. Params are read
 
@@ -103,7 +103,7 @@ The handler returned `400` but no output with code `400` matches. Add one, or tu
 
 ### Does the rate limit see the authorized user?
 
-No, it runs before authorization. Identify the client by its key or IP, as the [rate limit example](/examples/rate-limit) does.
+Yes, a policy with `key: identity` runs after the authorization and counts per identity of an `AuthorizationIdentityInterface`. The other policies run before it, by IP or endpoint. See the [rate limit example](/examples/rate-limit).
 
 ### Is the response time logged with the rate limit or auth checks?
 

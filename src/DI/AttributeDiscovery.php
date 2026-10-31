@@ -231,7 +231,7 @@ final class AttributeDiscovery
                     sprintf('#[%s] on %s', self::shortName($attribute->getName()), $class),
                 );
             }
-        } catch (\Error $e) {
+        } catch (\Error | \InvalidArgumentException $e) {
             throw new InvalidConfigurationException(sprintf(
                 "Invalid endpoint attribute on %s (%s). Check the attribute arguments, for example #[Get(1, 'users')] or #[Get(version: 1, package: 'users', action: 'detail')]; #[Authorization] and #[RateLimit] can be used only once per class.",
                 $class,

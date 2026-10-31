@@ -18,14 +18,18 @@ final readonly class ConfigSchema implements Schema
     private const string ENDPOINT = '{method: GET, version: 1, package: users, handler: App\Api\UsersHandler}';
 
     private const array KEYS = [
-        '' => ['outputConfigurator', 'ipDetector', 'logger', 'errors', 'cors', 'logging', 'authorizations', 'rateLimits', 'defaults', 'discovery', 'endpoints'],
+        '' => ['outputConfigurator', 'ipDetector', 'logger', 'errors', 'cors', 'logging', 'authorizations', 'rateLimits', 'rateLimiting', 'defaults', 'discovery', 'endpoints'],
         'errors' => ['format', 'typeBaseUri', 'handler'],
         'cors' => ['mode', 'allowedOrigins', 'originValidator', 'allowCredentials', 'preflight'],
         'logging' => ['maskHeaders', 'maskQueryParams', 'masking', 'hashKey'],
         'logging.maskHeaders' => ['names', 'add', 'remove', 'patterns'],
         'logging.maskHeaders.patterns' => ['add', 'remove'],
         'logging.maskQueryParams' => ['names', 'add', 'remove'],
+        'rateLimits.*' => ['algorithm', 'limit', 'interval', 'key', 'name'],
+        'rateLimiting' => ['storage', 'redis', 'prefix', 'clock'],
         'defaults' => ['authorization', 'rateLimit'],
+        'defaults.rateLimit' => ['algorithm', 'limit', 'interval', 'key', 'name'],
+        'endpoints.*.rateLimit' => ['algorithm', 'limit', 'interval', 'key', 'name'],
         'discovery' => ['paths', 'namespace'],
         'endpoints.*' => ['method', 'version', 'package', 'action', 'handler', 'authorization', 'rateLimit'],
     ];
@@ -38,12 +42,15 @@ final readonly class ConfigSchema implements Schema
         'errors.handler' => 'a class implementing Tomaj\NetteApi\Error\ErrorHandlerInterface',
         'cors.originValidator' => 'a class implementing Tomaj\NetteApi\Misc\CorsOriginValidatorInterface',
         'authorizations.*' => 'a class implementing Tomaj\NetteApi\Authorization\ApiAuthorizationInterface',
-        'rateLimits.*' => 'a class implementing Tomaj\NetteApi\RateLimit\RateLimitInterface',
+        'rateLimits.*' => '{algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}, a class implementing Tomaj\NetteApi\RateLimit\RateLimiterInterface',
+        'rateLimiting.storage' => "'cache' (the default), 'memory', 'redis', a class implementing Tomaj\\NetteApi\\RateLimit\\Storage\\RateLimitStorageInterface",
+        'rateLimiting.redis' => 'a Redis client (\Redis, \RedisCluster, Predis\ClientInterface or Tomaj\NetteApi\RateLimit\Redis\RedisClientInterface)',
+        'rateLimiting.clock' => 'a class implementing Psr\Clock\ClockInterface',
         'defaults.authorization' => 'a name from api.authorizations (leave it out for no default), a class implementing Tomaj\NetteApi\Authorization\ApiAuthorizationInterface',
-        'defaults.rateLimit' => 'a name from api.rateLimits (leave it out for no default), a class implementing Tomaj\NetteApi\RateLimit\RateLimitInterface',
+        'defaults.rateLimit' => 'a name from api.rateLimits (leave it out for no default), a list of names like [perIp, perUser], {limit: 60, interval: 1 minute}, a class implementing Tomaj\NetteApi\RateLimit\RateLimiterInterface',
         'endpoints.*.handler' => 'a handler class name',
         'endpoints.*.authorization' => 'false (no authorization for this endpoint), a name from api.authorizations, a class implementing Tomaj\NetteApi\Authorization\ApiAuthorizationInterface',
-        'endpoints.*.rateLimit' => 'false (no rate limit for this endpoint), a name from api.rateLimits, a class implementing Tomaj\NetteApi\RateLimit\RateLimitInterface',
+        'endpoints.*.rateLimit' => 'false (no rate limit for this endpoint), a name from api.rateLimits, a list of names like [perIp, perUser], {limit: 60, interval: 1 minute}, a class implementing Tomaj\NetteApi\RateLimit\RateLimiterInterface',
     ];
 
     private const array VALUES = [
@@ -71,7 +78,14 @@ final readonly class ConfigSchema implements Schema
         'logging.maskQueryParams.remove' => 'Use a list of parameter names, for example remove: [code].',
         'logging.hashKey' => 'Use a string, for example hashKey: %env.API_LOG_HASH_KEY%.',
         'authorizations' => 'Use a map of name: class, for example authorizations: {bearer: App\Api\MyAuthorization}.',
-        'rateLimits' => 'Use a map of name: class, for example rateLimits: {strict: App\Api\MyRateLimit}.',
+        'rateLimits' => 'Use a map of name: limit, for example rateLimits: {perIp: {algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}}.',
+        'rateLimits.*.algorithm' => "Use one of 'fixedWindow', 'slidingWindow' (the default), 'tokenBucket', or a class implementing Tomaj\\NetteApi\\RateLimit\\Algorithm\\RateLimitAlgorithmInterface.",
+        'rateLimits.*.limit' => 'Use a whole number of requests per interval, for example limit: 60.',
+        'rateLimits.*.interval' => "Use seconds or a text like '30 seconds', '1 minute', '1 hour', '1 day', for example interval: 1 minute.",
+        'rateLimits.*.key' => 'Use ip, identity, endpoint, a class implementing Tomaj\NetteApi\RateLimit\Key\RateLimitKeyInterface, or a list like [identity, endpoint].',
+        'rateLimits.*.name' => 'Use a policy name of letters, digits, _, - and ., for example name: perIp.',
+        'rateLimiting' => 'rateLimiting is a map, for example rateLimiting: {storage: redis, redis: @redis}.',
+        'rateLimiting.prefix' => 'Use a string, for example prefix: myapp:rate-limit:.',
         'defaults' => 'defaults is a map, for example defaults: {authorization: bearer}.',
         'discovery' => 'discovery is a map, for example discovery: {paths: [%appDir%/Api]}.',
         'discovery.paths' => 'Use a list of directories, for example paths: [%appDir%/Api].',
@@ -153,6 +167,14 @@ final readonly class ConfigSchema implements Schema
         return $where;
     }
 
+    /**
+     * An inline rate limit of an endpoint or of the defaults has the same items as one in api.rateLimits
+     */
+    private static function rateLimitKey(string $key): string
+    {
+        return (string) preg_replace('~^(?:endpoints\.\*|defaults)\.rateLimit\.(?=\w)~', 'rateLimits.*.', $key);
+    }
+
     private function hint(Message $message): ?string
     {
         $path = $message->path;
@@ -161,11 +183,14 @@ final readonly class ConfigSchema implements Schema
             $keys = self::KEYS[$parent] ?? null;
             return $keys === null ? null : sprintf('Allowed keys in %s: %s.', self::where(array_slice($path, 0, -1)), implode(', ', $keys));
         }
+        if ($message->code === Message::MissingItem && self::rateLimitKey(self::key($path)) !== self::key($path)) {
+            return 'A rate limit needs limit and interval, for example {limit: 60, interval: 1 minute}.';
+        }
         if ($message->code === Message::MissingItem) {
             return 'Every endpoint needs method, version, package and handler, for example - ' . self::ENDPOINT . '.';
         }
 
-        $key = self::key($path);
+        $key = self::rateLimitKey(self::key($path));
         if (!empty($message->variables['isKey'])) {
             return self::VALUES[self::key(array_slice($path, 0, -1))] ?? null;
         }

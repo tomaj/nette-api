@@ -16,7 +16,7 @@ public function addApi(
     EndpointInterface $endpointIdentifier,
     ApiHandlerInterface|string $handler,
     ApiAuthorizationInterface $apiAuthorization,
-    ?RateLimitInterface $rateLimit = null
+    RateLimiterInterface|RateLimitInterface|null $rateLimit = null
 ): self
 ```
 

@@ -7,7 +7,7 @@ description: 'Runnable Nette API example: bearer token, X-API-Key header, HTTP B
 
 Four endpoints with the same handler, each protected differently.
 
-<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'app/RemoteAddrIpDetector.php', 'app/FileRateLimit.php', 'e2e.sh']" />
+<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'app/RemoteAddrIpDetector.php', 'e2e.sh']" />
 
 <Diagram name="examples-auth-1" alt="Four endpoints: bearer, api-key and basic check credentials and answer 401 when wrong, limited answers 429 after three requests" />
 
@@ -16,7 +16,7 @@ Four endpoints with the same handler, each protected differently.
 | `/api/v1/bearer` | `BearerTokenAuthorization` | `-H 'Authorization: Bearer secret-token'` |
 | `/api/v1/api-key` | `HeaderApiKeyAuthentication` | `-H 'X-API-Key: secret-token'` |
 | `/api/v1/basic` | `BasicCredentialsAuthorization` from the example | `-u admin:change-me` |
-| `/api/v1/limited` | `NoAuthorization` and `FileRateLimit` | four calls in a minute |
+| `/api/v1/limited` | `NoAuthorization` and a `FixedWindowLimiter` with `NetteCacheStorage` | four calls in a minute |
 
 ## The services
 
@@ -35,10 +35,6 @@ The bundled `IpDetector` trusts client headers. This one reads only `REMOTE_ADDR
 <<< @/../examples/auth/app/BasicCredentialsAuthorization.php
 
 In 3.x the bundled `BasicAuthentication` does not work with `nette/http` 3.2 and newer (4.0 fixes it); this class reads the `Authorization` header and compares with `hash_equals()`.
-
-## Rate limit
-
-<<< @/../examples/auth/app/FileRateLimit.php
 
 ## The test
 

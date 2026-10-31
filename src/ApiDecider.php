@@ -12,6 +12,7 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
+use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class ApiDecider
@@ -69,8 +70,10 @@ class ApiDecider
 
     /**
      * Register new api handler
+     *
+     * @param RateLimiterInterface|RateLimitInterface|null $rateLimit a RateLimitInterface (deprecated) still works through LegacyRateLimitAdapter
      */
-    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, ?RateLimitInterface $rateLimit = null): self
+    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, RateLimiterInterface|RateLimitInterface|null $rateLimit = null): self
     {
         $this->apis[] = new ApiHolder($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;

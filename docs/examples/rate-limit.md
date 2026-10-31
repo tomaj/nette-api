@@ -1,38 +1,36 @@
 ---
 title: 'Example: rate limit'
-description: 'Runnable Nette API example with your own RateLimitInterface: three requests per hour per API key, X-RateLimit headers, Retry-After and a custom 429 body.'
+description: 'Runnable Nette API example with the built-in rate limits: an app-wide default per IP, a per-key quota after authorization, an inline #[RateLimit] on a handler and an endpoint without a limit.'
 ---
 
 # Example: rate limit
 
-`GET /api/v1/quote` allows three requests per hour per API key. The fourth answers `429` with `Retry-After`.
+Every endpoint allows 100 requests per minute per IP. `GET /api/v1/quote` also allows three requests per hour per API key, `GET /api/v1/ping` two per minute from its attribute, and `GET /api/v1/status` has no limit.
 
-<ProjectSource name="rate-limit" :files="['config/common.neon', 'app/FileRateLimit.php', 'app/Api/QuoteHandler.php', 'e2e.sh']" />
-
-<Diagram name="examples-rate-limit-1" alt="FileRateLimit counts requests per API key in a file; while requests remain the presenter adds X-RateLimit headers and continues to authorization; at zero it answers 429 with Retry-After" />
+<ProjectSource name="rate-limit" :files="['config/common.neon', 'app/Api/QuoteHandler.php', 'app/Api/Discovered/PingHandler.php', 'e2e.sh']" />
 
 | Request | Response |
 | --- | --- |
-| 1st to 3rd with `X-Api-Key: key-a` | `200`, `X-RateLimit-Remaining` 3, 2, 1 |
-| 4th with `key-a` | `429 Slow down`, `X-RateLimit-Remaining: 0` and `Retry-After` |
-| 1st with `key-b` | `200`, its own counter, `Remaining: 3` |
-| a wrong key | rate limit headers, then `401` |
+| 1st to 3rd `/quote` with `X-Api-Key: key-a` | `200`, `RateLimit: "perKey";r=2`, 1, 0 |
+| 4th `/quote` with `key-a` | `429` with `Retry-After` |
+| 1st `/quote` with `key-b` | `200`, its own quota, `r=2` |
+| `/quote` with a wrong key | `401`, counted by `perIp` only |
+| 3rd `/ping` | `429`, `Retry-After: 30` |
+| any `/status` | `200`, no rate limit headers |
 
-## The rate limit
+## The configuration
 
-`check()` returns a `RateLimitResponse(limit, remaining, retryAfter, errorResponse)`. The presenter answers `429` when `remaining` is `0`.
-
-<<< @/../examples/rate-limit/app/FileRateLimit.php
-
-## The services
-
-The rate limit is the fourth argument of `addApi()`.
+`rateLimits` defines the named policies, `defaults.rateLimit` applies `perIp` to every endpoint, `quote` adds `perKey` and `status` turns the limit off.
 
 <<< @/../examples/rate-limit/config/common.neon{yaml}
 
-## The handler
+## The handlers
 
 <<< @/../examples/rate-limit/app/Api/QuoteHandler.php
+
+`#[RateLimit]` on a discovered handler replaces the default with an inline limit:
+
+<<< @/../examples/rate-limit/app/Api/Discovered/PingHandler.php
 
 ## The test
 
@@ -42,20 +40,20 @@ The rate limit is the fourth argument of `addApi()`.
 
 ### Why is a wrong key counted?
 
-The rate limit runs before authorization, so a client guessing keys is limited too. See [ApiPresenter pipeline](/guide/presenter).
+`perIp` is keyed by the IP, so it runs before the authorization and a client guessing keys is limited too. `perKey` is keyed by `identity`, so it runs after a successful authorization. See [Rate limiting](/guide/rate-limit#before-and-after-authorization).
 
-### Why a file and flock()?
+### Why does the third ping wait 30 seconds?
 
-So the example has no dependencies. In production use Redis with `INCR` and `EXPIRE`, or your database.
+`tokenBucket` with 2 per minute refills one token every 30 seconds.
 
-### What if I return no error response?
+### Where are the counters?
 
-The presenter sends `429` with `Too many requests. Retry after N seconds.`. See [Rate limiting](/guide/rate-limit).
+In the Nette cache in `temp/cache`. With more servers use `storage: redis`, see [Storages](/guide/rate-limit#storages).
 
 ### Which headers does the client get?
 
-`X-RateLimit-Limit`, `X-RateLimit-Remaining` and, at the limit, `Retry-After`.
+`RateLimit-Policy` and `RateLimit` for every policy that applied, and `Retry-After` with `429`.
 
-### Can I limit by IP?
+### Can I limit by IP behind a proxy?
 
-Yes, the example falls back to the IP when there is no key. Use an IP detector that cannot be spoofed, see [Authorization](/guide/authorization#tokens-and-ip-restrictions).
+Yes, with an IP detector that cannot be spoofed, see [Authorization](/guide/authorization#tokens-and-ip-restrictions).

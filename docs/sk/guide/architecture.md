@@ -18,7 +18,7 @@ Každá API požiadavka ide do jedného presentera, `Tomaj\NetteApi\Presenters\A
 | Endpoint | `EndpointIdentifier` | Metóda, verzia, balík a voliteľná akcia. |
 | Handler | `ApiHandlerInterface`, zvyčajne `BaseHandler` | Deklaruje parametre a výstupy, robí samotnú prácu. |
 | Autorizácia | `ApiAuthorizationInterface` | Rozhodne, či požiadavka smie bežať. |
-| Obmedzenie požiadaviek | `RateLimitInterface` | Voliteľné, pre každý endpoint. |
+| Obmedzenie požiadaviek | `RateLimiterInterface` | Voliteľné, pre každý endpoint. |
 | Chyby | `ErrorHandlerInterface`, `DefaultErrorHandler` | Zmení zlyhania na JSON odpovede. |
 | Kontrola výstupov | `ConfiguratorInterface` | Rozhodne, či sa výstupy validujú a zobrazujú detaily chýb. |
 | Logger | `ApiLoggerInterface` | Voliteľný, hľadá sa v DI kontajneri. |

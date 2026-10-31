@@ -69,7 +69,7 @@ final class UsersListHandler extends BaseHandler
 
 ## Authorization and rate limit
 
-`#[Authorization]` and `#[RateLimit]` apply to all endpoints of the class. The value is the same as in neon: a name from `api: authorizations:` / `api: rateLimits:`, `@service`, a class name, or `false` for none.
+`#[Authorization]` and `#[RateLimit]` apply to all endpoints of the class. The value is the same as in neon: a name from `api: authorizations:` / `api: rateLimits:`, `@service`, a class name, or `false` for none. `#[RateLimit]` also takes a list of names, `#[RateLimit(['perIp', 'perUser'])]`, or an inline limit, `#[RateLimit(limit: 5, interval: '1 minute')]` with optional `algorithm`, `key` and `name`; see [Rate limiting](/guide/rate-limit).
 
 ```php
 use Tomaj\NetteApi\Attribute\Authorization;
@@ -87,7 +87,7 @@ api:
 	authorizations:
 		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
 	rateLimits:
-		strict: Tomaj\NetteApi\RateLimit\NoRateLimit
+		strict: {algorithm: fixedWindow, limit: 5, interval: 1 minute}
 	defaults:
 		authorization: token
 ```
@@ -190,7 +190,7 @@ api:
 | `Get`, `Post`, `Put`, `Patch`, `Delete` | `version`, `package`, `action = null` |
 | `Endpoint` | `method`, `version`, `package`, `action = null` |
 | `Authorization` | `authorization`: name, `@service`, class name, or `false` |
-| `RateLimit` | `rateLimit`: name, `@service`, class name, or `false` |
+| `RateLimit` | `rateLimit`: name, list of names, `@service`, class name, or `false`; or `limit`, `interval`, `algorithm = 'slidingWindow'`, `key = 'ip'`, `name = null` |
 
 ## Design decisions
 

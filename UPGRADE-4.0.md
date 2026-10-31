@@ -142,6 +142,30 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 }
 ```
 
+## Rate limits
+
+4.0 has built-in rate limits (#195), see the [documentation](https://tomaj.github.io/nette-api/guide/rate-limit).
+
+**Headers:** `X-RateLimit-Limit` and `X-RateLimit-Remaining` are replaced by `RateLimit-Policy: "name";q=60;w=60` and `RateLimit: "name";r=59;t=60` (the IETF draft). Update clients that read the old headers. `Retry-After` on `429` is unchanged.
+
+**RateLimitInterface is deprecated:** an own `RateLimitInterface` still works; `ApiDecider::addApi()`, `Api` and `ApiHolder` wrap it in `LegacyRateLimitAdapter`, which triggers a silenced `E_USER_DEPRECATED` (Tracy and error handlers still see it). It is removed in 5.0. Replace it with a built-in limiter:
+
+```yaml
+api:
+	rateLimits:
+		perIp: {algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}
+	defaults:
+		rateLimit: perIp
+```
+
+or implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array`, which returns a `RateLimitResult` per policy.
+
+**Return types:** `Api::getRateLimit()` and `ApiHolder::getRateLimit()` return `RateLimiterInterface` instead of `RateLimitInterface`. Code that called `->check()` on it must call `->consume()`.
+
+**Redis keys:** `RedisStorage` stores a counter under `prefix` + `{policy:key}` (default prefix `nette-api:rate-limit:`), with the braces as a Redis Cluster hash tag.
+
+**Dependencies:** `nette/caching` ^3.2 and `psr/clock` ^1.0 are required. For Redis install `ext-redis` or `predis/predis`.
+
 ## Exceptions from authorization are not sent to the client
 
 `DefaultErrorHandler::handleAuthorizationException()` answered with the exception message, which could reveal database hosts or internal paths. It now answers `{"status":"error","message":"Internal server error"}`, logs the exception to Tracy and adds the message as `detail` only when the configurator's `showErrorDetail()` is true, the same as `handle()`. Clients that parsed the message must read the log instead.

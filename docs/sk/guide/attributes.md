@@ -69,7 +69,7 @@ final class UsersListHandler extends BaseHandler
 
 ## Autorizácia a obmedzenie požiadaviek
 
-`#[Authorization]` a `#[RateLimit]` platia pre všetky endpointy triedy. Hodnota je rovnaká ako v neone: meno z `api: authorizations:` / `api: rateLimits:`, `@service`, názov triedy alebo `false` pre žiadnu.
+`#[Authorization]` a `#[RateLimit]` platia pre všetky endpointy triedy. Hodnota je rovnaká ako v neone: meno z `api: authorizations:` / `api: rateLimits:`, `@service`, názov triedy alebo `false` pre žiadnu. `#[RateLimit]` berie aj zoznam názvov, `#[RateLimit(['perIp', 'perUser'])]`, alebo vlastný limit, `#[RateLimit(limit: 5, interval: '1 minute')]` s voliteľnými `algorithm`, `key` a `name`; pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit).
 
 ```php
 use Tomaj\NetteApi\Attribute\Authorization;
@@ -87,7 +87,7 @@ api:
 	authorizations:
 		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
 	rateLimits:
-		strict: Tomaj\NetteApi\RateLimit\NoRateLimit
+		strict: {algorithm: fixedWindow, limit: 5, interval: 1 minute}
 	defaults:
 		authorization: token
 ```
@@ -190,7 +190,7 @@ api:
 | `Get`, `Post`, `Put`, `Patch`, `Delete` | `version`, `package`, `action = null` |
 | `Endpoint` | `method`, `version`, `package`, `action = null` |
 | `Authorization` | `authorization`: meno, `@service`, názov triedy alebo `false` |
-| `RateLimit` | `rateLimit`: meno, `@service`, názov triedy alebo `false` |
+| `RateLimit` | `rateLimit`: meno, zoznam mien, `@service`, názov triedy alebo `false`; alebo `limit`, `interval`, `algorithm = 'slidingWindow'`, `key = 'ip'`, `name = null` |
 
 ## Rozhodnutia v návrhu
 

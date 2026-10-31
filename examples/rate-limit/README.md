@@ -1,6 +1,6 @@
 # Rate limit
 
-A `RateLimitInterface` that allows three requests per hour per API key, with a custom 429 body.
+An app-wide rate limit with overrides per endpoint: `perIp` for every endpoint, `perIp` plus `perKey` (three requests per hour per API key) on `/quote`, an inline `#[RateLimit]` on `/ping` and no limit on `/status`.
 
 Documentation: [tomaj.github.io/nette-api/examples/rate-limit](https://tomaj.github.io/nette-api/examples/rate-limit)
 

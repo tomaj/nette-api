@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 [[ -f vendor/autoload.php ]] || { echo "fail: vendor/ is missing, run composer install first" >&2; exit 1; }
 source ../ci/lib.sh
-rm -rf temp/cache temp/rate-* log
+rm -rf temp/cache log
 serve 8097
 P='https://api.example.com/problems/'
 

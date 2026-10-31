@@ -14,6 +14,7 @@ use Throwable;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Authorization\AuthorizationIdentityInterface;
 use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
@@ -32,7 +33,12 @@ use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
-use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\RateLimit\NoRateLimit;
+use Tomaj\NetteApi\RateLimit\RateLimitContext;
+use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
+use Tomaj\NetteApi\RateLimit\RateLimitResponse;
+use Tomaj\NetteApi\RateLimit\RateLimitResult;
+use Tomaj\NetteApi\RateLimit\RateLimitStage;
 
 final class ApiPresenter implements IPresenter
 {
@@ -291,8 +297,12 @@ final class ApiPresenter implements IPresenter
 
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
+        $ipDetector = $rateLimit instanceof NoRateLimit ? null : $this->context->getByType(IpDetectorInterface::class, false);
+        $ip = $ipDetector?->getRequestIp();
+        // only IpKey needs the detector (it throws without one), a custom limiter without it keeps working
+        $hasIpDetector = $ipDetector !== null;
 
-        $rateLimitResponse = $this->checkRateLimit($rateLimit);
+        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::BeforeAuthorization, $ip, hasIpDetector: $hasIpDetector));
         if ($rateLimitResponse !== null) {
             return $rateLimitResponse;
         }
@@ -303,6 +313,12 @@ final class ApiPresenter implements IPresenter
         $authResponse = $this->checkAuth($authorization, $params);
         if ($authResponse !== null) {
             return $authResponse;
+        }
+
+        $identity = $authorization instanceof AuthorizationIdentityInterface ? $authorization->getIdentity() : null;
+        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::AfterAuthorization, $ip, $identity, $hasIpDetector));
+        if ($rateLimitResponse !== null) {
+            return $rateLimitResponse;
         }
 
         if ($paramsProcessor->isError()) {
@@ -384,27 +400,36 @@ final class ApiPresenter implements IPresenter
         return null;
     }
 
-    private function checkRateLimit(RateLimitInterface $rateLimit): ?IResponse
+    /**
+     * Sends RateLimit-Policy and RateLimit (draft-ietf-httpapi-ratelimit-headers) for every policy that applied,
+     * and answers 429 with Retry-After when any of them did not accept the request
+     */
+    private function checkRateLimit(RateLimiterInterface $rateLimit, RateLimitContext $context): ?IResponse
     {
-        $rateLimitResponse = $rateLimit->check();
-        if (!$rateLimitResponse) {
+        $rejected = null;
+        foreach ($rateLimit->consume($context) as $result) {
+            // a structured field string: an own limiter may name its policy with any characters
+            $policy = '"' . addcslashes((string) preg_replace('~[^\x20-\x7E]~', '', $result->policy), '"\\') . '"';
+            // the numbers of the headers are non-negative, an own limiter may return less than 0
+            $this->response->addHeader('RateLimit-Policy', $policy . ';q=' . max(0, $result->limit) . ($result->window > 0 ? ';w=' . $result->window : ''));
+            $this->response->addHeader('RateLimit', $policy . ';r=' . max(0, $result->remaining) . ';t=' . max(0, $result->resetAfter));
+            if (!$result->accepted && ($rejected === null || $result->retryAfter > $rejected->retryAfter)) {
+                $rejected = $result;
+            }
+        }
+
+        if (!$rejected instanceof RateLimitResult) {
             return null;
         }
 
-        $limit = $rateLimitResponse->getLimit();
-        $remaining = $rateLimitResponse->getRemaining();
-        $retryAfter = $rateLimitResponse->getRetryAfter();
-
-        $this->response->addHeader('X-RateLimit-Limit', (string)$limit);
-        $this->response->addHeader('X-RateLimit-Remaining', (string)$remaining);
-
-        if ($remaining === 0) {
-            $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
-            $this->response->addHeader('Retry-After', (string)$retryAfter);
-            return $rateLimitResponse->getErrorResponse() ?? $this->errorHandler->handleRateLimit($rateLimitResponse);
+        $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
+        $retryAfter = $rejected->retryAfter === null ? null : max(0, $rejected->retryAfter);
+        if ($retryAfter !== null) {
+            $this->response->addHeader('Retry-After', (string) $retryAfter);
         }
 
-        return null;
+        return $rejected->errorResponse
+            ?? $this->errorHandler->handleRateLimit(new RateLimitResponse(max(0, $rejected->limit), max(0, $rejected->remaining), $retryAfter));
     }
 
     private function logRequest(Request $request, ApiLoggerInterface $logger, int $code, float $elapsed): void

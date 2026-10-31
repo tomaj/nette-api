@@ -24,8 +24,9 @@ services:
 	bearer: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@tokens)
 	apiKey: Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-API-Key', @tokens)
 	basic: App\BasicCredentialsAuthorization(%apiUsers%)
+	# 3 requests per minute per IP, counted in the Nette cache (%tempDir%/cache)
 	rateLimit:
-		factory: App\FileRateLimit(directory: %tempDir%)
+		factory: Tomaj\NetteApi\RateLimit\FixedWindowLimiter(perIp, 3, 60, Tomaj\NetteApi\RateLimit\Key\IpKey(), Tomaj\NetteApi\RateLimit\Storage\NetteCacheStorage())
 		# otherwise Nette DI passes it as the 4th argument of every addApi() call below
 		autowired: false
 

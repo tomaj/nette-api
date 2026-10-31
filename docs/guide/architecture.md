@@ -18,7 +18,7 @@ Every API request goes to one presenter, `Tomaj\NetteApi\Presenters\ApiPresenter
 | Endpoint | `EndpointIdentifier` | Method, version, package and optional action. |
 | Handler | `ApiHandlerInterface`, usually `BaseHandler` | Declares params and outputs, does the work. |
 | Authorization | `ApiAuthorizationInterface` | Says whether the request may run. |
-| Rate limit | `RateLimitInterface` | Optional, per endpoint. |
+| Rate limit | `RateLimiterInterface` | Optional, per endpoint. |
 | Errors | `ErrorHandlerInterface`, `DefaultErrorHandler` | Turns failures into JSON responses. |
 | Output checks | `ConfiguratorInterface` | Decides whether outputs are validated and error details shown. |
 | Logger | `ApiLoggerInterface` | Optional, found in the DI container. |
