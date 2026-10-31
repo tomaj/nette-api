@@ -46,14 +46,15 @@ abstract class StorageTestCase extends TestCase
     public function testSlidingWindow(): void
     {
         $storage = $this->storage();
-        foreach ([3, 2, 1, 0] as $remaining) {
+        foreach ([3, 2, 1] as $remaining) {
             $this->assertResult(true, $remaining, 60, null, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 960.0));
         }
-        $this->assertResult(false, 0, 60, 75, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 960.0), 'the current window is full, it must slide out to 3 of 4');
-        $this->assertResult(false, 0, 46, 1, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1034.0), 'the previous window still weighs 3.07');
-        $this->assertResult(true, 0, 45, null, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1035.0));
-        $this->assertResult(false, 0, 45, 15, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1035.0), 'the previous window counts too much');
-        $this->assertResult(true, 0, 30, null, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1050.0), 'half of the previous window slid out');
+        $this->assertResult(true, 0, 75, null, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 960.0), 'nothing is left, t is the wait for the next unit, not the next window');
+        $this->assertResult(false, 0, 75, 75, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 960.0), 'the current window is full, it must slide out to 3 of 4');
+        $this->assertResult(false, 0, 1, 1, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1034.0), 'the previous window still weighs 3.07');
+        $this->assertResult(true, 0, 15, null, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1035.0));
+        $this->assertResult(false, 0, 15, 15, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1035.0), 'the previous window counts too much');
+        $this->assertResult(true, 0, 15, null, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1050.0), 'half of the previous window slid out');
         $this->assertResult(true, 3, 60, null, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 1, 1140.0), 'old windows do not count');
         $this->assertResult(false, 3, 60, 120, $storage->consume(new SlidingWindow(), 'sliding', 4, 60, 4, 1140.0), 'the cost needs the whole window to slide out');
     }
@@ -80,6 +81,19 @@ abstract class StorageTestCase extends TestCase
         $this->assertResult(true, 0, 10, null, $storage->consume(new TokenBucket(), 'skew', 2, 10, 1, 105.0));
     }
 
+    public function testWaitingTheResetTimeOfAFullSlidingWindowPasses(): void
+    {
+        $storage = $this->storage();
+        $now = 1230.0; // 30 seconds into a window
+        for ($i = 0; $i < 9; $i++) {
+            $storage->consume(new SlidingWindow(), 'full', 10, 60, 1, $now);
+        }
+        $last = $storage->consume(new SlidingWindow(), 'full', 10, 60, 1, $now);
+        $this->assertResult(true, 0, 36, null, $last);
+        $this->assertResult(false, 0, 36, 36, $storage->consume(new SlidingWindow(), 'full', 10, 60, 1, $now));
+        $this->assertTrue($storage->consume(new SlidingWindow(), 'full', 10, 60, 1, $now + $last->resetAfter)->accepted, 'a client waiting t is not rejected again');
+    }
+
     public function testWindowsKeepTheNewerWindowOfServersWithSkewedClocks(): void
     {
         $storage = $this->storage();
@@ -88,8 +102,8 @@ abstract class StorageTestCase extends TestCase
         $this->assertResult(false, 0, 62, 62, $storage->consume(new FixedWindow(), 'skew', 3, 60, 1, 1018.0), 'so it does not add the limit of the older window');
 
         $this->assertResult(true, 1, 60, null, $storage->consume(new SlidingWindow(), 'skew2', 4, 60, 3, 1020.0));
-        $this->assertResult(true, 0, 62, null, $storage->consume(new SlidingWindow(), 'skew2', 4, 60, 1, 1018.0), 'a server 2 seconds behind counts in the newer window');
-        $this->assertResult(false, 0, 62, 77, $storage->consume(new SlidingWindow(), 'skew2', 4, 60, 1, 1018.0), 'and measures Retry-After by its own clock');
+        $this->assertResult(true, 0, 77, null, $storage->consume(new SlidingWindow(), 'skew2', 4, 60, 1, 1018.0), 'a server 2 seconds behind counts in the newer window');
+        $this->assertResult(false, 0, 77, 77, $storage->consume(new SlidingWindow(), 'skew2', 4, 60, 1, 1018.0), 'and measures Retry-After by its own clock');
     }
 
     public function testCustomAlgorithm(): void

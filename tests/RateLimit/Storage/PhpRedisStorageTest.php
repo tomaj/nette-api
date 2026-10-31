@@ -14,8 +14,14 @@ use Tomaj\NetteApi\RateLimit\Storage\RedisStorage;
 #[RequiresPhpExtension('redis')]
 final class PhpRedisStorageTest extends RedisTestCase
 {
+    /**
+     * Declared as object, a return type \Redis would be a fatal error while loading the class without the extension,
+     * before RequiresPhpExtension can skip the test
+     *
+     * @return \Redis
+     */
     #[\Override]
-    protected function client(): \Redis
+    protected function client(): object
     {
         try {
             return self::phpRedis();

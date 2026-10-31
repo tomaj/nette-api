@@ -9,11 +9,11 @@ use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\RateLimit\RateLimitContext;
 
 /**
- * One quota per client IP from IpDetectorInterface, checked before the authorization (short name ip).
+ * One quota per client IP, checked before the authorization (short name ip).
  *
- * The key is only as reliable as the IP detector: the default IpDetector trusts the Client-IP and X-Forwarded-For
- * headers, so a client that can set them gets a new quota with every value. Behind no proxy, or with an untrusted one,
- * configure api.ipDetector to read only REMOTE_ADDR or the address set by your proxy.
+ * With the default IpDetector the presenter gives it the address from Nette\Http\IRequest::getRemoteAddress(), because
+ * IpDetector trusts headers that any client can send. Behind a reverse proxy list it in http.proxy of the Nette configuration,
+ * otherwise all clients share the quota of the proxy. An own IP detector from api.ipDetector is used as it is.
  * Without any IpDetectorInterface service (only possible without the DI extension) the key throws a LogicException.
  */
 final readonly class IpKey implements RateLimitKeyInterface

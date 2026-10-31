@@ -282,7 +282,7 @@ api:
 	ipDetector: App\Api\ProxyIpDetector
 ```
 
-The default `IpDetector` reads `REMOTE_ADDR`.
+The default `IpDetector` reads the `Client-IP` and `X-Forwarded-For` headers, which any client can send, and then `REMOTE_ADDR`. The [rate limits](/guide/rate-limit#which-ip-is-counted) do not use it, they take the address from Nette.
 
 ## Configuration reference
 

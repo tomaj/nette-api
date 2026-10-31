@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi\RateLimit;
 
 use Psr\Clock\ClockInterface;
+use Tomaj\NetteApi\Authorization\AuthorizationIdentityInterface;
 use Tomaj\NetteApi\RateLimit\Algorithm\RateLimitAlgorithmInterface;
 use Tomaj\NetteApi\RateLimit\Key\RateLimitKeyInterface;
-use Tomaj\NetteApi\RateLimit\Storage\RateLimitStorageException;
 use Tomaj\NetteApi\RateLimit\Storage\RateLimitStorageInterface;
 use Tracy\Debugger;
 use Tracy\ILogger;
@@ -15,8 +15,9 @@ use Tracy\ILogger;
 /**
  * The common part of the built-in limiters: the key decides the stage, the storage keeps the state and the algorithm decides.
  *
- * When the storage is not available, the request passes (fail-open) and a warning goes to the Tracy log
- * (or to the given ILogger), so a Redis outage does not take the API down.
+ * When the storage is not available (any exception except a \LogicException, which is a bug or a wrong configuration),
+ * the request passes (fail-open) and a warning goes to the Tracy log (or to the given ILogger), so a Redis outage
+ * does not take the API down.
  */
 abstract class StorageRateLimiter implements RateLimiterInterface
 {
@@ -94,6 +95,14 @@ abstract class StorageRateLimiter implements RateLimiterInterface
         }
         $key = $this->key->key($context);
         if ($key === null) {
+            if ($this->key->needsIdentity() && $context->identity === null && $context->api->getAuthorization() instanceof AuthorizationIdentityInterface) {
+                // for example a subclass that overrides authorized() without the parent, the limit would never apply
+                $this->warn(sprintf(
+                    "Rate limit '%s' is skipped, the authorization %s returned no identity after a successful authorized(). When it overrides authorized(), override getIdentity() too.",
+                    $this->policy,
+                    $context->api->getAuthorization()::class,
+                ));
+            }
             return [];
         }
 
@@ -104,14 +113,10 @@ abstract class StorageRateLimiter implements RateLimiterInterface
         $now = (float) $this->clock->now()->format('U.u');
         try {
             $result = $this->storage->consume($this->algorithm(), $this->policy . ':' . $key, $this->limit, $this->interval, $cost, $now);
-        } catch (RateLimitStorageException $e) {
-            $message = sprintf("Rate limit '%s' is skipped, the request passed without a limit: %s", $this->policy, $e->getMessage());
-            try {
-                $this->logger !== null ? $this->logger->log($message, ILogger::WARNING) : Debugger::log($message, ILogger::WARNING);
-            } catch (\Throwable $logError) {
-                // a logger without a log directory must not turn the fail-open into a 500
-                error_log($message . ' (the logger failed: ' . $logError->getMessage() . ')');
-            }
+        } catch (\LogicException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            $this->warn(sprintf("Rate limit '%s' is skipped, the request passed without a limit: %s", $this->policy, $e->getMessage()));
             return [];
         }
 
@@ -139,4 +144,14 @@ abstract class StorageRateLimiter implements RateLimiterInterface
     }
 
     abstract protected function algorithm(): RateLimitAlgorithmInterface;
+
+    private function warn(string $message): void
+    {
+        try {
+            $this->logger !== null ? $this->logger->log($message, ILogger::WARNING) : Debugger::log($message, ILogger::WARNING);
+        } catch (\Throwable $logError) {
+            // a logger without a log directory must not turn the fail-open into a 500
+            error_log($message . ' (the logger failed: ' . $logError->getMessage() . ')');
+        }
+    }
 }

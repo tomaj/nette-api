@@ -46,7 +46,7 @@ final readonly class LegacyRateLimitAdapter implements RateLimiterInterface
             $response->getLimit(),
             $response->getRemaining(),
             0,
-            $response->getRetryAfter() ?? 0,
+            $response->getRetryAfter(),
             $response->getRetryAfter(),
             self::POLICY,
             $response->getErrorResponse(),

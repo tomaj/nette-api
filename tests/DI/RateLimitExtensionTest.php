@@ -311,7 +311,7 @@ final class RateLimitExtensionTest extends TestCase
             $this->assertSame('The rate limit storage cannot be created: Connection refused', $e->getMessage());
         }
         $this->assertSame(1, DownRedisClient::$connections);
-        $this->assertFalse($container->isCreated('api.rateLimit.storageFactory'), 'the next request tries again');
+        $this->assertFalse($container->isCreated('api.rateLimiting.storageFactory'), 'the next request tries again');
     }
 
     public function testOwnStorageAndClock(): void
@@ -349,7 +349,7 @@ final class RateLimitExtensionTest extends TestCase
      */
     public static function attributeErrors(): iterable
     {
-        yield 'name and limit' => ['RateLimitBoth', "Invalid endpoint attribute on Tomaj\\NetteApi\\Test\\DI\\Discovery\\RateLimitBoth\\Handler (#[RateLimit] has both a rate limit name and an inline limit."];
+        yield 'name and limit' => ['RateLimitBoth', "Invalid endpoint attribute on Tomaj\\NetteApi\\Test\\DI\\Discovery\\RateLimitBoth\\Handler (#[RateLimit] has both a rate limit name and options of an inline limit (limit, interval, algorithm, key, name), which would be ignored."];
         yield 'not a name in the list' => ['RateLimitBadList', "Item 0 of the rate limit list in the rateLimit of endpoint GET /v1/users (#[Get] on Tomaj\\NetteApi\\Test\\DI\\Discovery\\RateLimitBadList\\Handler) is int, but it must be a name from api.rateLimits, @service or a class, for example rateLimit: [perIp, perUser] or #[RateLimit(['perIp', 'perUser'])]."];
     }
 
@@ -404,7 +404,7 @@ final class RateLimitExtensionTest extends TestCase
                 endpoints:
                     - {method: GET, version: 1, package: users, handler: {handler}, rateLimit: own}
             NEON));
-        $this->assertFalse($container->hasService('api.rateLimit.storage'), 'no cache needed for own limiters');
+        $this->assertFalse($container->hasService('api.rateLimiting.storage'), 'no cache needed for own limiters');
     }
 
     public function testCustomAlgorithm(): void
@@ -486,7 +486,15 @@ final class RateLimitExtensionTest extends TestCase
             new RateLimit('perIp', limit: 5);
             $this->fail('both a name and a limit');
         } catch (\InvalidArgumentException $e) {
-            $this->assertSame("#[RateLimit] has both a rate limit name and an inline limit. Use either #[RateLimit('perIp')] or #[RateLimit(limit: 60, interval: '1 minute')].", $e->getMessage());
+            $this->assertSame("#[RateLimit] has both a rate limit name and options of an inline limit (limit, interval, algorithm, key, name), which would be ignored. Use either #[RateLimit('perIp')] or #[RateLimit(limit: 60, interval: '1 minute')].", $e->getMessage());
+        }
+        foreach ([['interval' => '1 minute'], ['algorithm' => 'tokenBucket'], ['key' => 'identity'], ['name' => 'other']] as $option) {
+            try {
+                new RateLimit('perIp', ...$option);
+                $this->fail('the option would be ignored: ' . key($option));
+            } catch (\InvalidArgumentException $e) {
+                $this->assertStringContainsString('which would be ignored', $e->getMessage());
+            }
         }
         foreach ([[], ['limit' => 5]] as $arguments) {
             try {
@@ -611,6 +619,36 @@ final class RateLimitExtensionTest extends TestCase
         ];
     }
 
+    public function testPolicyNamesDoNotMeetTheStorageServices(): void
+    {
+        $container = ContainerFactory::create(self::neon(<<<'NEON'
+            api:
+                rateLimiting: {storage: memory}
+                rateLimits:
+                    storage: {limit: 1, interval: 60}
+                    storageFactory: {limit: 2, interval: 60}
+                endpoints:
+                    - {method: GET, version: 1, package: users, handler: {handler}, rateLimit: storage}
+                    - {method: GET, version: 1, package: orders, handler: {handler}, rateLimit: storageFactory}
+            NEON));
+        [$first, $second] = $this->rateLimits($container);
+        $this->assertTrue($first->consume(ContextFactory::create())[0]->accepted);
+        $this->assertFalse($first->consume(ContextFactory::create())[0]->accepted);
+        $this->assertSame(1, $second->consume(ContextFactory::create())[0]->remaining);
+    }
+
+    public function testKeyClassThatCannotBeCreatedFailsTheCompilation(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('the key class Tomaj\NetteApi\Test\RateLimit\Key\KeyWithArgument cannot be created without constructor arguments');
+        ContainerFactory::compile(self::neon(<<<'NEON'
+            api:
+                rateLimiting: {storage: memory}
+                rateLimits:
+                    perTenant: {limit: 1, interval: 60, key: Tomaj\NetteApi\Test\RateLimit\Key\KeyWithArgument}
+            NEON));
+    }
+
     public function testRedisNeedsALuaScriptAlsoWithServices(): void
     {
         $neon = <<<'NEON'
@@ -620,11 +658,22 @@ final class RateLimitExtensionTest extends TestCase
                 onlyInPhp: Tomaj\NetteApi\Test\RateLimit\Algorithm\OnlyInPhp
                 lua: Tomaj\NetteApi\RateLimit\Algorithm\FixedWindow
                 memoryStorage: Tomaj\NetteApi\RateLimit\Storage\InMemoryStorage
+                redisStorageFactory: {factory: Tomaj\NetteApi\RateLimit\Storage\RedisStorage(@fakeRedis)}
+                onlyInPhpFactory: {factory: Tomaj\NetteApi\Test\RateLimit\Algorithm\OnlyInPhp}
             api:
                 rateLimiting: {storage: %s}
                 endpoints:
                     - {method: GET, version: 1, package: users, handler: {handler}, rateLimit: {algorithm: %s, limit: 1, interval: 1}}
             NEON;
+        ContainerFactory::compile(self::neon(sprintf($neon, '@memoryStorage', '@onlyInPhpFactory')));
+        foreach ([['@redisStorageFactory', '@onlyInPhp'], ['@redisStorage', '@onlyInPhpFactory'], ['@redisStorageFactory', '@onlyInPhpFactory']] as [$storage, $algorithm]) {
+            try {
+                ContainerFactory::compile(self::neon(sprintf($neon, $storage, $algorithm)));
+                $this->fail("$storage with $algorithm should fail the compilation");
+            } catch (InvalidConfigurationException $e) {
+                $this->assertStringContainsString('cannot run in Redis', $e->getMessage());
+            }
+        }
         foreach ([['@redisStorage', '@onlyInPhp'], ['memory', '@onlyInPhp'], ['@memoryStorage', '@onlyInPhp'], ['@memoryStorage', 'Tomaj\NetteApi\Test\RateLimit\Algorithm\OnlyInPhp()'], ['@redisStorage', '@lua'], ['@redisStorage', 'Tomaj\NetteApi\RateLimit\Algorithm\TokenBucket()']] as [$storage, $algorithm]) {
             try {
                 ContainerFactory::compile(self::neon(sprintf($neon, $storage, $algorithm)));

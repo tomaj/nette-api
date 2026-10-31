@@ -296,10 +296,10 @@ final class NetteCacheStorageTest extends StorageTestCase
         $this->assertSame('accepted 0', self::defaultLocks($temp), 'the counter is updated without the lock');
 
         exec('rm -rf ' . escapeshellarg($directory));
-        symlink(sys_get_temp_dir(), $directory); // a directory of root, other users could replace the files in it
-        $this->assertNotSame(posix_geteuid(), fileowner(sys_get_temp_dir()));
+        symlink('/tmp', $directory); // a directory of root, other users could replace the files in it (sys_get_temp_dir() is ours on macOS)
+        $this->assertNotSame(posix_geteuid(), fileowner('/tmp/.'));
         $this->assertSame('accepted 0', self::defaultLocks($temp));
-        @unlink(sys_get_temp_dir() . '/' . (crc32('k') % 64) . '.lock');
+        @unlink('/tmp/' . (crc32('k') % 64) . '.lock');
         exec('rm -rf ' . escapeshellarg($temp));
     }
 

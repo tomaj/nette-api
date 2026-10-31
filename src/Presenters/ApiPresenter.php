@@ -9,6 +9,7 @@ use Nette\Application\IResponse;
 use Nette\Application\Request;
 use Nette\DI\Attributes\Inject;
 use Nette\DI\Container;
+use Nette\Http\IRequest;
 use Nette\Http\Response;
 use Throwable;
 use Tomaj\NetteApi\Api;
@@ -29,6 +30,7 @@ use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
 use Tomaj\NetteApi\Misc\CorsOriginCallback;
 use Tomaj\NetteApi\Misc\CorsOriginPolicy;
 use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
+use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
@@ -298,7 +300,7 @@ final class ApiPresenter implements IPresenter
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
         $ipDetector = $rateLimit instanceof NoRateLimit ? null : $this->context->getByType(IpDetectorInterface::class, false);
-        $ip = $ipDetector?->getRequestIp();
+        $ip = $ipDetector instanceof IpDetector ? $this->remoteAddress() : $ipDetector?->getRequestIp();
         // only IpKey needs the detector (it throws without one), a custom limiter without it keeps working
         $hasIpDetector = $ipDetector !== null;
 
@@ -401,18 +403,38 @@ final class ApiPresenter implements IPresenter
     }
 
     /**
+     * The IP for the rate limits instead of the default IpDetector, which trusts headers that any client can send,
+     * so every value would get a new quota. Nette trusts the forwarded headers only from the proxies in http.proxy.
+     */
+    private function remoteAddress(): string
+    {
+        $address = $this->context->getByType(IRequest::class, false)?->getRemoteAddress() ?? ($_SERVER['REMOTE_ADDR'] ?? null);
+
+        return is_string($address) ? $address : 'cli';
+    }
+
+    /**
      * Sends RateLimit-Policy and RateLimit (draft-ietf-httpapi-ratelimit-headers) for every policy that applied,
      * and answers 429 with Retry-After when any of them did not accept the request
      */
     private function checkRateLimit(RateLimiterInterface $rateLimit, RateLimitContext $context): ?IResponse
     {
+        try {
+            $results = $rateLimit->consume($context);
+        } catch (Throwable $throwable) {
+            // a wrong configuration or a bug of an own limiter, answered like an exception of a handler
+            $response = $this->errorHandler->handle($throwable, []);
+            $this->response->setCode($response->getCode());
+            return $response;
+        }
+
         $rejected = null;
-        foreach ($rateLimit->consume($context) as $result) {
+        foreach ($results as $result) {
             // a structured field string: an own limiter may name its policy with any characters
             $policy = '"' . addcslashes((string) preg_replace('~[^\x20-\x7E]~', '', $result->policy), '"\\') . '"';
             // the numbers of the headers are non-negative, an own limiter may return less than 0
             $this->response->addHeader('RateLimit-Policy', $policy . ';q=' . max(0, $result->limit) . ($result->window > 0 ? ';w=' . $result->window : ''));
-            $this->response->addHeader('RateLimit', $policy . ';r=' . max(0, $result->remaining) . ';t=' . max(0, $result->resetAfter));
+            $this->response->addHeader('RateLimit', $policy . ';r=' . max(0, $result->remaining) . ($result->resetAfter === null ? '' : ';t=' . max(0, $result->resetAfter)));
             if (!$result->accepted && ($rejected === null || $result->retryAfter > $rejected->retryAfter)) {
                 $rejected = $result;
             }

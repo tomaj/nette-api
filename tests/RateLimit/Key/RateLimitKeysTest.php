@@ -118,6 +118,15 @@ final class RateLimitKeysTest extends TestCase
         $this->assertInstanceOf(EndpointKey::class, RateLimitKeys::fromName(['endpoint']));
         $this->assertInstanceOf(IpKey::class, RateLimitKeys::fromName(IpKey::class));
         $this->assertInstanceOf(OwnKey::class, RateLimitKeys::fromName(OwnKey::class));
+        foreach ([KeyWithArgument::class, RateLimitKeyInterface::class] as $class) {
+            try {
+                RateLimitKeys::fromName($class, 'rateLimits.perTenant.key');
+                $this->fail('it cannot be created');
+            } catch (\InvalidArgumentException $e) {
+                $this->assertStringStartsWith("rateLimits.perTenant.key: the key class $class cannot be created without constructor arguments: ", $e->getMessage());
+                $this->assertInstanceOf(\Error::class, $e->getPrevious());
+            }
+        }
 
         $key = RateLimitKeys::fromName(['identity', 'endpoint', OwnKey::class]);
         $this->assertInstanceOf(CompositeKey::class, $key);

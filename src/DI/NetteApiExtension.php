@@ -106,7 +106,8 @@ final class NetteApiExtension extends CompilerExtension
 
     private const array RATE_LIMIT_STORAGES = ['cache', 'memory', 'redis'];
 
-    private const string RATE_LIMIT_STORAGE = 'rateLimit.storage';
+    /** not under rateLimit., where the policies from api.rateLimits are */
+    private const string RATE_LIMIT_STORAGE = 'rateLimiting.storage';
 
     private const array OUTPUT_CONFIGURATORS = [
         'env' => EnvConfigurator::class,

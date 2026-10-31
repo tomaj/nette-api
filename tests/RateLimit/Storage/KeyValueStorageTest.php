@@ -74,11 +74,11 @@ final class KeyValueStorageTest extends TestCase
     {
         // the current window is full, after 19.3 s it is the previous one and 1/4 of it must slide out: 19.3 + 15
         $storage = self::storage(['k' => [960, 0, 4]]);
-        $this->assertSame([false, 0, 20, 35], self::values($storage->consume(new SlidingWindow(), 'k', 4, 60, 1, 1000.7)));
+        $this->assertSame([false, 0, 35, 35], self::values($storage->consume(new SlidingWindow(), 'k', 4, 60, 1, 1000.7)));
 
         // one over the limit: 19.3 + 60 * 2 / 4
         $storage = self::storage(['k' => [960, 2, 4]]);
-        $this->assertSame([false, 0, 20, 50], self::values($storage->consume(new SlidingWindow(), 'k', 4, 60, 2, 1000.7)));
+        $this->assertSame([false, 0, 35, 50], self::values($storage->consume(new SlidingWindow(), 'k', 4, 60, 2, 1000.7)));
 
         // a cost over the limit in an empty window: 19.3 + 60 * 1
         $storage = self::storage();
@@ -133,10 +133,10 @@ final class KeyValueStorageTest extends TestCase
         $this->assertSame([true, 0, 80, null], self::values($storage->consume(new FixedWindow(), 'k', 3, 60, 1, 1000.7)), 'a clock behind counts in the newer window');
         $this->assertSame([['k', [1020, 3], 81]], $storage->saved);
         $storage = self::storage(['k' => [1020, 3, 2]]);
-        $this->assertSame([true, 0, 80, null], self::values($storage->consume(new SlidingWindow(), 'k', 6, 60, 1, 1000.7)), 'a clock behind counts in the newer window');
+        $this->assertSame([true, 0, 40, null], self::values($storage->consume(new SlidingWindow(), 'k', 6, 60, 1, 1000.7)), 'a clock behind counts in the newer window');
         $this->assertSame([['k', [1020, 3, 3], 141]], $storage->saved);
         $storage = self::storage(['k' => [1020, 3, 3]]);
-        $this->assertSame([false, 0, 80, 40], self::values($storage->consume(new SlidingWindow(), 'k', 6, 60, 1, 1000.7)), 'Retry-After by the clock behind: at 1040.7 the previous window weighs 1.97');
+        $this->assertSame([false, 0, 40, 40], self::values($storage->consume(new SlidingWindow(), 'k', 6, 60, 1, 1000.7)), 'Retry-After by the clock behind: at 1040.7 the previous window weighs 1.97');
         $storage = self::storage(['k' => [1020, '2']]);
         $this->assertSame([true, 2, 80, null], self::values($storage->consume(new FixedWindow(), 'k', 3, 60, 1, 1000.7)), 'an unknown count starts the newer window again');
         $storage = self::storage(['k' => [1020, '3', 2]]);

@@ -164,6 +164,8 @@ or implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost
 
 **Redis keys:** `RedisStorage` stores a counter under `prefix` + `{policy:key}` (default prefix `nette-api:rate-limit:`), with the braces as a Redis Cluster hash tag.
 
+**Reverse proxy:** with the default `IpDetector`, `key: ip` counts the address from `Nette\Http\IRequest::getRemoteAddress()`, because the detector trusts headers any client can send. Behind a reverse proxy list it in `http: proxy:`, otherwise all clients share the quota of the proxy. An own detector in `api.ipDetector` is used as it is.
+
 **Dependencies:** `nette/caching` ^3.2 and `psr/clock` ^1.0 are required. For Redis install `ext-redis` or `predis/predis`.
 
 ## Exceptions from authorization are not sent to the client

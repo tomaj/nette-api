@@ -19,7 +19,8 @@ interface RateLimitStorageInterface
      * @param int<1, max> $limit
      * @param int<1, max> $interval
      * @param int<1, max> $cost
-     * @throws RateLimitStorageException when the storage is not available; the built-in limiters then let the request through
+     * @throws RateLimitStorageException when the storage is not available; the built-in limiters then let the request through,
+     *                                   like for any other exception except a \LogicException
      */
     public function consume(RateLimitAlgorithmInterface $algorithm, string $key, int $limit, int $interval, int $cost, float $now): StorageResult;
 }

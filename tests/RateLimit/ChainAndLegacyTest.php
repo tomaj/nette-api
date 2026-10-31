@@ -20,7 +20,7 @@ use Tomaj\NetteApi\RateLimit\Storage\InMemoryStorage;
 
 final class ChainAndLegacyTest extends TestCase
 {
-    public function testChainCountsAll(): void
+    public function testChainStopsAtTheFirstRejection(): void
     {
         $storage = new InMemoryStorage();
         $ip = new FixedWindowLimiter('ip', 1, 60, new IpKey(), $storage, LimiterTest::clock(0.0));
@@ -35,9 +35,9 @@ final class ChainAndLegacyTest extends TestCase
         $this->assertSame(['user'], array_map(fn(RateLimitResult $r): string => $r->policy, $after));
 
         $again = $chain->consume(ContextFactory::create());
+        $this->assertSame(['ip'], array_map(fn(RateLimitResult $r): string => $r->policy, $again));
         $this->assertFalse($again[0]->accepted);
-        $this->assertTrue($again[1]->accepted, 'every limit is counted even when one rejects');
-        $this->assertSame(1, $again[1]->remaining);
+        $this->assertSame(1, $ip2->consume(ContextFactory::create())[0]->remaining, 'a rejected request does not use up the next limits');
         $this->assertSame([], new RateLimiterChain()->consume(ContextFactory::create()));
     }
 
@@ -95,7 +95,7 @@ final class ChainAndLegacyTest extends TestCase
         $this->assertSame([], @new LegacyRateLimitAdapter($this->legacy(null))->consume(ContextFactory::create()));
 
         $this->assertEquals(
-            [new RateLimitResult(true, 10, 4, 0, 0, null, 'default')],
+            [new RateLimitResult(true, 10, 4, 0, null, null, 'default')],
             @new LegacyRateLimitAdapter($this->legacy(new RateLimitResponse(10, 4)))->consume(ContextFactory::create()),
         );
 

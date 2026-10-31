@@ -23,7 +23,17 @@ final class RateLimitKeys
         $keys = [];
         foreach ((array) $key as $name) {
             if (is_string($name) && !isset(self::NAMES[$name]) && is_a($name, RateLimitKeyInterface::class, true)) {
-                $keys[] = new $name();
+                try {
+                    $keys[] = new $name();
+                } catch (\Error $e) {
+                    throw new \InvalidArgumentException(sprintf(
+                        '%s: the key class %s cannot be created without constructor arguments: %s. Remove the arguments, or create the limiter as a service with new FixedWindowLimiter(..., new %s($argument), $storage).',
+                        $where,
+                        $name,
+                        $e->getMessage(),
+                        $name,
+                    ), previous: $e);
+                }
                 continue;
             }
             $class = (is_string($name) ? self::NAMES[$name] ?? null : null) ?? throw new \InvalidArgumentException(sprintf(

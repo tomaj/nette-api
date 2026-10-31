@@ -28,6 +28,15 @@ use Tomaj\NetteApi\RateLimit\Key\RateLimitKeyInterface;
 use Tomaj\NetteApi\RateLimit\RateLimitContext;
 use Tracy\Debugger;
 use Tracy\ILogger;
+use Nette\Application\Request;
+use Tomaj\NetteApi\Api;
+use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
+use Tomaj\NetteApi\Authorization\NoAuthorization;
+use Tomaj\NetteApi\EndpointIdentifier;
+use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
+use Tomaj\NetteApi\Misc\IpDetector;
+use Tomaj\NetteApi\Misc\StaticTokenRepository;
 
 final class LimiterTest extends TestCase
 {
@@ -188,6 +197,75 @@ final class LimiterTest extends TestCase
         $limiter = new SlidingWindowLimiter('p', 5, 60, new IpKey(), $this->brokenStorage(), null, $logger);
         $this->assertSame([], $limiter->consume(ContextFactory::create()));
         $this->assertSame([["Rate limit 'p' is skipped, the request passed without a limit: Redis is down", ILogger::WARNING]], $logger->logs);
+    }
+
+    private function memoryLogger(): ILogger
+    {
+        return new class implements ILogger {
+            /** @var list<array{mixed, string}> */
+            public array $logs = [];
+
+            public function log(mixed $value, string $level = self::INFO): void
+            {
+                $this->logs[] = [$value, $level];
+            }
+        };
+    }
+
+    private function throwingStorage(\Throwable $error): RateLimitStorageInterface
+    {
+        return new readonly class ($error) implements RateLimitStorageInterface {
+            public function __construct(private \Throwable $error)
+            {
+            }
+
+            public function consume(RateLimitAlgorithmInterface $algorithm, string $key, int $limit, int $interval, int $cost, float $now): StorageResult
+            {
+                throw $this->error;
+            }
+        };
+    }
+
+    public function testAnyOutageOfAnOwnStorageFailsOpen(): void
+    {
+        $logger = $this->memoryLogger();
+        $limiter = new SlidingWindowLimiter('p', 5, 60, new IpKey(), $this->throwingStorage(new \PDOException('the database is down')), null, $logger);
+        $this->assertSame([], $limiter->consume(ContextFactory::create()));
+        $this->assertSame([["Rate limit 'p' is skipped, the request passed without a limit: the database is down", ILogger::WARNING]], $logger->logs); // @phpstan-ignore property.notFound
+    }
+
+    public function testABugInAStorageIsNotHidden(): void
+    {
+        $limiter = new SlidingWindowLimiter('p', 5, 60, new IpKey(), $this->throwingStorage(new \LogicException('wrong configuration')));
+        $this->expectExceptionObject(new \LogicException('wrong configuration'));
+        $limiter->consume(ContextFactory::create());
+    }
+
+    public function testAuthorizationWithoutTheExpectedIdentityLogsAWarning(): void
+    {
+        $authorization = new class (new StaticTokenRepository(['secret' => '*']), new IpDetector()) extends BearerTokenAuthorization {
+            public function authorized(): bool
+            {
+                return true; // no parent::authorized(), so the identity is never set
+            }
+        };
+        $logger = $this->memoryLogger();
+        $limiter = new SlidingWindowLimiter('p', 5, 60, new IdentityKey(), new InMemoryStorage(), null, $logger);
+        $context = fn (ApiAuthorizationInterface $authorization, ?string $identity): RateLimitContext => new RateLimitContext(
+            new Api(new EndpointIdentifier('GET', 1, 'users'), new AlwaysOkHandler(), $authorization),
+            new Request('Api:Api:default'),
+            RateLimitStage::AfterAuthorization,
+            '1.2.3.4',
+            $identity,
+        );
+
+        $this->assertSame([], $limiter->consume($context($authorization, null)));
+        $this->assertSame([[sprintf("Rate limit 'p' is skipped, the authorization %s returned no identity after a successful authorized(). When it overrides authorized(), override getIdentity() too.", $authorization::class), ILogger::WARNING]], $logger->logs); // @phpstan-ignore property.notFound
+
+        $logger->logs = []; // @phpstan-ignore property.notFound
+        $this->assertSame([], $limiter->consume($context(new NoAuthorization(), null)), 'an authorization without an identity skips the limit by design');
+        $this->assertCount(1, $limiter->consume($context($authorization, 'user')), 'with the identity the limit applies');
+        $this->assertSame([], $logger->logs); // @phpstan-ignore property.notFound
     }
 
     public function testFailOpenLogsToTracyByDefault(): void

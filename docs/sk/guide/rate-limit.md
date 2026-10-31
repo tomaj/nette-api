@@ -28,7 +28,7 @@ api:
 		rateLimit: perIp
 ```
 
-Každý endpoint teraz povolí 60 požiadaviek za minútu z jednej IP. Počítadlá sú v Nette cache, takže nič ďalšie netreba.
+Každý endpoint teraz povolí 60 požiadaviek za minútu z jednej IP. Počítadlá sú v Nette cache, takže nič ďalšie netreba. Za reverse proxy ju pridajte do `http: proxy:`, inak všetci klienti zdieľajú kvótu proxy, pozrite si [Ktorá IP sa počíta?](#ktora-ip-sa-pocita).
 
 ## Predvolený limit pre celú aplikáciu a nastavenie endpointu
 
@@ -49,7 +49,7 @@ api:
 		- {method: GET, version: 1, package: users, handler: App\Api\UsersHandler}
 		# iná pomenovaná politika
 		- {method: POST, version: 1, package: login, handler: App\Api\LoginHandler, rateLimit: login}
-		# viac politík, počítajú sa všetky a požiadavka musí prejsť každou
+		# viac politík, kontrolujú sa postupne a požiadavka musí prejsť každou
 		- {method: GET, version: 1, package: reports, handler: App\Api\ReportsHandler, rateLimit: [perIp, perUser]}
 		# vlastný limit len pre tento endpoint
 		- {method: POST, version: 1, package: export, handler: App\Api\ExportHandler, rateLimit: {limit: 2, interval: 1 hour}}
@@ -68,6 +68,8 @@ To isté na triede handlera cez [atribúty](/sk/guide/attributes):
 ```
 
 Pomenovaná politika je jeden zdieľaný objekt: všetky endpointy s `rateLimit: perIp` zdieľajú počítadlo klienta. Vlastný limit v neone alebo v atribúte má pre každý endpoint vlastné počítadlá (rozšírenie pridá do jeho kľúča `endpoint`); názov jeho politiky je endpoint, napríklad `POST.v1.export`. `name` mení len názov politiky v hlavičkách, počítadlá zostávajú pre každý endpoint. Dve pomenované politiky s rovnakým `name` zlyhajú pri kompilácii, zdieľali by počítadlá; rovnako vlastný `name` zhodný s názvom pomenovanej politiky, na zdieľanie počítadiel použite `rateLimit: perIp`.
+
+Politiky v zozname sa kontrolujú postupne. Prvá, ktorá požiadavku odmietne, odpovie 429 a ďalšie sa už nepočítajú, takže odmietnuté požiadavky jedného klienta nemíňajú kvótu zdieľanú s ostatnými. Limity jedného klienta dajte pred zdieľané, napríklad `[perIp, perEndpoint]`.
 
 ### Nastavenia politiky
 
@@ -91,7 +93,7 @@ Politika môže byť aj trieda implementujúca `RateLimiterInterface`, `@service
 
 ## Pred autorizáciou a po nej
 
-Presenter kontroluje obmedzenia dvakrát: pred autorizáciou a po úspešnej autorizácii. Politika s kľúčom `identity` beží po nej, s identitou z `AuthorizationIdentityInterface` (`BearerTokenAuthorization`, `HeaderApiKeyAuthentication`, `BasicAuthentication`, ...). Ostatné kľúče bežia pred ňou, takže aj klient, ktorý háda tokeny, je obmedzený. Požiadavka bez identity politiky `identity` preskočí.
+Presenter kontroluje obmedzenia dvakrát: pred autorizáciou a po úspešnej autorizácii. Politika s kľúčom `identity` beží po nej, s identitou z `AuthorizationIdentityInterface` (`BearerTokenAuthorization`, `HeaderApiKeyAuthentication`, `BasicAuthentication`, ...). Ostatné kľúče bežia pred ňou, takže aj klient, ktorý háda tokeny, je obmedzený. Požiadavka bez identity politiky `identity` preskočí. Keď autorizácia implementuje toto rozhranie, ale po úspešnom `authorized()` nevráti identitu, do logu ide varovanie: potomok, ktorý prepíše `authorized()` bez volania rodiča, musí prepísať aj `getIdentity()`.
 
 Vlastný `rateLimit` endpointu s kľúčom `identity` (aj v zozname alebo v pomenovanej politike) zastaví kompiláciu kontajnera, keď je jeho autorizácia známa trieda bez `AuthorizationIdentityInterface`, napríklad `authorization: false` alebo `NoAuthorization`, pretože obmedzenie by sa nikdy neuplatnilo. `defaults.rateLimit` sa nekontroluje, lebo ho zdieľajú endpointy s autorizáciou aj bez nej; ani služba, ktorej typ je len rozhranie.
 
@@ -129,7 +131,7 @@ services:
 	redis:
 		factory: Redis
 		setup:
-			- connect('127.0.0.1', 6379)
+			- connect('127.0.0.1', 6379, 1.0, null, 0, 1.0)   # 1 sekunda na pripojenie, 1 sekunda na čítanie
 		autowired: false
 
 api:
@@ -138,9 +140,11 @@ api:
 		redis: @redis
 ```
 
+Nastavte krátke timeouty. Pri PHP-FPM sa každá požiadavka pripája sama, takže Redis, ktorý neodpovedá, zdrží každú požiadavku s limitom o dĺžku timeoutu. Bez timeoutu požiadavky čakajú na `default_socket_timeout` (predvolene 60 sekúnd) a môžu obsadiť všetky workery, hoci by nakoniec prešli.
+
 ### Keď úložisko zlyhá
 
-Obmedzenie nesmie zhodiť API. Úložisko sa vytvorí pri prvej požiadavke s limitom, nie spolu s API, takže Redis, ktorý pri štarte aplikácie nebeží, endpointy nezhodí a endpointy bez limitu sa k nemu nikdy nepripájajú; neúspešné pripojenie sa skúsi znova po sekunde. Keď úložisko vyhodí výnimku (Redis nebeží, adresár cache je len na čítanie), požiadavka prejde (fail-open) a varovanie s príčinou ide do Tracy logu alebo do `Tracy\ILogger`, ktorý odovzdáte limiteru. Keď zlyhá aj logger (Tracy bez adresára pre logy), varovanie ide do PHP `error_log` a požiadavka aj tak prejde.
+Obmedzenie nesmie zhodiť API. Úložisko sa vytvorí pri prvej požiadavke s limitom, nie spolu s API, takže Redis, ktorý pri štarte aplikácie nebeží, endpointy nezhodí a endpointy bez limitu sa k nemu nikdy nepripájajú; dlho bežiaci proces skúsi neúspešné pripojenie znova po sekunde, pri PHP-FPM ho skúsi každá požiadavka raz. Keď úložisko vyhodí výnimku (Redis nebeží, adresár cache je len na čítanie), požiadavka prejde (fail-open) a varovanie s príčinou ide do Tracy logu alebo do `Tracy\ILogger`, ktorý odovzdáte limiteru. Keď zlyhá aj logger (Tracy bez adresára pre logy), varovanie ide do PHP `error_log` a požiadavka aj tak prejde. `\LogicException` (chyba v kóde alebo zlá konfigurácia) sa neskrýva: ako každá výnimka vlastného limitera alebo kľúča ide do `handle()` error handlera, ktorý odpovie `500`.
 
 ## Hlavičky a 429
 
@@ -206,7 +210,9 @@ final class MemcachedStorage extends KeyValueStorage
 
     protected function save(string $key, mixed $value, int $ttl, float $now): void
     {
-        if (!$this->memcached->set('rate:' . md5($key), $value, $ttl)) {
+        // Memcached číta expiráciu nad 30 dní ako časovú značku, relatívna by vypršala hneď
+        $expiration = $ttl > 2_592_000 ? time() + $ttl : $ttl;
+        if (!$this->memcached->set('rate:' . md5($key), $value, $expiration)) {
             throw new RateLimitStorageException('Memcached did not save the counter: ' . $this->memcached->getResultMessage());
         }
     }
@@ -227,7 +233,7 @@ Implementujte `RedisClientInterface::evaluate(string $script, array $keys, array
 
 ### Vlastný limiter
 
-Implementujte `RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array` a vráťte jeden `RateLimitResult` pre každú politiku, alebo `[]`, keď v `$context->stage` neplatí žiadny limit. Použite ho ako `rateLimits: {mine: App\MyLimiter}` alebo `#[RateLimit('App\MyLimiter')]`. Presenter z názvu politiky odstráni znaky okrem tlačiteľných ASCII a escapuje `"` a `\`, takže hlavičky zostanú platné; záporné čísla (`limit`, `remaining`, `resetAfter`, `retryAfter`) pošle ako `0`.
+Implementujte `RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array` a vráťte jeden `RateLimitResult` pre každú politiku, alebo `[]`, keď v `$context->stage` neplatí žiadny limit. Použite ho ako `rateLimits: {mine: App\MyLimiter}` alebo `#[RateLimit('App\MyLimiter')]`. Presenter z názvu politiky odstráni znaky okrem tlačiteľných ASCII a escapuje `"` a `\`, takže hlavičky zostanú platné; záporné čísla (`limit`, `remaining`, `resetAfter`, `retryAfter`) pošle ako `0`. `resetAfter` s hodnotou `null` vynechá `t` z hlavičky `RateLimit`.
 
 ## Vlastný algoritmus
 
@@ -349,17 +355,24 @@ $apiDecider->addApi(new EndpointIdentifier('GET', 1, 'users'), $handler, new NoA
 
 Takúto službu zaregistrujte s `autowired: false`, inak ju Nette DI odovzdá každému volaniu `addApi()`.
 
-Kľúč `ip` potrebuje v kontajneri službu `IpDetectorInterface` (DI rozšírenie ju registruje vždy). Bez nej požiadavka na endpoint s obmedzením `ip` vyhodí `LogicException` s názvom endpointu, takže sa obmedzenie potichu nepreskočí; zaregistrujte `Tomaj\NetteApi\Misc\IpDetector` alebo vlastný detektor. Obmedzenia, ktoré IP nepoužívajú, fungujú aj bez nej.
+Kľúč `ip` potrebuje v kontajneri službu `IpDetectorInterface` (DI rozšírenie ju registruje vždy). Bez nej požiadavka na endpoint s obmedzením `ip` odpovie `500` cez error handler a do logu ide `LogicException` s názvom endpointu, takže sa obmedzenie potichu nepreskočí; zaregistrujte `Tomaj\NetteApi\Misc\IpDetector` alebo vlastný detektor. Obmedzenia, ktoré IP nepoužívajú, fungujú aj bez nej.
 
 ## Prechod z RateLimitInterface
 
-`RateLimitInterface::check()` z 3.x stále funguje cez `LegacyRateLimitAdapter`, aj v zozname ako `rateLimit: [perIp, App\LegacyLimit]`, s upozornením `E_USER_DEPRECATED`. V 5.0 bude odstránené. Hlavičky `X-RateLimit-Limit` a `X-RateLimit-Remaining` nahrádzajú `RateLimit-Policy` a `RateLimit`. Pozrite si [návod na upgrade](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
+`RateLimitInterface::check()` z 3.x stále funguje cez `LegacyRateLimitAdapter`, aj v zozname ako `rateLimit: [perIp, App\LegacyLimit]`, s upozornením `E_USER_DEPRECATED`. Bez času na opakovanie nepošle `t`, čas obnovenia nie je známy. V 5.0 bude odstránené. Hlavičky `X-RateLimit-Limit` a `X-RateLimit-Remaining` nahrádzajú `RateLimit-Policy` a `RateLimit`. Pozrite si [návod na upgrade](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
 
 ## Časté otázky
 
 ### Ktorá IP sa počíta?
 
-Tá z IP detektora (`api.ipDetector`). Predvolený `IpDetector` verí hlavičkám `Client-IP` a `X-Forwarded-For`, takže klient, ktorý ich môže poslať, dostane s každou hodnotou novú kvótu. Ak tieto hlavičky neprepisuje proxy, ktorej dôverujete, nastavte IP detektor, ktorý číta len `REMOTE_ADDR` alebo adresu nastavenú vašou proxy; pozrite si upozornenie v [Autorizácii](/sk/guide/authorization#tokeny-a-obmedzenie-ip). Hodnota dlhšia než IP (45 znakov) sa zahashuje, takže podvrhnuté hlavičky nevytvoria dlhé kľúče v úložisku.
+Pri predvolenom `IpDetector` adresa z `Nette\Http\IRequest::getRemoteAddress()`, nie z detektora: ten verí hlavičkám `Client-IP` a `X-Forwarded-For`, takže každý klient by s každou hodnotou dostal novú kvótu (pozrite si upozornenie v [Autorizácii](/sk/guide/authorization#tokeny-a-obmedzenie-ip)). Nette verí preposlaným hlavičkám len od proxy, ktoré uvediete:
+
+```yaml
+http:
+	proxy: 10.0.0.0/8      # vaša reverse proxy alebo load balancer
+```
+
+Bez toho všetci klienti za reverse proxy zdieľajú jednu kvótu, kvótu proxy. Vlastný detektor v `api.ipDetector` sa použije tak, ako je, takže sám rozhoduje, ktorým hlavičkám verí. Hodnota dlhšia než IP (45 znakov) sa zahashuje, takže podvrhnuté hlavičky nevytvoria dlhé kľúče v úložisku.
 
 ### Logujú sa odpovede 429?
 

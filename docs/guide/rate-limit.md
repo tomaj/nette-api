@@ -28,7 +28,7 @@ api:
 		rateLimit: perIp
 ```
 
-Every endpoint now allows 60 requests per minute per IP. The counters are kept in the Nette cache, so nothing else is needed.
+Every endpoint now allows 60 requests per minute per IP. The counters are kept in the Nette cache, so nothing else is needed. Behind a reverse proxy add it to `http: proxy:`, otherwise all clients share the quota of the proxy, see [Which IP is counted?](#which-ip-is-counted).
 
 ## Global default and per-endpoint configuration
 
@@ -49,7 +49,7 @@ api:
 		- {method: GET, version: 1, package: users, handler: App\Api\UsersHandler}
 		# override with another named policy
 		- {method: POST, version: 1, package: login, handler: App\Api\LoginHandler, rateLimit: login}
-		# more policies, all of them count and the request must pass each
+		# more policies, checked in order, the request must pass each
 		- {method: GET, version: 1, package: reports, handler: App\Api\ReportsHandler, rateLimit: [perIp, perUser]}
 		# an inline limit only for this endpoint
 		- {method: POST, version: 1, package: export, handler: App\Api\ExportHandler, rateLimit: {limit: 2, interval: 1 hour}}
@@ -68,6 +68,8 @@ The same on a handler class with [attributes](/guide/attributes):
 ```
 
 A named policy is one shared object: all endpoints with `rateLimit: perIp` share the counter of a client. An inline limit, in neon or in the attribute, has its own counters for each endpoint (the extension adds `endpoint` to its key); its policy name is the endpoint, for example `POST.v1.export`. `name` changes only the policy name in the headers, the counters stay per endpoint. Two named policies with the same `name` fail the compilation, they would share their counters; so does an inline `name` equal to the name of a named policy, use `rateLimit: perIp` to share the counters.
+
+The policies of a list are checked in order. The first one that rejects the request answers 429 and the next ones are not counted, so rejected requests of one client do not use up a quota shared with others. Put the limits of one client before the shared ones, for example `[perIp, perEndpoint]`.
 
 ### The options of a policy
 
@@ -91,7 +93,7 @@ A policy can also be a class implementing `RateLimiterInterface`, `@service` or 
 
 ## Before and after authorization
 
-The presenter checks the rate limits twice: before the authorization and after a successful one. A policy keyed by `identity` runs after it, with the identity from `AuthorizationIdentityInterface` (`BearerTokenAuthorization`, `HeaderApiKeyAuthentication`, `BasicAuthentication`, ...). The other keys run before it, so a client guessing tokens is limited too. A request without an identity skips the `identity` policies.
+The presenter checks the rate limits twice: before the authorization and after a successful one. A policy keyed by `identity` runs after it, with the identity from `AuthorizationIdentityInterface` (`BearerTokenAuthorization`, `HeaderApiKeyAuthentication`, `BasicAuthentication`, ...). The other keys run before it, so a client guessing tokens is limited too. A request without an identity skips the `identity` policies. When the authorization implements the interface, but returns no identity after a successful `authorized()`, a warning goes to the log: a subclass that overrides `authorized()` without calling the parent must override `getIdentity()` too.
 
 An endpoint's own `rateLimit` keyed by `identity` (also in a list or a named policy) fails the container compilation when its authorization is a known class without `AuthorizationIdentityInterface`, for example `authorization: false` or `NoAuthorization`, because the limit would never apply. `defaults.rateLimit` is not checked, as it is shared by endpoints with and without an authorization; neither is a service whose type is only an interface.
 
@@ -129,7 +131,7 @@ services:
 	redis:
 		factory: Redis
 		setup:
-			- connect('127.0.0.1', 6379)
+			- connect('127.0.0.1', 6379, 1.0, null, 0, 1.0)   # 1 second to connect, 1 second to read
 		autowired: false
 
 api:
@@ -138,9 +140,11 @@ api:
 		redis: @redis
 ```
 
+Set short timeouts. With PHP-FPM every request connects on its own, so a Redis that does not answer delays each rate limited request by the timeout. Without a timeout the requests wait for `default_socket_timeout` (60 seconds by default) and can use up all workers, even though they would pass in the end.
+
 ### When the storage fails
 
-A rate limit must not take the API down. The storage is created on the first request with a rate limit, not with the API, so Redis that is down when the application starts does not fail the endpoints, and endpoints without a limit never connect to it; an unsuccessful connection is tried again after a second. When the storage throws (Redis is down, the cache directory is read only), the request passes (fail-open) and a warning with the cause goes to the Tracy log, or to the `Tracy\ILogger` you pass to the limiter. When the logger fails too (Tracy without a log directory), the warning goes to the PHP `error_log` and the request still passes.
+A rate limit must not take the API down. The storage is created on the first request with a rate limit, not with the API, so Redis that is down when the application starts does not fail the endpoints, and endpoints without a limit never connect to it; a long-running process tries an unsuccessful connection again after a second, with PHP-FPM every request tries once. When the storage throws (Redis is down, the cache directory is read only), the request passes (fail-open) and a warning with the cause goes to the Tracy log, or to the `Tracy\ILogger` you pass to the limiter. When the logger fails too (Tracy without a log directory), the warning goes to the PHP `error_log` and the request still passes. A `\LogicException` (a bug or a wrong configuration) is not hidden: like any exception of an own limiter or key, it goes to the `handle()` of the error handler, which answers `500`.
 
 ## Headers and 429
 
@@ -206,7 +210,9 @@ final class MemcachedStorage extends KeyValueStorage
 
     protected function save(string $key, mixed $value, int $ttl, float $now): void
     {
-        if (!$this->memcached->set('rate:' . md5($key), $value, $ttl)) {
+        // Memcached reads an expiration above 30 days as a timestamp, a relative one would expire at once
+        $expiration = $ttl > 2_592_000 ? time() + $ttl : $ttl;
+        if (!$this->memcached->set('rate:' . md5($key), $value, $expiration)) {
             throw new RateLimitStorageException('Memcached did not save the counter: ' . $this->memcached->getResultMessage());
         }
     }
@@ -227,7 +233,7 @@ Implement `RedisClientInterface::evaluate(string $script, array $keys, array $ar
 
 ### A custom limiter
 
-Implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array` and return one `RateLimitResult` per policy, or `[]` when no limit applies in `$context->stage`. Use it as `rateLimits: {mine: App\MyLimiter}` or `#[RateLimit('App\MyLimiter')]`. The presenter removes characters other than printable ASCII from the policy name and escapes `"` and `\`, so the headers stay valid; negative numbers (`limit`, `remaining`, `resetAfter`, `retryAfter`) are sent as `0`.
+Implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array` and return one `RateLimitResult` per policy, or `[]` when no limit applies in `$context->stage`. Use it as `rateLimits: {mine: App\MyLimiter}` or `#[RateLimit('App\MyLimiter')]`. The presenter removes characters other than printable ASCII from the policy name and escapes `"` and `\`, so the headers stay valid; negative numbers (`limit`, `remaining`, `resetAfter`, `retryAfter`) are sent as `0`. A `resetAfter` of `null` leaves `t` out of the `RateLimit` header.
 
 ## A custom algorithm
 
@@ -349,17 +355,24 @@ $apiDecider->addApi(new EndpointIdentifier('GET', 1, 'users'), $handler, new NoA
 
 Register such a service with `autowired: false`, otherwise Nette DI passes it to every `addApi()` call.
 
-The `ip` key needs an `IpDetectorInterface` service in the container (the DI extension always registers one). Without it, a request to an endpoint with an `ip` limit throws a `LogicException` that names the endpoint, so the limit is not skipped silently; register `Tomaj\NetteApi\Misc\IpDetector` or your own detector. Limiters that don't use the IP keep working without it.
+The `ip` key needs an `IpDetectorInterface` service in the container (the DI extension always registers one). Without it, a request to an endpoint with an `ip` limit answers `500` through the error handler, with a `LogicException` that names the endpoint in the log, so the limit is not skipped silently; register `Tomaj\NetteApi\Misc\IpDetector` or your own detector. Limiters that don't use the IP keep working without it.
 
 ## Upgrading from RateLimitInterface
 
-`RateLimitInterface::check()` from 3.x still works through `LegacyRateLimitAdapter`, also in a list like `rateLimit: [perIp, App\LegacyLimit]`, with an `E_USER_DEPRECATED` notice. It is removed in 5.0. The `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers are replaced by `RateLimit-Policy` and `RateLimit`. See the [upgrade guide](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
+`RateLimitInterface::check()` from 3.x still works through `LegacyRateLimitAdapter`, also in a list like `rateLimit: [perIp, App\LegacyLimit]`, with an `E_USER_DEPRECATED` notice. Without a retry time it sends no `t`, the reset time is not known. It is removed in 5.0. The `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers are replaced by `RateLimit-Policy` and `RateLimit`. See the [upgrade guide](https://github.com/tomaj/nette-api/blob/master/UPGRADE-4.0.md).
 
 ## FAQ
 
 ### Which IP is counted?
 
-The one from the IP detector (`api.ipDetector`). The default `IpDetector` trusts the `Client-IP` and `X-Forwarded-For` headers, so a client that can send them gets a new quota with every value. Unless a proxy you trust overwrites these headers, configure an IP detector that reads only `REMOTE_ADDR` or the address set by your proxy; see the warning in [Authorization](/guide/authorization#tokens-and-ip-restrictions). A value longer than an IP (45 characters) is hashed, so forged headers cannot make long storage keys.
+With the default `IpDetector`, the address from `Nette\Http\IRequest::getRemoteAddress()`, not from the detector: it trusts the `Client-IP` and `X-Forwarded-For` headers, so any client would get a new quota with every value (see the warning in [Authorization](/guide/authorization#tokens-and-ip-restrictions)). Nette trusts the forwarded headers only from the proxies you list:
+
+```yaml
+http:
+	proxy: 10.0.0.0/8      # your reverse proxy or load balancer
+```
+
+Without it, all clients behind a reverse proxy share one quota, the quota of the proxy. An own detector in `api.ipDetector` is used as it is, so it decides which headers to trust. A value longer than an IP (45 characters) is hashed, so forged headers cannot make long storage keys.
 
 ### Are 429 responses logged?
 

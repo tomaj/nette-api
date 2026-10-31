@@ -282,7 +282,7 @@ api:
 	ipDetector: App\Api\ProxyIpDetector
 ```
 
-Predvolený `IpDetector` číta `REMOTE_ADDR`.
+Predvolený `IpDetector` číta hlavičky `Client-IP` a `X-Forwarded-For`, ktoré môže poslať každý klient, a potom `REMOTE_ADDR`. [Obmedzenia](/sk/guide/rate-limit#ktora-ip-sa-pocita) ho nepoužívajú, adresu berú z Nette.
 
 ## Prehľad nastavení
 

@@ -8,7 +8,7 @@ namespace Tomaj\NetteApi\Attribute;
  * Rate limit of all endpoints of the handler class. Without it, api.defaults.rateLimit applies.
  *
  *     #[RateLimit('perIp')]                          a name from api.rateLimits, '@service' or a class name
- *     #[RateLimit(['perIp', 'perUser'])]             more limits, all of them are counted
+ *     #[RateLimit(['perIp', 'perUser'])]             more limits, checked in order until one rejects
  *     #[RateLimit(false)]                            no rate limit
  *     #[RateLimit(limit: 60, interval: '1 minute')]  an inline limit, each endpoint of the class has its own counters
  *     #[RateLimit(limit: 1000, interval: '1 hour', algorithm: 'tokenBucket', key: 'identity')]
@@ -24,24 +24,24 @@ final readonly class RateLimit
 
     /**
      * @param string|list<string>|false|null $rateLimit
-     * @param string|list<string> $key
+     * @param string|list<string>|null $key
      */
     public function __construct(
         string|array|false|null $rateLimit = null,
         ?int $limit = null,
         int|string|null $interval = null,
-        string $algorithm = 'slidingWindow',
-        string|array $key = 'ip',
+        ?string $algorithm = null,
+        string|array|null $key = null,
         ?string $name = null,
     ) {
         if ($rateLimit !== null) {
-            $this->rateLimit = $limit === null
+            $this->rateLimit = [$limit, $interval, $algorithm, $key, $name] === [null, null, null, null, null]
                 ? $rateLimit
-                : throw new \InvalidArgumentException("#[RateLimit] has both a rate limit name and an inline limit. Use either #[RateLimit('perIp')] or #[RateLimit(limit: 60, interval: '1 minute')].");
+                : throw new \InvalidArgumentException("#[RateLimit] has both a rate limit name and options of an inline limit (limit, interval, algorithm, key, name), which would be ignored. Use either #[RateLimit('perIp')] or #[RateLimit(limit: 60, interval: '1 minute')].");
         } elseif ($limit === null || $interval === null) {
             throw new \InvalidArgumentException("#[RateLimit] needs a name from api.rateLimits or limit and interval, for example #[RateLimit('perIp')] or #[RateLimit(limit: 60, interval: '1 minute')].");
         } else {
-            $this->rateLimit = ['algorithm' => $algorithm, 'limit' => $limit, 'interval' => (string) $interval, 'key' => $key, 'name' => $name];
+            $this->rateLimit = ['algorithm' => $algorithm ?? 'slidingWindow', 'limit' => $limit, 'interval' => (string) $interval, 'key' => $key ?? 'ip', 'name' => $name];
         }
     }
 }

@@ -200,6 +200,12 @@ final class ApiPresenterRateLimitTest extends TestCase
         $this->assertSame(['RateLimit-Policy: "a";q=10;w=60', 'RateLimit: "a";r=0;t=0'], $headers);
     }
 
+    public function testUnknownResetTimeIsLeftOut(): void
+    {
+        [, $headers] = $this->call($this->presenter($this->fixed(new RateLimitResult(true, 10, 4, 0, null, null, 'a'))));
+        $this->assertSame(['RateLimit-Policy: "a";q=10', 'RateLimit: "a";r=4'], $headers);
+    }
+
     public function testPolicyOfAnOwnLimiterCannotBreakTheHeaders(): void
     {
         [, $headers] = $this->call($this->presenter($this->fixed(new RateLimitResult(false, 10, 0, 60, 1, -5, "a\"b\\c\r\nX-Injected: 1\xC3\xA1"))));
