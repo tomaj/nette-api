@@ -480,6 +480,10 @@ final class RateLimitExtensionTest extends TestCase
             ['algorithm' => 'slidingWindow', 'limit' => 60, 'interval' => '60', 'key' => 'ip', 'name' => null],
             new RateLimit(limit: 60, interval: 60)->rateLimit,
         );
+        $this->assertSame(
+            ['algorithm' => 'tokenBucket', 'limit' => 60, 'interval' => '60', 'key' => 'identity', 'name' => 'quota'],
+            new RateLimit(limit: 60, interval: 60, algorithm: 'tokenBucket', key: 'identity', name: 'quota')->rateLimit,
+        );
         $this->assertSame('perIp', new RateLimit('perIp')->rateLimit);
         $this->assertFalse(new RateLimit(false)->rateLimit);
         try {
@@ -700,6 +704,19 @@ final class RateLimitExtensionTest extends TestCase
                 rateLimits:
                     perIp: {limit: 1, interval: 60}
             NEON, $client)));
+    }
+
+    public function testRedisClientClassWithALeadingBackslash(): void
+    {
+        $container = ContainerFactory::create(self::neon(<<<'NEON'
+            api:
+                rateLimiting: {storage: redis, redis: \Tomaj\NetteApi\Test\DI\Fixtures\FakeRedisClient}
+                rateLimits:
+                    perIp: {limit: 1, interval: 60}
+                endpoints:
+                    - {method: GET, version: 1, package: users, handler: {handler}, rateLimit: perIp}
+            NEON));
+        $this->assertInstanceOf(StorageRateLimiter::class, $this->rateLimits($container)[0]);
     }
 
     public function testKeyClassThatCannotBeCreatedFailsTheCompilation(): void

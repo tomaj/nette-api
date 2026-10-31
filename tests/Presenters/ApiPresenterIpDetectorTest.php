@@ -29,6 +29,7 @@ use Tomaj\NetteApi\RateLimit\Key\RateLimitKeyInterface;
 use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
 use Tomaj\NetteApi\RateLimit\Storage\InMemoryStorage;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
+use Nette\DI\MissingServiceException;
 use Nette\Http\IRequest;
 use Nette\Http\Request as HttpRequest;
 use Nette\Http\UrlScript;
@@ -88,7 +89,9 @@ final class ApiPresenterIpDetectorTest extends TestCase
             {
                 return match ($type) {
                     IpDetectorInterface::class => new IpDetector(),
-                    IRequest::class => $this->httpRequest ? new HttpRequest(new UrlScript('https://api.example.com/'), remoteAddress: $this->remoteAddress) : null,
+                    IRequest::class => $this->httpRequest
+                        ? new HttpRequest(new UrlScript('https://api.example.com/'), remoteAddress: $this->remoteAddress)
+                        : ($throw ? throw new MissingServiceException('no request') : null),
                     default => null,
                 };
             }
@@ -105,6 +108,7 @@ final class ApiPresenterIpDetectorTest extends TestCase
             ->willReturn(new JsonApiResponse(500, ['status' => 'error']));
         $presenter->errorHandler = $handler;
         $this->assertSame(500, $this->code($presenter), 'like an exception of a handler, the error handler answers');
+        $this->assertSame(500, $presenter->response->getCode());
     }
 
     private function code(ApiPresenter $presenter): int
@@ -155,6 +159,7 @@ final class ApiPresenterIpDetectorTest extends TestCase
     public function testTheDefaultDetectorCountsTheAddressFromNette(): void
     {
         $limiter = $this->limiter(new IpKey());
+        $_SERVER['REMOTE_ADDR'] = '7.7.7.7'; // a reverse proxy listed in http.proxy
         $this->assertSame(200, $this->code($this->presenterWithDefaultDetector($limiter, '9.9.9.9')));
         $this->assertSame(200, $this->code($this->presenterWithDefaultDetector($limiter, '8.8.8.8')), 'another client has its own quota');
         $this->assertSame(429, $this->code($this->presenterWithDefaultDetector($limiter, '9.9.9.9')));
@@ -223,6 +228,7 @@ final class ApiPresenterIpDetectorTest extends TestCase
         $handler->expects($this->once())->method('handleAuthorizationException')->willReturn(new JsonApiResponse(500, ['status' => 'error']));
         $presenter->errorHandler = $handler;
         $this->assertSame(500, $this->code($presenter));
+        $this->assertSame(500, $presenter->response->getCode());
     }
 
     public function testAnExceptionOfAnOwnLimiterGoesToTheErrorHandler(): void

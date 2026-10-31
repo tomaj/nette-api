@@ -37,6 +37,7 @@ use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
 use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
+use Tomaj\NetteApi\RateLimit\Key\CompositeKey;
 
 final class LimiterTest extends TestCase
 {
@@ -263,6 +264,32 @@ final class LimiterTest extends TestCase
         $this->assertSame([[sprintf("Rate limit 'p' is skipped, the authorization %s returned no identity after a successful authorized(). When it overrides authorized(), override getIdentity() too.", $authorization::class), ILogger::WARNING]], $logger->logs); // @phpstan-ignore property.notFound
 
         $logger->logs = []; // @phpstan-ignore property.notFound
+        $withoutIp = new SlidingWindowLimiter('p', 5, 60, new CompositeKey(new IdentityKey(), new IpKey()), new InMemoryStorage(), null, $logger);
+        $this->assertSame([], $withoutIp->consume(new RateLimitContext(
+            new Api(new EndpointIdentifier('GET', 1, 'users'), new AlwaysOkHandler(), $authorization),
+            new Request('Api:Api:default'),
+            RateLimitStage::AfterAuthorization,
+            null,
+            'user',
+        )), 'with the identity another part of the key decides');
+        $ownKey = new class implements RateLimitKeyInterface {
+            public function key(RateLimitContext $context): ?string
+            {
+                return null;
+            }
+
+            public function needsIdentity(): bool
+            {
+                return false;
+            }
+        };
+        $skipped = new SlidingWindowLimiter('p', 5, 60, $ownKey, new InMemoryStorage(), null, $logger);
+        $this->assertSame([], $skipped->consume(new RateLimitContext(
+            new Api(new EndpointIdentifier('GET', 1, 'users'), new AlwaysOkHandler(), $authorization),
+            new Request('Api:Api:default'),
+            RateLimitStage::BeforeAuthorization,
+            '1.2.3.4',
+        )), 'a key without the identity may skip the limit');
         $this->assertSame([], $limiter->consume($context(new NoAuthorization(), null)), 'an authorization without an identity skips the limit by design');
         $this->assertCount(1, $limiter->consume($context($authorization, 'user')), 'with the identity the limit applies');
         $this->assertSame([], $logger->logs); // @phpstan-ignore property.notFound

@@ -31,6 +31,8 @@ final class IpKeyTest extends TestCase
         $key = new IpKey();
         $this->assertSame('ip:1.2.3.4', $key->key(ContextFactory::create(ip: '1.2.3.4')));
         $this->assertSame('ip:1.2.3.4', $key->key(ContextFactory::create(ip: '::ffff:1.2.3.4')), 'an IPv4-mapped address is the IPv4 client');
+        $this->assertSame('ip:::/64', $key->key(ContextFactory::create(ip: '::1')), 'zeros without ffff are not an IPv4-mapped address');
+        $this->assertSame('ip:ffff::/64', $key->key(ContextFactory::create(ip: 'ffff::1')), 'ffff without zeros is not an IPv4-mapped address');
         $this->assertSame('ip:cli', $key->key(ContextFactory::create(ip: 'cli')), 'an own detector does not have to return an IP');
     }
 
