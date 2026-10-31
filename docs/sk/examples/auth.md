@@ -46,9 +46,9 @@ V 3.x vstavaná `BasicAuthentication` nefunguje s `nette/http` 3.2 a novším (4
 
 Z vášho vlastného `TokenRepositoryInterface` nad databázou. `StaticTokenRepository` s tokenmi v NEON je pre príklady a interné nástroje.
 
-### Prečo obmedzenie požiadaviek nie je autowirované?
+### Ako sa obmedzenie dostane k endpointu?
 
-Nette DI by ho odovzdalo každému volaniu `addApi()`. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit).
+`addApi()` ho dostane ako štvrtý argument, `RateLimiterInterface` sa neautowiruje. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit).
 
 ### Čo hovoria hlášky 401?
 

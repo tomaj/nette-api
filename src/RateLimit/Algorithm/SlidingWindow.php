@@ -21,8 +21,10 @@ final readonly class SlidingWindow implements RedisScriptAlgorithmInterface
     {
         $start = intdiv((int) $now, $interval) * $interval;
         if (is_array($state) && is_int($state[0] ?? null)) {
-            // a server with a clock behind the others must not reset the newer window of the others
-            $start = max($start, intdiv($state[0], $interval) * $interval);
+            // a server with a clock behind the others must not reset the newer window of the others;
+            // a window further ahead is from a wrong clock, it would reject the clients for the whole difference
+            $stored = intdiv($state[0], $interval) * $interval;
+            $start = $stored - $start <= $interval ? max($start, $stored) : $start;
         }
         [$previous, $current] = [0, 0];
         if (is_array($state) && is_int($state[1] ?? null) && is_int($state[2] ?? null)) {
@@ -82,8 +84,10 @@ final readonly class SlidingWindow implements RedisScriptAlgorithmInterface
             local limit, window, cost, now = tonumber(ARGV[1]), tonumber(ARGV[2]), tonumber(ARGV[3]), tonumber(ARGV[4])
             local start = math.floor(now / window) * window
             -- a server with a clock behind the others must not count in the older windows, like step()
-            local latest = tonumber(redis.call('GET', KEYS[1] .. ':start') or '0')
-            start = math.max(start, math.floor(latest / window) * window)
+            local latest = math.floor(tonumber(redis.call('GET', KEYS[1] .. ':start') or '0') / window) * window
+            if latest - start <= window then
+                start = math.max(start, latest)
+            end
             local currentKey = KEYS[1] .. ':' .. string.format('%d', start)
             local previous = tonumber(redis.call('GET', KEYS[1] .. ':' .. string.format('%d', start - window)) or '0')
             local current = tonumber(redis.call('GET', currentKey) or '0')

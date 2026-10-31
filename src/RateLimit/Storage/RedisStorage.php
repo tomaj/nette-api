@@ -66,7 +66,9 @@ final readonly class RedisStorage implements RateLimitStorageInterface
         $redisKey = $this->prefix . '{' . $key . '}';
         try {
             $result = $this->client->evaluate($script, [$redisKey], $arguments);
-        } catch (\Throwable $e) {
+        } catch (\LogicException $e) {
+            throw $e; // a bug of an own client, not an outage
+        } catch (\Exception $e) {
             throw new RateLimitStorageException(sprintf("The rate limit counter '%s' cannot be updated in Redis: %s", $redisKey, $e->getMessage()), 0, $e);
         }
         [$accepted, $remaining, $resetAfter, $retryAfter] = is_array($result) && array_is_list($result) && count($result) === 4 ? $result : [null, null, null, null];

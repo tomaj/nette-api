@@ -17,6 +17,11 @@ use Tomaj\NetteApi\RateLimit\RateLimitResponse;
 use Tomaj\NetteApi\RateLimit\RateLimitResult;
 use Tomaj\NetteApi\RateLimit\RateLimitStage;
 use Tomaj\NetteApi\RateLimit\Storage\InMemoryStorage;
+use Nette\DI\Container;
+use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\Authorization\NoAuthorization;
+use Tomaj\NetteApi\EndpointIdentifier;
+use Tomaj\NetteApi\Handlers\AlwaysOkHandler;
 
 final class ChainAndLegacyTest extends TestCase
 {
@@ -88,6 +93,31 @@ final class ChainAndLegacyTest extends TestCase
             . 'or implement Tomaj\NetteApi\RateLimit\RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array returning a list of RateLimitResult. See UPGRADE-4.0.md, section Rate limiting.',
             LegacyRateLimitAdapter::deprecation('Foo'),
         );
+    }
+
+    public function testAutowiredLegacyLimiterIsUsedWhenTheArgumentIsLeftOut(): void
+    {
+        $legacy = $this->legacy(null);
+        $container = new class ($legacy) extends Container {
+            public function __construct(private readonly RateLimitInterface $legacy)
+            {
+                parent::__construct();
+            }
+
+            #[\Override]
+            public function getByType(string $type, bool $throw = true): ?object
+            {
+                return $type === RateLimitInterface::class ? $this->legacy : null;
+            }
+        };
+        $endpoint = new EndpointIdentifier('GET', 1, 'users');
+        $decider = new ApiDecider($container);
+        @$decider->addApi($endpoint, new AlwaysOkHandler(), new NoAuthorization());
+        $decider->addApi($endpoint, new AlwaysOkHandler(), new NoAuthorization(), null);
+        [$autowired, $none] = $decider->getApis();
+        $this->assertInstanceOf(LegacyRateLimitAdapter::class, $autowired->getRateLimit());
+        $this->assertSame($legacy, $autowired->getRateLimit()->getRateLimit());
+        $this->assertInstanceOf(NoRateLimit::class, $none->getRateLimit(), 'null means no rate limit');
     }
 
     public function testAdapter(): void

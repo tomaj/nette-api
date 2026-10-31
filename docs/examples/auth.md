@@ -46,9 +46,9 @@ In 3.x the bundled `BasicAuthentication` does not work with `nette/http` 3.2 and
 
 From your own `TokenRepositoryInterface` backed by a database. `StaticTokenRepository` with tokens in NEON is for examples and internal tools.
 
-### Why is the rate limit not autowired?
+### How does the rate limit get to an endpoint?
 
-Nette DI would pass it to every `addApi()` call. See [Rate limiting](/guide/rate-limit).
+`addApi()` gets it as the 4th argument, a `RateLimiterInterface` is not autowired. See [Rate limiting](/guide/rate-limit).
 
 ### What do the 401 messages say?
 

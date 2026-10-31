@@ -12,7 +12,8 @@ use Tomaj\NetteApi\RateLimit\Algorithm\RateLimitAlgorithmInterface;
  * so two parallel requests can both read the same counter and both pass: the limit is not exact under load.
  * Use RedisStorage when the limit must hold exactly.
  *
- * Any exception of load() or save() becomes RateLimitStorageException, so the request passes with a warning (fail-open).
+ * An exception of load() or save() becomes RateLimitStorageException, so the request passes with a warning (fail-open).
+ * A \LogicException or an \Error is a bug or a wrong configuration, it is not hidden.
  */
 abstract class KeyValueStorage implements RateLimitStorageInterface
 {
@@ -28,14 +29,18 @@ abstract class KeyValueStorage implements RateLimitStorageInterface
     {
         try {
             $state = $this->load($key, $now);
-        } catch (\Throwable $e) {
+        } catch (\LogicException $e) {
+            throw $e;
+        } catch (\Exception $e) {
             throw self::failure('read from', $key, $e);
         }
         $step = $algorithm->step($state, $limit, $interval, $cost, $now);
         if ($step->state !== null) {
             try {
                 $this->save($key, $step->state, $step->ttl, $now);
-            } catch (\Throwable $e) {
+            } catch (\LogicException $e) {
+                throw $e;
+            } catch (\Exception $e) {
                 throw self::failure('saved to', $key, $e);
             }
         }
@@ -44,9 +49,9 @@ abstract class KeyValueStorage implements RateLimitStorageInterface
     }
 
     /**
-     * Any error of load() or save() (a database or Memcached outage, ...) lets the request pass with a warning, see StorageRateLimiter
+     * An outage of the backend of load() or save() (a database, Memcached, ...) lets the request pass with a warning, see StorageRateLimiter
      */
-    private static function failure(string $action, string $key, \Throwable $e): RateLimitStorageException
+    private static function failure(string $action, string $key, \Exception $e): RateLimitStorageException
     {
         return $e instanceof RateLimitStorageException
             ? $e

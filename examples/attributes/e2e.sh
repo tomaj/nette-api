@@ -45,6 +45,7 @@ expect_status 200 "preflight"
 expect_header 'Access-Control-Allow-Methods' "preflight methods"
 ok "cors.preflight answers OPTIONS for every endpoint without a token"
 
+avoid_minute_edge
 for i in 1 2; do
     request -X POST -H 'Authorization: Bearer secret-token' -d 'name=Carol' "$BASE/api/v1/users"
     expect_status 201 "create $i"

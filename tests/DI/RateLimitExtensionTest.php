@@ -637,6 +637,71 @@ final class RateLimitExtensionTest extends TestCase
         $this->assertSame(1, $second->consume(ContextFactory::create())[0]->remaining);
     }
 
+    public function testAutowiredLegacyLimiterStillReachesAddApi(): void
+    {
+        $container = ContainerFactory::create(self::neon(<<<'NEON'
+            services:
+                - Tomaj\NetteApi\Test\DI\Fixtures\LegacyRateLimit
+                decider:
+                    factory: Tomaj\NetteApi\ApiDecider
+                    setup:
+                        - addApi(Tomaj\NetteApi\EndpointIdentifier(GET, 1, users), {handler}(), Tomaj\NetteApi\Authorization\NoAuthorization())
+                        - addApi(Tomaj\NetteApi\EndpointIdentifier(GET, 1, orders), {handler}(), Tomaj\NetteApi\Authorization\NoAuthorization(), null)
+            api: []
+            NEON));
+        $decider = $container->getService('decider');
+        $this->assertInstanceOf(ApiDecider::class, $decider);
+        [$autowired, $none] = @$decider->getApis();
+        $this->assertInstanceOf(LegacyRateLimitAdapter::class, $autowired->getRateLimit());
+        $this->assertInstanceOf(NoRateLimit::class, $none->getRateLimit());
+    }
+
+    public function testLoggerOfTheWarnings(): void
+    {
+        $neon = <<<'NEON'
+            services:
+                first: {factory: Tomaj\NetteApi\Test\DI\Fixtures\NullLogger}
+                second: {factory: Tomaj\NetteApi\Test\DI\Fixtures\NullLogger}
+            api:
+                rateLimiting: {storage: memory%s}
+                rateLimits:
+                    perIp: {limit: 1, interval: 60}
+                endpoints:
+                    - {method: GET, version: 1, package: users, handler: {handler}, rateLimit: perIp}
+            NEON;
+        $limiter = $this->rateLimits(ContainerFactory::create(self::neon(sprintf($neon, ''))))[0];
+        $this->assertNull(new ReflectionProperty(StorageRateLimiter::class, 'logger')->getValue($limiter), 'more ILogger services do not fail the compilation, Tracy logs');
+        $container = ContainerFactory::create(self::neon(sprintf($neon, ', logger: @second')));
+        $this->assertSame($container->getService('second'), new ReflectionProperty(StorageRateLimiter::class, 'logger')->getValue($this->rateLimits($container)[0]));
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function wrongRedisClients(): iterable
+    {
+        yield 'a service of another type' => ['@notRedis', "api.rateLimiting.redis @notRedis is stdClass, which is not a Redis client."];
+        yield 'a class of another type' => ['stdClass', "api.rateLimiting.redis stdClass is stdClass, which is not a Redis client."];
+        yield 'a statement of another type' => ['stdClass()', "api.rateLimiting.redis stdClass(...) is stdClass, which is not a Redis client."];
+        yield 'a service without @' => ['notRedis', "api.rateLimiting.redis 'notRedis' is not a @service nor a class, for a service write @notRedis."];
+        yield 'a class in the wrong case, a service name without @' => ['stdclass', "api.rateLimiting.redis 'stdclass' is not a @service nor a class, for a service write @stdclass."];
+    }
+
+    #[DataProvider('wrongRedisClients')]
+    public function testWrongRedisClientFailsTheCompilation(string $client, string $message): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage($message);
+        ContainerFactory::compile(self::neon(sprintf(<<<'NEON'
+            services:
+                notRedis: stdClass
+            api:
+                rateLimiting: {storage: redis, redis: %s}
+                rateLimits:
+                    perIp: {limit: 1, interval: 60}
+            NEON, $client)));
+    }
+
     public function testKeyClassThatCannotBeCreatedFailsTheCompilation(): void
     {
         $this->expectException(InvalidConfigurationException::class);
@@ -666,6 +731,22 @@ final class RateLimitExtensionTest extends TestCase
                     - {method: GET, version: 1, package: users, handler: {handler}, rateLimit: {algorithm: %s, limit: 1, interval: 1}}
             NEON;
         ContainerFactory::compile(self::neon(sprintf($neon, '@memoryStorage', '@onlyInPhpFactory')));
+        $named = <<<'NEON'
+            services:
+                fakeRedis: Tomaj\NetteApi\Test\DI\Fixtures\FakeRedisClient
+                redisStorage: Tomaj\NetteApi\RateLimit\Storage\RedisStorage(@fakeRedis)
+                onlyInPhp: Tomaj\NetteApi\Test\RateLimit\Algorithm\OnlyInPhp
+            api:
+                rateLimiting: {storage: @redisStorage}
+                rateLimits:
+                    steady: {algorithm: @onlyInPhp, limit: 1, interval: 1}
+            NEON;
+        try {
+            ContainerFactory::compile($named);
+            $this->fail('a named policy is checked too');
+        } catch (InvalidConfigurationException $e) {
+            $this->assertStringContainsString('in api.rateLimits.steady cannot run in Redis', $e->getMessage());
+        }
         foreach ([['@redisStorageFactory', '@onlyInPhp'], ['@redisStorage', '@onlyInPhpFactory'], ['@redisStorageFactory', '@onlyInPhpFactory']] as [$storage, $algorithm]) {
             try {
                 ContainerFactory::compile(self::neon(sprintf($neon, $storage, $algorithm)));

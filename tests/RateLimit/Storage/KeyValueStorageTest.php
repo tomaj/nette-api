@@ -176,6 +176,19 @@ final class KeyValueStorageTest extends TestCase
         }
     }
 
+    public function testBugsOfAnOwnStorageAreNotHidden(): void
+    {
+        foreach ([[new \LogicException('bug'), null], [null, new \LogicException('bug')], [new \TypeError('bug'), null], [null, new \Error('bug')]] as [$load, $save]) {
+            $error = $load ?? $save;
+            try {
+                new FailingStorage($load, $save)->consume(new FixedWindow(), 'k', 3, 60, 1, 1000.0);
+                $this->fail('the bug should not be hidden');
+            } catch (\Throwable $e) {
+                $this->assertSame($error, $e);
+            }
+        }
+    }
+
     public function testErrorsOfAnOwnStorageLetTheRequestPass(): void
     {
         $storage = new FailingStorage(new \PDOException('server has gone away'));

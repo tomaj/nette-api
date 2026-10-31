@@ -299,8 +299,12 @@ final class ApiPresenter implements IPresenter
 
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
-        $ipDetector = $rateLimit instanceof NoRateLimit ? null : $this->context->getByType(IpDetectorInterface::class, false);
-        $ip = $ipDetector instanceof IpDetector ? $this->remoteAddress() : $ipDetector?->getRequestIp();
+        try {
+            $ipDetector = $rateLimit instanceof NoRateLimit ? null : $this->context->getByType(IpDetectorInterface::class, false);
+            $ip = $ipDetector instanceof IpDetector ? $this->remoteAddress() : $ipDetector?->getRequestIp();
+        } catch (Throwable $throwable) {
+            return $this->rateLimitError($throwable);
+        }
         // only IpKey needs the detector (it throws without one), a custom limiter without it keeps working
         $hasIpDetector = $ipDetector !== null;
 
@@ -317,7 +321,13 @@ final class ApiPresenter implements IPresenter
             return $authResponse;
         }
 
-        $identity = $authorization instanceof AuthorizationIdentityInterface ? $authorization->getIdentity() : null;
+        try {
+            $identity = $authorization instanceof AuthorizationIdentityInterface ? $authorization->getIdentity() : null;
+        } catch (Throwable $throwable) {
+            $response = $this->errorHandler->handleAuthorizationException($throwable, $params);
+            $this->response->setCode($response->getCode());
+            return $response;
+        }
         $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::AfterAuthorization, $ip, $identity, $hasIpDetector));
         if ($rateLimitResponse !== null) {
             return $rateLimitResponse;
@@ -410,7 +420,17 @@ final class ApiPresenter implements IPresenter
     {
         $address = $this->context->getByType(IRequest::class, false)?->getRemoteAddress() ?? ($_SERVER['REMOTE_ADDR'] ?? null);
 
-        return is_string($address) ? $address : 'cli';
+        return is_string($address) && $address !== '' ? $address : 'cli';
+    }
+
+    /**
+     * A wrong configuration or a bug of an own limiter or IP detector, answered like an exception of a handler
+     */
+    private function rateLimitError(Throwable $throwable): IResponse
+    {
+        $response = $this->errorHandler->handle($throwable, []);
+        $this->response->setCode($response->getCode());
+        return $response;
     }
 
     /**
@@ -422,10 +442,7 @@ final class ApiPresenter implements IPresenter
         try {
             $results = $rateLimit->consume($context);
         } catch (Throwable $throwable) {
-            // a wrong configuration or a bug of an own limiter, answered like an exception of a handler
-            $response = $this->errorHandler->handle($throwable, []);
-            $this->response->setCode($response->getCode());
-            return $response;
+            return $this->rateLimitError($throwable);
         }
 
         $rejected = null;

@@ -102,6 +102,13 @@ final class RedisStorageTest extends TestCase
         }
     }
 
+    public function testBugOfAClientIsNotHidden(): void
+    {
+        $error = new \LogicException('a bug');
+        $this->expectExceptionObject($error);
+        new RedisStorage($this->client(null, $error))->consume(new TokenBucket(), 'k', 5, 60, 1, 1.0);
+    }
+
     public function testOtherClientIsExplained(): void
     {
         $this->expectException(\InvalidArgumentException::class);

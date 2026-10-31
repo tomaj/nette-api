@@ -15,6 +15,7 @@ use Nette\DI\Extensions\InjectExtension;
 use Nette\DI\InvalidConfigurationException;
 use Nette\Schema\Expect;
 use Nette\Schema\Schema;
+use Predis\ClientInterface as PredisClientInterface;
 use Psr\Clock\ClockInterface;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
@@ -61,7 +62,9 @@ use Tomaj\NetteApi\RateLimit\Storage\RateLimitStorageInterface;
 use Tomaj\NetteApi\RateLimit\Storage\LazyStorage;
 use Tomaj\NetteApi\RateLimit\Storage\RedisStorage;
 use Nette\PhpGenerator\Literal;
+use Tomaj\NetteApi\RateLimit\Redis\RedisClientInterface;
 use Tomaj\NetteApi\RateLimit\TokenBucketLimiter;
+use Tracy\ILogger;
 
 /**
  * Registers the API services and endpoints from the "api:" neon section:
@@ -86,7 +89,7 @@ use Tomaj\NetteApi\RateLimit\TokenBucketLimiter;
  *     logging: object{maskHeaders: bool|list<string>|object{names: list<string>|null, add: list<string>, remove: list<string>, patterns: bool|list<string>|object{add: list<string>, remove: list<string>}}, maskQueryParams: bool|list<string>|object{names: list<string>|null, add: list<string>, remove: list<string>}, masking: ServiceValue, hashKey: string|Statement|null},
  *     authorizations: array<string, ServiceValue>,
  *     rateLimits: array<string, ServiceValue|RateLimitDefinition>,
- *     rateLimiting: object{storage: ServiceValue, redis: ServiceValue|null, prefix: string, clock: ServiceValue|null},
+ *     rateLimiting: object{storage: ServiceValue, redis: ServiceValue|null, prefix: string, clock: ServiceValue|null, logger: ServiceValue|null},
  *     defaults: object{authorization: ServiceValue|null, rateLimit: RateLimitValue|null},
  *     discovery: object{paths: list<string>, namespace: string|null},
  *     endpoints: list<object{method: string, version: string|int|float, package: string, action: string|null, handler: ServiceValue, authorization: EndpointValue, rateLimit: RateLimitValue|false|null}>
@@ -106,6 +109,8 @@ final class NetteApiExtension extends CompilerExtension
 
     private const array RATE_LIMIT_STORAGES = ['cache', 'memory', 'redis'];
 
+    private const array REDIS_CLIENTS = [\Redis::class, \RedisCluster::class, PredisClientInterface::class, RedisClientInterface::class];
+
     /** not under rateLimit., where the policies from api.rateLimits are */
     private const string RATE_LIMIT_STORAGE = 'rateLimiting.storage';
 
@@ -124,6 +129,9 @@ final class NetteApiExtension extends CompilerExtension
 
     /** @var list<array{string, class-string, string}> "@name" references checked once all services are registered */
     private array $references = [];
+
+    /** @var list<\Closure(): void> checks of the rate limits that need the types of all services */
+    private array $rateLimitChecks = [];
 
     /** @var array<string, string> policy names of api.rateLimits => where they are defined */
     private array $ratePolicies = [];
@@ -194,6 +202,7 @@ final class NetteApiExtension extends CompilerExtension
                 'redis' => $service()->nullable()->default(null),
                 'prefix' => Expect::string(RedisStorage::PREFIX),
                 'clock' => $service()->nullable()->default(null),
+                'logger' => $service()->nullable()->default(null),
             ]),
             'defaults' => Expect::structure([
                 'authorization' => $service()->nullable()->default(null),
@@ -388,6 +397,9 @@ final class NetteApiExtension extends CompilerExtension
             ]);
         }
 
+        foreach ($this->rateLimitChecks as $check) {
+            $check();
+        }
         $this->checkRateLimitStorage();
     }
 
@@ -1020,6 +1032,8 @@ final class NetteApiExtension extends CompilerExtension
             new Statement([RateLimitKeys::class, 'fromName'], [$key, $where]),
             $this->rateLimitStorage(),
             $rateLimiting->clock === null ? null : $this->service($rateLimiting->clock, [], 'api.rateLimiting.clock', ClockInterface::class),
+            // not autowired, more ILogger services in an application must not fail the compilation
+            $rateLimiting->logger === null ? null : $this->service($rateLimiting->logger, [], 'api.rateLimiting.logger', ILogger::class),
         ]);
     }
 
@@ -1051,10 +1065,12 @@ final class NetteApiExtension extends CompilerExtension
     {
         if ($algorithm instanceof Statement || (is_string($algorithm) && str_starts_with($algorithm, '@'))) {
             $service = $this->service($algorithm, [], $where . '.algorithm', RateLimitAlgorithmInterface::class);
-            $class = $this->classOf($algorithm);
-            if ($class !== null) {
-                $this->checkRedisAlgorithm($class, $where);
-            }
+            $this->rateLimitChecks[] = function () use ($algorithm, $where): void {
+                $class = $this->classOf($algorithm);
+                if ($class !== null) {
+                    $this->checkRedisAlgorithm($class, $where);
+                }
+            };
             return $service;
         }
         if (!is_string($algorithm) || !class_exists($algorithm)) {
@@ -1076,7 +1092,7 @@ final class NetteApiExtension extends CompilerExtension
                 RedisScriptAlgorithmInterface::class,
             ));
         }
-        $this->checkRedisAlgorithm($algorithm, $where);
+        $this->rateLimitChecks[] = fn () => $this->checkRedisAlgorithm($algorithm, $where);
         return new Statement($algorithm);
     }
 
@@ -1184,6 +1200,18 @@ final class NetteApiExtension extends CompilerExtension
 
     private function redisClient(string|Statement $client): Statement|Reference
     {
+        $class = $this->classOf($client);
+        $expected = sprintf('Use @service with a Redis client, or a class: %s.', implode(', ', self::REDIS_CLIENTS));
+        $this->rateLimitChecks[] = function () use ($client, $expected): void {
+            $class = $this->classOf($client);
+            if ($class !== null && !array_any(self::REDIS_CLIENTS, fn(string $type): bool => is_a($class, $type, true))) {
+                throw new InvalidConfigurationException(sprintf('api.rateLimiting.redis %s is %s, which is not a Redis client. %s', self::describe($client), $class, $expected));
+            }
+        };
+        if (is_string($client) && !str_starts_with($client, '@') && ($class === null || !class_exists($class) || new \ReflectionClass($class)->getName() !== ltrim($client, '\\'))) {
+            // 'redis' without @ would be the class \Redis: a client without connect(), so every request would pass without a limit
+            throw new InvalidConfigurationException(sprintf("api.rateLimiting.redis '%s' is not a @service nor a class, for a service write @%s. %s", $client, $client, $expected));
+        }
         if (is_string($client) && str_starts_with($client, '@')) {
             return new Reference(substr($client, 1));
         }

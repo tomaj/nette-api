@@ -14,6 +14,7 @@ use Tomaj\NetteApi\RateLimit\RateLimitContext;
  * With the default IpDetector the presenter gives it the address from Nette\Http\IRequest::getRemoteAddress(), because
  * IpDetector trusts headers that any client can send. Behind a reverse proxy list it in http.proxy of the Nette configuration,
  * otherwise all clients share the quota of the proxy. An own IP detector from api.ipDetector is used as it is.
+ * An IPv6 client controls a whole subnet, so the quota is per /64; an IPv4-mapped IPv6 address counts as the IPv4 address.
  * Without any IpDetectorInterface service (only possible without the DI extension) the key throws a LogicException.
  */
 final readonly class IpKey implements RateLimitKeyInterface
@@ -39,7 +40,20 @@ final readonly class IpKey implements RateLimitKeyInterface
             return null;
         }
         // an IP is at most 45 characters; a longer value (a list from X-Forwarded-For, a forged header) is hashed to keep keys short
-        return 'ip:' . (strlen($context->ip) > self::MAX_LENGTH ? hash('sha256', $context->ip) : $context->ip);
+        return 'ip:' . (strlen($context->ip) > self::MAX_LENGTH ? hash('sha256', $context->ip) : self::normalize($context->ip));
+    }
+
+    private static function normalize(string $ip): string
+    {
+        $binary = @inet_pton($ip); // @ - a value of an own detector does not have to be an IP
+        if ($binary === false || strlen($binary) !== 16) {
+            return $ip;
+        }
+        if (str_starts_with($binary, str_repeat("\0", 10) . "\xFF\xFF")) {
+            return (string) inet_ntop(substr($binary, 12));
+        }
+
+        return inet_ntop(substr($binary, 0, 8) . str_repeat("\0", 8)) . '/64';
     }
 
     #[\Override]

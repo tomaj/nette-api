@@ -94,6 +94,21 @@ abstract class StorageTestCase extends TestCase
         $this->assertTrue($storage->consume(new SlidingWindow(), 'full', 10, 60, 1, $now + $last->resetAfter)->accepted, 'a client waiting t is not rejected again');
     }
 
+    public function testAClockFarAheadDoesNotRejectClientsForTheWholeDifference(): void
+    {
+        $storage = $this->storage();
+        foreach ([new FixedWindow(), new SlidingWindow(), new TokenBucket()] as $algorithm) {
+            $key = $algorithm::class;
+            $this->assertTrue($storage->consume($algorithm, $key, 2, 60, 2, 4800.0)->accepted, 'a server one hour ahead');
+            $result = $storage->consume($algorithm, $key, 2, 60, 1, 1200.0);
+            $this->assertLessThanOrEqual(60, $result->retryAfter ?? 0, 'at most one interval');
+            $this->assertLessThanOrEqual(60, $result->resetAfter, 'at most one interval');
+        }
+        foreach ([new FixedWindow(), new SlidingWindow()] as $algorithm) {
+            $this->assertTrue($storage->consume($algorithm, $algorithm::class, 2, 60, 1, 1200.0)->accepted, 'the window of the wrong clock does not count');
+        }
+    }
+
     public function testWindowsKeepTheNewerWindowOfServersWithSkewedClocks(): void
     {
         $storage = $this->storage();

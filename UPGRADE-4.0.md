@@ -166,6 +166,10 @@ or implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost
 
 **Reverse proxy:** with the default `IpDetector`, `key: ip` counts the address from `Nette\Http\IRequest::getRemoteAddress()`, because the detector trusts headers any client can send. Behind a reverse proxy list it in `http: proxy:`, otherwise all clients share the quota of the proxy. An own detector in `api.ipDetector` is used as it is.
 
+**getIdentity():** `TokenAuthorization` and `BasicAuthentication` implement `AuthorizationIdentityInterface` with `public function getIdentity(): ?string`. A subclass with its own `getIdentity()` must use this signature, otherwise PHP fails with a fatal error when the class loads. A subclass that overrides `authorized()` without calling the parent must override `getIdentity()` too, or limits keyed by `identity` are skipped with a warning in the log.
+
+**Autowiring:** an autowired `RateLimitInterface` service still goes to `addApi()` calls without the 4th argument, also to calls from your PHP code; pass `null` for no limit. A `RateLimiterInterface` is not autowired.
+
 **Dependencies:** `nette/caching` ^3.2 and `psr/clock` ^1.0 are required. For Redis install `ext-redis` or `predis/predis`.
 
 ## Exceptions from authorization are not sent to the client

@@ -50,7 +50,7 @@ api:
 		# override with another named policy
 		- {method: POST, version: 1, package: login, handler: App\Api\LoginHandler, rateLimit: login}
 		# more policies, checked in order, the request must pass each
-		- {method: GET, version: 1, package: reports, handler: App\Api\ReportsHandler, rateLimit: [perIp, perUser]}
+		- {method: GET, version: 1, package: reports, handler: App\Api\ReportsHandler, authorization: Tomaj\NetteApi\Authorization\BearerTokenAuthorization, rateLimit: [perIp, perUser]}
 		# an inline limit only for this endpoint
 		- {method: POST, version: 1, package: export, handler: App\Api\ExportHandler, rateLimit: {limit: 2, interval: 1 hour}}
 		# no rate limit
@@ -108,6 +108,7 @@ api:
 		# redis: @redis         # \Redis, \RedisCluster, Predis\ClientInterface or a RedisClientInterface
 		# prefix: 'myapp:rate-limit:'
 		# clock: App\MyClock    # a Psr\Clock\ClockInterface
+		# logger: @myLogger     # a Tracy\ILogger for the warnings, the Tracy log by default
 ```
 
 | Storage | Atomic | Use |
@@ -122,7 +123,7 @@ Nette cache has no increment, so `NetteCacheStorage` reads and writes the counte
 Every key is one cache item. `FileStorage` deletes an expired file when it is read again, and `SQLiteStorage` keeps expired rows, so the counters of clients that never come back stay until `$storage->clean([Cache::All => true])` or the cache is emptied. The `MemoryStorage` of nette/caching never removes expired items, so in a long-running worker it grows with every client; use `memory` there instead. `DevNullStorage` keeps nothing, so every request passes.
 :::
 
-The time comes from the clock of the application server, not from Redis. With more servers keep their clocks synchronized (NTP): a window starts at a different moment on a server whose clock is off. The token bucket never moves its time back, so a server behind the others does not refill a bucket twice. A server behind the others counts in the newer window and does not reset it, in every storage: in Redis the fixed and the sliding window keep the start of the newest window in the key `<key>:start`. `t`, `Retry-After` and the expiration of a counter are measured by the clock of the server that answers, so a client waiting `Retry-After` is not rejected again by the same server.
+The time comes from the clock of the application server, not from Redis. With more servers keep their clocks synchronized (NTP): a window starts at a different moment on a server whose clock is off. The token bucket never moves its time back, so a server behind the others does not refill a bucket twice. A server behind the others counts in the newer window and does not reset it, in every storage: in Redis the fixed and the sliding window keep the start of the newest window in the key `<key>:start`. `t`, `Retry-After` and the expiration of a counter are measured by the clock of the server that answers, so a client waiting `Retry-After` is not rejected again by the same server. A stored window or time more than one interval ahead is ignored, so one server with a wrong clock does not reject clients for the whole difference.
 
 All built-in policies use the same storage. Redis keys are `prefix` + `{policy:key}`; the braces are a Redis Cluster hash tag, so every key of one counter is in one slot. Install `ext-redis` or `predis/predis` and register the client as a service:
 
@@ -144,7 +145,7 @@ Set short timeouts. With PHP-FPM every request connects on its own, so a Redis t
 
 ### When the storage fails
 
-A rate limit must not take the API down. The storage is created on the first request with a rate limit, not with the API, so Redis that is down when the application starts does not fail the endpoints, and endpoints without a limit never connect to it; a long-running process tries an unsuccessful connection again after a second, with PHP-FPM every request tries once. When the storage throws (Redis is down, the cache directory is read only), the request passes (fail-open) and a warning with the cause goes to the Tracy log, or to the `Tracy\ILogger` you pass to the limiter. When the logger fails too (Tracy without a log directory), the warning goes to the PHP `error_log` and the request still passes. A `\LogicException` (a bug or a wrong configuration) is not hidden: like any exception of an own limiter or key, it goes to the `handle()` of the error handler, which answers `500`.
+A rate limit must not take the API down. The storage is created on the first request with a rate limit, not with the API, so Redis that is down when the application starts does not fail the endpoints, and endpoints without a limit never connect to it; a long-running process tries an unsuccessful connection again after a second, with PHP-FPM every request tries once. When the storage throws (Redis is down, the cache directory is read only), the request passes (fail-open) and a warning with the cause goes to the Tracy log, or to the `Tracy\ILogger` in `rateLimiting.logger` or passed to the limiter. When the logger fails too (Tracy without a log directory), the warning goes to the PHP `error_log` and the request still passes. A `\LogicException` or an `\Error` (a bug or a wrong configuration) is not hidden: like any exception of an own limiter or key, it goes to the `handle()` of the error handler, which answers `500`.
 
 ## Headers and 429
 
@@ -169,7 +170,7 @@ final class TenantKey implements RateLimitKeyInterface
 {
     public function key(RateLimitContext $context): ?string
     {
-        return $context->request->getHeader('X-Tenant');   // null skips the limit
+        return $_SERVER['HTTP_X_TENANT'] ?? null;           // null skips the limit
     }
 
     public function needsIdentity(): bool
@@ -190,7 +191,7 @@ A header comes from the client, which can send another value with every request;
 
 ### A custom storage
 
-Extend `KeyValueStorage` and implement `load()` and `save()`; every algorithm works with it. An exception from them (a `PDOException` during a database outage) becomes `RateLimitStorageException`, so the request passes as with the built-in storages. `load()` and `save()` run in two steps without a lock, so parallel requests can read the same value and all pass. Override `consume()` and lock around `parent::consume()`, like `NetteCacheStorage` does, or implement an atomic `RateLimitStorageInterface::consume()` yourself.
+Extend `KeyValueStorage` and implement `load()` and `save()`; every algorithm works with it. An exception from them (a `PDOException` during a database outage) becomes `RateLimitStorageException`, so the request passes as with the built-in storages; a `\LogicException` or an `\Error` is a bug and answers `500`. `load()` and `save()` run in two steps without a lock, so parallel requests can read the same value and all pass. Override `consume()` and lock around `parent::consume()`, like `NetteCacheStorage` does, or implement an atomic `RateLimitStorageInterface::consume()` yourself.
 
 ```php
 use Tomaj\NetteApi\RateLimit\Storage\KeyValueStorage;
@@ -353,7 +354,7 @@ $limiter = new SlidingWindowLimiter('perIp', 60, 60, new IpKey(), new NetteCache
 $apiDecider->addApi(new EndpointIdentifier('GET', 1, 'users'), $handler, new NoAuthorization(), $limiter);
 ```
 
-Register such a service with `autowired: false`, otherwise Nette DI passes it to every `addApi()` call.
+A `RateLimiterInterface` is not autowired, pass it to `addApi()`. A `RateLimitInterface` service of 3.x still goes to every `addApi()` call without the 4th argument, unless it is registered with `autowired: false`; pass `null` for no limit.
 
 The `ip` key needs an `IpDetectorInterface` service in the container (the DI extension always registers one). Without it, a request to an endpoint with an `ip` limit answers `500` through the error handler, with a `LogicException` that names the endpoint in the log, so the limit is not skipped silently; register `Tomaj\NetteApi\Misc\IpDetector` or your own detector. Limiters that don't use the IP keep working without it.
 
@@ -365,14 +366,14 @@ The `ip` key needs an `IpDetectorInterface` service in the container (the DI ext
 
 ### Which IP is counted?
 
-With the default `IpDetector`, the address from `Nette\Http\IRequest::getRemoteAddress()`, not from the detector: it trusts the `Client-IP` and `X-Forwarded-For` headers, so any client would get a new quota with every value (see the warning in [Authorization](/guide/authorization#tokens-and-ip-restrictions)). Nette trusts the forwarded headers only from the proxies you list:
+With the default `IpDetector`, also when it is set explicitly, the address from `Nette\Http\IRequest::getRemoteAddress()`, not from the detector: it trusts the `Client-IP` and `X-Forwarded-For` headers, so any client would get a new quota with every value (see the warning in [Authorization](/guide/authorization#tokens-and-ip-restrictions)). Nette trusts the forwarded headers only from the proxies you list:
 
 ```yaml
 http:
 	proxy: 10.0.0.0/8      # your reverse proxy or load balancer
 ```
 
-Without it, all clients behind a reverse proxy share one quota, the quota of the proxy. An own detector in `api.ipDetector` is used as it is, so it decides which headers to trust. A value longer than an IP (45 characters) is hashed, so forged headers cannot make long storage keys.
+Without it, all clients behind a reverse proxy share one quota, the quota of the proxy. An own detector in `api.ipDetector` is used as it is, so it decides which headers to trust. An IPv6 client controls a whole subnet, so the quota is per `/64`; an IPv4-mapped address (`::ffff:1.2.3.4`) counts as the IPv4 address. A value longer than an IP (45 characters) is hashed, so forged headers cannot make long storage keys.
 
 ### Are 429 responses logged?
 

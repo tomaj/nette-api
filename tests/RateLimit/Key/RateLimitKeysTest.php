@@ -27,7 +27,7 @@ final class RateLimitKeysTest extends TestCase
         $this->assertNull($key->key(ContextFactory::create(ip: '')));
         $ipv6 = 'ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255';
         $this->assertSame(45, strlen($ipv6));
-        $this->assertSame('ip:' . $ipv6, $key->key(ContextFactory::create(ip: $ipv6)), 'the longest IP is kept as it is');
+        $this->assertSame('ip:ffff:ffff:ffff:ffff::/64', $key->key(ContextFactory::create(ip: $ipv6)), 'the longest IP is not hashed');
         $long = $ipv6 . ', 10.0.0.1';
         $this->assertSame('ip:' . hash('sha256', $long), $key->key(ContextFactory::create(ip: $long)), 'a longer value is hashed');
     }

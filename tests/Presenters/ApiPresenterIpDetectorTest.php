@@ -34,6 +34,8 @@ use Nette\Http\Request as HttpRequest;
 use Nette\Http\UrlScript;
 use Tomaj\NetteApi\Error\ErrorHandlerInterface;
 use Tomaj\NetteApi\RateLimit\RateLimitContext;
+use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Authorization\AuthorizationIdentityInterface;
 
 /**
  * The IP limits without an IpDetectorInterface service; only response codes, so it runs without xdebug too
@@ -167,6 +169,60 @@ final class ApiPresenterIpDetectorTest extends TestCase
         unset($_SERVER['REMOTE_ADDR']);
         $this->assertSame(200, $this->code($this->presenterWithDefaultDetector($limiter, null)), 'a command line request has its own quota');
         $this->assertSame(429, $this->code($this->presenterWithDefaultDetector($limiter, null, httpRequest: false)));
+    }
+
+    public function testAnEmptyAddressIsNotAKeyThatSkipsTheLimit(): void
+    {
+        $limiter = $this->limiter(new IpKey());
+        $_SERVER['REMOTE_ADDR'] = '';
+        $presenter = $this->presenterWithDefaultDetector($limiter, null);
+        $this->assertSame([200, 429], [$this->code($presenter), $this->code($presenter)]);
+    }
+
+    public function testAnExceptionOfAnIpDetectorGoesToTheErrorHandler(): void
+    {
+        $presenter = $this->presenter($this->limiter(new IpKey()), ipDetector: false);
+        $presenter->context = new class extends Container {
+            #[\Override]
+            public function getByType(string $type, bool $throw = true): ?object
+            {
+                return new class implements IpDetectorInterface {
+                    public function getRequestIp(): string
+                    {
+                        throw new \LogicException('a bug in the detector');
+                    }
+                };
+            }
+        };
+        $this->failingLimiterExpected($presenter, 'a bug in the detector');
+    }
+
+    public function testAnExceptionOfGetIdentityGoesToTheErrorHandler(): void
+    {
+        $authorization = new class implements ApiAuthorizationInterface, AuthorizationIdentityInterface {
+            public function authorized(): bool
+            {
+                return true;
+            }
+
+            public function getErrorMessage(): ?string
+            {
+                return null;
+            }
+
+            public function getIdentity(): ?string
+            {
+                throw new \RuntimeException('the database is down');
+            }
+        };
+        $presenter = $this->presenter($this->limiter(new EndpointKey()), ipDetector: false);
+        $apiDecider = new ApiDecider(new Container());
+        $apiDecider->addApi(new EndpointIdentifier('GET', '1', 'test', 'api'), new AlwaysOkHandler(), $authorization, $this->limiter(new EndpointKey()));
+        $presenter->apiDecider = $apiDecider;
+        $handler = $this->createMock(ErrorHandlerInterface::class);
+        $handler->expects($this->once())->method('handleAuthorizationException')->willReturn(new JsonApiResponse(500, ['status' => 'error']));
+        $presenter->errorHandler = $handler;
+        $this->assertSame(500, $this->code($presenter));
     }
 
     public function testAnExceptionOfAnOwnLimiterGoesToTheErrorHandler(): void

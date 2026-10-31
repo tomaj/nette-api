@@ -45,6 +45,7 @@ expect_status 401 "basic auth wrong password"
 expect_body '"message":"Incorrect username or password"' "basic auth wrong password"
 ok "HTTP Basic with a wrong password answers 401"
 
+avoid_minute_edge
 for i in 1 2 3; do
     request "$BASE/api/v1/limited"
     expect_status 200 "rate limit request $i"

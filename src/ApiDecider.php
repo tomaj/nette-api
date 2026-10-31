@@ -71,10 +71,15 @@ class ApiDecider
     /**
      * Register new api handler
      *
-     * @param RateLimiterInterface|RateLimitInterface|null $rateLimit a RateLimitInterface (deprecated) still works through LegacyRateLimitAdapter
+     * @param RateLimiterInterface|RateLimitInterface|null $rateLimit a RateLimitInterface (deprecated) still works through LegacyRateLimitAdapter.
+     *        Left out, an autowired RateLimitInterface service is used like in 3.x; null means no rate limit.
      */
     public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, RateLimiterInterface|RateLimitInterface|null $rateLimit = null): self
     {
+        if (func_num_args() < 4) {
+            // Nette DI does not autowire a union type, without this a limiter of 3.x would be dropped silently
+            $rateLimit = $this->container->getByType(RateLimitInterface::class, false);
+        }
         $this->apis[] = new ApiHolder($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
     }

@@ -50,7 +50,7 @@ api:
 		# iná pomenovaná politika
 		- {method: POST, version: 1, package: login, handler: App\Api\LoginHandler, rateLimit: login}
 		# viac politík, kontrolujú sa postupne a požiadavka musí prejsť každou
-		- {method: GET, version: 1, package: reports, handler: App\Api\ReportsHandler, rateLimit: [perIp, perUser]}
+		- {method: GET, version: 1, package: reports, handler: App\Api\ReportsHandler, authorization: Tomaj\NetteApi\Authorization\BearerTokenAuthorization, rateLimit: [perIp, perUser]}
 		# vlastný limit len pre tento endpoint
 		- {method: POST, version: 1, package: export, handler: App\Api\ExportHandler, rateLimit: {limit: 2, interval: 1 hour}}
 		# bez obmedzenia
@@ -108,6 +108,7 @@ api:
 		# redis: @redis         # \Redis, \RedisCluster, Predis\ClientInterface alebo RedisClientInterface
 		# prefix: 'myapp:rate-limit:'
 		# clock: App\MyClock    # Psr\Clock\ClockInterface
+		# logger: @myLogger     # Tracy\ILogger pre varovania, predvolene Tracy log
 ```
 
 | Úložisko | Atomické | Použitie |
@@ -122,7 +123,7 @@ Nette cache nemá inkrement, preto `NetteCacheStorage` číta a zapisuje počít
 Každý kľúč je jedna položka cache. `FileStorage` zmaže expirovaný súbor, keď ho znova číta, a `SQLiteStorage` expirované riadky ponecháva, takže počítadlá klientov, ktorí sa už nevrátia, zostanú až do `$storage->clean([Cache::All => true])` alebo vyprázdnenia cache. `MemoryStorage` z nette/caching expirované položky nikdy neodstraňuje, takže v dlho bežiacom workeri rastie s každým klientom; tam použite `memory`. `DevNullStorage` nič neuchováva, takže prejde každá požiadavka.
 :::
 
-Čas pochádza z hodín aplikačného servera, nie z Redisu. Pri viacerých serveroch majte hodiny synchronizované (NTP): na serveri s posunutými hodinami začína okno v inom okamihu. Token bucket nikdy neposúva svoj čas späť, takže server, ktorý sa oneskoruje, nedoplní bucket dvakrát. Server, ktorý sa oneskoruje, počíta do novšieho okna a nevynuluje ho, v každom úložisku: v Redise si pevné aj posuvné okno pamätajú začiatok najnovšieho okna v kľúči `<kľúč>:start`. `t`, `Retry-After` a expirácia počítadla sa merajú hodinami servera, ktorý odpovedá, takže klienta, ktorý počká `Retry-After`, ten istý server znova neodmietne.
+Čas pochádza z hodín aplikačného servera, nie z Redisu. Pri viacerých serveroch majte hodiny synchronizované (NTP): na serveri s posunutými hodinami začína okno v inom okamihu. Token bucket nikdy neposúva svoj čas späť, takže server, ktorý sa oneskoruje, nedoplní bucket dvakrát. Server, ktorý sa oneskoruje, počíta do novšieho okna a nevynuluje ho, v každom úložisku: v Redise si pevné aj posuvné okno pamätajú začiatok najnovšieho okna v kľúči `<kľúč>:start`. `t`, `Retry-After` a expirácia počítadla sa merajú hodinami servera, ktorý odpovedá, takže klienta, ktorý počká `Retry-After`, ten istý server znova neodmietne. Uložené okno alebo čas viac než jeden interval dopredu sa ignoruje, takže jeden server so zlými hodinami neodmieta klientov po celý rozdiel.
 
 Všetky vstavané politiky používajú rovnaké úložisko. Kľúče v Redise sú `prefix` + `{policy:key}`; zátvorky sú hash tag Redis Clustra, takže všetky kľúče jedného počítadla sú v jednom slote. Nainštalujte `ext-redis` alebo `predis/predis` a klienta zaregistrujte ako službu:
 
@@ -144,7 +145,7 @@ Nastavte krátke timeouty. Pri PHP-FPM sa každá požiadavka pripája sama, tak
 
 ### Keď úložisko zlyhá
 
-Obmedzenie nesmie zhodiť API. Úložisko sa vytvorí pri prvej požiadavke s limitom, nie spolu s API, takže Redis, ktorý pri štarte aplikácie nebeží, endpointy nezhodí a endpointy bez limitu sa k nemu nikdy nepripájajú; dlho bežiaci proces skúsi neúspešné pripojenie znova po sekunde, pri PHP-FPM ho skúsi každá požiadavka raz. Keď úložisko vyhodí výnimku (Redis nebeží, adresár cache je len na čítanie), požiadavka prejde (fail-open) a varovanie s príčinou ide do Tracy logu alebo do `Tracy\ILogger`, ktorý odovzdáte limiteru. Keď zlyhá aj logger (Tracy bez adresára pre logy), varovanie ide do PHP `error_log` a požiadavka aj tak prejde. `\LogicException` (chyba v kóde alebo zlá konfigurácia) sa neskrýva: ako každá výnimka vlastného limitera alebo kľúča ide do `handle()` error handlera, ktorý odpovie `500`.
+Obmedzenie nesmie zhodiť API. Úložisko sa vytvorí pri prvej požiadavke s limitom, nie spolu s API, takže Redis, ktorý pri štarte aplikácie nebeží, endpointy nezhodí a endpointy bez limitu sa k nemu nikdy nepripájajú; dlho bežiaci proces skúsi neúspešné pripojenie znova po sekunde, pri PHP-FPM ho skúsi každá požiadavka raz. Keď úložisko vyhodí výnimku (Redis nebeží, adresár cache je len na čítanie), požiadavka prejde (fail-open) a varovanie s príčinou ide do Tracy logu alebo do `Tracy\ILogger` z `rateLimiting.logger` či odovzdaného limiteru. Keď zlyhá aj logger (Tracy bez adresára pre logy), varovanie ide do PHP `error_log` a požiadavka aj tak prejde. `\LogicException` alebo `\Error` (chyba v kóde alebo zlá konfigurácia) sa neskrýva: ako každá výnimka vlastného limitera alebo kľúča ide do `handle()` error handlera, ktorý odpovie `500`.
 
 ## Hlavičky a 429
 
@@ -169,7 +170,7 @@ final class TenantKey implements RateLimitKeyInterface
 {
     public function key(RateLimitContext $context): ?string
     {
-        return $context->request->getHeader('X-Tenant');   // null limit preskočí
+        return $_SERVER['HTTP_X_TENANT'] ?? null;           // null limit preskočí
     }
 
     public function needsIdentity(): bool
@@ -190,7 +191,7 @@ Hlavičku posiela klient, ktorý môže s každou požiadavkou poslať inú hodn
 
 ### Vlastné úložisko
 
-Rozšírte `KeyValueStorage` a implementujte `load()` a `save()`; funguje s ním každý algoritmus. Výnimka z nich (`PDOException` pri výpadku databázy) sa zmení na `RateLimitStorageException`, takže požiadavka prejde ako pri vstavaných úložiskách. `load()` a `save()` bežia v dvoch krokoch bez zámku, takže súbežné požiadavky môžu prečítať rovnakú hodnotu a všetky prejsť. Prepíšte `consume()` a zamknite okolo `parent::consume()` ako `NetteCacheStorage`, alebo sami implementujte atomické `RateLimitStorageInterface::consume()`.
+Rozšírte `KeyValueStorage` a implementujte `load()` a `save()`; funguje s ním každý algoritmus. Výnimka z nich (`PDOException` pri výpadku databázy) sa zmení na `RateLimitStorageException`, takže požiadavka prejde ako pri vstavaných úložiskách; `\LogicException` alebo `\Error` je chyba v kóde a odpovie `500`. `load()` a `save()` bežia v dvoch krokoch bez zámku, takže súbežné požiadavky môžu prečítať rovnakú hodnotu a všetky prejsť. Prepíšte `consume()` a zamknite okolo `parent::consume()` ako `NetteCacheStorage`, alebo sami implementujte atomické `RateLimitStorageInterface::consume()`.
 
 ```php
 use Tomaj\NetteApi\RateLimit\Storage\KeyValueStorage;
@@ -353,7 +354,7 @@ $limiter = new SlidingWindowLimiter('perIp', 60, 60, new IpKey(), new NetteCache
 $apiDecider->addApi(new EndpointIdentifier('GET', 1, 'users'), $handler, new NoAuthorization(), $limiter);
 ```
 
-Takúto službu zaregistrujte s `autowired: false`, inak ju Nette DI odovzdá každému volaniu `addApi()`.
+`RateLimiterInterface` sa neautowiruje, odovzdajte ho do `addApi()`. Služba `RateLimitInterface` z 3.x stále ide do každého volania `addApi()` bez štvrtého argumentu, ak nie je zaregistrovaná s `autowired: false`; pre žiadny limit odovzdajte `null`.
 
 Kľúč `ip` potrebuje v kontajneri službu `IpDetectorInterface` (DI rozšírenie ju registruje vždy). Bez nej požiadavka na endpoint s obmedzením `ip` odpovie `500` cez error handler a do logu ide `LogicException` s názvom endpointu, takže sa obmedzenie potichu nepreskočí; zaregistrujte `Tomaj\NetteApi\Misc\IpDetector` alebo vlastný detektor. Obmedzenia, ktoré IP nepoužívajú, fungujú aj bez nej.
 
@@ -365,14 +366,14 @@ Kľúč `ip` potrebuje v kontajneri službu `IpDetectorInterface` (DI rozšíren
 
 ### Ktorá IP sa počíta?
 
-Pri predvolenom `IpDetector` adresa z `Nette\Http\IRequest::getRemoteAddress()`, nie z detektora: ten verí hlavičkám `Client-IP` a `X-Forwarded-For`, takže každý klient by s každou hodnotou dostal novú kvótu (pozrite si upozornenie v [Autorizácii](/sk/guide/authorization#tokeny-a-obmedzenie-ip)). Nette verí preposlaným hlavičkám len od proxy, ktoré uvediete:
+Pri predvolenom `IpDetector`, aj keď je nastavený výslovne, adresa z `Nette\Http\IRequest::getRemoteAddress()`, nie z detektora: ten verí hlavičkám `Client-IP` a `X-Forwarded-For`, takže každý klient by s každou hodnotou dostal novú kvótu (pozrite si upozornenie v [Autorizácii](/sk/guide/authorization#tokeny-a-obmedzenie-ip)). Nette verí preposlaným hlavičkám len od proxy, ktoré uvediete:
 
 ```yaml
 http:
 	proxy: 10.0.0.0/8      # vaša reverse proxy alebo load balancer
 ```
 
-Bez toho všetci klienti za reverse proxy zdieľajú jednu kvótu, kvótu proxy. Vlastný detektor v `api.ipDetector` sa použije tak, ako je, takže sám rozhoduje, ktorým hlavičkám verí. Hodnota dlhšia než IP (45 znakov) sa zahashuje, takže podvrhnuté hlavičky nevytvoria dlhé kľúče v úložisku.
+Bez toho všetci klienti za reverse proxy zdieľajú jednu kvótu, kvótu proxy. Vlastný detektor v `api.ipDetector` sa použije tak, ako je, takže sám rozhoduje, ktorým hlavičkám verí. IPv6 klient ovláda celú podsieť, preto je kvóta na `/64`; adresa IPv4 mapovaná do IPv6 (`::ffff:1.2.3.4`) sa počíta ako IPv4. Hodnota dlhšia než IP (45 znakov) sa zahashuje, takže podvrhnuté hlavičky nevytvoria dlhé kľúče v úložisku.
 
 ### Logujú sa odpovede 429?
 
