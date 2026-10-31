@@ -7,7 +7,7 @@ description: 'Runnable Nette API example: bearer token, X-API-Key header, HTTP B
 
 Four endpoints with the same handler, each protected differently.
 
-<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'app/RemoteAddrIpDetector.php', 'e2e.sh']" />
+<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'e2e.sh']" />
 
 <Diagram name="examples-auth-1" alt="Four endpoints: bearer, api-key and basic check credentials and answer 401 when wrong, limited answers 429 after three requests" />
 
@@ -25,10 +25,6 @@ Four endpoints with the same handler, each protected differently.
 `office-token` is allowed only from `10.0.0.0/8`; the test shows that a forged `X-Forwarded-For` does not help.
 
 ## The client IP
-
-<<< @/../examples/auth/app/RemoteAddrIpDetector.php
-
-The bundled `IpDetector` trusts client headers. This one reads only `REMOTE_ADDR`. See [Authorization](/guide/authorization#tokens-and-ip-restrictions).
 
 ## HTTP Basic
 

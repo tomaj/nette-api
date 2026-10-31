@@ -369,14 +369,14 @@ The `ip` key needs an `IpDetectorInterface` service in the container (the DI ext
 
 ### Which IP is counted?
 
-With the default `IpDetector`, also when it is set explicitly, the address from `Nette\Http\IRequest::getRemoteAddress()`, not from the detector: it trusts the `Client-IP` and `X-Forwarded-For` headers, so any client would get a new quota with every value (see the warning in [Authorization](/guide/authorization#tokens-and-ip-restrictions)). Nette trusts the forwarded headers only from the proxies you list:
+The one from the IP detector (`api.ipDetector`). The default `IpDetector` takes it from `Nette\Http\IRequest::getRemoteAddress()`, so a client cannot forge it with headers: Nette trusts the forwarded headers only from the proxies you list:
 
 ```yaml
 http:
 	proxy: 10.0.0.0/8      # your reverse proxy or load balancer
 ```
 
-Without it, all clients behind a reverse proxy share one quota, the quota of the proxy. An own detector in `api.ipDetector` is used as it is, so it decides which headers to trust. An IPv6 client controls a whole subnet, so the quota is per `/64`; an IPv4-mapped address (`::ffff:1.2.3.4`) counts as the IPv4 address. A value longer than an IP (45 characters) is hashed, so forged headers cannot make long storage keys.
+Without it, all clients behind a reverse proxy share one quota, the quota of the proxy. An own detector decides by itself which headers to trust. An IPv6 client controls a whole subnet, so the quota is per `/64`; an IPv4-mapped address (`::ffff:1.2.3.4`) counts as the IPv4 address. A value longer than an IP (45 characters) is hashed, so forged headers cannot make long storage keys.
 
 ### Are 429 responses logged?
 

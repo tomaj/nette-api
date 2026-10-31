@@ -369,14 +369,14 @@ Kľúč `ip` potrebuje v kontajneri službu `IpDetectorInterface` (DI rozšíren
 
 ### Ktorá IP sa počíta?
 
-Pri predvolenom `IpDetector`, aj keď je nastavený výslovne, adresa z `Nette\Http\IRequest::getRemoteAddress()`, nie z detektora: ten verí hlavičkám `Client-IP` a `X-Forwarded-For`, takže každý klient by s každou hodnotou dostal novú kvótu (pozrite si upozornenie v [Autorizácii](/sk/guide/authorization#tokeny-a-obmedzenie-ip)). Nette verí preposlaným hlavičkám len od proxy, ktoré uvediete:
+Tá z IP detektora (`api.ipDetector`). Predvolený `IpDetector` ju berie z `Nette\Http\IRequest::getRemoteAddress()`, takže ju klient nemôže podvrhnúť hlavičkami: Nette verí preposlaným hlavičkám len od proxy, ktoré uvediete:
 
 ```yaml
 http:
 	proxy: 10.0.0.0/8      # vaša reverse proxy alebo load balancer
 ```
 
-Bez toho všetci klienti za reverse proxy zdieľajú jednu kvótu, kvótu proxy. Vlastný detektor v `api.ipDetector` sa použije tak, ako je, takže sám rozhoduje, ktorým hlavičkám verí. IPv6 klient ovláda celú podsieť, preto je kvóta na `/64`; adresa IPv4 mapovaná do IPv6 (`::ffff:1.2.3.4`) sa počíta ako IPv4. Hodnota dlhšia než IP (45 znakov) sa zahashuje, takže podvrhnuté hlavičky nevytvoria dlhé kľúče v úložisku.
+Bez toho všetci klienti za reverse proxy zdieľajú jednu kvótu, kvótu proxy. Vlastný detektor sám rozhoduje, ktorým hlavičkám verí. IPv6 klient ovláda celú podsieť, preto je kvóta na `/64`; adresa IPv4 mapovaná do IPv6 (`::ffff:1.2.3.4`) sa počíta ako IPv4. Hodnota dlhšia než IP (45 znakov) sa zahashuje, takže podvrhnuté hlavičky nevytvoria dlhé kľúče v úložisku.
 
 ### Logujú sa odpovede 429?
 

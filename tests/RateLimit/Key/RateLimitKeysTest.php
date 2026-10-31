@@ -23,7 +23,6 @@ final class RateLimitKeysTest extends TestCase
         $key = new IpKey();
         $this->assertFalse($key->needsIdentity());
         $this->assertSame('ip:1.2.3.4', $key->key(ContextFactory::create()));
-        $this->assertNull($key->key(ContextFactory::create(ip: null)));
         $this->assertNull($key->key(ContextFactory::create(ip: '')));
         $ipv6 = 'ffff:ffff:ffff:ffff:ffff:ffff:255.255.255.255';
         $this->assertSame(45, strlen($ipv6));
@@ -54,7 +53,7 @@ final class RateLimitKeysTest extends TestCase
         $key = new CompositeKey(new IpKey(), new EndpointKey());
         $this->assertFalse($key->needsIdentity());
         $this->assertSame('ip:1.2.3.4|endpoint:GET:2:users:list', $key->key(ContextFactory::create()));
-        $this->assertNull($key->key(ContextFactory::create(ip: null)), 'a part without a key skips the limit');
+        $this->assertNull($key->key(ContextFactory::create(ip: '')), 'a part without a key skips the limit');
 
         $key = new CompositeKey(new EndpointKey(), new IdentityKey());
         $this->assertTrue($key->needsIdentity());

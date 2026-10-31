@@ -29,8 +29,6 @@ use Tomaj\NetteApi\RateLimit\Key\RateLimitKeyInterface;
 use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
 use Tomaj\NetteApi\RateLimit\Storage\InMemoryStorage;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
-use Nette\DI\MissingServiceException;
-use Nette\Http\IRequest;
 use Nette\Http\Request as HttpRequest;
 use Nette\Http\UrlScript;
 use Tomaj\NetteApi\Error\ErrorHandlerInterface;
@@ -88,10 +86,7 @@ final class ApiPresenterIpDetectorTest extends TestCase
             public function getByType(string $type, bool $throw = true): ?object
             {
                 return match ($type) {
-                    IpDetectorInterface::class => new IpDetector(),
-                    IRequest::class => $this->httpRequest
-                        ? new HttpRequest(new UrlScript('https://api.example.com/'), remoteAddress: $this->remoteAddress)
-                        : ($throw ? throw new MissingServiceException('no request') : null),
+                    IpDetectorInterface::class => new IpDetector($this->httpRequest ? new HttpRequest(new UrlScript('https://api.example.com/'), remoteAddress: $this->remoteAddress) : null),
                     default => null,
                 };
             }

@@ -17,8 +17,8 @@ services:
 	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
 	- Tomaj\NetteApi\Error\DefaultErrorHandler
 
-	# the only IpDetectorInterface service, so it is autowired everywhere
-	- App\RemoteAddrIpDetector
+	# the only IpDetectorInterface service, so it is autowired everywhere; it cannot be forged with headers
+	- Tomaj\NetteApi\Misc\IpDetector
 	tokens: Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%)
 
 	bearer: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(@tokens)

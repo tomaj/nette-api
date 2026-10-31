@@ -15,9 +15,7 @@ final readonly class RateLimitContext
     /**
      * @param string|null $identity the caller from AuthorizationIdentityInterface::getIdentity(), null before the authorization
      *                              or when the authorization does not provide one
-     * @param string|null $ip the client IP: from an own IP detector, or from Nette\Http\IRequest::getRemoteAddress() with the default IpDetector,
-     *                        which trusts headers that any client can send
-     * @param bool $hasIpDetector false when the container has no IpDetectorInterface service, so $ip is not known
+     * @param string|null $ip the client IP from IpDetectorInterface, null when the container has no such service
      */
     public function __construct(
         public Api $api,
@@ -25,7 +23,6 @@ final readonly class RateLimitContext
         public RateLimitStage $stage,
         public ?string $ip,
         public ?string $identity = null,
-        public bool $hasIpDetector = true,
     ) {
     }
 }

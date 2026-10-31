@@ -9,7 +9,6 @@ use Nette\Application\IResponse;
 use Nette\Application\Request;
 use Nette\DI\Attributes\Inject;
 use Nette\DI\Container;
-use Nette\Http\IRequest;
 use Nette\Http\Response;
 use Throwable;
 use Tomaj\NetteApi\Api;
@@ -30,7 +29,6 @@ use Tomaj\NetteApi\Misc\CorsOriginAllowlist;
 use Tomaj\NetteApi\Misc\CorsOriginCallback;
 use Tomaj\NetteApi\Misc\CorsOriginPolicy;
 use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
-use Tomaj\NetteApi\Misc\IpDetector;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
@@ -300,15 +298,12 @@ final class ApiPresenter implements IPresenter
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
         try {
-            $ipDetector = $rateLimit instanceof NoRateLimit ? null : $this->context->getByType(IpDetectorInterface::class, false);
-            $ip = $ipDetector instanceof IpDetector ? $this->remoteAddress() : $ipDetector?->getRequestIp();
+            $ip = $rateLimit instanceof NoRateLimit ? null : $this->context->getByType(IpDetectorInterface::class, false)?->getRequestIp();
         } catch (Throwable $throwable) {
             return $this->rateLimitError($throwable);
         }
-        // only IpKey needs the detector (it throws without one), a custom limiter without it keeps working
-        $hasIpDetector = $ipDetector !== null;
 
-        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::BeforeAuthorization, $ip, hasIpDetector: $hasIpDetector));
+        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::BeforeAuthorization, $ip));
         if ($rateLimitResponse !== null) {
             return $rateLimitResponse;
         }
@@ -328,7 +323,7 @@ final class ApiPresenter implements IPresenter
             $this->response->setCode($response->getCode());
             return $response;
         }
-        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::AfterAuthorization, $ip, $identity, $hasIpDetector));
+        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::AfterAuthorization, $ip, $identity));
         if ($rateLimitResponse !== null) {
             return $rateLimitResponse;
         }
@@ -410,17 +405,6 @@ final class ApiPresenter implements IPresenter
         }
 
         return null;
-    }
-
-    /**
-     * The IP for the rate limits instead of the default IpDetector, which trusts headers that any client can send,
-     * so every value would get a new quota. Nette trusts the forwarded headers only from the proxies in http.proxy.
-     */
-    private function remoteAddress(): string
-    {
-        $address = $this->context->getByType(IRequest::class, false)?->getRemoteAddress() ?? ($_SERVER['REMOTE_ADDR'] ?? null);
-
-        return is_string($address) && $address !== '' ? $address : 'cli';
     }
 
     /**

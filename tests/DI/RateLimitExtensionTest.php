@@ -14,6 +14,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\RateLimit\AlgorithmLimiter;
 use Tomaj\NetteApi\RateLimit\FixedWindowLimiter;
 use Tomaj\NetteApi\Test\RateLimit\Algorithm\MinimumGap;
@@ -717,6 +718,20 @@ final class RateLimitExtensionTest extends TestCase
                     - {method: GET, version: 1, package: users, handler: {handler}, rateLimit: perIp}
             NEON));
         $this->assertInstanceOf(StorageRateLimiter::class, $this->rateLimits($container)[0]);
+    }
+
+    public function testTheDefaultIpDetectorHonoursTheProxiesOfNette(): void
+    {
+        $server = $_SERVER;
+        try {
+            $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+            $_SERVER['HTTP_X_FORWARDED_FOR'] = '1.2.3.4';
+            $neon = "http:\n    proxy: %s\napi: []\n";
+            $this->assertSame('1.2.3.4', ContainerFactory::create(sprintf($neon, '10.0.0.0/8'))->getByType(IpDetectorInterface::class)->getRequestIp());
+            $this->assertSame('10.0.0.1', ContainerFactory::create(sprintf($neon, '192.168.0.0/16'))->getByType(IpDetectorInterface::class)->getRequestIp());
+        } finally {
+            $_SERVER = $server;
+        }
     }
 
     public function testKeyClassThatCannotBeCreatedFailsTheCompilation(): void

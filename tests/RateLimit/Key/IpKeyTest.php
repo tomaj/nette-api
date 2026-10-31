@@ -41,6 +41,6 @@ final class IpKeyTest extends TestCase
         $api = new Api(new EndpointIdentifier('post', 2, 'users', 'create'), new AlwaysOkHandler(), new NoAuthorization());
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('The rate limit of endpoint POST v2/users/create is keyed by ip');
-        new IpKey()->key(new RateLimitContext($api, new Request('Api:Api:default'), RateLimitStage::BeforeAuthorization, null, hasIpDetector: false));
+        new IpKey()->key(new RateLimitContext($api, new Request('Api:Api:default'), RateLimitStage::BeforeAuthorization, null));
     }
 }

@@ -7,7 +7,7 @@ description: 'Spustiteľný príklad Nette API: bearer token, hlavička X-API-Ke
 
 Štyri endpointy s rovnakým handlerom, každý chránený inak.
 
-<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'app/RemoteAddrIpDetector.php', 'e2e.sh']" />
+<ProjectSource name="auth" :files="['config/common.neon', 'app/BasicCredentialsAuthorization.php', 'e2e.sh']" />
 
 <Diagram name="examples-auth-1" alt="Štyri endpointy: bearer, api-key a basic kontrolujú prihlasovacie údaje a pri chybe vrátia 401, limited vráti 429 po troch požiadavkách" />
 
@@ -25,10 +25,6 @@ description: 'Spustiteľný príklad Nette API: bearer token, hlavička X-API-Ke
 `office-token` je povolený len z `10.0.0.0/8`; test ukazuje, že podvrhnutá `X-Forwarded-For` nepomôže.
 
 ## IP klienta
-
-<<< @/../examples/auth/app/RemoteAddrIpDetector.php
-
-Vstavaný `IpDetector` dôveruje hlavičkám klienta. Tento číta len `REMOTE_ADDR`. Pozrite si [Autorizáciu](/sk/guide/authorization#tokeny-a-obmedzenie-ip).
 
 ## HTTP Basic
 

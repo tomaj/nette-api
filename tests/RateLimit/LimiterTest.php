@@ -99,7 +99,7 @@ final class LimiterTest extends TestCase
         $this->assertTrue($limiter->consume($context)[0]->accepted);
         $this->assertFalse($limiter->consume($context)[0]->accepted);
         $this->assertTrue($limiter->consume(ContextFactory::create(ip: '5.6.7.8'))[0]->accepted);
-        $this->assertSame([], $limiter->consume(ContextFactory::create(ip: null)), 'no key, no limit');
+        $this->assertSame([], $limiter->consume(ContextFactory::create(ip: '')), 'no key, no limit');
     }
 
     public function testHighestLimit(): void
@@ -269,7 +269,7 @@ final class LimiterTest extends TestCase
             new Api(new EndpointIdentifier('GET', 1, 'users'), new AlwaysOkHandler(), $authorization),
             new Request('Api:Api:default'),
             RateLimitStage::AfterAuthorization,
-            null,
+            '',
             'user',
         )), 'with the identity another part of the key decides');
         $ownKey = new class implements RateLimitKeyInterface {

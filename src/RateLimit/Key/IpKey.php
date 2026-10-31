@@ -11,9 +11,8 @@ use Tomaj\NetteApi\RateLimit\RateLimitContext;
 /**
  * One quota per client IP, checked before the authorization (short name ip).
  *
- * With the default IpDetector the presenter gives it the address from Nette\Http\IRequest::getRemoteAddress(), because
- * IpDetector trusts headers that any client can send. Behind a reverse proxy list it in http.proxy of the Nette configuration,
- * otherwise all clients share the quota of the proxy. An own IP detector from api.ipDetector is used as it is.
+ * Behind a reverse proxy list it in http: proxy: of the Nette configuration, otherwise IpDetector gives the address
+ * of the proxy and all clients share its quota.
  * An IPv6 client controls a whole subnet, so the quota is per /64; an IPv4-mapped IPv6 address counts as the IPv4 address.
  * Without any IpDetectorInterface service (only possible without the DI extension) the key throws a LogicException.
  */
@@ -24,7 +23,7 @@ final readonly class IpKey implements RateLimitKeyInterface
     #[\Override]
     public function key(RateLimitContext $context): ?string
     {
-        if (!$context->hasIpDetector) {
+        if ($context->ip === null) {
             // without a detector every IP limit would be skipped silently
             $endpoint = $context->api->getEndpoint();
             throw new \LogicException(sprintf(
@@ -36,7 +35,7 @@ final readonly class IpKey implements RateLimitKeyInterface
                 IpDetector::class,
             ));
         }
-        if ($context->ip === null || $context->ip === '') {
+        if ($context->ip === '') {
             return null;
         }
         // an IP is at most 45 characters; a longer value (a list from X-Forwarded-For, a forged header) is hashed to keep keys short
