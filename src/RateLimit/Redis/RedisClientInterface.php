@@ -14,7 +14,7 @@ interface RedisClientInterface
      *
      * @param list<string> $keys
      * @param list<string> $arguments
-     * @throws \Throwable when Redis is not available
+     * @throws \Exception when Redis is not available, the request then passes; a \LogicException or an \Error is a bug and answers 500
      */
     public function evaluate(string $script, array $keys, array $arguments): mixed;
 }

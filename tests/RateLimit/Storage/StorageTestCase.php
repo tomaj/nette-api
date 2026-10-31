@@ -94,18 +94,16 @@ abstract class StorageTestCase extends TestCase
         $this->assertTrue($storage->consume(new SlidingWindow(), 'full', 10, 60, 1, $now + $last->resetAfter)->accepted, 'a client waiting t is not rejected again');
     }
 
-    public function testAClockFarAheadDoesNotRejectClientsForTheWholeDifference(): void
+    public function testAClockFarAheadKeepsTheLimit(): void
     {
+        // two servers an hour apart behind a load balancer: rejecting too much is better than no limit
         $storage = $this->storage();
         foreach ([new FixedWindow(), new SlidingWindow(), new TokenBucket()] as $algorithm) {
-            $key = $algorithm::class;
-            $this->assertTrue($storage->consume($algorithm, $key, 2, 60, 2, 4800.0)->accepted, 'a server one hour ahead');
-            $result = $storage->consume($algorithm, $key, 2, 60, 1, 1200.0);
-            $this->assertLessThanOrEqual(60, $result->retryAfter ?? 0, 'at most one interval');
-            $this->assertLessThanOrEqual(60, $result->resetAfter, 'at most one interval');
-        }
-        foreach ([new FixedWindow(), new SlidingWindow()] as $algorithm) {
-            $this->assertTrue($storage->consume($algorithm, $algorithm::class, 2, 60, 1, 1200.0)->accepted, 'the window of the wrong clock does not count');
+            $accepted = 0;
+            for ($i = 0; $i < 20; $i++) {
+                $accepted += (int) $storage->consume($algorithm, $algorithm::class, 5, 60, 1, ($i % 2 === 0 ? 4800.0 : 1200.0) + $i / 100)->accepted;
+            }
+            $this->assertSame(5, $accepted, $algorithm::class);
         }
     }
 

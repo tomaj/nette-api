@@ -315,6 +315,7 @@ api:
 		redis: null            # @service with Redis (ext-redis) or Predis\Client, needed by storage: redis
 		prefix: 'nette-api:rate-limit:'
 		clock: null            # Class | Class(args) | @service implementing Psr\Clock\ClockInterface
+		logger: null           # Class | Class(args) | @service implementing Tracy\ILogger, the Tracy log by default
 	defaults:
 		authorization: null    # a name | Class | Class(args) | @service
 		rateLimit: null        # a name | a list of names | {limit, interval, ...} | Class | Class(args) | @service

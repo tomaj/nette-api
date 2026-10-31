@@ -23,9 +23,8 @@ final readonly class TokenBucket implements RedisScriptAlgorithmInterface
         $time = $now;
         if (is_array($state) && is_float($state[0] ?? null) && is_float($state[1] ?? null)) {
             $tokens = min($limit, $state[0] + max(0, $now - $state[1]) * $rate);
-            // a server with a clock behind the others must not move the time back, the next request would refill twice;
-            // a time further ahead is from a wrong clock, the bucket would not refill for the whole difference
-            $time = $state[1] - $now <= $interval ? max($now, $state[1]) : $now;
+            // a server with a clock behind the others must not move the time back, the next request would refill twice
+            $time = max($now, $state[1]);
         }
         $accepted = $tokens >= $cost;
         if ($accepted) {
@@ -56,11 +55,8 @@ final readonly class TokenBucket implements RedisScriptAlgorithmInterface
             local tokens = limit
             local time = now
             if state[1] and state[2] then
-                local stored = tonumber(state[2])
-                tokens = math.min(limit, tonumber(state[1]) + math.max(0, now - stored) * rate)
-                if stored - now <= interval then
-                    time = math.max(now, stored)
-                end
+                tokens = math.min(limit, tonumber(state[1]) + math.max(0, now - tonumber(state[2])) * rate)
+                time = math.max(now, tonumber(state[2]))
             end
             local behind = time - now
             local accepted = 0

@@ -13,6 +13,7 @@ use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
+use Nette\DI\MissingServiceException;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class ApiDecider
@@ -78,7 +79,11 @@ class ApiDecider
     {
         if (func_num_args() < 4) {
             // Nette DI does not autowire a union type, without this a limiter of 3.x would be dropped silently
-            $rateLimit = $this->container->getByType(RateLimitInterface::class, false);
+            try {
+                $rateLimit = $this->container->getByType(RateLimitInterface::class, false);
+            } catch (MissingServiceException) {
+                $rateLimit = null; // more of them: which one is not known, and 3.x did not use them for a call from PHP either
+            }
         }
         $this->apis[] = new ApiHolder($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;

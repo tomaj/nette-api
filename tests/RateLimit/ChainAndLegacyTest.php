@@ -18,6 +18,7 @@ use Tomaj\NetteApi\RateLimit\RateLimitResult;
 use Tomaj\NetteApi\RateLimit\RateLimitStage;
 use Tomaj\NetteApi\RateLimit\Storage\InMemoryStorage;
 use Nette\DI\Container;
+use Nette\DI\MissingServiceException;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\EndpointIdentifier;
@@ -118,6 +119,20 @@ final class ChainAndLegacyTest extends TestCase
         $this->assertInstanceOf(LegacyRateLimitAdapter::class, $autowired->getRateLimit());
         $this->assertSame($legacy, $autowired->getRateLimit()->getRateLimit());
         $this->assertInstanceOf(NoRateLimit::class, $none->getRateLimit(), 'null means no rate limit');
+    }
+
+    public function testMoreAutowiredLegacyLimitersMeanNoLimit(): void
+    {
+        $container = new class extends Container {
+            #[\Override]
+            public function getByType(string $type, bool $throw = true): ?object
+            {
+                throw new MissingServiceException('Multiple services of type');
+            }
+        };
+        $decider = new ApiDecider($container);
+        $decider->addApi(new EndpointIdentifier('GET', 1, 'users'), new AlwaysOkHandler(), new NoAuthorization());
+        $this->assertInstanceOf(NoRateLimit::class, $decider->getApis()[0]->getRateLimit());
     }
 
     public function testAdapter(): void

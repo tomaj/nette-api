@@ -168,7 +168,7 @@ or implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost
 
 **getIdentity():** `TokenAuthorization` and `BasicAuthentication` implement `AuthorizationIdentityInterface` with `public function getIdentity(): ?string`. A subclass with its own `getIdentity()` must use this signature, otherwise PHP fails with a fatal error when the class loads. A subclass that overrides `authorized()` without calling the parent must override `getIdentity()` too, or limits keyed by `identity` are skipped with a warning in the log.
 
-**Autowiring:** an autowired `RateLimitInterface` service still goes to `addApi()` calls without the 4th argument, also to calls from your PHP code; pass `null` for no limit. A `RateLimiterInterface` is not autowired.
+**Autowiring:** an autowired `RateLimitInterface` service still goes to `addApi()` calls without the 4th argument, also to calls from your PHP code; pass `null` for no limit. With more such services none is used, pass the one you want. A `RateLimiterInterface` is not autowired.
 
 **Dependencies:** `nette/caching` ^3.2 and `psr/clock` ^1.0 are required. For Redis install `ext-redis` or `predis/predis`.
 

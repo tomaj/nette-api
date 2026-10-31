@@ -315,6 +315,7 @@ api:
 		redis: null            # @sluzba s Redis (ext-redis) alebo Predis\Client, potrebné pre storage: redis
 		prefix: 'nette-api:rate-limit:'
 		clock: null            # Trieda | Trieda(args) | @sluzba implementujúca Psr\Clock\ClockInterface
+		logger: null           # Trieda | Trieda(args) | @sluzba implementujúca Tracy\ILogger, predvolene Tracy log
 	defaults:
 		authorization: null    # názov | Trieda | Trieda(args) | @sluzba
 		rateLimit: null        # názov | zoznam názvov | {limit, interval, ...} | Trieda | Trieda(args) | @sluzba
