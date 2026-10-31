@@ -428,7 +428,7 @@ V 3.x končia predčasne, pozrite tabuľku. Ak ich potrebujete, logujte ich vo v
 
 ### Potrebujem na logovanie detektor IP?
 
-Áno, presenter berie `IpDetectorInterface` z kontajnera. Uprednostnite taký, ktorý číta len `REMOTE_ADDR`; pozrite si [Autorizáciu](/sk/guide/authorization#tokeny-a-obmedzenie-ip).
+Áno, presenter berie `IpDetectorInterface` z kontajnera. Vstavaný `IpDetector` sa nedá podvrhnúť hlavičkami; za reverse proxy ju uveďte v `http: proxy:`, pozrite si [Autorizáciu](/sk/guide/authorization#tokeny-a-obmedzenie-ip).
 
 ### Kam idú výnimky?
 

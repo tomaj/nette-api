@@ -1,38 +1,36 @@
 ---
 title: 'Príklad: obmedzenie požiadaviek'
-description: 'Spustiteľný príklad Nette API s vlastným RateLimitInterface: tri požiadavky za hodinu na API kľúč, hlavičky X-RateLimit, Retry-After a vlastné telo 429.'
+description: 'Spustiteľný príklad Nette API so vstavanými obmedzeniami: predvolený limit na IP pre celú aplikáciu, kvóta na kľúč po autorizácii, vlastný #[RateLimit] na handleri a endpoint bez limitu.'
 ---
 
 # Príklad: obmedzenie požiadaviek
 
-`GET /api/v1/quote` povolí tri požiadavky za hodinu na API kľúč. Štvrtá odpovie `429` s `Retry-After`.
+Každý endpoint povolí 100 požiadaviek za minútu z jednej IP. `GET /api/v1/quote` navyše povolí tri požiadavky za hodinu na API kľúč, `GET /api/v1/ping` dve za minútu podľa svojho atribútu a `GET /api/v1/status` nemá limit.
 
-<ProjectSource name="rate-limit" :files="['config/common.neon', 'app/FileRateLimit.php', 'app/Api/QuoteHandler.php', 'e2e.sh']" />
-
-<Diagram name="examples-rate-limit-1" alt="FileRateLimit počíta požiadavky na API kľúč v súbore; kým požiadavky zostávajú, presenter pridá hlavičky X-RateLimit a pokračuje k autorizácii; pri nule odpovie 429 s Retry-After" />
+<ProjectSource name="rate-limit" :files="['config/common.neon', 'app/Api/QuoteHandler.php', 'app/Api/Discovered/PingHandler.php', 'e2e.sh']" />
 
 | Požiadavka | Odpoveď |
 | --- | --- |
-| 1. až 3. s `X-Api-Key: key-a` | `200`, `X-RateLimit-Remaining` 3, 2, 1 |
-| 4. s `key-a` | `429 Slow down`, `X-RateLimit-Remaining: 0` a `Retry-After` |
-| 1. s `key-b` | `200`, vlastné počítadlo, `Remaining: 3` |
-| zlý kľúč | hlavičky obmedzenia požiadaviek, potom `401` |
+| 1. až 3. `/quote` s `X-Api-Key: key-a` | `200`, `RateLimit: "perKey";r=2`, 1, 0 |
+| 4. `/quote` s `key-a` | `429` s `Retry-After` |
+| 1. `/quote` s `key-b` | `200`, vlastná kvóta, `r=2` |
+| `/quote` so zlým kľúčom | `401`, počíta ho len `perIp` |
+| 3. `/ping` | `429`, `Retry-After: 30` |
+| akýkoľvek `/status` | `200`, bez hlavičiek obmedzenia |
 
-## Obmedzenie požiadaviek
+## Konfigurácia
 
-`check()` vráti `RateLimitResponse(limit, remaining, retryAfter, errorResponse)`. Presenter odpovie `429`, keď je `remaining` `0`.
-
-<<< @/../examples/rate-limit/app/FileRateLimit.php
-
-## Služby
-
-Obmedzenie požiadaviek sa nastavuje štvrtým argumentom `addApi()`.
+`rateLimits` definuje pomenované politiky, `defaults.rateLimit` použije `perIp` na každý endpoint, `quote` pridá `perKey` a `status` limit vypne.
 
 <<< @/../examples/rate-limit/config/common.neon{yaml}
 
-## Handler
+## Handlery
 
 <<< @/../examples/rate-limit/app/Api/QuoteHandler.php
+
+`#[RateLimit]` na objavenom handleri nahradí predvolený limit vlastným:
+
+<<< @/../examples/rate-limit/app/Api/Discovered/PingHandler.php
 
 ## Test
 
@@ -42,20 +40,20 @@ Obmedzenie požiadaviek sa nastavuje štvrtým argumentom `addApi()`.
 
 ### Prečo sa počíta aj zlý kľúč?
 
-Obmedzenie požiadaviek beží pred autorizáciou, takže obmedzený je aj klient, ktorý kľúče hádá. Pozrite si [Spracovanie v ApiPresenteri](/sk/guide/presenter).
+`perIp` má kľúč podľa IP, takže beží pred autorizáciou a obmedzí aj klienta, ktorý háda kľúče. `perKey` má kľúč `identity`, takže beží až po úspešnej autorizácii. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit#pred-autorizaciou-a-po-nej).
 
-### Prečo súbor a flock()?
+### Prečo tretí ping čaká 30 sekúnd?
 
-Aby príklad nemal závislosti. V produkcii použite Redis s `INCR` a `EXPIRE` alebo databázu.
+`tokenBucket` s 2 za minútu doplní jeden token každých 30 sekúnd.
 
-### Čo ak nevrátim chybovú odpoveď?
+### Kde sú počítadlá?
 
-Presenter pošle `429` s `Too many requests. Retry after N seconds.`. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit).
+V Nette cache v `temp/cache`. Pri viacerých serveroch použite `storage: redis`, pozrite si [Úložiská](/sk/guide/rate-limit#uloziska).
 
-### Ktoré hlavičky klient dostane?
+### Aké hlavičky klient dostane?
 
-`X-RateLimit-Limit`, `X-RateLimit-Remaining` a pri limite `Retry-After`.
+`RateLimit-Policy` a `RateLimit` pre každú použitú politiku a `Retry-After` pri `429`.
 
-### Môžem obmedzovať podľa IP?
+### Môžem obmedzovať podľa IP za proxy?
 
-Áno, príklad použije IP, keď kľúč chýba. Použite detektor IP, ktorý sa nedá podvrhnúť, pozrite si [Autorizácia](/sk/guide/authorization#tokeny-a-obmedzenie-ip).
+Áno, uveďte proxy v `http: proxy:`, inak všetci klienti zdieľajú jej kvótu. Pozrite si [Ktorá IP sa počíta?](/sk/guide/rate-limit#ktora-ip-sa-pocita).

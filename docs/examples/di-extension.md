@@ -7,7 +7,7 @@ description: 'Runnable Nette API example: the whole API in one api: neon section
 
 A users API configured only in the `api:` section of `config/common.neon`, with the [DI extension](/guide/di-extension). There is no `ApiDecider`, `ApiPresenter` or error handler in `services:`.
 
-<ProjectSource name="di-extension" :files="['config/common.neon', 'app/Api/UsersListHandler.php', 'app/FileRateLimit.php', 'e2e.sh']" />
+<ProjectSource name="di-extension" :files="['config/common.neon', 'app/Api/UsersListHandler.php', 'e2e.sh']" />
 
 ::: tip Since 4.0.0
 `NetteApiExtension` is new in 4.0.0.
@@ -35,10 +35,6 @@ A users API configured only in the `api:` section of `config/common.neon`, with 
 ## A handler with a dependency
 
 <<< @/../examples/di-extension/app/Api/UsersListHandler.php
-
-## The rate limit
-
-<<< @/../examples/di-extension/app/FileRateLimit.php
 
 ## The bootstrap
 

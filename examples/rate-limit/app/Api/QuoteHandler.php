@@ -12,7 +12,7 @@ final class QuoteHandler extends BaseHandler
 {
     public function summary(): string
     {
-        return 'A quote, at most three per hour per API key';
+        return 'A quote, at most three per hour per API key and 100 per minute per IP';
     }
 
     public function handle(array $params): ResponseInterface

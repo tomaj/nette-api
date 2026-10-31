@@ -35,7 +35,7 @@ To run an example against your local checkout, as CI does, use `examples/ci/exam
   { title: 'File upload', text: 'One file and many files, size and real type checked.', link: '/examples/file-upload' },
   { title: 'Pagination', text: 'Typed page params, allowed values, links, an output for every code.', link: '/examples/pagination' },
   { title: 'API versions', text: 'v1 and v2 of one endpoint, deprecation headers, OpenAPI per version.', link: '/examples/versions' },
-  { title: 'Rate limit', text: 'Your own RateLimitInterface, 3 requests per hour per key, a custom 429.', link: '/examples/rate-limit' },
+  { title: 'Rate limit', text: 'A default per IP, a quota per API key, #[RateLimit] and an endpoint without a limit.', link: '/examples/rate-limit' },
   { title: 'Testing', text: 'PHPUnit tests for a handler, params, outputs and authorization.', link: '/examples/testing' },
 ]" />
 

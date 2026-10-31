@@ -21,6 +21,14 @@ serve() {
     exit 1
 }
 
+# avoid_minute_edge: waits for the next minute when it starts soon, so the requests of a test stay in one fixed window of a minute
+avoid_minute_edge() {
+    local second=$((10#$(date +%S)))
+    if ((second >= 50)); then
+        sleep $((61 - second))
+    fi
+}
+
 # request <curl args...>: runs curl, sets $STATUS, $BODY and $HEADERS
 request() {
     local out

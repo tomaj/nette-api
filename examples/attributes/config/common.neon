@@ -32,7 +32,7 @@ api:
 	authorizations:
 		token: Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%))
 	rateLimits:
-		strict: App\FileRateLimit(storageDir: %tempDir%, limit: 2)
+		strict: {algorithm: fixedWindow, limit: 2, interval: 1 minute}
 
 	# every endpoint needs the token unless it says otherwise
 	defaults:

@@ -35,7 +35,7 @@ Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa re
   { title: 'Nahrávanie súborov', text: 'Jeden aj viac súborov, overená veľkosť a skutočný typ.', link: '/sk/examples/file-upload' },
   { title: 'Stránkovanie', text: 'Typované parametre stránky, povolené hodnoty, odkazy, výstup pre každý kód.', link: '/sk/examples/pagination' },
   { title: 'Verzie API', text: 'v1 a v2 jedného endpointu, hlavičky zastarania, OpenAPI pre každú verziu.', link: '/sk/examples/versions' },
-  { title: 'Obmedzenie požiadaviek', text: 'Vlastný RateLimitInterface, 3 požiadavky za hodinu na kľúč, vlastná 429.', link: '/sk/examples/rate-limit' },
+  { title: 'Obmedzenie požiadaviek', text: 'Predvolený limit na IP, kvóta na API kľúč, #[RateLimit] a endpoint bez limitu.', link: '/sk/examples/rate-limit' },
   { title: 'Testovanie', text: 'PHPUnit testy handlera, parametrov, výstupov a autorizácie.', link: '/sk/examples/testing' },
 ]" />
 
