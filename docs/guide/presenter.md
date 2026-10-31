@@ -39,7 +39,7 @@ if (/* a result is not accepted */) {
 }
 ```
 
-Before authorization, so failed logins count. After a successful authorization (step 5) the presenter calls `consume()` again with `RateLimitStage::AfterAuthorization` and the identity, for the policies keyed by `identity`. See [Rate limiting](/guide/rate-limit).
+Before authorization, so failed logins count. After a successful authorization (step 5) the presenter calls `consume()` again with `RateLimitStage::AfterAuthorization` and the identity, for the policies keyed by `identity`. An exception of a limiter goes to `ErrorHandlerInterface::handle()`; a storage outage does not, the request passes. See [Rate limiting](/guide/rate-limit).
 
 ## 4. Params are read
 

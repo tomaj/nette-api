@@ -56,4 +56,4 @@ In the Nette cache in `temp/cache`. With more servers use `storage: redis`, see 
 
 ### Can I limit by IP behind a proxy?
 
-Yes, with an IP detector that cannot be spoofed, see [Authorization](/guide/authorization#tokens-and-ip-restrictions).
+Yes, list the proxy in `http: proxy:`, otherwise all clients share its quota. See [Which IP is counted?](/guide/rate-limit#which-ip-is-counted).

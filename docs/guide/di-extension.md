@@ -129,7 +129,7 @@ api:
 | Value | Meaning |
 | --- | --- |
 | a name from `api.authorizations` / `api.rateLimits` | that object, shared by all endpoints that use the name |
-| `rateLimit` only: a list of names, or `{limit, interval, ...}` | all of the policies count; an inline limit of this endpoint, see [Rate limiting](/guide/rate-limit) |
+| `rateLimit` only: a list of names, or `{limit, interval, ...}` | the policies are checked in order until one rejects the request; an inline limit of this endpoint, see [Rate limiting](/guide/rate-limit) |
 | `@service` | a service from `services:` |
 | a class or `Class(arguments)` | a new object for this endpoint |
 | `false` | none, even when there is a default |
@@ -342,6 +342,7 @@ Every mistake in the `api:` section stops the container compilation with a `Nett
 | Invalid authorization or rate limit name | `authorizations: {my-auth: ...}` | that a name has only letters, digits and underscores |
 | Two rate limits with the same `name` | `a: {limit: 5, interval: 60, name: x}`, `b: {limit: 9, interval: 60, name: x}` | that they would share their counters, to give each its own name |
 | An inline limit with the `name` of a named policy | `rateLimits: {perIp: {limit: 5, interval: 60}}`, `rateLimit: {limit: 1, interval: 60, name: perIp}` | the named policy, to give the inline limit its own name or to use `rateLimit: perIp` |
+| A wrong Redis client | `rateLimiting: {storage: redis, redis: redis}` | that it is not a `@service` nor a Redis client, and how to write it |
 | Typo in the HTTP method | `method: GETT` | `Did you mean 'GET'?` and the HTTP methods |
 | Invalid version, package or action | `version: v1`, `package: users/list`, `package: 'u x'` | which characters are allowed, with an example |
 | Duplicate endpoint | two `GET /v1/users` | both places |

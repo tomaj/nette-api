@@ -129,7 +129,7 @@ api:
 | Hodnota | Význam |
 | --- | --- |
 | názov z `api.authorizations` / `api.rateLimits` | ten objekt, spoločný pre všetky endpointy s týmto názvom |
-| len `rateLimit`: zoznam názvov alebo `{limit, interval, ...}` | počítajú sa všetky politiky; vlastný limit tohto endpointu, pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit) |
+| len `rateLimit`: zoznam názvov alebo `{limit, interval, ...}` | politiky sa kontrolujú postupne, kým niektorá požiadavku neodmietne; vlastný limit tohto endpointu, pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit) |
 | `@sluzba` | služba zo `services:` |
 | trieda alebo `Trieda(argumenty)` | nový objekt pre tento endpoint |
 | `false` | žiadna, aj keď je nastavená predvolená |
@@ -342,6 +342,7 @@ Každá chyba v sekcii `api:` zastaví kompiláciu kontajnera výnimkou `Nette\D
 | Neplatné meno autorizácie alebo obmedzenia | `authorizations: {my-auth: ...}` | že meno má len písmená, číslice a podčiarkovníky |
 | Dve obmedzenia s rovnakým `name` | `a: {limit: 5, interval: 60, name: x}`, `b: {limit: 9, interval: 60, name: x}` | že by zdieľali počítadlá, a aby ste každému dali vlastné meno |
 | Vlastný limit s `name` pomenovanej politiky | `rateLimits: {perIp: {limit: 5, interval: 60}}`, `rateLimit: {limit: 1, interval: 60, name: perIp}` | pomenovanú politiku, a aby ste vlastnému limitu dali iné meno alebo použili `rateLimit: perIp` |
+| Zlý Redis klient | `rateLimiting: {storage: redis, redis: redis}` | že to nie je `@služba` ani Redis klient, a ako to napísať |
 | Preklep v HTTP metóde | `method: GETT` | `Did you mean 'GET'?` a HTTP metódy |
 | Neplatná verzia, balík alebo akcia | `version: v1`, `package: users/list`, `package: 'u x'` | aké znaky sú povolené, s príkladom |
 | Duplicitný endpoint | dvakrát `GET /v1/users` | obe miesta |

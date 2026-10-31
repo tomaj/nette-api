@@ -165,6 +165,7 @@ Každá správa hovorí, čo urobiť, väčšinou s príkladom. Najčastejšie:
 | `Attribute #[Get] on method App\Api\Foo::handle() is ignored` | Atribúty endpointov fungujú iba na triede. |
 | `Class App\Api\Foo has #[Authorization] but no route attribute` | `#[Authorization]` a `#[RateLimit]` potrebujú na tej istej triede atribút cesty. |
 | `Endpoint in #[Get] on App\Api\Foo has an invalid version 'v1'` | `v` sa do URL pridá samo, napíšte `#[Get(1, 'users')]`. |
+| `Invalid endpoint attribute on App\Api\Foo (#[RateLimit] has both a rate limit name and options of an inline limit ...)` | Názov sa nedá kombinovať s `limit`, `interval`, `algorithm`, `key` ani `name`, ignorovali by sa. Použite jedno alebo druhé. |
 | `Invalid endpoint attribute on App\Api\Foo (Attribute "...\Authorization" must not be repeated)` | `#[Authorization]` a `#[RateLimit]` môžu byť na triede iba raz. |
 | `Class App\Foo (...) found by api.discovery cannot be loaded` | Trieda dedí alebo implementuje triedu, ktorá neexistuje. Opravte `use` alebo názov, alebo obmedzte hľadanie cez `namespace:`. |
 | `Class App\Foo (...) found by api.discovery cannot be autoloaded.` | Opravte namespace alebo sekciu autoload v `composer.json`, alebo obmedzte hľadanie cez `namespace:`. |

@@ -60,8 +60,8 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 | `Authorization\ApiAuthorizationInterface`, `TokenAuthorization` | vlastná autorizácia | [Autorizácia](/sk/guide/authorization#vlastna-autorizacia) |
 | `Misc\TokenRepositoryInterface`, `StaticTokenRepository` | tokeny a ich IP | [Autorizácia](/sk/guide/authorization#tokeny-a-obmedzenie-ip) |
 | `Misc\IpDetectorInterface`, `IpDetector`, `StaticIpDetector` | IP klienta | [Autorizácia](/sk/guide/authorization#tokeny-a-obmedzenie-ip) |
-| `RateLimit\RateLimiterInterface`, `RateLimitResult`, `FixedWindowLimiter`, `SlidingWindowLimiter`, `TokenBucketLimiter`, `RateLimiterChain`, `NoRateLimit` | obmedzenie požiadaviek (4.0.0) |
-| `RateLimit\Algorithm\RateLimitAlgorithmInterface`, `Storage\RateLimitStorageInterface`, `Key\RateLimitKeyInterface`, `Redis\RedisClientInterface` | vlastné algoritmy, úložiská, kľúče a Redis klienti (4.0.0) |
+| `RateLimit\RateLimiterInterface`, `RateLimitResult`, `FixedWindowLimiter`, `SlidingWindowLimiter`, `TokenBucketLimiter`, `AlgorithmLimiter`, `RateLimiterChain`, `NoRateLimit` | obmedzenie požiadaviek (4.0.0) |
+| `RateLimit\Algorithm\RateLimitAlgorithmInterface`, `Storage\RateLimitStorageInterface`, `Key\RateLimitKeyInterface`, `Redis\RedisClientInterface`, `Storage\KeyValueStorage`, `Authorization\AuthorizationIdentityInterface` | vlastné algoritmy, úložiská, kľúče, Redis klienti a identita volajúceho (4.0.0) |
 | `RateLimit\RateLimitInterface`, `RateLimitResponse` | obmedzenie z 3.x, zastarané, odstránené v 5.0 | [Obmedzenie požiadaviek](/sk/guide/rate-limit) |
 
 ## Logovanie, odkazy a konzola

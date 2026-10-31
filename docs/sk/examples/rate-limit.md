@@ -56,4 +56,4 @@ V Nette cache v `temp/cache`. Pri viacerých serveroch použite `storage: redis`
 
 ### Môžem obmedzovať podľa IP za proxy?
 
-Áno, s IP detektorom, ktorý sa nedá podvrhnúť, pozrite si [Autorizáciu](/sk/guide/authorization#tokeny-a-obmedzenie-ip).
+Áno, uveďte proxy v `http: proxy:`, inak všetci klienti zdieľajú jej kvótu. Pozrite si [Ktorá IP sa počíta?](/sk/guide/rate-limit#ktora-ip-sa-pocita).

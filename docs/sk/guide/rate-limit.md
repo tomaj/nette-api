@@ -35,6 +35,9 @@ Každý endpoint teraz povolí 60 požiadaviek za minútu z jednej IP. Počítad
 `api.rateLimits` definuje pomenované politiky. `api.defaults.rateLimit` je predvolený limit pre všetky endpointy. Endpoint ho môže zmeniť, skombinovať viac politík alebo vypnúť:
 
 ```yaml
+services:
+	- Tomaj\NetteApi\Misc\StaticTokenRepository([my-token: '*'])   # váš TokenRepositoryInterface, pre autorizáciu nižšie
+
 api:
 	rateLimits:
 		perIp: {algorithm: slidingWindow, limit: 100, interval: 1 minute}
@@ -149,14 +152,14 @@ Obmedzenie nesmie zhodiť API. Úložisko sa vytvorí pri prvej požiadavke s li
 
 ## Hlavičky a 429
 
-Každá použitá politika pridá hlavičky podľa [draft-ietf-httpapi-ratelimit-headers](https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/):
+Každá použitá politika pridá hlavičky podľa [draft-ietf-httpapi-ratelimit-headers](https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/); politiky zo zoznamu za tou, ktorá požiadavku odmietla, sa neuplatnili:
 
 ```http
 RateLimit-Policy: "perIp";q=100;w=60
 RateLimit: "perIp";r=97;t=42
 ```
 
-`q` je limit, `w` okno v sekundách, `r` zostávajúce požiadavky a `t` sekundy, kým bude kvóta znova k dispozícii. Keď ktorákoľvek politika požiadavku odmietne, presenter odpovie `429 Too Many Requests` s `Retry-After` (najdlhšie čakanie z odmietnutých politík) a odpoveďou z `handleRateLimit()` error handlera, alebo vašou odpoveďou z `RateLimitResult::$errorResponse`. `ProblemDetailsErrorHandler` pošle [problém](/sk/guide/problem-details) s `limit` a `retryAfter`.
+`q` je limit, `w` okno v sekundách, `r` zostávajúce požiadavky a `t` sekundy, kým bude kvóta znova k dispozícii. Keď ktorákoľvek politika požiadavku odmietne, presenter odpovie `429 Too Many Requests` s `Retry-After` (najdlhšie čakanie, keď vlastný limiter odmietne viacerými výsledkami) a odpoveďou z `handleRateLimit()` error handlera, alebo vašou odpoveďou z `RateLimitResult::$errorResponse`. `ProblemDetailsErrorHandler` pošle [problém](/sk/guide/problem-details) s `limit` a `retryAfter`.
 
 ## Vlastné časti
 

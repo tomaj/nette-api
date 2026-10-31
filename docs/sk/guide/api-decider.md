@@ -32,6 +32,8 @@ services:
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 2, 'users', 'detail'), App\Api\UserDetailV2Handler(), @bearer)
 ```
 
+Štvrtý argument je obmedzenie požiadaviek, `null` znamená žiadne. Keď chýba, použije sa autowirovaná služba `RateLimitInterface` z 3.x; `RateLimiterInterface` sa neautowiruje. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit#bez-di-rozsirenia).
+
 ## EndpointIdentifier
 
 | Argument | Príklad | Poznámka |

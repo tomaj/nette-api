@@ -35,6 +35,9 @@ Every endpoint now allows 60 requests per minute per IP. The counters are kept i
 `api.rateLimits` defines named policies. `api.defaults.rateLimit` is the app-wide default for all endpoints. An endpoint overrides it, combines more policies, or turns it off:
 
 ```yaml
+services:
+	- Tomaj\NetteApi\Misc\StaticTokenRepository([my-token: '*'])   # your TokenRepositoryInterface, for the authorization below
+
 api:
 	rateLimits:
 		perIp: {algorithm: slidingWindow, limit: 100, interval: 1 minute}
@@ -149,14 +152,14 @@ A rate limit must not take the API down. The storage is created on the first req
 
 ## Headers and 429
 
-Every policy that applied adds the headers of [draft-ietf-httpapi-ratelimit-headers](https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/):
+Every policy that applied adds the headers of [draft-ietf-httpapi-ratelimit-headers](https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/); the policies of a list after the one that rejected the request did not apply:
 
 ```http
 RateLimit-Policy: "perIp";q=100;w=60
 RateLimit: "perIp";r=97;t=42
 ```
 
-`q` is the limit, `w` the window in seconds, `r` the remaining requests and `t` the seconds until the quota is available again. When any policy rejects the request, the presenter answers `429 Too Many Requests` with `Retry-After` (the longest wait of the rejected policies) and the response of the error handler's `handleRateLimit()`, or your own response from `RateLimitResult::$errorResponse`. `ProblemDetailsErrorHandler` sends a [problem](/guide/problem-details) with `limit` and `retryAfter`.
+`q` is the limit, `w` the window in seconds, `r` the remaining requests and `t` the seconds until the quota is available again. When any policy rejects the request, the presenter answers `429 Too Many Requests` with `Retry-After` (the longest wait, when an own limiter rejects with more results) and the response of the error handler's `handleRateLimit()`, or your own response from `RateLimitResult::$errorResponse`. `ProblemDetailsErrorHandler` sends a [problem](/guide/problem-details) with `limit` and `retryAfter`.
 
 ## Own parts
 

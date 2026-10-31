@@ -32,6 +32,8 @@ services:
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 2, 'users', 'detail'), App\Api\UserDetailV2Handler(), @bearer)
 ```
 
+The 4th argument is the rate limit, `null` means none. Left out, an autowired `RateLimitInterface` service of 3.x is used; a `RateLimiterInterface` is not autowired. See [Rate limiting](/guide/rate-limit#without-the-di-extension).
+
 ## EndpointIdentifier
 
 | Argument | Example | Note |

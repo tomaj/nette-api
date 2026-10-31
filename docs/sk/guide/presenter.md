@@ -39,7 +39,7 @@ if (/* niektorý výsledok nie je prijatý */) {
 }
 ```
 
-Pred autorizáciou, takže sa počítajú aj neúspešné prihlásenia. Po úspešnej autorizácii (krok 5) presenter zavolá `consume()` znova s `RateLimitStage::AfterAuthorization` a identitou, pre politiky s kľúčom `identity`. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit).
+Pred autorizáciou, takže sa počítajú aj neúspešné prihlásenia. Po úspešnej autorizácii (krok 5) presenter zavolá `consume()` znova s `RateLimitStage::AfterAuthorization` a identitou, pre politiky s kľúčom `identity`. Výnimka limitera ide do `ErrorHandlerInterface::handle()`; výpadok úložiska nie, požiadavka prejde. Pozrite si [Obmedzenie požiadaviek](/sk/guide/rate-limit).
 
 ## 4. Načítanie parametrov
 

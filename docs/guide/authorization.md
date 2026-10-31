@@ -41,7 +41,7 @@ The token classes share `TokenAuthorization`: the token must be valid in the rep
 For a real app, implement `TokenRepositoryInterface` on top of your database.
 
 ::: warning Known limits in 3.x
-- **IP detection can be spoofed.** The bundled `IpDetector` prefers the `Client-IP` and `X-Forwarded-For` headers, which any client can send. Use it only behind a proxy that overwrites them, or use your own detector like `RemoteAddrIpDetector` in the [authorization example](/examples/auth). This remains in 4.0: making `IpDetector` ignore the headers would silently change the detected IP for every app behind a proxy, so it needs a trusted-proxy setting and a deprecation step rather than a change inside a dependency upgrade. It makes sense in a minor release that adds the trusted-proxy option first. Tracked in [#234](https://github.com/tomaj/nette-api/issues/234).
+- **IP detection can be spoofed.** The bundled `IpDetector` prefers the `Client-IP` and `X-Forwarded-For` headers, which any client can send. The [rate limits](/guide/rate-limit#which-ip-is-counted) do not use it, they take the address from Nette; token IP restrictions and logs do. Use it only behind a proxy that overwrites them, or use your own detector like `RemoteAddrIpDetector` in the [authorization example](/examples/auth). This remains in 4.0: making `IpDetector` ignore the headers would silently change the detected IP for every app behind a proxy, so it needs a trusted-proxy setting and a deprecation step rather than a change inside a dependency upgrade. It makes sense in a minor release that adds the trusted-proxy option first. Tracked in [#234](https://github.com/tomaj/nette-api/issues/234).
 - **Only the first range counts.** In a list, checking stops at the first entry with a `/`, so `10.0.0.0/8, 192.168.0.0/16` never matches the second range. Put the range last, or one range per token.
 - **BasicAuthentication reads the user from the request URL**, which `nette/http` 3.2 and newer leaves empty, so in 3.x it never passes there. Write a class that reads `$request->getBasicCredentials()`. 4.0 reads the `Authorization: Basic` header.
 - **Numeric tokens never match** in `StaticTokenRepository`: PHP turns a key like `'12345'` into an integer, which is never equal to the string token. Use keys with a letter.
@@ -76,6 +76,8 @@ final class AdminOnlyAuthorization implements ApiAuthorizationInterface
     }
 }
 ```
+
+For a rate limit with `key: identity`, implement `AuthorizationIdentityInterface` too: `getIdentity()` returns who called (a user id, a token), or `null` before a successful `authorized()`. The built-in token authorizations return the token and `BasicAuthentication` the user name. A subclass that overrides their `authorized()` without calling the parent must override `getIdentity()` too. See [Rate limiting](/guide/rate-limit#before-and-after-authorization).
 
 ## FAQ
 

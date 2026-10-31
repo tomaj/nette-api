@@ -165,6 +165,7 @@ Each message says what to do, usually with an example. The most common ones:
 | `Attribute #[Get] on method App\Api\Foo::handle() is ignored` | Endpoint attributes work only on the class. |
 | `Class App\Api\Foo has #[Authorization] but no route attribute` | `#[Authorization]` and `#[RateLimit]` need a route attribute on the same class. |
 | `Endpoint in #[Get] on App\Api\Foo has an invalid version 'v1'` | The `v` is added to the URL, write `#[Get(1, 'users')]`. |
+| `Invalid endpoint attribute on App\Api\Foo (#[RateLimit] has both a rate limit name and options of an inline limit ...)` | A name cannot be combined with `limit`, `interval`, `algorithm`, `key` or `name`, they would be ignored. Use one or the other. |
 | `Invalid endpoint attribute on App\Api\Foo (Attribute "...\Authorization" must not be repeated)` | `#[Authorization]` and `#[RateLimit]` can be on a class only once. |
 | `Class App\Foo (...) found by api.discovery cannot be loaded` | The class extends or implements a class that does not exist. Fix the `use` or the name, or limit the search with `namespace:`. |
 | `Class App\Foo (...) found by api.discovery cannot be autoloaded.` | Fix the namespace or the autoload section of `composer.json`, or limit the search with `namespace:`. |
