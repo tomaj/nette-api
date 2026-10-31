@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tomaj\NetteApi;
 
 use Nette\DI\Container;
+use Nette\DI\MissingServiceException;
 use Nette\Http\Response;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\NoAuthorization;
@@ -12,6 +13,8 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
+use Tomaj\NetteApi\RateLimit\AutowiredRateLimit;
+use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
 
 class ApiDecider
@@ -69,9 +72,26 @@ class ApiDecider
 
     /**
      * Register new api handler
+     *
+     * @param RateLimiterInterface|RateLimitInterface|null $rateLimit a RateLimitInterface (deprecated) still works through LegacyRateLimitAdapter.
+     *        Left out, the autowired RateLimitInterface service is used like in 3.x; null means no rate limit.
+     * @throws \LogicException when it is left out and the container has more autowired RateLimitInterface services
      */
-    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, ?RateLimitInterface $rateLimit = null): self
+    public function addApi(EndpointInterface $endpointIdentifier, ApiHandlerInterface|string $handler, ApiAuthorizationInterface $apiAuthorization, RateLimiterInterface|RateLimitInterface|null $rateLimit = new AutowiredRateLimit()): self
     {
+        if ($rateLimit instanceof AutowiredRateLimit) {
+            // Nette DI does not autowire a union type, without this a limiter of 3.x would be dropped silently
+            try {
+                $rateLimit = $this->container->getByType(RateLimitInterface::class, false);
+            } catch (MissingServiceException $e) {
+                throw new \LogicException(sprintf(
+                    'ApiDecider::addApi() for %s %s got no rate limit, so it looks for the autowired RateLimitInterface service like 3.x, but the container has more of them: %s. Pass the limiter as the 4th argument (null for no rate limit), or set autowired: false on all of them but one.',
+                    $endpointIdentifier->getMethod(),
+                    $endpointIdentifier->getUrl(),
+                    implode(', ', $this->container->findByType(RateLimitInterface::class)),
+                ), previous: $e);
+            }
+        }
         $this->apis[] = new ApiHolder($endpointIdentifier, $handler, $apiAuthorization, $rateLimit);
         return $this;
     }

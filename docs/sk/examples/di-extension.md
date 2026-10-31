@@ -7,7 +7,7 @@ description: 'Spustiteľný príklad Nette API: celé API v jednej neon sekcii a
 
 API používateľov nastavené iba v sekcii `api:` súboru `config/common.neon`, cez [DI rozšírenie](/sk/guide/di-extension). V `services:` nie je `ApiDecider`, `ApiPresenter` ani error handler.
 
-<ProjectSource name="di-extension" :files="['config/common.neon', 'app/Api/UsersListHandler.php', 'app/FileRateLimit.php', 'e2e.sh']" />
+<ProjectSource name="di-extension" :files="['config/common.neon', 'app/Api/UsersListHandler.php', 'e2e.sh']" />
 
 ::: tip Od verzie 4.0.0
 `NetteApiExtension` je novinka vo verzii 4.0.0.
@@ -35,10 +35,6 @@ API používateľov nastavené iba v sekcii `api:` súboru `config/common.neon`,
 ## Handler so závislosťou
 
 <<< @/../examples/di-extension/app/Api/UsersListHandler.php
-
-## Obmedzenie požiadaviek
-
-<<< @/../examples/di-extension/app/FileRateLimit.php
 
 ## Bootstrap
 

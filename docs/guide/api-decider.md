@@ -16,7 +16,7 @@ public function addApi(
     EndpointInterface $endpointIdentifier,
     ApiHandlerInterface|string $handler,
     ApiAuthorizationInterface $apiAuthorization,
-    ?RateLimitInterface $rateLimit = null
+    RateLimiterInterface|RateLimitInterface|null $rateLimit = new AutowiredRateLimit()
 ): self
 ```
 
@@ -31,6 +31,8 @@ services:
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'users'), '@userCreateHandler', @bearer, @writeLimit)
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 2, 'users', 'detail'), App\Api\UserDetailV2Handler(), @bearer)
 ```
+
+The 4th argument is the rate limit, `null` means none. Left out, an autowired `RateLimitInterface` service of 3.x is used, with more of them `addApi()` throws a `LogicException` that names them; a `RateLimiterInterface` is not autowired. See [Rate limiting](/guide/rate-limit#without-the-di-extension).
 
 ## EndpointIdentifier
 

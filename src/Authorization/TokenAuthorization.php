@@ -7,7 +7,7 @@ namespace Tomaj\NetteApi\Authorization;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
-abstract class TokenAuthorization implements ApiAuthorizationInterface
+abstract class TokenAuthorization implements ApiAuthorizationInterface, AuthorizationIdentityInterface
 {
     /**
      * @var TokenRepositoryInterface
@@ -24,6 +24,8 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
      */
     protected $ipDetector;
 
+    private ?string $identity = null;
+
     public function __construct(TokenRepositoryInterface $tokenRepository, IpDetectorInterface $ipDetector)
     {
         $this->tokenRepository = $tokenRepository;
@@ -36,6 +38,7 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
     #[\Override]
     public function authorized(): bool
     {
+        $this->identity = null;
         $token = $this->readAuthorizationToken();
         if ($token === null) {
             return false;
@@ -52,12 +55,22 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface
             return false;
         }
 
+        $this->identity = $token;
         return true;
     }
 
     /**
      * {@inheritdoc}
      */
+    /**
+     * The token of the last successful authorized()
+     */
+    #[\Override]
+    public function getIdentity(): ?string
+    {
+        return $this->identity;
+    }
+
     #[\Override]
     public function getErrorMessage(): ?string
     {

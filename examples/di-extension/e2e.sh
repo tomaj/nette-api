@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 [[ -f vendor/autoload.php ]] || { echo "fail: vendor/ is missing, run composer install first" >&2; exit 1; }
 source ../ci/lib.sh
-rm -rf temp/cache temp/rate-* log
+rm -rf temp/cache log
 serve 8097
 P='https://api.example.com/problems/'
 
@@ -45,6 +45,7 @@ expect_status 200 "preflight"
 expect_header 'Access-Control-Allow-Methods' "preflight methods"
 ok "cors.preflight answers OPTIONS for every endpoint without a token"
 
+avoid_minute_edge
 for i in 1 2; do
     request -X POST -H 'Authorization: Bearer secret-token' -d 'name=Carol' "$BASE/api/v1/users"
     expect_status 201 "create $i"

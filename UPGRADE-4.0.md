@@ -7,6 +7,24 @@
 * PHP 8.4 or newer.
 * `nette/application` ^3.2, `nette/http` ^3.3, `tracy/tracy` ^2.10, `latte/latte` ^3.0.20, `league/fractal` ^0.21, `justinrainbow/json-schema` ^6.0, `nette/di` ^3.2, `nette/schema` ^1.3.
 
+## IpDetector does not trust headers from any client
+
+`Misc\IpDetector` preferred the `Client-IP` and `X-Forwarded-For` headers, so any client could forge its address: pass an IP restriction of a token, get a new rate limit quota, write another address to the log. It now returns `Nette\Http\IRequest::getRemoteAddress()`, which trusts forwarded headers only from the proxies you list. `Client-IP` is not used any more.
+
+**Behind a reverse proxy or a load balancer you have to list it,** otherwise every client has the address of the proxy: logs show the proxy, all clients share one rate limit quota, and IP restrictions of tokens compare the address of the proxy:
+
+- a token restricted to client addresses stops matching, so it answers `401`;
+- **a token restricted to the address of the proxy (`127.0.0.1` behind a local nginx, a `10.0.0.0/8` range with a load balancer in it) passes for every client that has the token.** Check these restrictions before you deploy.
+
+```yaml
+http:
+	proxy: 10.0.0.0/8      # one range or a list of them
+```
+
+In debug mode without `http: proxy:`, the first request with an `X-Forwarded-For` or `Forwarded` header logs a warning with this fix (once per process).
+
+A detector of your own that reads the headers keeps working; if it only read `REMOTE_ADDR` to avoid the forged headers, you can remove it. `new IpDetector()` without the request reads `REMOTE_ADDR`.
+
 ## CORS: 'auto' renamed to 'reflect-unsafe', no CORS headers by default
 
 `'auto'` sent the origin of the `Referer` header with `Access-Control-Allow-Credentials: true`, so any website could call the API with the user's cookies and read the response (#186). In 4.0:
@@ -141,6 +159,36 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
     return new JsonApiResponse(404, ['status' => 'error', 'message' => 'No endpoint ' . $endpoint->getUrl()]);
 }
 ```
+
+## Rate limits
+
+4.0 has built-in rate limits (#195), see the [documentation](https://tomaj.github.io/nette-api/guide/rate-limit).
+
+**Headers:** `X-RateLimit-Limit` and `X-RateLimit-Remaining` are replaced by `RateLimit-Policy: "name";q=60;w=60` and `RateLimit: "name";r=59;t=60` (the IETF draft). Update clients that read the old headers. `Retry-After` on `429` is unchanged.
+
+**RateLimitInterface is deprecated:** an own `RateLimitInterface` still works; `ApiDecider::addApi()`, `Api` and `ApiHolder` wrap it in `LegacyRateLimitAdapter`, which triggers a silenced `E_USER_DEPRECATED`. A handler that respects `error_reporting()`, like Tracy by default, ignores it; to see it in Tracy set `Debugger::$scream = E_USER_DEPRECATED`, or search your code for `RateLimitInterface`. It is removed in 5.0. Replace it with a built-in limiter:
+
+```yaml
+api:
+	rateLimits:
+		perIp: {algorithm: slidingWindow, limit: 60, interval: 1 minute, key: ip}
+	defaults:
+		rateLimit: perIp
+```
+
+or implement `RateLimiterInterface::consume(RateLimitContext $context, int $cost = 1): array`, which returns a `RateLimitResult` per policy.
+
+**Return types:** `Api::getRateLimit()` and `ApiHolder::getRateLimit()` return `RateLimiterInterface` instead of `RateLimitInterface`. Code that called `->check()` on it must call `->consume()`.
+
+**Redis keys:** `RedisStorage` stores a counter under `prefix` + `{policy:key}` (default prefix `nette-api:rate-limit:`), with the braces as a Redis Cluster hash tag.
+
+**Reverse proxy:** `key: ip` counts the address from `IpDetector`. Behind a reverse proxy list it in `http: proxy:`, otherwise all clients share the quota of the proxy, see [IpDetector](#ipdetector-does-not-trust-headers-from-any-client).
+
+**getIdentity():** `TokenAuthorization` and `BasicAuthentication` implement `AuthorizationIdentityInterface` with `public function getIdentity(): ?string`. A subclass with its own `getIdentity()` must use this signature, otherwise PHP fails with a fatal error when the class loads. Both classes are now stateful: `authorized()` remembers the identity of the request (the user or the token) and `getIdentity()` returns it, so one instance must not authorize two requests at the same time (a long-running worker that handles requests in parallel needs an instance per request). A subclass that overrides `authorized()` without calling the parent must override `getIdentity()` too, or limits keyed by `identity` are skipped with a warning in the log (once per process and policy).
+
+**Autowiring:** an autowired `RateLimitInterface` service still goes to `addApi()` calls without the 4th argument, also to calls from your PHP code; pass `null` for no limit. With more such services `addApi()` throws a `LogicException` that names them (in 3.x none was used): pass the one you want, or set `autowired: false` on all of them but one. A `RateLimiterInterface` is not autowired.
+
+**Dependencies:** `nette/caching` ^3.2 and `psr/clock` ^1.0 are required. For Redis install `ext-redis` or `predis/predis`.
 
 ## Exceptions from authorization are not sent to the client
 

@@ -138,7 +138,7 @@
    "t": "text",
    "x": 398.1025,
    "y": 16.75,
-   "text": "RateLimitInterface",
+   "text": "RateLimiterInterface",
    "size": 18,
    "align": "left"
   },

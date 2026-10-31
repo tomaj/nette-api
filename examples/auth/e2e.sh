@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 [[ -f vendor/autoload.php ]] || { echo "fail: vendor/ is missing, run composer install first" >&2; exit 1; }
 source ../ci/lib.sh
-rm -f temp/rate-*
+rm -rf temp/cache
 serve 8083
 
 request -H 'Authorization: Bearer secret-token' "$BASE/api/v1/bearer"
@@ -45,12 +45,13 @@ expect_status 401 "basic auth wrong password"
 expect_body '"message":"Incorrect username or password"' "basic auth wrong password"
 ok "HTTP Basic with a wrong password answers 401"
 
+avoid_minute_edge
 for i in 1 2 3; do
     request "$BASE/api/v1/limited"
     expect_status 200 "rate limit request $i"
 done
-expect_header 'X-RateLimit-Limit: 3' "rate limit headers"
-expect_header 'X-RateLimit-Remaining: 1' "rate limit headers"
+expect_header 'RateLimit-Policy: "perIp";q=3;w=60' "rate limit headers"
+expect_header 'RateLimit: "perIp";r=0;' "rate limit headers"
 request "$BASE/api/v1/limited"
 expect_status 429 "rate limit exceeded"
 expect_header 'Retry-After:' "rate limit exceeded"

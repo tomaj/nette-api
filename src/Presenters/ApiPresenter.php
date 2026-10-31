@@ -11,9 +11,12 @@ use Nette\DI\Attributes\Inject;
 use Nette\DI\Container;
 use Nette\Http\Response;
 use Throwable;
+use Tracy\Debugger;
+use Tracy\ILogger;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
+use Tomaj\NetteApi\Authorization\AuthorizationIdentityInterface;
 use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
@@ -32,7 +35,11 @@ use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
 use Tomaj\NetteApi\Params\ParamsProcessor;
-use Tomaj\NetteApi\RateLimit\RateLimitInterface;
+use Tomaj\NetteApi\RateLimit\RateLimitContext;
+use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
+use Tomaj\NetteApi\RateLimit\RateLimitResponse;
+use Tomaj\NetteApi\RateLimit\RateLimitResult;
+use Tomaj\NetteApi\RateLimit\RateLimitStage;
 
 final class ApiPresenter implements IPresenter
 {
@@ -291,8 +298,19 @@ final class ApiPresenter implements IPresenter
 
         $authorization = $api->getAuthorization();
         $rateLimit = $api->getRateLimit();
+        // read only by a limiter that needs it, an error of the detector must not fail the others;
+        // read once per request, both stages of the rate limits and the request log get the same address
+        $ipRead = false;
+        $ipValue = null;
+        $ip = function () use (&$ipRead, &$ipValue): ?string {
+            if (!$ipRead) {
+                $ipValue = $this->context->getByType(IpDetectorInterface::class, false)?->getRequestIp();
+                $ipRead = true;
+            }
+            return $ipValue;
+        };
 
-        $rateLimitResponse = $this->checkRateLimit($rateLimit);
+        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::BeforeAuthorization, $ip), []);
         if ($rateLimitResponse !== null) {
             return $rateLimitResponse;
         }
@@ -303,6 +321,18 @@ final class ApiPresenter implements IPresenter
         $authResponse = $this->checkAuth($authorization, $params);
         if ($authResponse !== null) {
             return $authResponse;
+        }
+
+        try {
+            $identity = $authorization instanceof AuthorizationIdentityInterface ? $authorization->getIdentity() : null;
+        } catch (Throwable $throwable) {
+            $response = $this->errorHandler->handleAuthorizationException($throwable, $params);
+            $this->response->setCode($response->getCode());
+            return $response;
+        }
+        $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::AfterAuthorization, $ip, $identity), $params);
+        if ($rateLimitResponse !== null) {
+            return $rateLimitResponse;
         }
 
         if ($paramsProcessor->isError()) {
@@ -346,7 +376,12 @@ final class ApiPresenter implements IPresenter
         if ($this->context->findByType(ApiLoggerInterface::class)) {
             /** @var ApiLoggerInterface $apiLogger */
             $apiLogger = $this->context->getByType(ApiLoggerInterface::class);
-            $this->logRequest($request, $apiLogger, $code, $end - $start);
+            try {
+                $this->logRequest($request, $apiLogger, $code, $end - $start, $ip);
+            } catch (Throwable $throwable) {
+                // the handler has run, a broken logger or IP detector must not lose its response, so the error is only logged
+                self::logError($throwable);
+            }
         }
 
         // output to nette
@@ -384,30 +419,63 @@ final class ApiPresenter implements IPresenter
         return null;
     }
 
-    private function checkRateLimit(RateLimitInterface $rateLimit): ?IResponse
+    /**
+     * Sends RateLimit-Policy and RateLimit (draft-ietf-httpapi-ratelimit-headers) for every policy that applied,
+     * and answers 429 with Retry-After when any of them did not accept the request
+     *
+     * @param array<mixed> $params the values of the params, empty before the authorization (they are not read yet)
+     */
+    private function checkRateLimit(RateLimiterInterface $rateLimit, RateLimitContext $context, array $params): ?IResponse
     {
-        $rateLimitResponse = $rateLimit->check();
-        if (!$rateLimitResponse) {
+        try {
+            $results = $rateLimit->consume($context);
+        } catch (Throwable $throwable) {
+            // a wrong configuration or a bug of an own limiter or IP detector, answered like an exception of a handler
+            $response = $this->errorHandler->handle($throwable, $params);
+            $this->response->setCode($response->getCode());
+            return $response;
+        }
+
+        $rejected = null;
+        foreach ($results as $result) {
+            // a structured field string: an own limiter may name its policy with any characters
+            $policy = '"' . addcslashes((string) preg_replace('~[^\x20-\x7E]~', '', $result->policy), '"\\') . '"';
+            // the numbers of the headers are non-negative, an own limiter may return less than 0
+            $this->response->addHeader('RateLimit-Policy', $policy . ';q=' . max(0, $result->limit) . ($result->window > 0 ? ';w=' . $result->window : ''));
+            $this->response->addHeader('RateLimit', $policy . ';r=' . max(0, $result->remaining) . ($result->resetAfter === null ? '' : ';t=' . max(0, $result->resetAfter)));
+            if (!$result->accepted && ($rejected === null || $result->retryAfter > $rejected->retryAfter)) {
+                $rejected = $result;
+            }
+        }
+
+        if (!$rejected instanceof RateLimitResult) {
             return null;
         }
 
-        $limit = $rateLimitResponse->getLimit();
-        $remaining = $rateLimitResponse->getRemaining();
-        $retryAfter = $rateLimitResponse->getRetryAfter();
-
-        $this->response->addHeader('X-RateLimit-Limit', (string)$limit);
-        $this->response->addHeader('X-RateLimit-Remaining', (string)$remaining);
-
-        if ($remaining === 0) {
-            $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
-            $this->response->addHeader('Retry-After', (string)$retryAfter);
-            return $rateLimitResponse->getErrorResponse() ?? $this->errorHandler->handleRateLimit($rateLimitResponse);
+        $this->response->setCode(Response::S429_TOO_MANY_REQUESTS);
+        $retryAfter = $rejected->retryAfter === null ? null : max(0, $rejected->retryAfter);
+        if ($retryAfter !== null) {
+            $this->response->addHeader('Retry-After', (string) $retryAfter);
         }
 
-        return null;
+        return $rejected->errorResponse
+            ?? $this->errorHandler->handleRateLimit(new RateLimitResponse(max(0, $rejected->limit), max(0, $rejected->remaining), $retryAfter));
     }
 
-    private function logRequest(Request $request, ApiLoggerInterface $logger, int $code, float $elapsed): void
+    private static function logError(Throwable $throwable): void
+    {
+        try {
+            Debugger::log($throwable, ILogger::EXCEPTION);
+        } catch (Throwable $logError) {
+            // Tracy without a log directory
+            error_log('The request log failed: ' . $throwable->getMessage() . ' (the logger failed: ' . $logError->getMessage() . ')');
+        }
+    }
+
+    /**
+     * @param \Closure(): ?string $ip the address read once per request
+     */
+    private function logRequest(Request $request, ApiLoggerInterface $logger, int $code, float $elapsed, \Closure $ip): void
     {
         $headers = [];
         if (function_exists('getallheaders')) {
@@ -433,13 +501,12 @@ final class ApiPresenter implements IPresenter
         }
         $masking = $this->logMasking();
 
-        $ipDetector = $this->context->getByType(IpDetectorInterface::class);
         $logger->log(
             $code,
             $request->getMethod() ?? '',
             $masking->headers($headers, $authHeaders, $authCookies),
             $masking->uri(is_string($_SERVER['REQUEST_URI'] ?? null) ? $_SERVER['REQUEST_URI'] : '', $authParams),
-            $ipDetector->getRequestIp(),
+            $ip() ?? $this->context->getByType(IpDetectorInterface::class)->getRequestIp(),
             (string)filter_input(INPUT_SERVER, 'HTTP_USER_AGENT'),
             (int)($elapsed * self::TO_SECONDS),
         );

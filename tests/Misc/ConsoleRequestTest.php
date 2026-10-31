@@ -12,7 +12,7 @@ final class ConsoleRequestTest extends TestCase
 {
     public function testLogRequest(): void
     {
-    	$handler = new EchoHandler();
+        $handler = new EchoHandler();
 
         $request = new ConsoleRequest($handler);
         $response = $request->makeRequest("http://127.0.0.1:23523/", 'POST', ['status' => 'ok', 'message' => 'Hello']);

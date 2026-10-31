@@ -16,10 +16,10 @@ final class EchoHandlerTest extends TestCase
         $this->assertSame('', $handler->description());
         $this->assertFalse($handler->deprecated());
         $this->assertEquals([], $handler->tags());
-        
+
         $result = $handler->handle(['status' => 'error', 'message' => 'Hello']);
         $this->assertSame(200, $result->getCode());
-        
+
         $this->assertEquals(['status' => 'error', 'params' => ['status' => 'error', 'message' => 'Hello']], $result->getPayload());
     }
 

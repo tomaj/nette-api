@@ -1,6 +1,5 @@
-application:
-	mapping:
-		Api: Tomaj\NetteApi\Presenters\*Presenter
+extensions:
+	api: Tomaj\NetteApi\DI\NetteApiExtension
 
 parameters:
 	apiKeys:
@@ -9,23 +8,33 @@ parameters:
 
 services:
 	router: App\RouterFactory::create
-	apiPresenter:
-		factory: Tomaj\NetteApi\Presenters\ApiPresenter
-	- Tomaj\NetteApi\Output\Configurator\EnvConfigurator
-	- Tomaj\NetteApi\Error\DefaultErrorHandler
-	- Tomaj\NetteApi\Misc\IpDetector
 
-	quoteLimit:
-		factory: App\FileRateLimit(storageDir: %tempDir%, limit: 3, window: 3600)
-		autowired: false
+api:
+	# where the counters are kept: cache (the default, the Nette cache in %tempDir%), memory, redis or your own storage
+	rateLimiting:
+		storage: cache
 
-	apiDecider:
-		factory: Tomaj\NetteApi\ApiDecider
-		setup:
-			# the fourth argument: a RateLimitInterface checked before the authorization
-			- addApi(
-				Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'quote'),
-				App\Api\QuoteHandler(),
-				Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-Api-Key', Tomaj\NetteApi\Misc\StaticTokenRepository(%apiKeys%)),
-				@quoteLimit
-			)
+	authorizations:
+		apiKey: Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication('X-Api-Key', Tomaj\NetteApi\Misc\StaticTokenRepository(%apiKeys%))
+
+	# named policies, shared by every endpoint that uses the name
+	rateLimits:
+		# checked before the authorization, so a client guessing keys is limited too
+		perIp: {algorithm: slidingWindow, limit: 100, interval: 1 minute, key: ip}
+		# checked after the authorization, one quota per API key
+		perKey: {algorithm: fixedWindow, limit: 3, interval: 1 hour, key: identity}
+
+	# the app-wide default for every endpoint
+	defaults:
+		authorization: apiKey
+		rateLimit: perIp
+
+	# the endpoints with #[RateLimit] on the class
+	discovery:
+		paths: [%appDir%/Api/Discovered]
+
+	endpoints:
+		# override: both policies count
+		- {method: GET, version: 1, package: quote, handler: App\Api\QuoteHandler, rateLimit: [perIp, perKey]}
+		# disabled: a public health check without any limit
+		- {method: GET, version: 1, package: status, handler: App\Api\StatusHandler, authorization: false, rateLimit: false}
