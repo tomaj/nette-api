@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Misc;
 
+use Tomaj\NetteApi\Exception\InvalidTokenException;
+
 interface TokenRepositoryInterface
 {
     /**
-     * Return true if token is valid, otherwise return false
+     * Return true if token is valid, otherwise return false or throw InvalidTokenException with custom error message
      *
      * @param string $token
      * @return bool
+     * @throws InvalidTokenException
      */
     public function validToken(string $token): bool;
 
