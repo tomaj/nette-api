@@ -68,6 +68,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 * change Inject from PHPDoc format to native PHP attribute
 * [Reverted] Remove BC addApi register method now requires ApiHandlerInterface as second parameter instead of string or service name
 
+### Added
+* Custom error message for token authorization
+
 ## 3.2.0
 
 ### Added
