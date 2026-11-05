@@ -1,6 +1,6 @@
 ---
 title: Príklady
-description: 'Šestnásť spustiteľných projektov Nette API testovaných v CI: parametre, JSON telo, súbory, stránkovanie, autorizácia, limity, CORS, verzie, OpenAPI, logovanie, DI rozšírenie a endpointy z atribútov.'
+description: 'Sedemnásť spustiteľných projektov Nette API testovaných v CI: parametre, typovaný vstup, JSON telo, súbory, stránkovanie, autorizácia, limity, CORS, verzie, OpenAPI, logovanie, DI rozšírenie a endpointy z atribútov.'
 ---
 
 # Príklady
@@ -33,6 +33,7 @@ Ak chcete príklad spustiť proti lokálnemu klonu ako CI, použite z koreňa re
   { title: 'Vlastná autorizácia', text: 'Vlastný ApiAuthorizationInterface s rolami, používateľ v handleri, token alebo API kľúč.', link: '/sk/examples/custom-authorization' },
   { title: 'JSON a surové telo', text: 'JSON telo overené schémou a CSV telo.', link: '/sk/examples/json-body' },
   { title: 'Nahrávanie súborov', text: 'Jeden aj viac súborov, overená veľkosť a skutočný typ.', link: '/sk/examples/file-upload' },
+  { title: 'Typovaný vstup', text: 'Readonly DTO pre query, path, header, JSON alebo formulár a súbor (potrebuje 4.0.0).', link: '/sk/examples/typed-input' },
   { title: 'Stránkovanie', text: 'Typované parametre stránky, povolené hodnoty, odkazy, výstup pre každý kód.', link: '/sk/examples/pagination' },
   { title: 'Verzie API', text: 'v1 a v2 jedného endpointu, hlavičky zastarania, OpenAPI pre každú verziu.', link: '/sk/examples/versions' },
   { title: 'Obmedzenie požiadaviek', text: 'Predvolený limit na IP, kvóta na API kľúč, #[RateLimit] a endpoint bez limitu.', link: '/sk/examples/rate-limit' },

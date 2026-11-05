@@ -25,7 +25,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 
 | Trieda | Čo robí | Príručka |
 | --- | --- | --- |
-| `Handlers\ApiHandlerInterface`, `BaseHandler` | vaše endpointy | [Handlery](/sk/guide/handlers) |
+| `Handlers\ApiHandlerInterface`, `BaseHandler`, `TypedHandler` | vaše endpointy; `TypedHandler` berie DTO | [Handlery](/sk/guide/handlers), [Typovaný vstup](/sk/guide/typed-input) |
 | `Handlers\OpenApiHandler` | OpenAPI 3.0 dokument | [OpenAPI](/sk/guide/openapi) |
 | `Handlers\ApiListingHandler` | JSON zoznam endpointov vo vlastnej verzii | [Handlery](/sk/guide/handlers#handlery-ktore-su-sucastou-kniznice) |
 | `Handlers\AlwaysOkHandler`, `EchoHandler` | health check a testovacie endpointy | [Handlery](/sk/guide/handlers#handlery-ktore-su-sucastou-kniznice) |
@@ -36,7 +36,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 
 | Trieda | Čo robí | Príručka |
 | --- | --- | --- |
-| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | každá jeden vstup | [Parametre](/sk/guide/params) |
+| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `PathInputParam`, `HeaderInputParam`, `BodyInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | každá jeden vstup | [Parametre](/sk/guide/params) |
 | `Params\InputParam`, `ParamInterface`, `ParamsProcessor` | základná trieda a spracovanie | [Parametre](/sk/guide/params) |
 | `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` (enum) | kontroly hodnôt | [Parametre](/sk/guide/params#typy) |
 | `ValidationResult\ValidationResult(Interface)` | výsledok kontroly | [Parametre](/sk/guide/params) |

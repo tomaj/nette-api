@@ -1,0 +1,44 @@
+[
+    {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "schema": {
+            "type": "integer",
+            "minimum": 1
+        }
+    },
+    {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+        }
+    },
+    {
+        "name": "status",
+        "in": "query",
+        "required": false,
+        "schema": {
+            "type": "string",
+            "enum": [
+                "active",
+                "disabled"
+            ],
+            "nullable": true
+        }
+    },
+    {
+        "name": "X-Request-Id",
+        "in": "header",
+        "required": false,
+        "schema": {
+            "type": "string",
+            "nullable": true
+        }
+    }
+]

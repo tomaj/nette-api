@@ -60,4 +60,9 @@ interface ErrorHandlerInterface
      * Rate limit has no remaining requests and returned no own error response (429)
      */
     public function handleRateLimit(RateLimitResponse $rateLimit): ResponseInterface;
+
+    /**
+     * Body content type is missing or not accepted by the handler (415)
+     */
+    public function handleUnsupportedMediaType(string $detail): ResponseInterface;
 }

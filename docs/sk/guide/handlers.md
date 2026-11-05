@@ -21,6 +21,8 @@ Handler je kód jedného endpointu. Implementuje `Tomaj\NetteApi\Handlers\ApiHan
 | `tags(): array` | `[]` | OpenAPI |
 | `deprecated(): bool` | `false` | OpenAPI |
 
+Namiesto poľa môžete použiť typované DTO properties, pozrite [typovaný vstup](/sk/guide/typed-input). `TypedHandler` zachováva existujúcu pipeline `InputParam`.
+
 `handle()` dostane hodnoty parametrov podľa ich názvov. Vracia odpoveď, napríklad `JsonApiResponse`, pozrite si [Výstupy a odpovede](/sk/guide/outputs).
 
 ```php

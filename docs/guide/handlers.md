@@ -21,6 +21,8 @@ A handler is the code of one endpoint. It implements `Tomaj\NetteApi\Handlers\Ap
 | `tags(): array` | `[]` | OpenAPI |
 | `deprecated(): bool` | `false` | OpenAPI |
 
+For typed DTO properties instead of an array, see [Typed input](/guide/typed-input). `TypedHandler` keeps the existing `InputParam` pipeline.
+
 `handle()` gets the values of the params keyed by their names. It returns a response such as `JsonApiResponse`, see [Outputs and responses](/guide/outputs).
 
 ```php
