@@ -74,6 +74,14 @@ new BearerTokenAuthorization(new StaticBearerTokenRepository(['token' => '*']), 
 new BearerTokenAuthorization(new StaticTokenRepository(['token' => '*']), $ipDetector);
 ```
 
+## Error handlers answer 415
+
+`ErrorHandlerInterface` has `handleUnsupportedMediaType(string $detail): ResponseInterface`. A typed handler sends 415 when the body content type is missing or not one of the types it accepts. `DefaultErrorHandler` uses the message `unsupported media type` and adds the detail only when error details are on. `ProblemDetailsErrorHandler` uses status 415, title `Unsupported Media Type` and type `unsupported-media-type`. An own error handler has to implement the method. `params()` handlers are not affected.
+
+## Typed input does not change params()
+
+`TypedHandler` is an additional way to declare input. Handlers that stay on `BaseHandler::params()` and `handle(array $params)` keep their conversion, validation and OpenAPI output. `PathInputParam` and `HeaderInputParam` are new classes; existing parameter classes are unchanged. A path segment is written in the endpoint action or package, for example `#[Get(1, 'users', '{id}/detail')]`. The usual route `/api/v<version>/<package>[/<apiAction>][/<params>]` already delivers `users/42/detail`.
+
 ## Stricter types
 
 * Every file declares `strict_types=1`.
@@ -125,7 +133,7 @@ Overriding methods are marked with `#[\Override]`.
 
 ## Error handlers
 
-`ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has two new methods. An own implementation must add them; a wrapper can delegate to `DefaultErrorHandler`:
+`ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has three new methods: `handleNotFound()`, `handleRateLimit()` and `handleUnsupportedMediaType(string $detail)`. An own implementation must add them; a wrapper can delegate to `DefaultErrorHandler`:
 
 ```php
 use Tomaj\NetteApi\EndpointInterface;
@@ -140,6 +148,11 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 public function handleRateLimit(RateLimitResponse $rateLimit): ResponseInterface
 {
     return $this->inner->handleRateLimit($rateLimit);
+}
+
+public function handleUnsupportedMediaType(string $detail): ResponseInterface
+{
+    return $this->inner->handleUnsupportedMediaType($detail);
 }
 ```
 

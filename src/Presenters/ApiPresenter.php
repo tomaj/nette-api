@@ -9,6 +9,7 @@ use Nette\Application\IResponse;
 use Nette\Application\Request;
 use Nette\DI\Attributes\Inject;
 use Nette\DI\Container;
+use Nette\Http\IRequest;
 use Nette\Http\Response;
 use Throwable;
 use Tracy\Debugger;
@@ -34,6 +35,8 @@ use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
+use Tomaj\NetteApi\Input\RequestInput;
+use Tomaj\NetteApi\Input\UnsupportedMediaTypeException;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitContext;
 use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
@@ -289,6 +292,7 @@ final class ApiPresenter implements IPresenter
     #[\Override]
     public function run(Request $request): IResponse
     {
+        RequestInput::reset();
         $start = microtime(true);
 
         $this->sendCorsHeaders();
@@ -315,8 +319,14 @@ final class ApiPresenter implements IPresenter
             return $rateLimitResponse;
         }
 
-        $paramsProcessor = new ParamsProcessor($handler->params());
-        $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
+        try {
+            $paramsProcessor = new ParamsProcessor($handler->params());
+            $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
+        } catch (UnsupportedMediaTypeException $exception) {
+            $response = $this->errorHandler->handleUnsupportedMediaType($exception->getMessage());
+            $this->response->setCode($response->getCode());
+            return $response;
+        }
 
         $authResponse = $this->checkAuth($authorization, $params);
         if ($authResponse !== null) {
@@ -396,7 +406,17 @@ final class ApiPresenter implements IPresenter
             TypeHelper::toString($request->getParameter('version')),
             TypeHelper::toString($request->getParameter('package')),
             $request->getParameter('apiAction') === null ? null : TypeHelper::toString($request->getParameter('apiAction')),
+            $this->requestPath(),
         );
+    }
+
+    private function requestPath(): ?string
+    {
+        try {
+            return $this->context->getByType(IRequest::class)->getUrl()->getPath();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

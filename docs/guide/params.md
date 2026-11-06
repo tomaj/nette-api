@@ -7,6 +7,8 @@ description: Declare and validate input in Nette API - GET, POST, PUT, cookie, f
 
 `params()` returns the inputs of the endpoint. `ApiPresenter` reads and validates all of them before `handle()` runs, and `handle()` gets the values keyed by name.
 
+For the attribute-based alternative with typed DTOs, see [Typed input](/guide/typed-input). It also includes `PathInputParam` and `HeaderInputParam` for direct `params()` declarations.
+
 <Diagram name="params-1" alt="Input is read by InputParam::getValue, converted to the declared type and validated; errors answer 400, valid values reach the handler" />
 
 ## Param classes
@@ -16,6 +18,8 @@ description: Declare and validate input in Nette API - GET, POST, PUT, cookie, f
 | `GetInputParam` | query string | supports types and `setMulti()` |
 | `PostInputParam` | form body, `$_POST` | supports types and `setMulti()` |
 | `PutInputParam` | form-encoded body of any method | no type conversion, but a type is still checked: `INTEGER` rejects even `"12"`, so use `STRING` or no type |
+| `PathInputParam` | a named `{placeholder}` in the endpoint URL | always required; see [Typed input](/guide/typed-input) |
+| `HeaderInputParam` | HTTP header, case-insensitive | see [Typed input](/guide/typed-input) |
 | `CookieInputParam` | cookie | no type conversion, but a type is still checked: `INTEGER` rejects even `"12"`, so use `STRING` or no type |
 | `FileInputParam` | uploaded file, `$_FILES` | `setMulti()` for several files |
 | `RawInputParam` | the whole request body as a string | `setMulti()` throws |

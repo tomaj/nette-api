@@ -28,6 +28,10 @@ use Tomaj\NetteApi\Error\NegotiatingErrorHandler;
 use Tomaj\NetteApi\Error\ProblemDetailsErrorHandler;
 use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\DtoCompiler;
+use Tomaj\NetteApi\Input\DtoMetadataRegistry;
+use Tomaj\NetteApi\Input\EndpointTemplate;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Logger\ApiLoggerInterface;
 use Tomaj\NetteApi\Logger\LogMaskMode;
@@ -61,6 +65,7 @@ use Tomaj\NetteApi\RateLimit\Storage\NetteCacheStorage;
 use Tomaj\NetteApi\RateLimit\Storage\RateLimitStorageInterface;
 use Tomaj\NetteApi\RateLimit\Storage\LazyStorage;
 use Tomaj\NetteApi\RateLimit\Storage\RedisStorage;
+use Nette\PhpGenerator\ClassType;
 use Nette\PhpGenerator\Literal;
 use Tomaj\NetteApi\RateLimit\Redis\RedisClientInterface;
 use Tomaj\NetteApi\RateLimit\TokenBucketLimiter;
@@ -141,6 +146,9 @@ final class NetteApiExtension extends CompilerExtension
 
     /** @var array<string, string> own service name => service it returns ("@name" in neon) */
     private array $aliases = [];
+
+    /** @var array<class-string, array<string, mixed>> handler class => compiled DTO metadata */
+    private array $typedExport = [];
 
     public function __construct()
     {
@@ -405,6 +413,17 @@ final class NetteApiExtension extends CompilerExtension
             $check();
         }
         $this->checkRateLimitStorage();
+        $this->compileTypedInput();
+    }
+
+    #[\Override]
+    public function afterCompile(ClassType $class): void
+    {
+        if ($this->typedExport === []) {
+            return;
+        }
+
+        $this->getInitialization()->addBody(DtoMetadataRegistry::class . '::install(?);', [$this->typedExport]);
     }
 
     /**
@@ -1425,5 +1444,56 @@ final class NetteApiExtension extends CompilerExtension
                         : ' Implement the interface in the class, or use another class.'),
             ));
         }
+    }
+
+    /**
+     * Reflects typed handlers while the container is compiled and stores the result for initialize().
+     */
+    private function compileTypedInput(): void
+    {
+        /** @var array<string, list<string>> $urls */
+        $urls = [];
+        foreach ($this->endpoints->all() as $endpoint) {
+            $action = $endpoint->action === null ? '' : sprintf('/%s', $endpoint->action);
+            $url = sprintf('v%s/%s%s', $endpoint->version, $endpoint->package, $action);
+            $urls[$endpoint->method][] = $url;
+            $class = $this->handlerClass($endpoint);
+            if ($class === null || !is_a($class, TypedHandler::class, true)) {
+                continue;
+            }
+
+            $metadata = DtoCompiler::compile($class);
+            EndpointTemplate::assert($url, $metadata->pathNames(), sprintf('%s (%s)', $class, $endpoint->source));
+            foreach ($metadata->files as $file) {
+                $this->compiler->addDependencies([$file]);
+            }
+            $this->typedExport[$class] = $metadata->export();
+        }
+
+        EndpointTemplate::assertDisjoint($urls);
+    }
+
+    private function handlerClass(EndpointDefinition $endpoint): ?string
+    {
+        $handler = $endpoint->handler;
+        if ($handler instanceof Statement) {
+            $entity = $handler->getEntity();
+            $entity = is_string($entity) ? $entity : '';
+
+            return class_exists($entity) ? ltrim($entity, '\\') : null;
+        }
+        if (str_starts_with($handler, '@')) {
+            $name = substr($handler, 1);
+            if (!$this->getContainerBuilder()->hasDefinition($name)) {
+                return null;
+            }
+            $type = $this->getContainerBuilder()->getDefinition($name)->getType();
+            $type = is_string($type) ? $type : '';
+
+            return class_exists($type) ? $type : null;
+        }
+        $class = ltrim($handler, '\\');
+
+        return class_exists($class) ? $class : null;
     }
 }

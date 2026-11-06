@@ -22,6 +22,9 @@ abstract class InputParam implements ParamInterface
     public const TYPE_COOKIE    = 'COOKIE';
     public const TYPE_POST_RAW  = 'POST_RAW';
     public const TYPE_POST_JSON = 'POST_JSON';
+    public const TYPE_PATH = 'PATH';
+    public const TYPE_HEADER = 'HEADER';
+    public const TYPE_BODY = 'BODY';
 
     public const OPTIONAL = false;
     public const REQUIRED = true;
@@ -53,6 +56,12 @@ abstract class InputParam implements ParamInterface
 
     /** @var string|null */
     protected $valueType;
+
+    /** @var array<string, mixed>|null */
+    private ?array $openApiSchema = null;
+
+    /** @var list<string> */
+    private array $contentTypes = [];
 
     /**
      * @param InputType|string|null $valueType expected value type, see InputType
@@ -171,6 +180,44 @@ abstract class InputParam implements ParamInterface
     {
         $this->examples[$name] = $example;
         return $this;
+    }
+
+    /**
+     * OpenAPI schema used instead of the default string schema. Null keeps the existing schema.
+     *
+     * @param array<string, mixed> $schema
+     */
+    public function setOpenApiSchema(array $schema): self
+    {
+        $this->openApiSchema = $schema;
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getOpenApiSchema(): ?array
+    {
+        return $this->openApiSchema;
+    }
+
+    /**
+     * Media types of a body or file parameter. Empty means the historical single form content type.
+     *
+     * @param list<string> $contentTypes
+     */
+    public function setContentTypes(array $contentTypes): self
+    {
+        $this->contentTypes = $contentTypes;
+        return $this;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getContentTypes(): array
+    {
+        return $this->contentTypes;
     }
 
     #[\Override]

@@ -1,6 +1,6 @@
 ---
 title: Examples
-description: 'Sixteen runnable Nette API projects tested in CI: params, JSON body, uploads, pagination, authorization, rate limit, CORS, versions, OpenAPI, logging, testing, DI extension, attribute endpoints.'
+description: 'Seventeen runnable Nette API projects tested in CI: params, typed input, JSON body, uploads, pagination, authorization, rate limit, CORS, versions, OpenAPI, logging, testing, DI extension, attribute endpoints.'
 ---
 
 # Examples
@@ -33,6 +33,7 @@ To run an example against your local checkout, as CI does, use `examples/ci/exam
   { title: 'Custom authorization', text: 'Your own ApiAuthorizationInterface with roles, the user in the handler, token or API key.', link: '/examples/custom-authorization' },
   { title: 'JSON and raw body', text: 'A JSON body checked by a schema, and a CSV body.', link: '/examples/json-body' },
   { title: 'File upload', text: 'One file and many files, size and real type checked.', link: '/examples/file-upload' },
+  { title: 'Typed input', text: 'A readonly DTO for query, path, header, JSON or form and a file (needs 4.0.0).', link: '/examples/typed-input' },
   { title: 'Pagination', text: 'Typed page params, allowed values, links, an output for every code.', link: '/examples/pagination' },
   { title: 'API versions', text: 'v1 and v2 of one endpoint, deprecation headers, OpenAPI per version.', link: '/examples/versions' },
   { title: 'Rate limit', text: 'A default per IP, a quota per API key, #[RateLimit] and an endpoint without a limit.', link: '/examples/rate-limit' },

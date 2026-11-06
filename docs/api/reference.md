@@ -25,7 +25,7 @@ All classes live under `Tomaj\NetteApi`.
 
 | Class | What it does | Guide |
 | --- | --- | --- |
-| `Handlers\ApiHandlerInterface`, `BaseHandler` | your endpoints | [Handlers](/guide/handlers) |
+| `Handlers\ApiHandlerInterface`, `BaseHandler`, `TypedHandler` | your endpoints; `TypedHandler` takes a DTO | [Handlers](/guide/handlers), [Typed input](/guide/typed-input) |
 | `Handlers\OpenApiHandler` | OpenAPI 3.0 document | [OpenAPI](/guide/openapi) |
 | `Handlers\ApiListingHandler` | JSON list of the endpoints in its own version | [Handlers](/guide/handlers#handlers-that-ship-with-the-library) |
 | `Handlers\AlwaysOkHandler`, `EchoHandler` | health check and test endpoints | [Handlers](/guide/handlers#handlers-that-ship-with-the-library) |
@@ -36,7 +36,7 @@ All classes live under `Tomaj\NetteApi`.
 
 | Class | What it does | Guide |
 | --- | --- | --- |
-| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | one input each | [Params](/guide/params) |
+| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `PathInputParam`, `HeaderInputParam`, `BodyInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | one input each | [Params](/guide/params) |
 | `Params\InputParam`, `ParamInterface`, `ParamsProcessor` | the base class and the processing | [Params](/guide/params) |
 | `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` (enum) | value checks | [Params](/guide/params#types) |
 | `ValidationResult\ValidationResult(Interface)` | the result of a check | [Params](/guide/params) |

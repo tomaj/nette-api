@@ -28,7 +28,26 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
         $filesInBody = false;
         $requestBodyExample = [];
         $result = [];
+        $typedProperties = [];
+        $typedRequired = [];
+        $typedTypes = [];
+        $typedAnyRequired = false;
         foreach ($handler->params() as $param) {
+            if ($param instanceof InputParam && $param->getOpenApiSchema() !== null && ($param->getType() === InputParam::TYPE_BODY || $param->getType() === InputParam::TYPE_FILE)) {
+                $schema = $param->getOpenApiSchema();
+                if ($param->getDescription() !== '' && !isset($schema['description'])) {
+                    $schema['description'] = $param->getDescription();
+                }
+                $typedProperties[$param->getKey()] = $schema;
+                if ($param->isRequired()) {
+                    $typedRequired[] = $param->getKey();
+                    $typedAnyRequired = true;
+                }
+                if ($param->getContentTypes() !== []) {
+                    $typedTypes = $param->getContentTypes();
+                }
+                continue;
+            }
             if ($param instanceof JsonInputParam) {
                 $schema = TypeHelper::toArray(json_decode($param->getSchema(), true));
                 if (!empty($examples = $param->getExamples())) {
@@ -143,6 +162,20 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
             $result['content'][$contentType] = [
                 'schema' => $requestBodySchema,
             ];
+        }
+
+        if ($typedProperties !== []) {
+            $typedSchema = [
+                'type' => 'object',
+                'properties' => $typedProperties,
+            ];
+            if ($typedRequired !== []) {
+                $typedSchema['required'] = $typedRequired;
+            }
+            $result['required'] = $typedAnyRequired;
+            foreach ($typedTypes === [] ? ['application/json', 'application/x-www-form-urlencoded'] : $typedTypes as $contentType) {
+                $result['content'][$contentType] = ['schema' => $typedSchema];
+            }
         }
 
         return $result ?: null;

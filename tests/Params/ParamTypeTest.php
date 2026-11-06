@@ -12,8 +12,11 @@ use Tomaj\NetteApi\Params\GetInputParam;
 use Tomaj\NetteApi\Params\InputParam;
 use Tomaj\NetteApi\Params\JsonInputParam;
 use Tomaj\NetteApi\Params\ParamType;
+use Tomaj\NetteApi\Params\HeaderInputParam;
+use Tomaj\NetteApi\Params\PathInputParam;
 use Tomaj\NetteApi\Params\PostInputParam;
 use Tomaj\NetteApi\Params\PutInputParam;
+use Tomaj\NetteApi\Params\BodyInputParam;
 use Tomaj\NetteApi\Params\RawInputParam;
 use Tomaj\NetteApi\Validation\InputType;
 use Tomaj\NetteApi\Validation\InputValidator;
@@ -29,13 +32,18 @@ final class ParamTypeTest extends TestCase
         $this->assertSame(ParamType::Cookie, new CookieInputParam('a')->getParamType());
         $this->assertSame(ParamType::PostRaw, new RawInputParam('a')->getParamType());
         $this->assertSame(ParamType::PostJson, new JsonInputParam('a', '{}')->getParamType());
+        $this->assertSame(ParamType::Path, new PathInputParam('a')->getParamType());
+        $this->assertSame(ParamType::Header, new HeaderInputParam('a')->getParamType());
+        $this->assertSame(ParamType::Body, new BodyInputParam('a')->getParamType());
         $this->assertSame(InputParam::TYPE_POST_JSON, ParamType::PostJson->value);
+        $this->assertSame(InputParam::TYPE_PATH, ParamType::Path->value);
+        $this->assertSame(InputParam::TYPE_HEADER, ParamType::Header->value);
     }
 
     public function testCustomTypeGivesNull(): void
     {
         $param = new class ('a') extends InputParam {
-            protected $type = 'HEADER';
+            protected $type = 'CUSTOM';
 
             public function getValue(): mixed
             {

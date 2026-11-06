@@ -7,6 +7,8 @@ description: Deklarácia a validácia vstupu v Nette API - GET, POST, PUT, cooki
 
 `params()` vracia vstupy endpointu. `ApiPresenter` ich všetky načíta a zvaliduje pred spustením `handle()`, ktorý dostane hodnoty podľa názvu.
 
+Alternatívu cez atribúty a typované DTO popisuje [typovaný vstup](/sk/guide/typed-input). Obsahuje aj `PathInputParam` a `HeaderInputParam` pre priame deklarácie cez `params()`.
+
 <Diagram name="params-1" alt="Vstup načíta InputParam::getValue, prevedie na deklarovaný typ a zvaliduje; chyby vrátia 400, platné hodnoty idú do handlera" />
 
 ## Triedy parametrov
@@ -16,6 +18,8 @@ description: Deklarácia a validácia vstupu v Nette API - GET, POST, PUT, cooki
 | `GetInputParam` | query string | podporuje typy a `setMulti()` |
 | `PostInputParam` | telo formulára, `$_POST` | podporuje typy a `setMulti()` |
 | `PutInputParam` | form-encoded telo ľubovoľnej metódy | bez prevodu typu, typ sa ale kontroluje: `INTEGER` odmietne aj `"12"`, použite `STRING` alebo žiadny typ |
+| `PathInputParam` | pomenovaný `{placeholder}` v URL endpointu | vždy povinný; pozrite [Typovaný vstup](/sk/guide/typed-input) |
+| `HeaderInputParam` | HTTP hlavička, bez ohľadu na veľkosť písmen | pozrite [Typovaný vstup](/sk/guide/typed-input) |
 | `CookieInputParam` | cookie | bez prevodu typu, typ sa ale kontroluje: `INTEGER` odmietne aj `"12"`, použite `STRING` alebo žiadny typ |
 | `FileInputParam` | nahraný súbor, `$_FILES` | `setMulti()` pre viac súborov |
 | `RawInputParam` | celé telo požiadavky ako reťazec | `setMulti()` vyhodí výnimku |
