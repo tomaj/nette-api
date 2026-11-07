@@ -49,6 +49,30 @@ For a real app, implement `TokenRepositoryInterface` on top of your database.
 Since 3.6.0, `BasicAuthentication` and `StaticTokenRepository` compare passwords and tokens with `hash_equals()`, in constant time, so the response time does not reveal how much of a token was right. Which values match is the same as before. In your own [token repository](#your-own-authorization) or authorization, compare secrets with `hash_equals()` too.
 :::
 
+### Custom error message
+
+`validToken()` can throw `InvalidTokenException` instead of returning `false`. Its message becomes the `message` in the 401 response, so you can tell the client why the token was refused, for example which permission is missing:
+
+```php
+use Tomaj\NetteApi\Exception\InvalidTokenException;
+
+public function validToken(string $token): bool
+{
+    $apiToken = $this->tokens->findActive($token);
+    if ($apiToken === null) {
+        return false; // default message: Token doesn't exists or isn't active
+    }
+    if (!$apiToken->hasPermission('articles.write')) {
+        throw new InvalidTokenException('Token is missing permission "articles.write"');
+    }
+    return true;
+}
+```
+
+::: warning
+The message is sent to the client as is. Don't put anything sensitive in it.
+:::
+
 ## Your own authorization
 
 ```php
