@@ -6,6 +6,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 
+### Added
+* Custom error message for token authorization
+
 ### Changed (BC breaks)
 * Renamed the unsafe CORS mode `'auto'` (any website can make credentialed requests) to `'reflect-unsafe'` (`CorsMode::ReflectUnsafe`) with the same behaviour plus `Vary: Origin, Referer`: `setCorsHeader('auto')` throws and `api: cors: mode: auto` fails the compilation, both with the allowlist to use instead and the new name (#186).
 * `ApiPresenter` sends no CORS headers by default (`'off'` instead of `'*'`), with or without the DI extension; set `setCorsAllowedOrigins()` / `cors: allowedOrigins` or `'*'` explicitly. See `UPGRADE-4.0.md` (#186).
@@ -131,9 +134,6 @@ Planned for 4.0, developed on `master`. 3.x is maintained on the `3.x` branch.
 * update minimum PHP to version 8.2 (currently still supported version) + update league/fractal library [BC]
 * change Inject from PHPDoc format to native PHP attribute
 * [Reverted] Remove BC addApi register method now requires ApiHandlerInterface as second parameter instead of string or service name
-
-### Added
-* Custom error message for token authorization
 
 ## 3.2.0
 
