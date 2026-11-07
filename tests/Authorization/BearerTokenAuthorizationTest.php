@@ -6,7 +6,9 @@ namespace Tomaj\NetteApi\Test\Handler;
 
 use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\Authorization\BearerTokenAuthorization;
+use Tomaj\NetteApi\Exception\InvalidTokenException;
 use Tomaj\NetteApi\Misc\StaticTokenRepository;
+use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 use Tomaj\NetteApi\Misc\StaticIpDetector;
 
 final class BearerTokenAuthorizationTest extends TestCase
@@ -114,5 +116,24 @@ final class BearerTokenAuthorizationTest extends TestCase
         $ipDetector = new StaticIpDetector('5.6.2.2');
         $bearerTokenAuthorization = new BearerTokenAuthorization($bearerTokenRepository, $ipDetector);
         $this->assertFalse($bearerTokenAuthorization->authorized());
+    }
+
+    public function testRepositoryCustomErrorMessage(): void
+    {
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
+        $tokenRepository = new class implements TokenRepositoryInterface {
+            public function validToken(string $token): bool
+            {
+                throw new InvalidTokenException('Missing permission "articles.write"');
+            }
+
+            public function ipRestrictions(string $token): ?string
+            {
+                return '*';
+            }
+        };
+        $bearerTokenAuthorization = new BearerTokenAuthorization($tokenRepository, new StaticIpDetector('34.24.126.44'));
+        $this->assertFalse($bearerTokenAuthorization->authorized());
+        $this->assertSame('Missing permission "articles.write"', $bearerTokenAuthorization->getErrorMessage());
     }
 }

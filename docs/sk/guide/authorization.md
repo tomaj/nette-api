@@ -49,6 +49,30 @@ V reálnej aplikácii implementujte `TokenRepositoryInterface` nad vašou datab�
 Od verzie 3.6.0 porovnávajú `BasicAuthentication` a `StaticTokenRepository` heslá a tokeny cez `hash_equals()`, v konštantnom čase, takže čas odpovede neprezradí, aká časť tokenu bola správna. Ktoré hodnoty sa zhodujú, je rovnaké ako predtým. Vo vlastnom [repozitári tokenov](#vlastna-autorizacia) alebo autorizácii porovnávajte tajomstvá tiež cez `hash_equals()`.
 :::
 
+### Vlastná chybová správa
+
+`validToken()` môže namiesto `false` hodiť `InvalidTokenException`. Jej správa sa stane `message` v odpovedi 401, takže klientovi viete povedať, prečo token neprešiel, napríklad aké oprávnenie chýba:
+
+```php
+use Tomaj\NetteApi\Exception\InvalidTokenException;
+
+public function validToken(string $token): bool
+{
+    $apiToken = $this->tokens->findActive($token);
+    if ($apiToken === null) {
+        return false; // predvolená správa: Token doesn't exists or isn't active
+    }
+    if (!$apiToken->hasPermission('articles.write')) {
+        throw new InvalidTokenException('Token is missing permission "articles.write"');
+    }
+    return true;
+}
+```
+
+::: warning
+Správa ide klientovi tak, ako je. Nedávajte do nej nič citlivé.
+:::
+
 ## Vlastná autorizácia
 
 ```php
