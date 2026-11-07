@@ -315,13 +315,13 @@ final class ApiPresenter implements IPresenter
             return $rateLimitResponse;
         }
 
-        $paramsProcessor = new ParamsProcessor($handler->params());
-        $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
-
-        $authResponse = $this->checkAuth($authorization, $params);
+        $authResponse = $this->checkAuth($authorization, []);
         if ($authResponse !== null) {
             return $authResponse;
         }
+
+        $paramsProcessor = new ParamsProcessor($handler->params());
+        $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
 
         try {
             $identity = $authorization instanceof AuthorizationIdentityInterface ? $authorization->getIdentity() : null;
