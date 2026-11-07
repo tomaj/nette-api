@@ -4,6 +4,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 
 ## [Unreleased][unreleased]
 
+### Added
+* Custom error message for token authorization
+
 ## 3.6.0 - 2026-10-27
 
 ### Security
