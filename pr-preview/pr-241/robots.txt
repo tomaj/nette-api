@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://tomaj.github.io/nette-api/sitemap.xml
