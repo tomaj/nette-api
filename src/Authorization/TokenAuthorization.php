@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tomaj\NetteApi\Authorization;
 
+use Tomaj\NetteApi\Exception\InvalidTokenException;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
 
@@ -44,7 +45,12 @@ abstract class TokenAuthorization implements ApiAuthorizationInterface, Authoriz
             return false;
         }
 
-        $result = $this->tokenRepository->validToken($token);
+        try {
+            $result = $this->tokenRepository->validToken($token);
+        } catch (InvalidTokenException $e) {
+            $this->errorMessage = $e->getMessage();
+            return false;
+        }
         if (!$result) {
             $this->errorMessage = 'Token doesn\'t exists or isn\'t active';
             return false;
