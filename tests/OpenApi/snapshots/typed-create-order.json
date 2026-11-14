@@ -1,0 +1,125 @@
+{
+    "required": true,
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "customerEmail": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "address": {
+                        "type": "object",
+                        "properties": {
+                            "street": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                            },
+                            "postalCode": {
+                                "type": "string",
+                                "pattern": "^[0-9]{5}$"
+                            }
+                        },
+                        "required": [
+                            "street",
+                            "postalCode"
+                        ]
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "sku": {
+                                    "type": "string"
+                                },
+                                "quantity": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            },
+                            "required": [
+                                "sku",
+                                "quantity"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 50
+                    },
+                    "deliveryAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "customerEmail",
+                    "address",
+                    "items"
+                ]
+            }
+        },
+        "application/x-www-form-urlencoded": {
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "customerEmail": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "address": {
+                        "type": "object",
+                        "properties": {
+                            "street": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                            },
+                            "postalCode": {
+                                "type": "string",
+                                "pattern": "^[0-9]{5}$"
+                            }
+                        },
+                        "required": [
+                            "street",
+                            "postalCode"
+                        ]
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "sku": {
+                                    "type": "string"
+                                },
+                                "quantity": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            },
+                            "required": [
+                                "sku",
+                                "quantity"
+                            ]
+                        },
+                        "minItems": 1,
+                        "maxItems": 50
+                    },
+                    "deliveryAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "customerEmail",
+                    "address",
+                    "items"
+                ]
+            }
+        }
+    }
+}

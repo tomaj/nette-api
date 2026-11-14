@@ -18,11 +18,12 @@ description: Ako Nette API mení výnimky, zlý vstup, zlyhanú autorizáciu a p
 | `handleAuthorizationException(Throwable, array $params)` | `authorized()` vyhodil výnimku | `500 Internal server error`, loguje do Tracy |
 | `handleNotFound(EndpointInterface)` | URL nezodpovedá žiadny endpoint | `404 Unknown api endpoint` |
 | `handleRateLimit(RateLimitResponse)` | limit je vyčerpaný a nemá vlastnú odpoveď | `429 Too many requests.`, ak je čas známy, aj `Retry after N seconds.` |
+| `handleUnsupportedMediaType(string $detail)` | typovaný handler dostane telo s content typom, ktorý neprijíma | `415 unsupported media type`, s akceptovanými typmi v `detail` len so zapnutými detailmi chýb |
 
 Všetky vracajú `ResponseInterface`; `DefaultErrorHandler` vracia `JsonApiResponse` so `status: error` a `message`.
 
 ::: tip Od verzie 4.0.0
-`handleNotFound()` a `handleRateLimit()` sú nové, takže `404` a `429` sa dajú zmeniť na jednom mieste. Metódy vracajú `ResponseInterface` namiesto `JsonApiResponse`. `handleAuthorizationException()` už nepošle text výnimky, ak nie sú zapnuté detaily. Pozrite si [návod na upgrade](/sk/upgrade).
+`handleNotFound()`, `handleRateLimit()` a `handleUnsupportedMediaType()` sú nové, takže `404`, `429` a `415` sa dajú zmeniť na jednom mieste. Metódy vracajú `ResponseInterface` namiesto `JsonApiResponse`. `handleAuthorizationException()` už nepošle text výnimky, ak nie sú zapnuté detaily. Pozrite si [návod na upgrade](/sk/upgrade).
 :::
 
 Pre nové projekty odporúčame chyby `application/problem+json` podľa RFC 9457 cez `ProblemDetailsErrorHandler`, pozrite si [Problem Details](/sk/guide/problem-details). `DefaultErrorHandler` ostáva predvolený, aby klienti, ktorí čítajú `message`, fungovali ďalej.

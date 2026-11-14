@@ -6,6 +6,7 @@ namespace Tomaj\NetteApi\DI;
 
 use Nette\DI\Definitions\Statement;
 use Nette\DI\InvalidConfigurationException;
+use Tomaj\NetteApi\Input\EndpointTemplate;
 
 /**
  * One endpoint as written in neon (api.endpoints) or found by discovery, before it becomes an addApi() call.
@@ -79,13 +80,13 @@ final readonly class EndpointDefinition
         if ($package === '') {
             throw $this->invalid('package', '', 'it is empty', $this->example('package', "'users'", 'package: users'));
         }
-        if (str_contains($package, '/')) {
+        if (str_contains($package, '/') && !EndpointTemplate::isComposite($package)) {
             [$first, $rest] = explode('/', $package, 2);
             throw $this->invalid('package', $package, 'a package is one URL segment without a slash', str_contains($rest, '/') || $first === '' || $rest === ''
                 ? $this->example('package', "'users'", 'package: users')
                 : $this->example('package', sprintf("'%s', '%s'", $first, $rest), sprintf('package: %s, action: %s', $first, $rest)));
         }
-        if ($this->action !== null && str_contains($this->action, '/')) {
+        if ($this->action !== null && str_contains($this->action, '/') && !EndpointTemplate::isComposite($this->action)) {
             throw $this->invalid('action', $this->action, 'an action is one URL segment without a slash', $this->example('action', "'detail'", 'action: detail'));
         }
     }

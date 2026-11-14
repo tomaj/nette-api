@@ -67,6 +67,12 @@ final readonly class DefaultErrorHandler implements ErrorHandlerInterface
         return new JsonApiResponse(Response::S429_TOO_MANY_REQUESTS, ['status' => 'error', 'message' => $message]);
     }
 
+    #[\Override]
+    public function handleUnsupportedMediaType(string $detail): JsonApiResponse
+    {
+        return $this->error(Response::S415_UnsupportedMediaType, 'unsupported media type', $detail);
+    }
+
     private function internalError(Throwable $exception): JsonApiResponse
     {
         Debugger::log($exception, Debugger::EXCEPTION);

@@ -1,0 +1,16 @@
+extensions:
+	api: Tomaj\NetteApi\DI\NetteApiExtension
+
+services:
+	router: App\RouterFactory::create
+	apiLink: Tomaj\NetteApi\Link\ApiLink
+
+api:
+	outputConfigurator: Tomaj\NetteApi\Output\Configurator\EnvConfigurator('APP_ENV', 'production')
+
+	discovery:
+		paths: [%appDir%/Api]
+		namespace: App\Api
+
+	endpoints:
+		- {method: GET, version: 1, package: openapi, handler: Tomaj\NetteApi\Handlers\OpenApiHandler, authorization: false}

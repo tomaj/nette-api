@@ -7,6 +7,8 @@ description: Declare and validate input in Nette API - GET, POST, PUT, cookie, f
 
 `params()` returns the inputs of the endpoint. `ApiPresenter` reads and validates all of them before `handle()` runs, and `handle()` gets the values keyed by name.
 
+Input can be declared in two equal ways: with `params()`, as described on this page, or as properties of a typed DTO read by `TypedHandler::handleDto()`. Both produce these `InputParam` objects and share validation, OpenAPI and the console. [Typed input (DTO)](/guide/typed-input) helps you choose, and [params() and DTO side by side](/guide/input-styles) shows the same endpoints in both styles.
+
 <Diagram name="params-1" alt="Input is read by InputParam::getValue, converted to the declared type and validated; errors answer 400, valid values reach the handler" />
 
 ## Param classes
@@ -16,6 +18,9 @@ description: Declare and validate input in Nette API - GET, POST, PUT, cookie, f
 | `GetInputParam` | query string | supports types and `setMulti()` |
 | `PostInputParam` | form body, `$_POST` | supports types and `setMulti()` |
 | `PutInputParam` | form-encoded body of any method | no type conversion, but a type is still checked: `INTEGER` rejects even `"12"`, so use `STRING` or no type |
+| `PathInputParam` | a named `{placeholder}` in the endpoint URL | always required, see [below](#path-header-and-body-params) |
+| `HeaderInputParam` | HTTP header, case-insensitive | see [below](#path-header-and-body-params) |
+| `BodyInputParam` | one field of a JSON, form or multipart body | see [below](#path-header-and-body-params) |
 | `CookieInputParam` | cookie | no type conversion, but a type is still checked: `INTEGER` rejects even `"12"`, so use `STRING` or no type |
 | `FileInputParam` | uploaded file, `$_FILES` | `setMulti()` for several files |
 | `RawInputParam` | the whole request body as a string | `setMulti()` throws |
@@ -55,6 +60,25 @@ All params share a fluent API:
 ::: warning A value that is not a number becomes null
 In 3.x `?limit=abc` with `INTEGER` is not an error: the value is converted to `null` before validation, so an optional param passes and a required one answers `Field is required`. Always handle `null` in `handle()`. The [params example](/examples/params-validation) tests this.
 :::
+
+## Path, header and body params
+
+`PathInputParam` reads a value from the endpoint URL. Declare the placeholder in the endpoint action with `{name}`, for example `users/{id}/detail`, as described in [Typed input](/guide/typed-input#path-values-and-url-templates). The param is always required and its OpenAPI placeholder has the same name. `HeaderInputParam` reads a request header, case-insensitively. `BodyInputParam` reads one field of a JSON object, a URL-encoded form or a multipart body, and `setContentTypes()` lists the media types it accepts. A typed DTO generates the same three classes from `#[Path]`, `#[Header]` and `#[Body]`, and `params()` can declare them directly:
+
+```php
+public function params(): array
+{
+    return [
+        (new PathInputParam('id', InputType::INTEGER))->setRequired(),
+        new HeaderInputParam('X-Request-Id', InputType::STRING),
+        (new BodyInputParam('email', InputType::STRING))
+            ->setRequired()
+            ->setContentTypes(['application/json', 'application/x-www-form-urlencoded']),
+    ];
+}
+```
+
+OpenAPI emits them as `in: path`, `in: header` and as fields of the `requestBody`.
 
 ## JSON body
 

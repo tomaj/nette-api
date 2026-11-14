@@ -41,7 +41,7 @@ services:
 | metóda | `'GET'` | porovnáva sa veľkými písmenami |
 | verzia | `1`, `'1.1'` | uloží sa ako reťazec, nesmie obsahovať `/` |
 | balík | `'users'` | prvý segment cesty za verziou |
-| apiAction | `'detail'` alebo `null` | voliteľný druhý segment |
+| apiAction | `'detail'`, `'{id}/detail'` alebo `null` | voliteľný druhý segment; `{name}` z neho robí šablónu URL, pozrite nižšie |
 
 `getUrl()` vráti `v1/users/detail`, čo používa [OpenAPI](/sk/guide/openapi) aj konzola.
 
@@ -54,6 +54,12 @@ services:
 3. vráti prvý, kde sa zhoduje metóda, verzia, balík aj akcia;
 4. nastaví handleru endpoint, takže fungujú `getEndpoint()` a `createLink()`;
 5. bez zhody vráti `DefaultHandler` a `NoAuthorization`, ktoré odpovedia `404 Unknown api endpoint` cez metódu `handleNotFound()` error handlera.
+
+`getApi()` si ponecháva svoje štyri argumenty, takže podtrieda, ktorá ho prekrýva, ďalej funguje, a nájde len endpointy so statickou URL.
+
+### Endpointy so segmentmi {name}
+
+Endpoint, ktorého akcia má segmenty `{name}`, napríklad `users/{id}/detail`, potrebuje cestu požiadavky. `ApiPresenter` najprv zavolá `getApi()` a keď ten nič nenájde, zavolá `matchPath($method, $version, $package, $apiAction, $path)`. Statický endpoint teda vždy vyhrá. `matchPath()` porovná cestu so všetkými šablónami danej metódy a verzie, uloží zhodné hodnoty pre properties `#[Path]` a vráti `Api`, alebo `null`, keď nezodpovedá žiadna šablóna. Ak jednej ceste vyhovujú dve šablóny, vyhodí `LogicException`, ktorá ich vymenuje, takže zmeňte statický segment tak, aby sa líšili. Globálny preflight odpovie na `OPTIONS` aj pre cestu, ktorá zodpovedá šablóne. Ako šablónu zaregistrovať a smerovať, je v stránke [Typovaný vstup](/sk/guide/typed-input#hodnoty-z-cesty-a-sablony-url).
 
 `GET /api/v1/users` a `POST /api/v1/users` sú dva endpointy s dvoma handlermi. Nezaregistrovaná verzia, napríklad `/api/v3/users`, je `404`, ako testuje [príklad verzií](/sk/examples/versions).
 

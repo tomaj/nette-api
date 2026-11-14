@@ -1,6 +1,6 @@
 ---
 title: Reference
-description: Every public class and interface of Nette API 3.x by namespace, with a one line description and a link to the guide page.
+description: The public classes and interfaces of Nette API by namespace, with a one line description and a link to the guide page.
 ---
 
 # Reference
@@ -11,7 +11,7 @@ All classes live under `Tomaj\NetteApi`.
 
 | Class | What it does | Guide |
 | --- | --- | --- |
-| `ApiDecider` | registry of endpoints: `addApi()`, `getApi()`, `getApis()`, `enableGlobalPreflight()` | [Architecture](/guide/architecture) |
+| `ApiDecider` | registry of endpoints: `addApi()`, `getApi()`, `matchPath()`, `getApis()`, `enableGlobalPreflight()` | [Architecture](/guide/architecture) |
 | `Api` | one registered endpoint: endpoint, handler, authorization, rate limit | [Architecture](/guide/architecture) |
 | `ApiHolder` | used inside `ApiDecider`: how it stores an endpoint before its handler is created; the handler can still be a class or service name | [ApiDecider](/guide/api-decider#three-ways-to-pass-a-handler) |
 | `EndpointIdentifier` / `EndpointInterface` | method, version, package, action | [Handlers](/guide/handlers#registering-a-handler) |
@@ -25,7 +25,7 @@ All classes live under `Tomaj\NetteApi`.
 
 | Class | What it does | Guide |
 | --- | --- | --- |
-| `Handlers\ApiHandlerInterface`, `BaseHandler` | your endpoints | [Handlers](/guide/handlers) |
+| `Handlers\ApiHandlerInterface`, `BaseHandler`, `TypedHandler` | your endpoints; `TypedHandler` takes a DTO | [Handlers](/guide/handlers), [Typed input](/guide/typed-input) |
 | `Handlers\OpenApiHandler` | OpenAPI 3.0 document | [OpenAPI](/guide/openapi) |
 | `Handlers\ApiListingHandler` | JSON list of the endpoints in its own version | [Handlers](/guide/handlers#handlers-that-ship-with-the-library) |
 | `Handlers\AlwaysOkHandler`, `EchoHandler` | health check and test endpoints | [Handlers](/guide/handlers#handlers-that-ship-with-the-library) |
@@ -36,10 +36,25 @@ All classes live under `Tomaj\NetteApi`.
 
 | Class | What it does | Guide |
 | --- | --- | --- |
-| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | one input each | [Params](/guide/params) |
+| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `PathInputParam`, `HeaderInputParam`, `BodyInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | one input each | [Params](/guide/params) |
 | `Params\InputParam`, `ParamInterface`, `ParamsProcessor` | the base class and the processing | [Params](/guide/params) |
 | `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` (enum) | value checks | [Params](/guide/params#types) |
 | `ValidationResult\ValidationResult(Interface)` | the result of a check | [Params](/guide/params) |
+
+## Typed input (4.0.0)
+
+| Class | What it does | Guide |
+| --- | --- | --- |
+| `Input\Query`, `Path`, `Header`, `Body`, `File` | attributes that say where a DTO property is read from | [Typed input](/guide/typed-input#source-attributes) |
+| `Input\Consumes`, `Input\FileUpload` | restricts the accepted body media types; the typed upload value | [Body, files and content types](/guide/typed-input-body) |
+| `Input\Cast`, `CasterInterface`, `OpenApiCasterInterface`, `CastException` | a custom conversion of one property | [Conversion](/guide/typed-input-conversion#custom-conversions-with-cast) |
+| `Input\DateFormat`, `UnixTimestamp`, `Split` | built-in casters | [Conversion](/guide/typed-input-conversion#built-in-casters-and-a-czech-date) |
+| `Validation\Range`, `Length`, `Pattern`, `Email` | built-in constraints | [Constraints](/guide/typed-input-conversion#constraints) |
+| `Validation\ConstraintInterface`, `ConstraintContext` | your own constraints | [Custom constraints](/guide/typed-input-conversion#custom-constraints) |
+| `Params\MappedInputParam` | the `InputParam` generated for one DTO property | [Typed input](/guide/typed-input) |
+| `Input\RequestInput`, `Params\PathValues` | request state of a typed handler, reset in long-running workers | [Long-running workers](/guide/typed-input#long-running-workers) |
+
+The other classes of the `Input` namespace are the machinery behind these (compiler, mapper, metadata, schema and conversion helpers). They are not listed and are not meant to be extended or called directly.
 
 ## Responses and outputs
 
@@ -69,7 +84,7 @@ All classes live under `Tomaj\NetteApi`.
 | Class | What it does | Guide |
 | --- | --- | --- |
 | `Logger\ApiLoggerInterface` | request log | [Logging](/guide/logging) |
-| `Link\ApiLink`, `ApiLinkExtension`, `ApiLinkNode` | URLs and the `{apiLink}` tag | [Links](/guide/links) |
+| `Link\ApiLink` (`link()`), `ApiLinkExtension`, `ApiLinkNode` | URLs and the `{apiLink}` tag | [Links](/guide/links) |
 | `Component\ApiListingControl`, `ApiConsoleControl`, `ApiConsoleFormFactoryInterface`, `DefaultApiConsoleFormFactory` | web console | [Web console](/guide/console) |
 | `Misc\ConsoleRequest`, `ConsoleResponse` | the console's cURL request | [Web console](/guide/console) |
 | `Misc\CorsOriginAllowlist` | internal (`@internal`), used by `setCorsAllowedOrigins()`; may change in 4.0 | [CORS](/guide/cors#allowed-origins) |

@@ -12,11 +12,11 @@ description: 'Presné poradie krokov v Nette API ApiPresenter::run(), od CORS a 
 | Krok | Kód | Výstup |
 | --- | --- | --- |
 | 1. CORS hlavičky | `sendCorsHeaders()` | |
-| 2. Endpoint | `$this->apiDecider->getApi(...)` | `404` cez `DefaultHandler` a `handleNotFound()` |
+| 2. Endpoint | `$this->apiDecider->getApi(...)`, potom `matchPath(...)` pre URL s `{name}` | `404` cez `DefaultHandler` a `handleNotFound()` |
 | 3. Obmedzenie požiadaviek | `checkRateLimit($rateLimit)` | `429`, neloguje sa |
 | 4. Načítanie parametrov | `new ParamsProcessor($handler->params())` | |
 | 5. Autorizácia | `checkAuth($authorization, $params)` | `401` alebo `500`, neloguje sa |
-| 6. Chyby parametrov | `errorHandler->handleInputParams()` | `400`, neloguje sa |
+| 6. Chyby parametrov | `errorHandler->handleUnsupportedMediaType()`, `errorHandler->handleInputParams()` | `415` typovaného handlera, loguje sa; `400`, neloguje sa |
 | 7. Handler | `$handler->handle($params)` | výnimka: `500` |
 | 8. Kontrola výstupu | `$output->validate($response)` | bez zhody: `500` |
 | 9. Logger | `logRequest()` | |

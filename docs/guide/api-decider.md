@@ -41,7 +41,7 @@ The 4th argument is the rate limit, `null` means none. Left out, an autowired `R
 | method | `'GET'` | compared upper case |
 | version | `1`, `'1.1'` | stored as a string, must not contain `/` |
 | package | `'users'` | the first path segment after the version |
-| apiAction | `'detail'` or `null` | optional second segment |
+| apiAction | `'detail'`, `'{id}/detail'` or `null` | optional second segment; `{name}` makes it a URL template, see below |
 
 `getUrl()` returns `v1/users/detail`, which [OpenAPI](/guide/openapi) and the console use.
 
@@ -54,6 +54,12 @@ The 4th argument is the rate limit, `null` means none. Left out, an autowired `R
 3. returns the first one where method, version, package and action are all equal;
 4. sets the endpoint on the handler, so `getEndpoint()` and `createLink()` work;
 5. with no match returns `DefaultHandler` and `NoAuthorization`, which answer `404 Unknown api endpoint` through the error handler's `handleNotFound()`.
+
+`getApi()` keeps its four arguments, so a subclass that overrides it keeps working, and it finds only endpoints with a static URL.
+
+### Endpoints with {name} segments
+
+An endpoint whose action has `{name}` segments, such as `users/{id}/detail`, needs the path of the request. `ApiPresenter` calls `getApi()` first, and when that finds nothing it calls `matchPath($method, $version, $package, $apiAction, $path)`. A static endpoint therefore always wins. `matchPath()` compares the path with every template of the method and version, stores the matched values for the `#[Path]` properties and returns the `Api`, or `null` when no template matches. When two templates match one path it throws a `LogicException` that lists them, so make a static segment differ. A global preflight also answers `OPTIONS` for a path that matches a template. How to register and route one is in [Typed input](/guide/typed-input#path-values-and-url-templates).
 
 `GET /api/v1/users` and `POST /api/v1/users` are two endpoints with two handlers. A version that is not registered, such as `/api/v3/users`, is a `404`, as the [versions example](/examples/versions) tests.
 

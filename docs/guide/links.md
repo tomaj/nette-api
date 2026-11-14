@@ -15,7 +15,18 @@ $url = $apiLink->link(new EndpointIdentifier('GET', 1, 'users', 'detail'), ['id'
 
 It needs a route to `Api:Api:default` with `version`, `package` and `apiAction` parameters, as in [Getting started](/guide/getting-started).
 
-Inside a handler extending `BaseHandler`, call `$this->createLink($params)` for a link to the handler's own endpoint. It needs Nette's `LinkGenerator` first, otherwise it throws `Nette\InvalidStateException`. Add a `setup` line to the handler service:
+For an endpoint whose URL has `{name}` segments, such as `{id}/detail`, `link()` keeps the segments literal, which is the OpenAPI path template. Replace a segment with the URL-encoded value yourself:
+
+```php
+$url = $apiLink->link(new EndpointIdentifier('GET', 1, 'users', '{id}/detail'), ['limit' => 5]);
+// https://example.com/api/v1/users/{id}/detail?limit=5
+$url = str_replace('{id}', rawurlencode('42'), $url);
+// https://example.com/api/v1/users/42/detail?limit=5
+```
+
+The API console does the same with the values typed into the path inputs, after `link()` has built the URL, so a subclass that overrides `link()` still decides the URL of every endpoint.
+
+Inside a handler extending `BaseHandler` or `TypedHandler`, call `$this->createLink($params)` for a link to the handler's own endpoint. It needs Nette's `LinkGenerator` first, otherwise it throws `Nette\InvalidStateException`. Add a `setup` line to the handler service:
 
 ```yaml
 services:

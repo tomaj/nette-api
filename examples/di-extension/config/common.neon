@@ -39,6 +39,8 @@ api:
 	endpoints:
 		# GET /api/v1/hello is public
 		- {method: GET, version: 1, package: hello, handler: App\Api\HelloHandler('Hello from neon'), authorization: false}
+		# GET /api/v1/greet?name=Nette is public, its handler reads a typed input DTO
+		- {method: GET, version: 1, package: greet, handler: App\Api\GreetHandler, authorization: false}
 		# GET /api/v1/users and GET /api/v1/users/detail?id=1 need the token
 		- {method: GET, version: 1, package: users, handler: App\Api\UsersListHandler}
 		- {method: GET, version: 1, package: users, action: detail, handler: App\Api\UserDetailHandler}

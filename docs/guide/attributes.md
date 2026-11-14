@@ -11,7 +11,9 @@ The attributes in `Tomaj\NetteApi\Attribute` are new in 4.0.0. They need the [DI
 
 With attributes you write the URL of an endpoint right on the handler class. There is no endpoint list in neon to keep in sync with the code:
 
-```php [app/Api/UsersListHandler.php]
+::: code-group
+
+```php [params()]
 namespace App\Api;
 
 use Tomaj\NetteApi\Attribute\Get;
@@ -29,7 +31,37 @@ final class UsersListHandler extends BaseHandler
 }
 ```
 
-`#[Get(1, 'users')]` means `GET /api/v1/users`. The neon config only says where the handlers are:
+```php [Typed DTO]
+namespace App\Api;
+
+use Tomaj\NetteApi\Attribute\Get;
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\Query;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+final readonly class UsersListInput
+{
+    public function __construct(
+        #[Query]
+        public int $page = 1,
+    ) {
+    }
+}
+
+#[Get(1, 'users')]
+final class UsersListHandler extends TypedHandler
+{
+    public function handleDto(UsersListInput $input): ResponseInterface
+    {
+        return new JsonApiResponse(200, ['users' => [], 'page' => $input->page]);
+    }
+}
+```
+
+:::
+
+`#[Get(1, 'users')]` means `GET /api/v1/users`. The attributes work the same on a `BaseHandler` and on a `TypedHandler`; `examples/attributes` has both. The neon config only says where the handlers are:
 
 ```yaml [config/api.neon]
 extensions:
@@ -48,6 +80,7 @@ When Nette compiles the container, the extension finds every class in `app/Api` 
 | --- | --- |
 | `#[Get(1, 'users')]` | `GET /api/v1/users` |
 | `#[Get(1, 'users', 'detail')]` | `GET /api/v1/users/detail` |
+| `#[Get(1, 'users', '{id}/detail')]` | `GET /api/v1/users/{id}/detail`, the `id` is read by a `#[Path]` property, see [Typed input](/guide/typed-input#path-values-and-url-templates) |
 | `#[Post(1, 'users')]` | `POST /api/v1/users` |
 | `#[Put(1, 'users', 'update')]` | `PUT /api/v1/users/update` |
 | `#[Patch(1, 'users')]` | `PATCH /api/v1/users` |

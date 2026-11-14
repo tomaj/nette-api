@@ -13,6 +13,9 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandler;
 use Tomaj\NetteApi\Handlers\CorsPreflightHandlerInterface;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
+use Tomaj\NetteApi\Input\EndpointTemplate;
+use Tomaj\NetteApi\Params\InputParam;
+use Tomaj\NetteApi\Params\PathValues;
 use Tomaj\NetteApi\RateLimit\AutowiredRateLimit;
 use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
 use Tomaj\NetteApi\RateLimit\RateLimitInterface;
@@ -33,6 +36,8 @@ class ApiDecider
      * Get api handler that match input method, version, package and apiAction.
      * If decider cannot find handler for given handler, returns defaults.
      *
+     * Endpoints with {name} segments are found by matchPath(), because they need the request path.
+     *
      * @param string   $apiAction
      *
      * @return Api
@@ -41,6 +46,7 @@ class ApiDecider
     {
         $method = strtoupper($method);
         $apiAction = $apiAction === '' ? null : $apiAction;
+        PathValues::reset();
 
         foreach ($this->apis as $api) {
             $identifier = $api->getEndpoint();
@@ -57,6 +63,47 @@ class ApiDecider
         }
 
         return new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
+    }
+
+    /**
+     * Finds an endpoint whose URL has {name} segments, for example users/{id}/detail, and stores the matched values
+     * for #[Path] properties. Called after getApi() found no static endpoint. Null when no template matches.
+     *
+     * @param string|null $requestPath absolute or application path of the request
+     *
+     * @throws \LogicException when more than one template matches
+     */
+    public function matchPath(string $method, string $version, string $package, ?string $apiAction, ?string $requestPath): ?Api
+    {
+        if ($requestPath === null) {
+            return null;
+        }
+
+        $method = strtoupper($method);
+        $apiAction = $apiAction === '' ? null : $apiAction;
+        $matched = $this->matchTemplate($method, $version, $requestPath);
+        if (count($matched) > 1) {
+            $urls = array_map(static fn (array $match): string => $match[0]->getEndpoint()->getUrl(), $matched);
+            throw new \LogicException(sprintf(
+                "%s request '%s' matches more than one endpoint (%s). Make a static segment differ so only one URL template matches.",
+                $method,
+                $requestPath,
+                implode(', ', $urls),
+            ));
+        }
+        if (count($matched) === 1) {
+            [$api, $captured] = $matched[0];
+            PathValues::set($captured);
+            $handler = $this->getHandler($api);
+            $handler->setEndpointIdentifier($api->getEndpoint());
+            return new Api($api->getEndpoint(), $handler, $api->getAuthorization(), $api->getRateLimit());
+        }
+
+        if ($method === 'OPTIONS' && $this->globalPreflightHandler && $this->matchTemplate('', $version, $requestPath) !== []) {
+            return new Api(new EndpointIdentifier('OPTIONS', $version, $package, $apiAction), $this->globalPreflightHandler, new NoAuthorization());
+        }
+
+        return null;
     }
 
     public function enableGlobalPreflight(?CorsPreflightHandlerInterface $corsHandler = null): void
@@ -125,23 +172,60 @@ class ApiDecider
     private function getHandler(ApiHolder $api): ApiHandlerInterface
     {
         $handler = $api->getHandler();
-        if (!is_string($handler)) {
-            return $handler;
+        if (is_string($handler)) {
+            if (str_starts_with($handler, '@')) {
+                /**
+                 * @var ApiHandlerInterface $resolved
+                 */
+                $resolved = $this->container->getByName(substr($handler, 1));
+            } else {
+                /**
+                 * @var ApiHandlerInterface $resolved
+                 * @var class-string<object> $handler
+                 */
+                $resolved = $this->container->getByType($handler);
+            }
+            $handler = $resolved;
         }
 
-        if (str_starts_with($handler, '@')) {
-            /**
-             * @var ApiHandlerInterface $apiHandler
-             */
-            $apiHandler = $this->container->getByName(substr($handler, 1));
-            return $apiHandler;
+        $this->checkPath($api->getEndpoint(), $handler);
+        return $handler;
+    }
+
+    /**
+     * @return list<array{0: ApiHolder, 1: array<string, string>}>
+     */
+    private function matchTemplate(string $method, string $version, string $requestPath): array
+    {
+        $normalized = EndpointTemplate::normalize($requestPath, $version);
+        if ($normalized === null) {
+            return [];
         }
 
-        /**
-         * @var ApiHandlerInterface $apiHandler
-         * @var class-string<object> $handler
-         */
-        $apiHandler = $this->container->getByType($handler);
-        return $apiHandler;
+        $matched = [];
+        foreach ($this->apis as $api) {
+            $identifier = $api->getEndpoint();
+            if (($method !== '' && $method !== $identifier->getMethod()) || !str_contains($identifier->getUrl(), '{')) {
+                continue;
+            }
+            $captured = EndpointTemplate::match($identifier->getUrl(), $normalized);
+            if ($captured !== null) {
+                $matched[] = [$api, $captured];
+            }
+        }
+
+        return $matched;
+    }
+
+    private function checkPath(EndpointInterface $endpoint, ApiHandlerInterface $handler): void
+    {
+        $names = [];
+        foreach ($handler->params() as $param) {
+            if ($param->getType() === InputParam::TYPE_PATH) {
+                $names[] = $param->getKey();
+            }
+        }
+
+        EndpointTemplate::assert($endpoint->getUrl(), $names, $handler::class);
     }
 }

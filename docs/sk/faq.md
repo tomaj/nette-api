@@ -33,6 +33,14 @@ V 3.x presenter skončí pred loggerom. Pozrite si [Logovanie](/sk/guide/logging
 
 Áno, v novom projekte: chyby podľa RFC 9457 majú jeden strojovo čitateľný tvar. Nie sú predvolené, lebo existujúci klienti čítajú `message`. Pozrite si [Problem Details](/sk/guide/problem-details).
 
+## Mám používať params() alebo typované DTO?
+
+Ktorékoľvek: sú to dva rovnocenné spôsoby deklarácie vstupu handlera a jedno API ich môže miešať. V stránke [Typovaný vstup (DTO)](/sk/guide/typed-input) je, v čom sa líšia, a [params() a DTO vedľa seba](/sk/guide/input-styles) ukazuje tie isté endpointy v oboch štýloch.
+
+## Prečo môj typovaný endpoint vracia 415?
+
+Telo má content type, ktorý handler neprijíma, alebo žiadny. DTO s poľami tela predvolene prijíma JSON a URL-enkódovaný formulár a `#[Consumes]` to mení. Pozrite [telo, súbory a content typy](/sk/guide/typed-input-body).
+
 ## Dá sa API nastaviť bez zoznamu volaní addApi()?
 
 Áno, od verzie 4.0.0 cez [DI rozšírenie](/sk/guide/di-extension): jedna neon sekcia `api:` s endpointmi, autorizáciami, obmedzeniami požiadaviek, CORS a formátom chýb, skontrolovaná pri kompilácii kontajnera.
@@ -55,4 +63,4 @@ Postupujte podľa [návodu na upgrade](/sk/upgrade) a [changelogu](/sk/changelog
 
 ## Je k dispozícii kompletný projekt, ktorý si môžem spustiť?
 
-Áno, 13, testovaných v CI: pozrite si [Príklady](/sk/examples/).
+Áno, 17, testovaných v CI: pozrite si [Príklady](/sk/examples/).

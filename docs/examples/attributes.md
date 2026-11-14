@@ -44,6 +44,18 @@ The attributes and `api: discovery:` are new in 4.0.0.
 
 <<< @/../examples/attributes/app/Api/UsersListHandler.php
 
+## A typed input DTO
+
+`GreetHandler` is a `TypedHandler`: the same `#[Get]` and `#[Authorization]` attributes, with its input in `GreetInput` instead of `params()`.
+
+::: code-group
+
+<<< @/../examples/attributes/app/Api/GreetHandler.php
+
+<<< @/../examples/attributes/app/Api/GreetInput.php
+
+:::
+
 ## An endpoint with an action
 
 <<< @/../examples/attributes/app/Api/UserDetailHandler.php

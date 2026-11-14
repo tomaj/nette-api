@@ -1,6 +1,6 @@
 ---
 title: Referencia
-description: Všetky verejné triedy a rozhrania Nette API 3.x podľa namespace, s jednoriadkovým popisom a odkazom na stránku príručky.
+description: Verejné triedy a rozhrania Nette API podľa namespace, s jednoriadkovým popisom a odkazom na stránku príručky.
 ---
 
 # Referencia
@@ -11,7 +11,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 
 | Trieda | Čo robí | Príručka |
 | --- | --- | --- |
-| `ApiDecider` | register endpointov: `addApi()`, `getApi()`, `getApis()`, `enableGlobalPreflight()` | [Architektúra](/sk/guide/architecture) |
+| `ApiDecider` | register endpointov: `addApi()`, `getApi()`, `matchPath()`, `getApis()`, `enableGlobalPreflight()` | [Architektúra](/sk/guide/architecture) |
 | `Api` | jeden zaregistrovaný endpoint: endpoint, handler, autorizácia, obmedzenie požiadaviek | [Architektúra](/sk/guide/architecture) |
 | `ApiHolder` | používa ho `ApiDecider`: ako uchováva endpoint pred vytvorením handlera; handler môže byť ešte názov triedy alebo služby | [ApiDecider](/sk/guide/api-decider#tri-sposoby-ako-odovzdat-handler) |
 | `EndpointIdentifier` / `EndpointInterface` | metóda, verzia, balík, akcia | [Handlery](/sk/guide/handlers#registracia-handlera) |
@@ -25,7 +25,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 
 | Trieda | Čo robí | Príručka |
 | --- | --- | --- |
-| `Handlers\ApiHandlerInterface`, `BaseHandler` | vaše endpointy | [Handlery](/sk/guide/handlers) |
+| `Handlers\ApiHandlerInterface`, `BaseHandler`, `TypedHandler` | vaše endpointy; `TypedHandler` berie DTO | [Handlery](/sk/guide/handlers), [Typovaný vstup](/sk/guide/typed-input) |
 | `Handlers\OpenApiHandler` | OpenAPI 3.0 dokument | [OpenAPI](/sk/guide/openapi) |
 | `Handlers\ApiListingHandler` | JSON zoznam endpointov vo vlastnej verzii | [Handlery](/sk/guide/handlers#handlery-ktore-su-sucastou-kniznice) |
 | `Handlers\AlwaysOkHandler`, `EchoHandler` | health check a testovacie endpointy | [Handlery](/sk/guide/handlers#handlery-ktore-su-sucastou-kniznice) |
@@ -36,10 +36,25 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 
 | Trieda | Čo robí | Príručka |
 | --- | --- | --- |
-| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | každá jeden vstup | [Parametre](/sk/guide/params) |
+| `Params\GetInputParam`, `PostInputParam`, `PutInputParam`, `PathInputParam`, `HeaderInputParam`, `BodyInputParam`, `CookieInputParam`, `FileInputParam`, `RawInputParam`, `JsonInputParam` | každá jeden vstup | [Parametre](/sk/guide/params) |
 | `Params\InputParam`, `ParamInterface`, `ParamsProcessor` | základná trieda a spracovanie | [Parametre](/sk/guide/params) |
 | `Validation\InputValidator`, `JsonSchemaValidator`, `InputType` (enum) | kontroly hodnôt | [Parametre](/sk/guide/params#typy) |
 | `ValidationResult\ValidationResult(Interface)` | výsledok kontroly | [Parametre](/sk/guide/params) |
+
+## Typovaný vstup (4.0.0)
+
+| Trieda | Čo robí | Príručka |
+| --- | --- | --- |
+| `Input\Query`, `Path`, `Header`, `Body`, `File` | atribúty, ktoré určujú, odkiaľ sa property DTO číta | [Typovaný vstup](/sk/guide/typed-input#atributy-zdroja) |
+| `Input\Consumes`, `Input\FileUpload` | obmedzí akceptované media typy tela; typovaná hodnota nahraného súboru | [Telo, súbory a content typy](/sk/guide/typed-input-body) |
+| `Input\Cast`, `CasterInterface`, `OpenApiCasterInterface`, `CastException` | vlastná konverzia jednej property | [Konverzia](/sk/guide/typed-input-conversion#vlastne-konverzie-cez-cast) |
+| `Input\DateFormat`, `UnixTimestamp`, `Split` | vstavané castery | [Konverzia](/sk/guide/typed-input-conversion#vstavane-castery-a-cesky-datum) |
+| `Validation\Range`, `Length`, `Pattern`, `Email` | vstavané validačné obmedzenia | [Validačné obmedzenia](/sk/guide/typed-input-conversion#validacne-obmedzenia) |
+| `Validation\ConstraintInterface`, `ConstraintContext` | vaše vlastné validačné obmedzenia | [Vlastné validačné obmedzenia](/sk/guide/typed-input-conversion#vlastne-validacne-obmedzenia) |
+| `Params\MappedInputParam` | `InputParam` vygenerovaný pre jednu property DTO | [Typovaný vstup](/sk/guide/typed-input) |
+| `Input\RequestInput`, `Params\PathValues` | stav požiadavky typovaného handlera, nulovaný v dlho bežiacich workeroch | [Dlho bežiace workery](/sk/guide/typed-input#dlho-beziace-workery) |
+
+Ostatné triedy namespace `Input` sú mechanika za týmito (kompilátor, mapper, metadáta, schéma a pomocníci konverzie). Nie sú uvedené a nie sú určené na rozširovanie ani na priame volanie.
 
 ## Odpovede a výstupy
 
@@ -69,7 +84,7 @@ Všetky triedy sú pod `Tomaj\NetteApi`.
 | Trieda | Čo robí | Príručka |
 | --- | --- | --- |
 | `Logger\ApiLoggerInterface` | log požiadaviek | [Logovanie](/sk/guide/logging) |
-| `Link\ApiLink`, `ApiLinkExtension`, `ApiLinkNode` | URL a tag `{apiLink}` | [Odkazy](/sk/guide/links) |
+| `Link\ApiLink` (`link()`), `ApiLinkExtension`, `ApiLinkNode` | URL a tag `{apiLink}` | [Odkazy](/sk/guide/links) |
 | `Component\ApiListingControl`, `ApiConsoleControl`, `ApiConsoleFormFactoryInterface`, `DefaultApiConsoleFormFactory` | webová konzola | [Webová konzola](/sk/guide/console) |
 | `Misc\ConsoleRequest`, `ConsoleResponse` | cURL požiadavka konzoly | [Webová konzola](/sk/guide/console) |
 | `Misc\CorsOriginAllowlist` | interné (`@internal`), používa ho `setCorsAllowedOrigins()`; vo 4.0 sa môže zmeniť | [CORS](/sk/guide/cors#povolene-originy) |
