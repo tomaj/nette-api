@@ -11,6 +11,8 @@ use Tomaj\NetteApi\Handlers\ApiHandlerInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\JsonOutput;
 use Tomaj\NetteApi\Output\RedirectOutput;
+use Tomaj\NetteApi\Params\MappedInputParam;
+use Tomaj\NetteApi\Params\ParamInterface;
 
 /**
  * Creates operation responses: default error responses and responses from handler outputs
@@ -98,6 +100,11 @@ class ResponseBuilder implements ResponseBuilderInterface
             $responses[IResponse::S400_BAD_REQUEST] = $this->errorResponse('Bad request', 'ErrorWrongInput');
         }
 
+        if (self::readsTypedBody($handler)) {
+            // a typed handler answers 415 for a body in a media type it does not read, see requestBody.content
+            $responses[IResponse::S415_UnsupportedMediaType] = $this->unsupportedMediaTypeResponse();
+        }
+
         if (!$authorization instanceof NoAuthorization) {
             $responses[IResponse::S401_Unauthorized] = $this->errorResponse('Operation forbidden', 'ErrorUnauthorized');
         }
@@ -148,6 +155,11 @@ class ResponseBuilder implements ResponseBuilderInterface
         }
 
         return $responses;
+    }
+
+    private static function readsTypedBody(ApiHandlerInterface $handler): bool
+    {
+        return array_any($handler->params(), static fn (ParamInterface $param): bool => $param instanceof MappedInputParam && $param->getContentTypes() !== []);
     }
 
     /**
@@ -202,6 +214,36 @@ class ResponseBuilder implements ResponseBuilderInterface
                 $contentType => [
                     'schema' => [
                         '$ref' => '#/components/schemas/' . $schema,
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * The 415 answer of a typed body. Its `detail` is a sentence (shown only when error details are on),
+     * unlike the field map of a 400, so it has its own inline schema.
+     *
+     * @return array<string, mixed>
+     */
+    private function unsupportedMediaTypeResponse(): array
+    {
+        if ($this->problemDetails) {
+            return $this->errorResponse('Unsupported media type', 'ErrorWrongInput');
+        }
+
+        return [
+            'description' => 'Unsupported media type',
+            'content' => [
+                self::JSON_CONTENT_TYPE => [
+                    'schema' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'status' => ['type' => 'string', 'enum' => ['error']],
+                            'message' => ['type' => 'string'],
+                            'detail' => ['type' => 'string', 'description' => 'Which media types the endpoint reads. Sent only when error details are on.'],
+                        ],
+                        'required' => ['status', 'message'],
                     ],
                 ],
             ],

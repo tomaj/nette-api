@@ -23,7 +23,8 @@ Jedna požiadavka, ktorá prejde, jedna bez tokenu a jedna so zlým vstupom:
 | Parametre | `InputParam`, `ParamsProcessor` | Načíta a overí vstup; chyby počkajú na autorizáciu | |
 | Autorizácia | `ApiAuthorizationInterface` | Rozhodne, kto smie volať | `401` |
 | Chyby parametrov | `ErrorHandlerInterface::handleInputParams()` | Nahlási neplatný vstup | `400` |
-| Handler | `ApiHandlerInterface`, `BaseHandler` | Vaša logika, vráti odpoveď | ľubovoľný kód |
+| Media type | `ErrorHandlerInterface::handleUnsupportedMediaType()` | Odmietne telo, ktoré typovaný handler neprijíma, po autorizácii | `415` |
+| Handler | `ApiHandlerInterface`, `BaseHandler`, `TypedHandler` | Vaša logika, vráti odpoveď | ľubovoľný kód |
 | Výstupy | `OutputInterface`, `ConfiguratorInterface` | Overí odpoveď voči schéme | `500` |
 | Chyby | `ErrorHandlerInterface` | Zmení zlyhania na JSON | |
 | Logger | `ApiLoggerInterface` | Zapíše spracované požiadavky | |
@@ -113,6 +114,7 @@ public function handle(array $params): ResponseInterface
 | `handleSchema()` | výstup nezodpovedá | `500` |
 | `handleAuthorization()` | `authorized()` vrátil false | `401` so správou |
 | `handleAuthorizationException()` | `authorized()` vyhodil výnimku | `500` so správou výnimky |
+| `handleUnsupportedMediaType()` | typovaný handler dostal telo s iným content typom | `415` |
 
 Pozrite si [Spracovanie chýb](/sk/guide/errors).
 
@@ -122,7 +124,7 @@ So službou `ApiLoggerInterface` v kontajneri sa zaloguje každá požiadavka, k
 
 ## Časté otázky
 
-### Kam patrí biznis logika?
+### Kam patrí obchodná logika?
 
 Do handlera alebo do služby, ktorú volá. Ostatné vrstvy iba rozhodujú, či sa spustí, a kontrolujú, čo vráti.
 

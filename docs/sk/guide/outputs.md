@@ -88,4 +88,4 @@ Ak má endpoint výstupy, aj vrátená `404` musí jednému zodpovedať, inak va
 
 ### Môžem použiť Fractal transformery?
 
-Áno. `BaseHandler` vytvorí Fractal `Manager`, dostupný cez `$this->getFractal()`, a v konštruktore prijme voliteľný `ScopeFactoryInterface`. Pozrite si [Handlery](/sk/guide/handlers#metody).
+Áno. `BaseHandler` (a teda aj `TypedHandler`) vytvorí Fractal `Manager`, dostupný cez `$this->getFractal()`, a v konštruktore prijme voliteľný `ScopeFactoryInterface`. Pozrite si [Handlery](/sk/guide/handlers#metody).

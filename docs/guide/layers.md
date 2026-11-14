@@ -23,7 +23,8 @@ One request that passes, one without a token and one with wrong input:
 | Params | `InputParam`, `ParamsProcessor` | Reads and validates input; errors wait for authorization | |
 | Authorization | `ApiAuthorizationInterface` | Decides who may call | `401` |
 | Param errors | `ErrorHandlerInterface::handleInputParams()` | Reports invalid input | `400` |
-| Handler | `ApiHandlerInterface`, `BaseHandler` | Your logic, returns a response | any code |
+| Media type | `ErrorHandlerInterface::handleUnsupportedMediaType()` | Rejects a body the typed handler does not accept, after authorization | `415` |
+| Handler | `ApiHandlerInterface`, `BaseHandler`, `TypedHandler` | Your logic, returns a response | any code |
 | Outputs | `OutputInterface`, `ConfiguratorInterface` | Checks the response against its schema | `500` |
 | Errors | `ErrorHandlerInterface` | Turns failures into JSON | |
 | Logger | `ApiLoggerInterface` | Records handled requests | |
@@ -113,6 +114,7 @@ public function handle(array $params): ResponseInterface
 | `handleSchema()` | the output did not match | `500` |
 | `handleAuthorization()` | `authorized()` returned false | `401` with the message |
 | `handleAuthorizationException()` | `authorized()` threw | `500` with the exception message |
+| `handleUnsupportedMediaType()` | a typed handler got a body of another content type | `415` |
 
 See [Error handling](/guide/errors).
 

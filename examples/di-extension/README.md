@@ -6,12 +6,15 @@ Documentation: [tomaj.github.io/nette-api/examples/di-extension](https://tomaj.g
 
 Needs nette-api 4.0.
 
+`GET /api/v1/greet` is the same kind of endpoint as `hello` written with a typed input DTO (`TypedHandler`), next to the `params()` handlers.
+
 ## Run it
 
 ```bash
 composer install
 php -S 127.0.0.1:8000 -t public public/index.php
 curl -i http://127.0.0.1:8000/api/v1/hello
+curl 'http://127.0.0.1:8000/api/v1/greet?name=Nette'
 curl -i -H 'Authorization: Bearer secret-token' http://127.0.0.1:8000/api/v1/users
 ```
 

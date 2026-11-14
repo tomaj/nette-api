@@ -109,9 +109,11 @@ Potom súbor načítajte v `app/Bootstrap.php`:
 
 ## 4. Napíšte handler
 
-Vytvorte `app/Api/HelloHandler.php`:
+Vytvorte `app/Api/HelloHandler.php`. Handler deklaruje svoj vstup jedným z dvoch rovnocenných spôsobov: zoznamom parametrov v `params()` alebo typovaným DTO, ktoré dostane `handleDto()`. Oba prechádzajú rovnakým validačným pipeline a dávajú rovnaké OpenAPI aj webovú konzolu a jedno API ich môže kombinovať. Typované DTO konvertuje hodnoty prísnejšie než `params()`.
 
-```php [app/Api/HelloHandler.php]
+::: code-group
+
+```php [params()]
 <?php
 
 declare(strict_types=1);
@@ -144,7 +146,46 @@ final class HelloHandler extends BaseHandler
 }
 ```
 
-`handle()` dostane zvalidované parametre ako pole a vráti odpoveď. Ostatné metódy vysvetľujú [Handlery](/sk/guide/handlers).
+```php [Typed DTO]
+<?php
+
+declare(strict_types=1);
+
+namespace App\Api;
+
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\Query;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+// app/Api/HelloInput.php
+final readonly class HelloInput
+{
+    public function __construct(
+        #[Query(description: 'Who to greet')]
+        public string $name = 'world',
+    ) {
+    }
+}
+
+// app/Api/HelloHandler.php
+final class HelloHandler extends TypedHandler
+{
+    public function summary(): string
+    {
+        return 'Say hello';
+    }
+
+    public function handleDto(HelloInput $input): ResponseInterface
+    {
+        return new JsonApiResponse(200, ['message' => 'Hello ' . $input->name . '!']);
+    }
+}
+```
+
+:::
+
+S `params()` dostane `handle()` zvalidované parametre ako pole. S typovaným DTO dostane `handleDto()` zvalidovaný objekt `HelloInput`. Oba vrátia odpoveď. Ostatné metódy vysvetľujú [Handlery](/sk/guide/handlers) a atribúty DTO [Typovaný vstup (DTO)](/sk/guide/typed-input).
 
 ## 5. Zavolajte ho
 

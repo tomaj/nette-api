@@ -29,7 +29,7 @@ export default defineConfig({
 
   lastUpdated: true,
   markdown: {
-    languageAlias: { latte: 'html', neon: 'yaml' },
+    languageAlias: { latte: 'html', neon: 'yaml', openapi: 'yaml' },
   },
 
   sitemap: {

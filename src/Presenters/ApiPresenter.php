@@ -9,6 +9,7 @@ use Nette\Application\IResponse;
 use Nette\Application\Request;
 use Nette\DI\Attributes\Inject;
 use Nette\DI\Container;
+use Nette\Http\IRequest;
 use Nette\Http\Response;
 use Throwable;
 use Tracy\Debugger;
@@ -34,6 +35,9 @@ use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
+use Tomaj\NetteApi\Input\RequestInput;
+use Tomaj\NetteApi\Params\PathValues;
+use Tomaj\NetteApi\Input\UnsupportedMediaTypeException;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitContext;
 use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
@@ -289,6 +293,8 @@ final class ApiPresenter implements IPresenter
     #[\Override]
     public function run(Request $request): IResponse
     {
+        RequestInput::reset();
+        PathValues::reset();
         $start = microtime(true);
 
         $this->sendCorsHeaders();
@@ -315,8 +321,18 @@ final class ApiPresenter implements IPresenter
             return $rateLimitResponse;
         }
 
-        $paramsProcessor = new ParamsProcessor($handler->params());
-        $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
+        // a body in a media type the typed handler does not accept is answered with 415 after the authorization,
+        // so a client without access learns nothing about the endpoint
+        $unsupportedMediaType = '';
+        $paramsProcessor = null;
+        $params = [];
+        try {
+            $paramsProcessor = new ParamsProcessor($handler->params());
+            $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
+        } catch (UnsupportedMediaTypeException $exception) {
+            $unsupportedMediaType = $exception->getMessage();
+            $paramsProcessor = null;
+        }
 
         $authResponse = $this->checkAuth($authorization, $params);
         if ($authResponse !== null) {
@@ -333,6 +349,13 @@ final class ApiPresenter implements IPresenter
         $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::AfterAuthorization, $ip, $identity), $params);
         if ($rateLimitResponse !== null) {
             return $rateLimitResponse;
+        }
+
+        if ($paramsProcessor === null) {
+            $response = $this->errorHandler->handleUnsupportedMediaType($unsupportedMediaType);
+            $this->logResponse($request, $response->getCode(), $start, $ip);
+            $this->response->setCode($response->getCode());
+            return $response;
         }
 
         if ($paramsProcessor->isError()) {
@@ -371,32 +394,51 @@ final class ApiPresenter implements IPresenter
             $code = $response->getCode();
         }
 
-        $end = microtime(true);
-
-        if ($this->context->findByType(ApiLoggerInterface::class)) {
-            /** @var ApiLoggerInterface $apiLogger */
-            $apiLogger = $this->context->getByType(ApiLoggerInterface::class);
-            try {
-                $this->logRequest($request, $apiLogger, $code, $end - $start, $ip);
-            } catch (Throwable $throwable) {
-                // the handler has run, a broken logger or IP detector must not lose its response, so the error is only logged
-                self::logError($throwable);
-            }
-        }
+        $this->logResponse($request, $code, $start, $ip);
 
         // output to nette
         $this->response->setCode($code);
         return $response;
     }
 
+    private function logResponse(Request $request, int $code, float $start, \Closure $ip): void
+    {
+        $end = microtime(true);
+        if (!$this->context->findByType(ApiLoggerInterface::class)) {
+            return;
+        }
+        /** @var ApiLoggerInterface $apiLogger */
+        $apiLogger = $this->context->getByType(ApiLoggerInterface::class);
+        try {
+            $this->logRequest($request, $apiLogger, $code, $end - $start, $ip);
+        } catch (Throwable $throwable) {
+            // the response is ready, a broken logger or IP detector must not lose it, so the error is only logged
+            self::logError($throwable);
+        }
+    }
+
     private function getApi(Request $request): Api
     {
-        return $this->apiDecider->getApi(
-            $request->getMethod() ?? '',
-            TypeHelper::toString($request->getParameter('version')),
-            TypeHelper::toString($request->getParameter('package')),
-            $request->getParameter('apiAction') === null ? null : TypeHelper::toString($request->getParameter('apiAction')),
-        );
+        $method = $request->getMethod() ?? '';
+        $version = TypeHelper::toString($request->getParameter('version'));
+        $package = TypeHelper::toString($request->getParameter('package'));
+        $apiAction = $request->getParameter('apiAction') === null ? null : TypeHelper::toString($request->getParameter('apiAction'));
+
+        $api = $this->apiDecider->getApi($method, $version, $package, $apiAction);
+        if ($api->getHandler() instanceof DefaultHandler) {
+            // a static endpoint wins; only then are the URL templates of the endpoints tried
+            return $this->apiDecider->matchPath($method, $version, $package, $apiAction, $this->requestPath()) ?? $api;
+        }
+
+        return $api;
+    }
+
+    private function requestPath(): ?string
+    {
+        // without an http request service (for example in a CLI or a test container) templates are matched without a path
+        $httpRequest = $this->context->getByType(IRequest::class, false);
+
+        return $httpRequest instanceof IRequest ? $httpRequest->getUrl()->getPath() : null;
     }
 
     /**

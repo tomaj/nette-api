@@ -18,11 +18,12 @@ description: How Nette API turns exceptions, wrong input, failed authorization a
 | `handleAuthorizationException(Throwable, array $params)` | `authorized()` threw | `500 Internal server error`, logs to Tracy |
 | `handleNotFound(EndpointInterface)` | no endpoint matches the URL | `404 Unknown api endpoint` |
 | `handleRateLimit(RateLimitResponse)` | the rate limit is reached and has no own response | `429 Too many requests.`, plus `Retry after N seconds.` when the time is known |
+| `handleUnsupportedMediaType(string $detail)` | a typed handler gets a body of a content type it does not accept | `415 unsupported media type`, with the accepted types in `detail` only when error details are on |
 
 All of them return a `ResponseInterface`; `DefaultErrorHandler` returns a `JsonApiResponse` with `status: error` and `message`.
 
 ::: tip Since 4.0.0
-`handleNotFound()` and `handleRateLimit()` are new, so `404` and `429` can be changed in one place. The methods return `ResponseInterface` instead of `JsonApiResponse`. `handleAuthorizationException()` no longer sends the exception message unless error details are on. See the [upgrade guide](/upgrade).
+`handleNotFound()`, `handleRateLimit()` and `handleUnsupportedMediaType()` are new, so `404`, `429` and `415` can be changed in one place. The methods return `ResponseInterface` instead of `JsonApiResponse`. `handleAuthorizationException()` no longer sends the exception message unless error details are on. See the [upgrade guide](/upgrade).
 :::
 
 For new projects we recommend RFC 9457 `application/problem+json` errors with `ProblemDetailsErrorHandler`, see [Problem Details](/guide/problem-details). `DefaultErrorHandler` stays the default so that clients reading `message` keep working.

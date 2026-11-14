@@ -11,7 +11,9 @@ Atribúty v `Tomaj\NetteApi\Attribute` sú nové vo verzii 4.0.0. Potrebujú [DI
 
 S atribútmi zapíšete URL endpointu priamo na triedu handlera. V neone nie je zoznam endpointov, ktorý treba držať v súlade s kódom:
 
-```php [app/Api/UsersListHandler.php]
+::: code-group
+
+```php [params()]
 namespace App\Api;
 
 use Tomaj\NetteApi\Attribute\Get;
@@ -29,7 +31,37 @@ final class UsersListHandler extends BaseHandler
 }
 ```
 
-`#[Get(1, 'users')]` znamená `GET /api/v1/users`. Neon konfigurácia hovorí iba to, kde sú handlery:
+```php [Typed DTO]
+namespace App\Api;
+
+use Tomaj\NetteApi\Attribute\Get;
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\Query;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+final readonly class UsersListInput
+{
+    public function __construct(
+        #[Query]
+        public int $page = 1,
+    ) {
+    }
+}
+
+#[Get(1, 'users')]
+final class UsersListHandler extends TypedHandler
+{
+    public function handleDto(UsersListInput $input): ResponseInterface
+    {
+        return new JsonApiResponse(200, ['users' => [], 'page' => $input->page]);
+    }
+}
+```
+
+:::
+
+`#[Get(1, 'users')]` znamená `GET /api/v1/users`. Atribúty fungujú rovnako na `BaseHandler` aj na `TypedHandler`; `examples/attributes` obsahuje oba. Neon konfigurácia hovorí iba to, kde sú handlery:
 
 ```yaml [config/api.neon]
 extensions:
@@ -48,6 +80,7 @@ Keď Nette kompiluje kontajner, rozšírenie nájde každú triedu v `app/Api` s
 | --- | --- |
 | `#[Get(1, 'users')]` | `GET /api/v1/users` |
 | `#[Get(1, 'users', 'detail')]` | `GET /api/v1/users/detail` |
+| `#[Get(1, 'users', '{id}/detail')]` | `GET /api/v1/users/{id}/detail`, `id` číta property `#[Path]`, pozrite [Typovaný vstup](/sk/guide/typed-input#hodnoty-z-cesty-a-sablony-url) |
 | `#[Post(1, 'users')]` | `POST /api/v1/users` |
 | `#[Put(1, 'users', 'update')]` | `PUT /api/v1/users/update` |
 | `#[Patch(1, 'users')]` | `PATCH /api/v1/users` |

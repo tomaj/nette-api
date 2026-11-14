@@ -56,9 +56,16 @@ services:
 
 For new projects we recommend [RFC 9457 Problem Details](https://tomaj.github.io/nette-api/guide/problem-details) errors: register `Tomaj\NetteApi\Error\ProblemDetailsErrorHandler` as `apiErrorHandler`. `DefaultErrorHandler` stays the default, so existing clients that read `message` keep working.
 
-Write the handler:
+Write the handler. There are two equal ways to declare its input; pick the one that fits the endpoint, and mix them freely in one API.
+
+With a list of params, the handler gets an array:
 
 ```php
+use Tomaj\NetteApi\Handlers\BaseHandler;
+use Tomaj\NetteApi\Params\GetInputParam;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
 final class HelloHandler extends BaseHandler
 {
     public function params(): array
@@ -74,6 +81,34 @@ final class HelloHandler extends BaseHandler
     }
 }
 ```
+
+With a typed DTO (since 4.0), the handler gets a validated object:
+
+```php
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\Query;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+final readonly class HelloInput
+{
+    public function __construct(
+        #[Query]
+        public string $name = 'world',
+    ) {
+    }
+}
+
+final class HelloHandler extends TypedHandler
+{
+    public function handleDto(HelloInput $input): ResponseInterface
+    {
+        return new JsonApiResponse(200, ['message' => 'Hello ' . $input->name . '!']);
+    }
+}
+```
+
+Both go through the same validation pipeline, OpenAPI and web console; a typed DTO converts values more strictly than `params()`. See [Handlers](https://tomaj.github.io/nette-api/guide/handlers) and [Typed input (DTO)](https://tomaj.github.io/nette-api/guide/typed-input).
 
 ```bash
 curl http://localhost:8000/api/v1/hello?name=Nette
@@ -101,7 +136,7 @@ Or put `#[Get(1, 'hello')]` on the handler class and let the extension find it w
 | --- | --- |
 | How a request is processed | [Architecture](https://tomaj.github.io/nette-api/guide/architecture) |
 | What each layer does: ApiDecider, presenter, authorization, params, handler, outputs | [Layers](https://tomaj.github.io/nette-api/guide/layers), [ApiDecider](https://tomaj.github.io/nette-api/guide/api-decider), [ApiPresenter pipeline](https://tomaj.github.io/nette-api/guide/presenter) |
-| Handlers, params and outputs | [Handlers](https://tomaj.github.io/nette-api/guide/handlers), [Params](https://tomaj.github.io/nette-api/guide/params), [Outputs](https://tomaj.github.io/nette-api/guide/outputs) |
+| Handlers, params, typed input DTOs and outputs | [Handlers](https://tomaj.github.io/nette-api/guide/handlers), [Params](https://tomaj.github.io/nette-api/guide/params), [Typed input (DTO)](https://tomaj.github.io/nette-api/guide/typed-input), [Outputs](https://tomaj.github.io/nette-api/guide/outputs) |
 | Bearer tokens, API keys, HTTP Basic, IP restrictions | [Authorization](https://tomaj.github.io/nette-api/guide/authorization) |
 | Rate limits, CORS, logging, errors | [Rate limiting](https://tomaj.github.io/nette-api/guide/rate-limit), [CORS](https://tomaj.github.io/nette-api/guide/cors), [Logging](https://tomaj.github.io/nette-api/guide/logging), [Error handling](https://tomaj.github.io/nette-api/guide/errors) |
 | OpenAPI, web console, `{apiLink}` | [OpenAPI](https://tomaj.github.io/nette-api/guide/openapi), [Web console](https://tomaj.github.io/nette-api/guide/console), [Links and versions](https://tomaj.github.io/nette-api/guide/links) |
@@ -117,8 +152,8 @@ Or put `#[Get(1, 'hello')]` on the handler class and let the extension find it w
 
 ## Examples
 
-Sixteen runnable projects in [`examples/`](examples/), each with an `e2e.sh` test that CI runs against the current code:
-[hello world](examples/hello-world), [params and validation](examples/params-validation), [authorization and rate limit](examples/auth), [CORS](examples/cors), [OpenAPI and console](examples/openapi-console), [logging and errors](examples/logging-errors), [Problem Details](examples/problem-details), [DI extension](examples/di-extension), [attribute endpoints](examples/attributes), [custom authorization](examples/custom-authorization), [JSON and raw body](examples/json-body), [file upload](examples/file-upload), [pagination](examples/pagination), [API versions](examples/versions), [rate limit](examples/rate-limit), [testing](examples/testing).
+Seventeen runnable projects in [`examples/`](examples/), each with an `e2e.sh` test that CI runs against the current code:
+[hello world](examples/hello-world), [params and validation](examples/params-validation), [authorization and rate limit](examples/auth), [CORS](examples/cors), [OpenAPI and console](examples/openapi-console), [logging and errors](examples/logging-errors), [Problem Details](examples/problem-details), [DI extension](examples/di-extension), [attribute endpoints](examples/attributes), [custom authorization](examples/custom-authorization), [JSON and raw body](examples/json-body), [file upload](examples/file-upload), [typed input DTOs](examples/typed-input), [pagination](examples/pagination), [API versions](examples/versions), [rate limit](examples/rate-limit), [testing](examples/testing).
 
 ## Upgrading
 

@@ -21,15 +21,36 @@ class ParameterBuilder implements ParameterBuilderInterface
     {
         $parameters = [];
         foreach ($handler->params() as $param) {
-            if ($param->getType() !== InputParam::TYPE_GET && $param->getType() !== InputParam::TYPE_COOKIE) {
+            $in = match ($param->getType()) {
+                InputParam::TYPE_GET => 'query',
+                InputParam::TYPE_COOKIE => 'cookie',
+                InputParam::TYPE_PATH => 'path',
+                InputParam::TYPE_HEADER => 'header',
+                default => null,
+            };
+            if ($in === null) {
                 continue;
             }
 
+            $explicitSchema = $param instanceof InputParam ? $param->getOpenApiSchema() : null;
             $parameter = [
-                'name' => $param->getKey() . ($param->isMulti() ? '[]' : ''),
-                'in' => $param->getType() === InputParam::TYPE_GET ? 'query' : 'cookie',
-                'required' => $param->isRequired(),
+                // PHP reads a repeated query value only in the bracket form, for example items[]=1&items[]=2
+                'name' => $param->getKey() . ($param->isMulti() && ($explicitSchema === null || ($explicitSchema['type'] ?? null) === 'array') ? '[]' : ''),
+                'in' => $in,
+                'required' => $in === 'path' ? true : $param->isRequired(),
             ];
+
+            if ($explicitSchema !== null) {
+                $parameter['schema'] = $explicitSchema;
+                if ($param->getDescription() !== '') {
+                    $parameter['description'] = $param->getDescription();
+                }
+                if ($param->getExamples() !== []) {
+                    $parameter['example'] = $param->getExample();
+                }
+                $parameters[] = $parameter;
+                continue;
+            }
 
             $schema = [
                 'type' => $param->isMulti() ? 'array' : 'string',

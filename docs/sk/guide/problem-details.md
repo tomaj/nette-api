@@ -44,6 +44,7 @@ Nechajte len jednu službu error handlera: pri dvoch Nette DI nevie autowirovať
 | `authorized()` je false, `handleAuthorization()` | `401` | `unauthorized` | `getErrorMessage()` | |
 | neznámy endpoint, `handleNotFound()` | `404` | `not-found` | `Unknown api endpoint` | |
 | vyčerpaný limit, `handleRateLimit()` | `429` | `rate-limited` | `Too many requests.`, ak je čas známy, aj `Retry after N seconds.` | `limit`, `retryAfter`, ak je známy |
+| content type tela nie je akceptovaný, `handleUnsupportedMediaType()` | `415` | `unsupported-media-type` | prijatý typ a akceptované typy | |
 | výnimka v handleri, `handle()` | `500` | `internal-error` | text výnimky, len so zapnutými detailmi | |
 | výnimka v `authorized()`, `handleAuthorizationException()` | `500` | `internal-error` | text výnimky, len so zapnutými detailmi | |
 | výstup nesedí, `handleSchema()` | `500` | `invalid-output` | žiadny | `outputErrors`, len so zapnutými detailmi |
@@ -54,7 +55,7 @@ Chyby validácie sú zoznam `{"parameter": ..., "detail": ...}` a posielajú sa 
 
 ## Vlastné problémy z handlera
 
-Biznis chybu, napríklad objednávku vypredaného produktu, vráti handler ako `ProblemDetailsResponse`:
+Obchodnú chybu, napríklad objednávku vypredaného produktu, vráti handler ako `ProblemDetailsResponse`:
 
 ```php
 use Tomaj\NetteApi\Error\ProblemDetails;

@@ -7,6 +7,8 @@ description: Deklarácia a validácia vstupu v Nette API - GET, POST, PUT, cooki
 
 `params()` vracia vstupy endpointu. `ApiPresenter` ich všetky načíta a zvaliduje pred spustením `handle()`, ktorý dostane hodnoty podľa názvu.
 
+Vstup sa dá deklarovať dvoma rovnocennými spôsobmi: cez `params()`, ako popisuje táto stránka, alebo ako properties typovaného DTO, ktoré číta `TypedHandler::handleDto()`. Oba vytvoria tieto objekty `InputParam` a zdieľajú validáciu, OpenAPI aj konzolu. Pri výbere pomôže [Typovaný vstup (DTO)](/sk/guide/typed-input) a [params() a DTO vedľa seba](/sk/guide/input-styles) ukazuje tie isté endpointy v oboch štýloch.
+
 <Diagram name="params-1" alt="Vstup načíta InputParam::getValue, prevedie na deklarovaný typ a zvaliduje; chyby vrátia 400, platné hodnoty idú do handlera" />
 
 ## Triedy parametrov
@@ -16,6 +18,9 @@ description: Deklarácia a validácia vstupu v Nette API - GET, POST, PUT, cooki
 | `GetInputParam` | query string | podporuje typy a `setMulti()` |
 | `PostInputParam` | telo formulára, `$_POST` | podporuje typy a `setMulti()` |
 | `PutInputParam` | form-encoded telo ľubovoľnej metódy | bez prevodu typu, typ sa ale kontroluje: `INTEGER` odmietne aj `"12"`, použite `STRING` alebo žiadny typ |
+| `PathInputParam` | pomenovaný `{placeholder}` v URL endpointu | vždy povinný, pozrite [nižšie](#parametre-path-header-a-body) |
+| `HeaderInputParam` | HTTP hlavička, bez ohľadu na veľkosť písmen | pozrite [nižšie](#parametre-path-header-a-body) |
+| `BodyInputParam` | jedno pole tela JSON, formulára alebo multipart | pozrite [nižšie](#parametre-path-header-a-body) |
 | `CookieInputParam` | cookie | bez prevodu typu, typ sa ale kontroluje: `INTEGER` odmietne aj `"12"`, použite `STRING` alebo žiadny typ |
 | `FileInputParam` | nahraný súbor, `$_FILES` | `setMulti()` pre viac súborov |
 | `RawInputParam` | celé telo požiadavky ako reťazec | `setMulti()` vyhodí výnimku |
@@ -55,6 +60,25 @@ Všetky parametre majú spoločné fluent API:
 ::: warning Hodnota, ktorá nie je číslo, sa zmení na null
 V 3.x `?limit=abc` s typom `INTEGER` nie je chyba: hodnota sa pred validáciou prevedie na `null`, takže voliteľný parameter prejde a povinný vráti `Field is required`. V `handle()` vždy počítajte s `null`. Testuje to [príklad parametrov](/sk/examples/params-validation).
 :::
+
+## Parametre Path, Header a Body
+
+`PathInputParam` číta hodnotu z URL endpointu. Placeholder deklarujte v akcii endpointu ako `{name}`, napríklad `users/{id}/detail`, ako popisuje [Typovaný vstup](/sk/guide/typed-input#hodnoty-z-cesty-a-sablony-url). Parameter je vždy povinný a jeho placeholder v OpenAPI má rovnaký názov. `HeaderInputParam` číta hlavičku požiadavky bez ohľadu na veľkosť písmen. `BodyInputParam` číta jedno pole objektu JSON, URL-enkódovaného formulára alebo multipart tela a `setContentTypes()` uvádza media typy, ktoré prijíma. Typované DTO vygeneruje tieto isté tri triedy z `#[Path]`, `#[Header]` a `#[Body]` a `params()` ich vie deklarovať priamo:
+
+```php
+public function params(): array
+{
+    return [
+        (new PathInputParam('id', InputType::INTEGER))->setRequired(),
+        new HeaderInputParam('X-Request-Id', InputType::STRING),
+        (new BodyInputParam('email', InputType::STRING))
+            ->setRequired()
+            ->setContentTypes(['application/json', 'application/x-www-form-urlencoded']),
+    ];
+}
+```
+
+OpenAPI ich zapíše ako `in: path`, `in: header` a ako polia `requestBody`.
 
 ## JSON telo
 

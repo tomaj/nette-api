@@ -74,6 +74,20 @@ new BearerTokenAuthorization(new StaticBearerTokenRepository(['token' => '*']), 
 new BearerTokenAuthorization(new StaticTokenRepository(['token' => '*']), $ipDetector);
 ```
 
+## Error handlers answer 415
+
+`ErrorHandlerInterface` has `handleUnsupportedMediaType(string $detail): ResponseInterface`. A typed handler sends 415 when the body content type is missing or not one of the types it accepts. `DefaultErrorHandler` uses the message `unsupported media type` and adds the detail only when error details are on. `ProblemDetailsErrorHandler` uses status 415, title `Unsupported Media Type` and type `unsupported-media-type`. An own error handler has to implement the method. `params()` handlers are not affected.
+
+## Typed input does not change params()
+
+`TypedHandler` is an additional way to declare input. Handlers that stay on `BaseHandler::params()` and `handle(array $params)` keep their conversion, validation and OpenAPI output. `PathInputParam` and `HeaderInputParam` are new classes; existing parameter classes are unchanged. A path segment is written in the endpoint action or package, for example `#[Get(1, 'users', '{id}/detail')]`. The usual route `/api/v<version>/<package>[/<apiAction>][/<params>]` already delivers `users/42/detail`.
+
+## ApiDecider::getApi() and ApiLink::link() keep their signatures
+
+`ApiDecider::getApi(string $method, string $version, string $package, ?string $apiAction = null)` is unchanged, so a subclass that overrides it needs no change. Endpoints with `{name}` segments are found by the new `ApiDecider::matchPath()`, which `ApiPresenter` calls when `getApi()` returns no static endpoint. An own presenter that should serve URL templates calls `matchPath()` the same way.
+
+`ApiLink::link(EndpointInterface $endpoint, $params = [])` is unchanged too. A link for an endpoint with `{name}` segments keeps them literal (the OpenAPI path template). The API console puts typed path values into those segments after `link()` returned the URL, so a subclass that overrides `link()` (for example to add a prefix) still decides the URL of every endpoint. `BearerTokenAuthorization` also reads `REDIRECT_HTTP_AUTHORIZATION`, which Apache with CGI or FastCGI sets after a rewrite.
+
 ## Stricter types
 
 * Every file declares `strict_types=1`.
@@ -125,7 +139,7 @@ Overriding methods are marked with `#[\Override]`.
 
 ## Error handlers
 
-`ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has two new methods. An own implementation must add them; a wrapper can delegate to `DefaultErrorHandler`:
+`ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has three new methods compared with 3.x: `handleNotFound()` and `handleRateLimit()` (#196), and `handleUnsupportedMediaType(string $detail)` for the `415` of typed handlers (#197, see "Error handlers answer 415" above). An own implementation must add them; a wrapper can delegate to `DefaultErrorHandler`:
 
 ```php
 use Tomaj\NetteApi\EndpointInterface;
@@ -140,6 +154,11 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 public function handleRateLimit(RateLimitResponse $rateLimit): ResponseInterface
 {
     return $this->inner->handleRateLimit($rateLimit);
+}
+
+public function handleUnsupportedMediaType(string $detail): ResponseInterface
+{
+    return $this->inner->handleUnsupportedMediaType($detail);
 }
 ```
 

@@ -5,7 +5,12 @@ description: Písanie handlerov v Nette API - dedenie z BaseHandler, deklarácia
 
 # Handlery
 
-Handler je kód jedného endpointu. Implementuje `Tomaj\NetteApi\Handlers\ApiHandlerInterface`; v praxi dedíte z `BaseHandler` a píšete `handle()`.
+Handler je kód jedného endpointu. Implementuje `Tomaj\NetteApi\Handlers\ApiHandlerInterface`; v praxi dedíte z jednej z dvoch rovnocenných základných tried, podľa toho, ako chcete deklarovať vstup:
+
+- `BaseHandler`: vstup vymenujete v `params()` a čítate ho ako pole v `handle(array $params)`.
+- `TypedHandler`: vstup opíšete ako readonly DTO s `#[Query]`, `#[Path]`, `#[Header]`, `#[Body]` a `#[File]` a čítate ho ako objekt v `handleDto(SomeInput $input)`. Pozrite [Typovaný vstup (DTO)](/sk/guide/typed-input).
+
+Oba skončia ako rovnaké objekty `InputParam`, takže validačný pipeline, chybové odpovede, OpenAPI aj webová konzola sú spoločné. Líši sa len konverzia: typované DTO konvertuje striktne (`?page=1a` je `400`), zatiaľ čo `params()` si ponecháva voľnejšiu konverziu, pozrite [Vstupné parametre](/sk/guide/params#typy). Jedno API môže kombinovať oba.
 
 <Diagram name="handlers-1" alt="Handler deklaruje parametre, výstupy a metadáta; čítajú ich ApiPresenter, OpenApiHandler a webová konzola" />
 
@@ -13,17 +18,19 @@ Handler je kód jedného endpointu. Implementuje `Tomaj\NetteApi\Handlers\ApiHan
 
 | Metóda | Predvolená hodnota v BaseHandler | Používa |
 | --- | --- | --- |
-| `handle(array $params): ResponseInterface` | abstraktná, píšete ju vy | ApiPresenter |
-| `params(): array` | `[]` | validácia, OpenAPI, konzola |
+| `handle(array $params): ResponseInterface` | abstraktná, píšete ju vy; `TypedHandler` ju implementuje a volá `handleDto()` | ApiPresenter |
+| `params(): array` | `[]`; `TypedHandler` ho zostaví z DTO | validácia, OpenAPI, konzola |
 | `outputs(): array` | `[]` | kontrola výstupu, OpenAPI |
 | `summary(): string` | `''` | OpenAPI, konzola |
 | `description(): string` | `''` | OpenAPI, konzola |
 | `tags(): array` | `[]` | OpenAPI |
 | `deprecated(): bool` | `false` | OpenAPI |
 
-`handle()` dostane hodnoty parametrov podľa ich názvov. Vracia odpoveď, napríklad `JsonApiResponse`, pozrite si [Výstupy a odpovede](/sk/guide/outputs).
+`handle()` dostane hodnoty parametrov podľa ich názvov; `handleDto()` dostane DTO. Vracia odpoveď, napríklad `JsonApiResponse`, pozrite si [Výstupy a odpovede](/sk/guide/outputs).
 
-```php
+::: code-group
+
+```php [params()]
 <?php
 
 declare(strict_types=1);
@@ -66,6 +73,53 @@ final class UserDetailHandler extends BaseHandler
     }
 }
 ```
+
+```php [Typed DTO]
+<?php
+
+declare(strict_types=1);
+
+namespace App\Api;
+
+use App\Model\UserRepository;
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\Query;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+final readonly class UserDetailInput
+{
+    public function __construct(
+        #[Query]
+        public int $id,
+    ) {
+    }
+}
+
+final class UserDetailHandler extends TypedHandler
+{
+    public function __construct(private UserRepository $users)
+    {
+        parent::__construct();
+    }
+
+    public function summary(): string
+    {
+        return 'Get one user';
+    }
+
+    public function handleDto(UserDetailInput $input): ResponseInterface
+    {
+        $user = $this->users->find($input->id);
+        if ($user === null) {
+            return new JsonApiResponse(404, ['status' => 'error', 'message' => 'User not found']);
+        }
+        return new JsonApiResponse(200, ['id' => $user->id, 'name' => $user->name]);
+    }
+}
+```
+
+:::
 
 `BaseHandler` má konštruktor s voliteľným Fractal `ScopeFactoryInterface`. Keď má váš handler vlastný konštruktor, zavolajte `parent::__construct()`.
 

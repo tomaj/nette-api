@@ -6,6 +6,7 @@ namespace Tomaj\NetteApi\Authorization;
 
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TokenRepositoryInterface;
+use Tomaj\NetteApi\Params\HeaderBag;
 
 class BearerTokenAuthorization extends TokenAuthorization
 {
@@ -26,8 +27,9 @@ class BearerTokenAuthorization extends TokenAuthorization
     #[\Override]
     protected function readAuthorizationToken(): ?string
     {
-        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
-        if (!is_string($header)) {
+        // also finds the header that Apache hands over as REDIRECT_HTTP_AUTHORIZATION
+        $header = HeaderBag::get('Authorization');
+        if ($header === null) {
             $this->errorMessage = 'Authorization header HTTP_Authorization is not set';
             return null;
         }

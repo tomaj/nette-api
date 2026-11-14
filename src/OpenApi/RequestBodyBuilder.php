@@ -28,7 +28,30 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
         $filesInBody = false;
         $requestBodyExample = [];
         $result = [];
+        $typedProperties = [];
+        $typedRequired = [];
+        $typedTypes = [];
+        $typedAnyRequired = false;
+        $typedFiles = [];
         foreach ($handler->params() as $param) {
+            if ($param instanceof InputParam && $param->getOpenApiSchema() !== null && ($param->getType() === InputParam::TYPE_BODY || $param->getType() === InputParam::TYPE_FILE)) {
+                $schema = $param->getOpenApiSchema();
+                if ($param->getDescription() !== '' && !isset($schema['description'])) {
+                    $schema['description'] = $param->getDescription();
+                }
+                $typedProperties[$param->getKey()] = $schema;
+                if ($param->getType() === InputParam::TYPE_FILE) {
+                    $typedFiles[] = $param->getKey();
+                }
+                if ($param->isRequired()) {
+                    $typedRequired[] = $param->getKey();
+                    $typedAnyRequired = true;
+                }
+                if ($param->getContentTypes() !== []) {
+                    $typedTypes = $param->getContentTypes();
+                }
+                continue;
+            }
             if ($param instanceof JsonInputParam) {
                 $schema = TypeHelper::toArray(json_decode($param->getSchema(), true));
                 if (!empty($examples = $param->getExamples())) {
@@ -143,6 +166,34 @@ class RequestBodyBuilder implements RequestBodyBuilderInterface
             $result['content'][$contentType] = [
                 'schema' => $requestBodySchema,
             ];
+        }
+
+        if ($typedProperties !== []) {
+            $typedSchema = [
+                'type' => 'object',
+                'properties' => $typedProperties,
+            ];
+            if ($typedRequired !== []) {
+                $typedSchema['required'] = $typedRequired;
+            }
+            // files can only be sent as multipart/form-data, so the other media types do not list them
+            $withoutFiles = ['type' => 'object'];
+            $propertiesWithoutFiles = array_diff_key($typedProperties, array_flip($typedFiles));
+            if ($propertiesWithoutFiles !== []) {
+                $withoutFiles['properties'] = $propertiesWithoutFiles;
+            }
+            // the other media types are advertised only when no file is required, so `typedRequired` has none
+            if ($typedRequired !== []) {
+                $withoutFiles['required'] = $typedRequired;
+            }
+            $result['required'] = $typedAnyRequired;
+            // a required file cannot be sent as JSON, so such a request could only be answered with 400: only multipart is advertised
+            $advertised = array_intersect($typedRequired, $typedFiles) !== []
+                ? ['multipart/form-data']
+                : ($typedTypes === [] ? ['application/json', 'application/x-www-form-urlencoded'] : $typedTypes);
+            foreach ($advertised as $contentType) {
+                $result['content'][$contentType] = ['schema' => $contentType === 'multipart/form-data' ? $typedSchema : $withoutFiles];
+            }
         }
 
         return $result ?: null;

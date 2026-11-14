@@ -72,6 +72,12 @@ final readonly class NegotiatingErrorHandler implements ErrorHandlerInterface
         return $this->select()->handleRateLimit($rateLimit);
     }
 
+    #[\Override]
+    public function handleUnsupportedMediaType(string $detail): ResponseInterface
+    {
+        return $this->select()->handleUnsupportedMediaType($detail);
+    }
+
     private function select(): ErrorHandlerInterface
     {
         $this->response->addHeader('Vary', 'Accept');

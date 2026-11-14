@@ -36,6 +36,18 @@ A users API configured only in the `api:` section of `config/common.neon`, with 
 
 <<< @/../examples/di-extension/app/Api/UsersListHandler.php
 
+## A typed input DTO
+
+`GreetHandler` is a `TypedHandler` registered in `endpoints:` like the others; its input is the `GreetInput` DTO instead of `params()`.
+
+::: code-group
+
+<<< @/../examples/di-extension/app/Api/GreetHandler.php
+
+<<< @/../examples/di-extension/app/Api/GreetInput.php
+
+:::
+
 ## The bootstrap
 
 <<< @/../examples/di-extension/app/Bootstrap.php

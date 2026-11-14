@@ -109,9 +109,11 @@ Then load the file in `app/Bootstrap.php`:
 
 ## 4. Write the handler
 
-Create `app/Api/HelloHandler.php`:
+Create `app/Api/HelloHandler.php`. A handler declares its input in one of two equal ways: a list of params in `params()`, or a typed DTO read by `handleDto()`. Both go through the same validation pipeline and give the same OpenAPI and web console, and one API can mix them. A typed DTO converts values more strictly than `params()`.
 
-```php [app/Api/HelloHandler.php]
+::: code-group
+
+```php [params()]
 <?php
 
 declare(strict_types=1);
@@ -144,7 +146,46 @@ final class HelloHandler extends BaseHandler
 }
 ```
 
-`handle()` gets the validated params as an array and returns a response. [Handlers](/guide/handlers) explains the other methods.
+```php [Typed DTO]
+<?php
+
+declare(strict_types=1);
+
+namespace App\Api;
+
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\Query;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+// app/Api/HelloInput.php
+final readonly class HelloInput
+{
+    public function __construct(
+        #[Query(description: 'Who to greet')]
+        public string $name = 'world',
+    ) {
+    }
+}
+
+// app/Api/HelloHandler.php
+final class HelloHandler extends TypedHandler
+{
+    public function summary(): string
+    {
+        return 'Say hello';
+    }
+
+    public function handleDto(HelloInput $input): ResponseInterface
+    {
+        return new JsonApiResponse(200, ['message' => 'Hello ' . $input->name . '!']);
+    }
+}
+```
+
+:::
+
+With `params()`, `handle()` gets the validated params as an array. With a typed DTO, `handleDto()` gets a validated `HelloInput` object. Both return a response. [Handlers](/guide/handlers) explains the other methods and [Typed input (DTO)](/guide/typed-input) the DTO attributes.
 
 ## 5. Call it
 

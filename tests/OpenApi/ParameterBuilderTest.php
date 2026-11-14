@@ -47,6 +47,16 @@ final class ParameterBuilderTest extends TestCase
         ]], $parameters);
     }
 
+    public function testAMultiParamWithAnExplicitNonArraySchemaKeepsItsPlainName(): void
+    {
+        $parameters = new ParameterBuilder()->build(new ConfigurableHandler([
+            new GetInputParam('csv')->setMulti()->setOpenApiSchema(['type' => 'string']),
+            new GetInputParam('ids')->setMulti()->setOpenApiSchema(['type' => 'array', 'items' => ['type' => 'integer']]),
+        ]));
+
+        $this->assertSame(['csv', 'ids[]'], array_column($parameters, 'name'));
+    }
+
     public function testAvailableValuesWithDescriptions(): void
     {
         $parameters = new ParameterBuilder()->build(new ConfigurableHandler([
