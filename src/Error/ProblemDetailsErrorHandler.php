@@ -29,6 +29,8 @@ final readonly class ProblemDetailsErrorHandler implements ErrorHandlerInterface
 
     public const string TYPE_INTERNAL = 'internal-error';
 
+    public const string TYPE_UNSUPPORTED_MEDIA = 'unsupported-media-type';
+
     public const string TYPE_INVALID_OUTPUT = 'invalid-output';
 
     private ?string $typeBaseUri;
@@ -110,6 +112,12 @@ final readonly class ProblemDetailsErrorHandler implements ErrorHandlerInterface
         }
 
         return $this->problem(Response::S429_TOO_MANY_REQUESTS, 'Too Many Requests', self::TYPE_RATE_LIMITED, $detail, $extensions);
+    }
+
+    #[\Override]
+    public function handleUnsupportedMediaType(string $detail): ProblemDetailsResponse
+    {
+        return $this->problem(Response::S415_UnsupportedMediaType, 'Unsupported Media Type', self::TYPE_UNSUPPORTED_MEDIA, $detail);
     }
 
     private function internalError(Throwable $exception): ProblemDetailsResponse

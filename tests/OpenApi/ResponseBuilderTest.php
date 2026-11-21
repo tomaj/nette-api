@@ -14,6 +14,11 @@ use Tomaj\NetteApi\OpenApi\SchemaRegistry;
 use Tomaj\NetteApi\Output\JsonOutput;
 use Tomaj\NetteApi\Output\RedirectOutput;
 use Tomaj\NetteApi\Test\OpenApi\Fixtures\ConfigurableHandler;
+use Tomaj\NetteApi\Handlers\EchoHandler;
+use Tomaj\NetteApi\Params\BodyInputParam;
+use Tomaj\NetteApi\Test\Input\Fixtures\ManyIdsHandler;
+use Tomaj\NetteApi\Test\Input\Fixtures\FormHandler;
+use Tomaj\NetteApi\Test\Input\Fixtures\SplitHandler;
 
 final class ResponseBuilderTest extends TestCase
 {
@@ -147,5 +152,44 @@ final class ResponseBuilderTest extends TestCase
                 ],
             ],
         ], $responses[301]);
+    }
+
+    public function testOpenApiListsTheUnsupportedMediaTypeResponseOfATypedBody(): void
+    {
+        foreach ([false, true] as $problemDetails) {
+            $builder = new ResponseBuilder($problemDetails);
+            $withBody = $builder->build(new ManyIdsHandler(), new NoAuthorization(), true, new SchemaRegistry());
+            $this->assertSame([400, 415, 500], array_keys($withBody));
+            $this->assertSame('Unsupported media type', $withBody[415]['description']);
+            $this->assertArrayHasKey($problemDetails ? 'application/problem+json; charset=utf-8' : 'application/json; charset=utf-8', $withBody[415]['content']);
+
+            $queryOnly = $builder->build(new SplitHandler(), new NoAuthorization(), true, new SchemaRegistry());
+            $this->assertSame([400, 500], array_keys($queryOnly));
+        }
+
+        $classic = new ResponseBuilder()->build(new EchoHandler(), new NoAuthorization(), true, new SchemaRegistry());
+        $this->assertArrayNotHasKey(415, $classic);
+
+        $plainBody = new ResponseBuilder()->build(new ConfigurableHandler([new BodyInputParam('name')]), new NoAuthorization(), true, new SchemaRegistry());
+        $this->assertSame([400, 415, 500], array_keys($plainBody), 'a BodyInputParam of params() refuses other media types too');
+    }
+
+    public function testTheUnsupportedMediaTypeResponseDescribesItsDetail(): void
+    {
+        $legacy = new ResponseBuilder()->build(new FormHandler(), new NoAuthorization(), true, new SchemaRegistry());
+        $schema = $legacy[415]['content']['application/json; charset=utf-8']['schema'];
+        $this->assertSame([
+            'type' => 'object',
+            'properties' => [
+                'status' => ['type' => 'string', 'enum' => ['error']],
+                'message' => ['type' => 'string'],
+                'detail' => ['type' => 'string', 'description' => 'Which media types the endpoint reads. Sent only when error details are on.'],
+            ],
+            'required' => ['status', 'message'],
+        ], $schema);
+        $this->assertSame('Unsupported media type', $legacy[415]['description']);
+
+        $problem = new ResponseBuilder(true)->build(new FormHandler(), new NoAuthorization(), true, new SchemaRegistry());
+        $this->assertSame(['$ref' => '#/components/schemas/ProblemDetails'], $problem[415]['content']['application/problem+json; charset=utf-8']['schema']);
     }
 }

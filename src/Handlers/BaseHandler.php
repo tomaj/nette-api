@@ -10,6 +10,7 @@ use Nette\Application\LinkGenerator;
 use Nette\Application\UI\InvalidLinkException;
 use Nette\InvalidStateException;
 use Tomaj\NetteApi\EndpointInterface;
+use Tomaj\NetteApi\Link\ApiLink;
 use Tomaj\NetteApi\Response\ResponseInterface;
 
 abstract class BaseHandler implements ApiHandlerInterface
@@ -121,7 +122,7 @@ abstract class BaseHandler implements ApiHandlerInterface
     }
 
     /**
-     * Create link to actual handler endpoint
+     * Create link to actual handler endpoint, a {name} segment of a URL template is filled from $params[name]
      *
      * @param array<string,mixed> $params
      *
@@ -137,12 +138,7 @@ abstract class BaseHandler implements ApiHandlerInterface
             throw new InvalidStateException('You have setEndpoint() for this handler if you want to generate link in this handler');
         }
 
-        $params = array_merge([
-            'version' => $this->endpoint->getVersion(),
-            'package' => $this->endpoint->getPackage(),
-            'apiAction' => $this->endpoint->getApiAction(),
-        ], $params);
-        return $this->linkGenerator->link('Api:Api:default', $params) ?: '';
+        return new ApiLink($this->linkGenerator)->link($this->endpoint, $params);
     }
 
     /**

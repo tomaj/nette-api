@@ -50,7 +50,7 @@ Each item of `api.endpoints` is one endpoint:
 | `method` | yes | HTTP method, `GET`, `post`, ... (case does not matter) |
 | `version` | yes | `1`, `2`, `'2.1'` without the `v`; the URL is `/api/v{version}/...`. Write a version with a dot in quotes, neon reads `2.10` as the number `2.1` |
 | `package` | yes | the first part of the URL after the version, without a slash |
-| `action` | no | the second part, `/api/v1/users/detail` has the action `detail`, without a slash |
+| `action` | no | the second part, `/api/v1/users/detail` has the action `detail`, without a slash; `'{id}/detail'` (quoted) is a URL template, see [Typed input](/guide/typed-input#path-values-and-url-templates) |
 | `handler` | yes | the handler, see below |
 | `authorization` | no | who may call it, see [Authorization](#authorization-and-rate-limits) |
 | `rateLimit` | no | how often, see [Authorization](#authorization-and-rate-limits) |
@@ -62,6 +62,8 @@ api:
 		- {method: GET, version: 1, package: users, handler: App\Api\UsersListHandler}
 		# GET /api/v1/users/detail?id=5
 		- {method: GET, version: 1, package: users, action: detail, handler: App\Api\UserDetailHandler}
+		# GET /api/v1/users/5/detail, the id is read by a #[Path] property
+		- {method: GET, version: 1, package: users, action: '{id}/detail', handler: App\Api\UserDetailByPathHandler}
 		# POST /api/v1/users
 		- {method: POST, version: 1, package: users, handler: App\Api\UserCreateHandler}
 		# GET /api/v2.1/users

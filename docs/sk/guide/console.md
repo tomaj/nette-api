@@ -30,6 +30,20 @@ Pohľad `default` (`default.latte`) vykreslí zoznam endpointov. Klik na endpoin
 
 Formulár má jedno pole pre každý parameter, pole pre token alebo API kľúč (alebo meno a heslo pre Basic) a timeout. Ak ho chcete zmeniť, napíšte vlastný `ApiConsoleFormFactoryInterface`.
 
+## Čo konzola posiela
+
+Konzola zostaví požiadavku z parametrov handlera, či už pochádzajú z `params()` alebo z typovaného DTO, takže neexistuje osobitný režim pre DTO.
+
+| Zdroj parametra | Posiela sa ako |
+| --- | --- |
+| query | query string |
+| hodnota z cesty | orezaná a URL-enkódovaná do segmentu `{name}` v URL; prázdna hodnota, `.`, `..` alebo hodnota s lomítkom sa neodošle |
+| hodnota hlavičky | hlavička požiadavky |
+| pole tela | prvý media type, ktorý handler číta a konzola ho vie zostaviť: JSON, URL-enkódovaný formulár alebo multipart |
+| súbor | multipart upload; pri priloženom súbore idú polia tela v tej istej multipart požiadavke |
+
+V tele JSON si každá hodnota zachová deklarovaný typ; vnorený objekt alebo položka zoznamu, ktorá je objekt, berie JSON text. Prázdne voliteľné polia sa neposielajú; pri prázdnej hodnote z cesty, `.` alebo `..` konzola namiesto odoslania ukáže chybu.
+
 ## Časté otázky
 
 ### Prečo odoslanie formulára zlyhá s chybou CSRF?

@@ -1,0 +1,276 @@
+{
+    "@class": "Tomaj\\NetteApi\\Input\\DtoMetadata",
+    "handler": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\CreateOrderHandler",
+    "class": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\CreateOrderInput",
+    "fields": [
+        {
+            "@class": "Tomaj\\NetteApi\\Input\\Field",
+            "property": "customerEmail",
+            "externalName": "customerEmail",
+            "source": {
+                "enum": "Tomaj\\NetteApi\\Input\\Source",
+                "value": "body"
+            },
+            "typeName": "string",
+            "nullable": false,
+            "hasDefault": false,
+            "default": null,
+            "description": null,
+            "examples": [],
+            "listItem": null,
+            "enumClass": null,
+            "enumInt": false,
+            "enumValues": [],
+            "constraints": [
+                {
+                    "@class": "Tomaj\\NetteApi\\Validation\\Email"
+                }
+            ],
+            "casterClass": null,
+            "casterArguments": [],
+            "casterSchema": null,
+            "children": [],
+            "item": null,
+            "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\CreateOrderInput"
+        },
+        {
+            "@class": "Tomaj\\NetteApi\\Input\\Field",
+            "property": "address",
+            "externalName": "address",
+            "source": {
+                "enum": "Tomaj\\NetteApi\\Input\\Source",
+                "value": "body"
+            },
+            "typeName": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\AddressInput",
+            "nullable": false,
+            "hasDefault": false,
+            "default": null,
+            "description": null,
+            "examples": [],
+            "listItem": null,
+            "enumClass": null,
+            "enumInt": false,
+            "enumValues": [],
+            "constraints": [],
+            "casterClass": null,
+            "casterArguments": [],
+            "casterSchema": null,
+            "children": [
+                {
+                    "@class": "Tomaj\\NetteApi\\Input\\Field",
+                    "property": "street",
+                    "externalName": "street",
+                    "source": {
+                        "enum": "Tomaj\\NetteApi\\Input\\Source",
+                        "value": "body"
+                    },
+                    "typeName": "string",
+                    "nullable": false,
+                    "hasDefault": false,
+                    "default": null,
+                    "description": null,
+                    "examples": [],
+                    "listItem": null,
+                    "enumClass": null,
+                    "enumInt": false,
+                    "enumValues": [],
+                    "constraints": [
+                        {
+                            "@class": "Tomaj\\NetteApi\\Validation\\Length",
+                            "min": 1,
+                            "max": 120
+                        }
+                    ],
+                    "casterClass": null,
+                    "casterArguments": [],
+                    "casterSchema": null,
+                    "children": [],
+                    "item": null,
+                    "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\AddressInput"
+                },
+                {
+                    "@class": "Tomaj\\NetteApi\\Input\\Field",
+                    "property": "postalCode",
+                    "externalName": "postalCode",
+                    "source": {
+                        "enum": "Tomaj\\NetteApi\\Input\\Source",
+                        "value": "body"
+                    },
+                    "typeName": "string",
+                    "nullable": false,
+                    "hasDefault": false,
+                    "default": null,
+                    "description": null,
+                    "examples": [],
+                    "listItem": null,
+                    "enumClass": null,
+                    "enumInt": false,
+                    "enumValues": [],
+                    "constraints": [
+                        {
+                            "@class": "Tomaj\\NetteApi\\Validation\\Pattern",
+                            "pattern": "/^[0-9]{5}$/"
+                        }
+                    ],
+                    "casterClass": null,
+                    "casterArguments": [],
+                    "casterSchema": null,
+                    "children": [],
+                    "item": null,
+                    "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\AddressInput"
+                }
+            ],
+            "item": null,
+            "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\CreateOrderInput"
+        },
+        {
+            "@class": "Tomaj\\NetteApi\\Input\\Field",
+            "property": "items",
+            "externalName": "items",
+            "source": {
+                "enum": "Tomaj\\NetteApi\\Input\\Source",
+                "value": "body"
+            },
+            "typeName": "array",
+            "nullable": false,
+            "hasDefault": false,
+            "default": null,
+            "description": null,
+            "examples": [],
+            "listItem": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\ItemInput",
+            "enumClass": null,
+            "enumInt": false,
+            "enumValues": [],
+            "constraints": [
+                {
+                    "@class": "Tomaj\\NetteApi\\Validation\\Length",
+                    "min": 1,
+                    "max": 50
+                }
+            ],
+            "casterClass": null,
+            "casterArguments": [],
+            "casterSchema": null,
+            "children": [],
+            "item": {
+                "@class": "Tomaj\\NetteApi\\Input\\Field",
+                "property": "items",
+                "externalName": "items",
+                "source": {
+                    "enum": "Tomaj\\NetteApi\\Input\\Source",
+                    "value": "body"
+                },
+                "typeName": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\ItemInput",
+                "nullable": false,
+                "hasDefault": false,
+                "default": null,
+                "description": null,
+                "examples": [],
+                "listItem": null,
+                "enumClass": null,
+                "enumInt": false,
+                "enumValues": [],
+                "constraints": [],
+                "casterClass": null,
+                "casterArguments": [],
+                "casterSchema": null,
+                "children": [
+                    {
+                        "@class": "Tomaj\\NetteApi\\Input\\Field",
+                        "property": "sku",
+                        "externalName": "sku",
+                        "source": {
+                            "enum": "Tomaj\\NetteApi\\Input\\Source",
+                            "value": "body"
+                        },
+                        "typeName": "string",
+                        "nullable": false,
+                        "hasDefault": false,
+                        "default": null,
+                        "description": null,
+                        "examples": [],
+                        "listItem": null,
+                        "enumClass": null,
+                        "enumInt": false,
+                        "enumValues": [],
+                        "constraints": [],
+                        "casterClass": null,
+                        "casterArguments": [],
+                        "casterSchema": null,
+                        "children": [],
+                        "item": null,
+                        "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\ItemInput"
+                    },
+                    {
+                        "@class": "Tomaj\\NetteApi\\Input\\Field",
+                        "property": "quantity",
+                        "externalName": "quantity",
+                        "source": {
+                            "enum": "Tomaj\\NetteApi\\Input\\Source",
+                            "value": "body"
+                        },
+                        "typeName": "int",
+                        "nullable": false,
+                        "hasDefault": false,
+                        "default": null,
+                        "description": null,
+                        "examples": [],
+                        "listItem": null,
+                        "enumClass": null,
+                        "enumInt": false,
+                        "enumValues": [],
+                        "constraints": [
+                            {
+                                "@class": "Tomaj\\NetteApi\\Validation\\Range",
+                                "min": 1,
+                                "max": null
+                            }
+                        ],
+                        "casterClass": null,
+                        "casterArguments": [],
+                        "casterSchema": null,
+                        "children": [],
+                        "item": null,
+                        "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\ItemInput"
+                    }
+                ],
+                "item": null,
+                "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\CreateOrderInput"
+            },
+            "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\CreateOrderInput"
+        },
+        {
+            "@class": "Tomaj\\NetteApi\\Input\\Field",
+            "property": "deliveryAt",
+            "externalName": "deliveryAt",
+            "source": {
+                "enum": "Tomaj\\NetteApi\\Input\\Source",
+                "value": "body"
+            },
+            "typeName": "DateTimeImmutable",
+            "nullable": true,
+            "hasDefault": true,
+            "default": null,
+            "description": null,
+            "examples": [],
+            "listItem": null,
+            "enumClass": null,
+            "enumInt": false,
+            "enumValues": [],
+            "constraints": [],
+            "casterClass": null,
+            "casterArguments": [],
+            "casterSchema": null,
+            "children": [],
+            "item": null,
+            "dtoClass": "Tomaj\\NetteApi\\Test\\Input\\Fixtures\\CreateOrderInput"
+        }
+    ],
+    "contentTypes": [
+        "application/json",
+        "application/x-www-form-urlencoded"
+    ],
+    "bodyRequired": true,
+    "readsBody": true,
+    "firstBody": "customerEmail"
+}

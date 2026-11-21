@@ -44,6 +44,18 @@ Atribúty a `api: discovery:` sú nové vo verzii 4.0.0.
 
 <<< @/../examples/attributes/app/Api/UsersListHandler.php
 
+## Typované vstupné DTO
+
+`GreetHandler` je `TypedHandler`: rovnaké atribúty `#[Get]` a `#[Authorization]`, vstup je v `GreetInput` namiesto `params()`.
+
+::: code-group
+
+<<< @/../examples/attributes/app/Api/GreetHandler.php
+
+<<< @/../examples/attributes/app/Api/GreetInput.php
+
+:::
+
 ## Endpoint s akciou
 
 <<< @/../examples/attributes/app/Api/UserDetailHandler.php

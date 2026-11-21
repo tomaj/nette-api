@@ -16,7 +16,7 @@ Každá API požiadavka ide do jedného presentera, `Tomaj\NetteApi\Presenters\A
 | Presenter | `ApiPresenter` | Spúšťa všetky kroky nižšie. Je `final`. |
 | Zoznam endpointov | `ApiDecider` | `addApi()` registruje endpointy, `getApi()` nájde ten pre požiadavku. |
 | Endpoint | `EndpointIdentifier` | Metóda, verzia, balík a voliteľná akcia. |
-| Handler | `ApiHandlerInterface`, zvyčajne `BaseHandler` | Deklaruje parametre a výstupy, robí samotnú prácu. |
+| Handler | `ApiHandlerInterface`, zvyčajne `BaseHandler` alebo `TypedHandler` | Deklaruje parametre (alebo typované vstupné DTO) a výstupy, robí samotnú prácu. |
 | Autorizácia | `ApiAuthorizationInterface` | Rozhodne, či požiadavka smie bežať. |
 | Obmedzenie požiadaviek | `RateLimiterInterface` | Voliteľné, pre každý endpoint. |
 | Chyby | `ErrorHandlerInterface`, `DefaultErrorHandler` | Zmení zlyhania na JSON odpovede. |

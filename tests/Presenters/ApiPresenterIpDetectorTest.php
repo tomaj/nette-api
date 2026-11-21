@@ -209,7 +209,8 @@ final class ApiPresenterIpDetectorTest extends TestCase
             #[\Override]
             public function getByType(string $type, bool $throw = true): ?object
             {
-                throw new \LogicException('more IP detectors');
+                // the http request service is optional, only the IP detector lookup fails
+                return $type === IpDetectorInterface::class ? throw new \LogicException('more IP detectors') : null;
             }
         };
         $this->assertSame([200, 429], [$this->code($presenter), $this->code($presenter)]);
@@ -241,7 +242,7 @@ final class ApiPresenterIpDetectorTest extends TestCase
                             return true;
                         }
                     }
-                    : throw $this->error;
+                    : ($type === IpDetectorInterface::class ? throw $this->error : null);
             }
         };
         $handler = $this->createMock(ErrorHandlerInterface::class);

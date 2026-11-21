@@ -30,6 +30,20 @@ The `default` view (`default.latte`) renders the endpoint list. Clicking an endp
 
 The form has one field per param, a field for the token or API key (or user and password for Basic), and a timeout. Write your own `ApiConsoleFormFactoryInterface` to change it.
 
+## What the console sends
+
+The console builds the request from the params of the handler, whether they come from `params()` or from a typed DTO, so there is no DTO-specific mode.
+
+| Param source | Sent as |
+| --- | --- |
+| query | the query string |
+| path value | trimmed and URL-encoded into the `{name}` segment of the URL; an empty value, `.`, `..` or a value with a slash is not sent |
+| header value | a request header |
+| body field | the first media type the handler reads that the console can build: JSON, a URL-encoded form or multipart |
+| file | a multipart upload; with a file attached the body fields go in the same multipart request |
+
+In a JSON body each value keeps its declared type; a nested object, or an object item of a list, takes JSON text. Blank optional fields are not sent; a blank path value, `.` or `..` shows an error instead of sending.
+
 ## FAQ
 
 ### Why does the form submit fail with a CSRF error?

@@ -17,6 +17,8 @@ return RectorConfig::configure()
         RenameMethodRector::class,
         // \Redis as the return type is a fatal error while loading the class without ext-redis, before the test can be skipped
         NarrowObjectReturnTypeRector::class => [__DIR__ . '/tests/RateLimit/Storage/PhpRedisStorageTest.php'],
+        // the use statements are the fixture TypeNameTest reads back from this file
+        __DIR__ . '/tests/Input/Fixtures/ImportScope.php',
     ])
     ->withPhpSets(php84: true)
     ->withPreparedSets(typeDeclarations: true, phpunitCodeQuality: true)

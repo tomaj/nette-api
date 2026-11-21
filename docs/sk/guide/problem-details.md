@@ -44,6 +44,7 @@ Nechajte len jednu službu error handlera: pri dvoch Nette DI nevie autowirovať
 | `authorized()` je false, `handleAuthorization()` | `401` | `unauthorized` | `getErrorMessage()` | |
 | neznámy endpoint, `handleNotFound()` | `404` | `not-found` | `Unknown api endpoint` | |
 | vyčerpaný limit, `handleRateLimit()` | `429` | `rate-limited` | `Too many requests.`, ak je čas známy, aj `Retry after N seconds.` | `limit`, `retryAfter`, ak je známy |
+| typ obsahu tela nie je akceptovaný, `handleUnsupportedMediaType()` | `415` | `unsupported-media-type` | prijatý typ a akceptované typy | |
 | výnimka v handleri, `handle()` | `500` | `internal-error` | text výnimky, len so zapnutými detailmi | |
 | výnimka v `authorized()`, `handleAuthorizationException()` | `500` | `internal-error` | text výnimky, len so zapnutými detailmi | |
 | výstup nesedí, `handleSchema()` | `500` | `invalid-output` | žiadny | `outputErrors`, len so zapnutými detailmi |
@@ -104,7 +105,7 @@ services:
 	)
 ```
 
-Nechajte len jednu službu `OpenApiHandler`: `addApi()` ju hľadá podľa názvu triedy, a ak sú dve, endpoint OpenAPI spadne s chybou „Multiple services of type“. Odpovede, ktoré handler uvádza v `outputs()`, napríklad `409` vyššie, sú opísané ako `application/json`, lebo `JsonOutput` nemá content type. Pozrite si [OpenAPI](/sk/guide/openapi).
+Nechajte len jednu službu `OpenApiHandler`: `addApi()` ju hľadá podľa názvu triedy, a ak sú dve, endpoint OpenAPI spadne s chybou „Multiple services of type“. Odpovede, ktoré handler uvádza v `outputs()`, napríklad `409` vyššie, sú opísané ako `application/json`, lebo `JsonOutput` nemá typ obsahu. Pozrite si [OpenAPI](/sk/guide/openapi).
 
 ## Časté otázky
 

@@ -9,14 +9,17 @@ use Nette\Application\IResponse;
 use Nette\Application\Request;
 use Nette\DI\Attributes\Inject;
 use Nette\DI\Container;
+use Nette\Http\IRequest;
 use Nette\Http\Response;
 use Throwable;
 use Tracy\Debugger;
 use Tracy\ILogger;
 use Tomaj\NetteApi\Api;
 use Tomaj\NetteApi\ApiDecider;
+use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Authorization\ApiAuthorizationInterface;
 use Tomaj\NetteApi\Authorization\AuthorizationIdentityInterface;
+use Tomaj\NetteApi\Authorization\NoAuthorization;
 use Tomaj\NetteApi\Authorization\CookieApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\HeaderApiKeyAuthentication;
 use Tomaj\NetteApi\Authorization\QueryApiKeyAuthentication;
@@ -34,6 +37,9 @@ use Tomaj\NetteApi\Misc\CorsOriginValidatorInterface;
 use Tomaj\NetteApi\Misc\IpDetectorInterface;
 use Tomaj\NetteApi\Misc\TypeHelper;
 use Tomaj\NetteApi\Output\Configurator\ConfiguratorInterface;
+use Tomaj\NetteApi\Input\RequestInput;
+use Tomaj\NetteApi\Params\PathValues;
+use Tomaj\NetteApi\Input\UnsupportedMediaTypeException;
 use Tomaj\NetteApi\Params\ParamsProcessor;
 use Tomaj\NetteApi\RateLimit\RateLimitContext;
 use Tomaj\NetteApi\RateLimit\RateLimiterInterface;
@@ -289,6 +295,8 @@ final class ApiPresenter implements IPresenter
     #[\Override]
     public function run(Request $request): IResponse
     {
+        RequestInput::reset();
+        PathValues::reset();
         $start = microtime(true);
 
         $this->sendCorsHeaders();
@@ -315,8 +323,16 @@ final class ApiPresenter implements IPresenter
             return $rateLimitResponse;
         }
 
-        $paramsProcessor = new ParamsProcessor($handler->params());
-        $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
+        // a body in a media type the typed handler does not accept is answered with 415 after the authorization,
+        // so a client without access learns nothing about the endpoint
+        // as does an exception while the params are read, for example from the constructor of a nested DTO or a caster
+        $params = [];
+        try {
+            $paramsProcessor = new ParamsProcessor($handler->params());
+            $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
+        } catch (Throwable $throwable) {
+            $paramsProcessor = $throwable;
+        }
 
         $authResponse = $this->checkAuth($authorization, $params);
         if ($authResponse !== null) {
@@ -333,6 +349,15 @@ final class ApiPresenter implements IPresenter
         $rateLimitResponse = $this->checkRateLimit($rateLimit, new RateLimitContext($api, $request, RateLimitStage::AfterAuthorization, $ip, $identity), $params);
         if ($rateLimitResponse !== null) {
             return $rateLimitResponse;
+        }
+
+        if ($paramsProcessor instanceof Throwable) {
+            $response = $paramsProcessor instanceof UnsupportedMediaTypeException
+                ? $this->errorHandler->handleUnsupportedMediaType($paramsProcessor->getMessage())
+                : $this->errorHandler->handle($paramsProcessor, $params);
+            $this->logResponse($request, $response->getCode(), $start, $ip);
+            $this->response->setCode($response->getCode());
+            return $response;
         }
 
         if ($paramsProcessor->isError()) {
@@ -371,32 +396,82 @@ final class ApiPresenter implements IPresenter
             $code = $response->getCode();
         }
 
-        $end = microtime(true);
-
-        if ($this->context->findByType(ApiLoggerInterface::class)) {
-            /** @var ApiLoggerInterface $apiLogger */
-            $apiLogger = $this->context->getByType(ApiLoggerInterface::class);
-            try {
-                $this->logRequest($request, $apiLogger, $code, $end - $start, $ip);
-            } catch (Throwable $throwable) {
-                // the handler has run, a broken logger or IP detector must not lose its response, so the error is only logged
-                self::logError($throwable);
-            }
-        }
+        $this->logResponse($request, $code, $start, $ip);
 
         // output to nette
         $this->response->setCode($code);
         return $response;
     }
 
+    private function logResponse(Request $request, int $code, float $start, \Closure $ip): void
+    {
+        $end = microtime(true);
+        if (!$this->context->findByType(ApiLoggerInterface::class)) {
+            return;
+        }
+        /** @var ApiLoggerInterface $apiLogger */
+        $apiLogger = $this->context->getByType(ApiLoggerInterface::class);
+        try {
+            $this->logRequest($request, $apiLogger, $code, $end - $start, $ip);
+        } catch (Throwable $throwable) {
+            // the response is ready, a broken logger or IP detector must not lose it, so the error is only logged
+            self::logError($throwable);
+        }
+    }
+
     private function getApi(Request $request): Api
     {
-        return $this->apiDecider->getApi(
-            $request->getMethod() ?? '',
-            TypeHelper::toString($request->getParameter('version')),
-            TypeHelper::toString($request->getParameter('package')),
-            $request->getParameter('apiAction') === null ? null : TypeHelper::toString($request->getParameter('apiAction')),
-        );
+        $method = $request->getMethod() ?? '';
+        $version = TypeHelper::toString($request->getParameter('version'));
+        $package = TypeHelper::toString($request->getParameter('package'));
+        $apiAction = $request->getParameter('apiAction') === null ? null : TypeHelper::toString($request->getParameter('apiAction'));
+        $params = $request->getParameter('params') === null ? null : TypeHelper::toString($request->getParameter('params'));
+
+        // segments after the action are swallowed by the route's <params>: a static endpoint for the shorter URL must not
+        // answer them when a URL template matches the whole path, for example users/me/detail with users/{id}/detail
+        $extraSegments = $params !== null && $params !== '';
+        if ($extraSegments && $this->paramsFromQuery($params)) {
+            // a route without <params> fills it from the query string; ?params=detail must not route to another endpoint
+            $params = null;
+            $extraSegments = false;
+        }
+        if ($extraSegments) {
+            $templated = $this->matchPath($method, $version, $package, $apiAction, $params);
+            if ($templated !== null) {
+                return $templated;
+            }
+        }
+
+        $api = $this->apiDecider->getApi($method, $version, $package, $apiAction);
+        if (str_contains($api->getEndpoint()->getUrl(), '{')) {
+            // getApi() found a template by its literal URL, so the request holds "{id}" as a value; it is matched as one
+            $api = new Api(new EndpointIdentifier($method, $version, $package, $apiAction), new DefaultHandler(), new NoAuthorization());
+        }
+        if (!$extraSegments && $api->getHandler() instanceof DefaultHandler) {
+            // a static endpoint wins; only then are the URL templates of the endpoints tried
+            return $this->matchPath($method, $version, $package, $apiAction, $params) ?? $api;
+        }
+
+        return $api;
+    }
+
+    private function paramsFromQuery(string $params): bool
+    {
+        $httpRequest = $this->context->getByType(IRequest::class, false);
+        return $httpRequest instanceof IRequest
+            && $httpRequest->getQuery('params') === $params
+            && !str_ends_with(rawurldecode($httpRequest->getUrl()->getPath()), '/' . $params);
+    }
+
+    private function matchPath(string $method, string $version, string $package, ?string $apiAction, ?string $params): ?Api
+    {
+        // the router decodes the path, so an encoded slash (%2F) inside a value would split it into two segments
+        $httpRequest = $this->context->getByType(IRequest::class, false);
+        if ($httpRequest instanceof IRequest && stripos($httpRequest->getUrl()->getPath(), '%2F') !== false) {
+            return null;
+        }
+
+        return $this->apiDecider->matchPath($method, $version, $package, $apiAction, $params);
     }
 
     /**

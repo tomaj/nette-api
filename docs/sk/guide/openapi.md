@@ -56,7 +56,7 @@ Dokument vytvárajú malé buildery v `Tomaj\NetteApi\OpenApi`, každý zodpoved
 |---|---|
 | `SpecBuilder` | celý dokument: info, servers, components, paths (filtruje API podľa verzie) |
 | `PathBuilder` | cesty a operácie (summary, tagy, parametre, telo requestu, security, odpovede) |
-| `ParameterBuilder` | query a cookie parametre |
+| `ParameterBuilder` | query, cookie, path a header parametre; path a header pochádzajú z [typovaného vstupu](/sk/guide/typed-input) |
 | `RequestBodyBuilder` | JSON, raw, form a multipart telá requestu |
 | `ResponseBuilder` | chybové odpovede a ich schémy, odpovede z outputov handlera |
 | `SecuritySchemeBuilder` | security schémy a požiadavky z autorizácií (prepíšte `createScheme()`) |

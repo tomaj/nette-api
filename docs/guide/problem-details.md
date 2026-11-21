@@ -44,6 +44,7 @@ Keep only one error handler service: with two, Nette DI cannot autowire `ErrorHa
 | `authorized()` is false, `handleAuthorization()` | `401` | `unauthorized` | `getErrorMessage()` | |
 | unknown endpoint, `handleNotFound()` | `404` | `not-found` | `Unknown api endpoint` | |
 | rate limit reached, `handleRateLimit()` | `429` | `rate-limited` | `Too many requests.`, plus `Retry after N seconds.` when known | `limit`, `retryAfter` when known |
+| body content type not accepted, `handleUnsupportedMediaType()` | `415` | `unsupported-media-type` | the received type and the accepted types | |
 | exception in the handler, `handle()` | `500` | `internal-error` | the message, only with error details on | |
 | exception in `authorized()`, `handleAuthorizationException()` | `500` | `internal-error` | the message, only with error details on | |
 | output does not match, `handleSchema()` | `500` | `invalid-output` | none | `outputErrors`, only with error details on |

@@ -38,7 +38,22 @@ expect_body 'name="since"' "console form"
 ok "GET /console/show/GET/1/books renders the form for the since parameter"
 
 request -c "$jar" -b "$jar" -d "api_url=$BASE/api/v1/books/&api_method=GET&since=1980&timeout=10&_do=apiConsole-consoleForm-submit&send=1" "$BASE/console/show/GET/1/books"
-rm -f "$jar"
 expect_status 200 "console request"
 expect_body 'Neuromancer' "console request"
 ok "submitting the console form calls the endpoint and shows the response"
+
+request "$BASE/api/v1/books/2"
+expect_status 200 "URL template"
+expect_body '"title":"Neuromancer"' "URL template"
+ok "GET /api/v1/books/2 fills the {id} segment"
+
+request -c "$jar" -b "$jar" "$BASE/console/show/GET/1/books/%7Bid%7D"
+expect_status 200 "console form of a URL template"
+expect_body 'name="id"' "console form of a URL template"
+ok "GET /console/show/GET/1/books/{id} renders the form for the path parameter"
+
+request -c "$jar" -b "$jar" -d "api_url=$BASE/api/v1/books/%7Bid%7D&api_method=GET&id=1&timeout=10&_do=apiConsole-consoleForm-submit&send=1" "$BASE/console/show/GET/1/books/%7Bid%7D"
+rm -f "$jar"
+expect_status 200 "console request of a URL template"
+expect_body 'Dune' "console request of a URL template"
+ok "the console fills the {id} segment and shows the response"
