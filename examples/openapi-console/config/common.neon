@@ -29,6 +29,7 @@ services:
 
 	- App\Api\BookListHandler
 	- App\Api\BookCreateHandler
+	- App\Api\BookDetailHandler
 	# the listing handlers need ApiDecider, so they are registered by class name below
 	# and created only when their endpoint is called
 	- Tomaj\NetteApi\Handlers\OpenApiHandler(initData: [info: [title: 'Bookshelf API', description: 'Example API documented with OpenAPI']])
@@ -38,6 +39,8 @@ services:
 		factory: Tomaj\NetteApi\ApiDecider
 		setup:
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'books'), App\Api\BookListHandler, Tomaj\NetteApi\Authorization\NoAuthorization())
+			# GET /api/v1/books/2, the {id} segment is the path parameter of the handler
+			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'books', '{id}'), App\Api\BookDetailHandler, Tomaj\NetteApi\Authorization\NoAuthorization())
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('POST', 1, 'books'), App\Api\BookCreateHandler, Tomaj\NetteApi\Authorization\BearerTokenAuthorization(Tomaj\NetteApi\Misc\StaticTokenRepository(%apiTokens%)))
 			# GET /api/v1/openapi, ?format=yaml with symfony/yaml installed
 			- addApi(Tomaj\NetteApi\EndpointIdentifier('GET', 1, 'openapi'), Tomaj\NetteApi\Handlers\OpenApiHandler, Tomaj\NetteApi\Authorization\NoAuthorization())

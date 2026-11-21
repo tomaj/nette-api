@@ -33,6 +33,14 @@ The presenter returns before the logger in 3.x. See [Logging](/guide/logging#wha
 
 Yes, in a new project: RFC 9457 errors have one machine-readable shape. They are not the default, because existing clients read `message`. See [Problem Details](/guide/problem-details).
 
+## Should I use params() or a typed DTO?
+
+Either: they are two equal ways to declare the input of a handler, and one API can mix them. See [Typed input (DTO)](/guide/typed-input) for what differs and [params() and DTO side by side](/guide/input-styles) for the same endpoints in both styles.
+
+## Why does my typed endpoint answer 415?
+
+The body has a content type the handler does not accept, or none at all. By default a DTO with body fields accepts JSON and a URL-encoded form, and `#[Consumes]` changes that. See [body, files and content types](/guide/typed-input-body).
+
 ## Can I configure the API without a list of addApi() calls?
 
 Yes, since 4.0.0 with the [DI extension](/guide/di-extension): one `api:` neon section with the endpoints, authorizations, rate limits, CORS and the error format, checked when the container is compiled.
@@ -55,4 +63,4 @@ Follow the [upgrade guide](/upgrade) and the [changelog](/changelog).
 
 ## Is there a complete project I can run?
 
-Yes, 13 of them, tested in CI: see [Examples](/examples/).
+Yes, 17 of them, tested in CI: see [Examples](/examples/).

@@ -12,7 +12,7 @@ description: Vracanie JSON, textu, XML alebo presmerovaní z handlerov Nette API
 | Trieda | Konštruktor | Posiela |
 | --- | --- | --- |
 | `JsonApiResponse` | `(int $code, array\|JsonSerializable $payload, string $contentType = 'application/json', string $charset = 'utf-8', $expiration = null)` | JSON s `Content-Length` |
-| `TextApiResponse` | `(int $code, $data)` | reťazec tak, ako je, alebo vykreslí Latte šablónu; content type nenastavuje |
+| `TextApiResponse` | `(int $code, $data)` | reťazec tak, ako je, alebo vykreslí Latte šablónu; typ obsahu nenastavuje |
 | `XmlApiResponse` | `(int $code, string $data, $expiration = null)` | XML reťazec ako `text/xml` s `Content-Length` |
 | `RedirectResponse` | `(string $url, int $httpCode = 302)` | presmerovanie |
 
@@ -35,7 +35,7 @@ return new TextApiResponse(IResponse::S200_OK, "id,name\n7,Ann\n");
 ```
 
 - `XmlApiResponse` berie hotový XML reťazec; zostavte ho cez `SimpleXMLElement`, `DOMDocument` alebo šablónu.
-- `TextApiResponse` nenastavuje content type, takže platí predvolený (PHP `default_mimetype`, zvyčajne `text/html`). Pre CSV, YAML alebo súbory si ho nastavte vo vlastnej triede. Vstavaný `OpenApiHandler` posiela cez `TextApiResponse` svoj YAML výstup.
+- `TextApiResponse` nenastavuje typ obsahu, takže platí predvolený (PHP `default_mimetype`, zvyčajne `text/html`). Pre CSV, YAML alebo súbory si ho nastavte vo vlastnej triede. Vstavaný `OpenApiHandler` posiela cez `TextApiResponse` svoj YAML výstup.
 - Pre ľubovoľný iný formát napíšte triedu, ktorá implementuje `ResponseInterface`: Nette `IResponse` s `getCode()`.
 - Triedu výstupu majú iba `JsonApiResponse` a `RedirectResponse`. So zapnutou validáciou musí endpoint s neprázdnym `outputs()` vrátiť jednu z nich, takže pri XML alebo textových endpointoch nechajte `outputs()` prázdne.
 
@@ -88,4 +88,4 @@ Ak má endpoint výstupy, aj vrátená `404` musí jednému zodpovedať, inak va
 
 ### Môžem použiť Fractal transformery?
 
-Áno. `BaseHandler` vytvorí Fractal `Manager`, dostupný cez `$this->getFractal()`, a v konštruktore prijme voliteľný `ScopeFactoryInterface`. Pozrite si [Handlery](/sk/guide/handlers#metody).
+Áno. `BaseHandler` (a teda aj `TypedHandler`) vytvorí Fractal `Manager`, dostupný cez `$this->getFractal()`, a v konštruktore prijme voliteľný `ScopeFactoryInterface`. Pozrite si [Handlery](/sk/guide/handlers#metody).

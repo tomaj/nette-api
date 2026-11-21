@@ -36,6 +36,18 @@ API používateľov nastavené iba v sekcii `api:` súboru `config/common.neon`,
 
 <<< @/../examples/di-extension/app/Api/UsersListHandler.php
 
+## Typované vstupné DTO
+
+`GreetHandler` je `TypedHandler` zaregistrovaný v `endpoints:` ako ostatné; jeho vstup je DTO `GreetInput` namiesto `params()`.
+
+::: code-group
+
+<<< @/../examples/di-extension/app/Api/GreetHandler.php
+
+<<< @/../examples/di-extension/app/Api/GreetInput.php
+
+:::
+
 ## Bootstrap
 
 <<< @/../examples/di-extension/app/Bootstrap.php

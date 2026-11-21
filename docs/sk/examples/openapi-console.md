@@ -25,7 +25,7 @@ Summary, popis, tagy, parametre aj výstupy skončia v OpenAPI dokumente.
 
 <<< @/../examples/openapi-console/app/UI/Console/ConsolePresenter.php
 
-Pohľad `default` (`default.latte`) vykreslí zoznam endpointov. Klik na endpoint presmeruje na `actionShow`, ktorá vykreslí `show.latte` s formulárom konzoly pre daný endpoint.
+Pohľad `default` (`default.latte`) vykreslí zoznam endpointov. Klik na endpoint presmeruje na `actionShow`, ktorá vykreslí `show.latte` s formulárom konzoly pre daný endpoint. `GET /api/v1/books/{id}` má šablónu URL: formulár sa opýta na `id` a konzola ho dosadí do URL.
 
 <<< @/../examples/openapi-console/app/UI/Console/default.latte
 

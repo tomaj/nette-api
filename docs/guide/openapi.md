@@ -56,7 +56,7 @@ The document is created by small builders in `Tomaj\NetteApi\OpenApi`, each resp
 |---|---|
 | `SpecBuilder` | whole document: info, servers, components, paths (filters APIs by version) |
 | `PathBuilder` | paths and operations (summary, tags, parameters, request body, security, responses) |
-| `ParameterBuilder` | query and cookie parameters |
+| `ParameterBuilder` | query, cookie, path and header parameters; path and header come from [typed input](/guide/typed-input) |
 | `RequestBodyBuilder` | JSON, raw, form and multipart request bodies |
 | `ResponseBuilder` | error responses and their schemas, responses from handler outputs |
 | `SecuritySchemeBuilder` | security schemes and requirements from authorizations (override `createScheme()`) |

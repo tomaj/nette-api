@@ -1,0 +1,201 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tomaj\NetteApi\Test\Input;
+
+use PHPUnit\Framework\TestCase;
+use Tomaj\NetteApi\Input\ConversionFailed;
+use Tomaj\NetteApi\Input\ScalarCoercer;
+use Tomaj\NetteApi\Test\Input\Fixtures\Priority;
+use Tomaj\NetteApi\Test\Input\Fixtures\UserStatus;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Tomaj\NetteApi\Input\DateFormat;
+use Tomaj\NetteApi\Input\MediaTypes;
+use Tomaj\NetteApi\Test\Input\Fixtures\Dependency\DependencyItemEnum;
+
+final class ScalarCoercerTest extends TestCase
+{
+    public function testIntegers(): void
+    {
+        $this->assertSame(2, ScalarCoercer::toInt(2));
+        $this->assertSame(2, ScalarCoercer::toInt('2'));
+        $this->assertSame(2, ScalarCoercer::toInt('+2'));
+        $this->assertSame(2, ScalarCoercer::toInt('02'));
+        $this->assertSame(-3, ScalarCoercer::toInt('-3'));
+        $this->assertSame(0, ScalarCoercer::toInt('-0'));
+        $this->assertSame(PHP_INT_MAX, ScalarCoercer::toInt((string) PHP_INT_MAX));
+
+        foreach (['1a', 'x1', '1.0', ' 1', '', '1 ', '+', '-', true, 1.5, null, []] as $value) {
+            try {
+                ScalarCoercer::toInt($value);
+                $this->fail('accepted ' . var_export($value, true));
+            } catch (ConversionFailed $exception) {
+                $this->assertSame('Value must be an integer', $exception->getMessage());
+            }
+        }
+        $this->expectException(ConversionFailed::class);
+        ScalarCoercer::toInt((string) PHP_INT_MAX . '0');
+    }
+
+    public function testFloats(): void
+    {
+        $this->assertEqualsWithDelta(2.0, ScalarCoercer::toFloat(2), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(1.5, ScalarCoercer::toFloat(1.5), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(1.5, ScalarCoercer::toFloat('1.5'), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(0.5, ScalarCoercer::toFloat('.5'), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(100.0, ScalarCoercer::toFloat('1e2'), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(0.015, ScalarCoercer::toFloat('+1.5e-2'), PHP_FLOAT_EPSILON);
+
+        foreach (['1a', 'nan', 'INF', '-INF', '', ' 1', true] as $value) {
+            try {
+                ScalarCoercer::toFloat($value);
+                $this->fail('accepted ' . var_export($value, true));
+            } catch (ConversionFailed $exception) {
+                $this->assertSame('Value must be a number', $exception->getMessage());
+            }
+        }
+        $this->expectException(ConversionFailed::class);
+        ScalarCoercer::toFloat(NAN);
+    }
+
+    public function testFloatRejectsInfinity(): void
+    {
+        $this->expectException(ConversionFailed::class);
+        ScalarCoercer::toFloat(INF);
+    }
+
+    public function testBooleans(): void
+    {
+        $this->assertTrue(ScalarCoercer::toBool(true));
+        $this->assertFalse(ScalarCoercer::toBool(false));
+        $this->assertTrue(ScalarCoercer::toBool(1));
+        $this->assertFalse(ScalarCoercer::toBool(0));
+        $this->assertTrue(ScalarCoercer::toBool('TRUE'));
+        $this->assertFalse(ScalarCoercer::toBool('False'));
+        $this->assertTrue(ScalarCoercer::toBool('1'));
+        $this->assertFalse(ScalarCoercer::toBool('0'));
+
+        foreach (['yes', '2', '', 2, null, []] as $value) {
+            try {
+                ScalarCoercer::toBool($value);
+                $this->fail('accepted ' . var_export($value, true));
+            } catch (ConversionFailed $exception) {
+                $this->assertSame('Value must be a boolean', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testStringsAndDateTimes(): void
+    {
+        $this->assertSame('ada', ScalarCoercer::toString('ada'));
+        $this->expectException(ConversionFailed::class);
+        ScalarCoercer::toString(1);
+    }
+
+    public function testDateTimeAcceptsRfc3339(): void
+    {
+        $date = ScalarCoercer::toDateTime('2026-11-06T14:30:00+01:00');
+        $this->assertSame('2026-11-06T14:30:00+01:00', $date->format('Y-m-d\TH:i:sP'));
+
+        $utc = ScalarCoercer::toDateTime('2026-11-06T13:30:00Z');
+        $this->assertSame('+00:00', $utc->format('P'));
+
+        $fraction = ScalarCoercer::toDateTime('2026-11-06T14:30:00.5+01:00');
+        $this->assertSame('500000', $fraction->format('u'));
+    }
+
+    public function testDateTimeRejectsIncompleteValues(): void
+    {
+        foreach (['2026-11-06', '2026-11-06T14:30:00', '2026-02-31T14:30:00Z', '2026-11-06T14:30:00+01', 1, ''] as $value) {
+            try {
+                ScalarCoercer::toDateTime($value);
+                $this->fail('accepted ' . var_export($value, true));
+            } catch (ConversionFailed $exception) {
+                $this->assertSame('DateTime must be a valid RFC 3339 date and time', $exception->getMessage());
+            }
+        }
+    }
+
+    public function testEnums(): void
+    {
+        $this->assertSame(UserStatus::Active, ScalarCoercer::toEnum('active', UserStatus::class));
+        $this->assertSame(Priority::High, ScalarCoercer::toEnum('2', Priority::class));
+        $this->assertSame(Priority::High, ScalarCoercer::toEnum(2, Priority::class));
+
+        try {
+            ScalarCoercer::toEnum('nope', UserStatus::class);
+            $this->fail('accepted unknown enum');
+        } catch (ConversionFailed $exception) {
+            $this->assertSame('Value must be one of: active, disabled', $exception->getMessage());
+        }
+        try {
+            ScalarCoercer::toEnum('1a', Priority::class);
+            $this->fail('accepted bad int enum');
+        } catch (ConversionFailed $exception) {
+            $this->assertSame('Value must be one of: 1, 2', $exception->getMessage());
+        }
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function malformedIntegers(): iterable
+    {
+        foreach (['++0', '--0', '+-0', '-+000', "1\n", ' 1', '1 ', '+', '-', ''] as $value) {
+            yield json_encode($value, JSON_THROW_ON_ERROR) => [$value];
+        }
+    }
+
+    #[DataProvider('malformedIntegers')]
+    public function testMalformedIntegersAreRejected(string $value): void
+    {
+        $this->expectException(ConversionFailed::class);
+        ScalarCoercer::toInt($value);
+    }
+
+    public function testSingleSignedIntegersAndAnchoredPatterns(): void
+    {
+        $this->assertSame([5, -5, 0, 7], [ScalarCoercer::toInt('+5'), ScalarCoercer::toInt('-5'), ScalarCoercer::toInt('-0'), ScalarCoercer::toInt('007')]);
+        foreach (["1\n", "1.5\n"] as $value) {
+            try {
+                ScalarCoercer::toFloat($value);
+                $this->fail('float with a newline was accepted');
+            } catch (ConversionFailed) {
+                $this->addToAssertionCount(1);
+            }
+        }
+        $this->expectException(ConversionFailed::class);
+        ScalarCoercer::toDateTime("2026-11-06T14:30:00Z\n");
+    }
+
+    public function testEnumBackingTypeComesFromItsCases(): void
+    {
+        $this->assertSame(DependencyItemEnum::First, ScalarCoercer::toEnum('1', DependencyItemEnum::class));
+        $this->expectException(ConversionFailed::class);
+        ScalarCoercer::toEnum('x', EmptyStringEnum::class);
+    }
+
+    public function testDateAndEnumMessages(): void
+    {
+        $date = new DateFormat('d.m.Y')->cast('24.12.2026');
+        $this->assertSame('2026-12-24T00:00:00+00:00', $date->format('c'));
+        $parsed = ScalarCoercer::toDateTime('2026-12-24T00:00:00.1Z');
+        $this->assertSame('100000', $parsed->format('u'));
+        $longer = ScalarCoercer::toDateTime('2026-12-24T00:00:00.1234567Z');
+        $this->assertSame('123456', $longer->format('u'));
+        $this->assertSame('Value must be one of: 1, 2', ScalarCoercer::enumMessage(Priority::class));
+        $this->assertSame('application/json', MediaTypes::normalize(' Application/JSON ; charset=utf-8'));
+    }
+
+    public function testNegativeZeroOffsetIsUtc(): void
+    {
+        $date = ScalarCoercer::toDateTime('2026-05-01T10:00:00-00:00');
+        $this->assertSame('2026-05-01T10:00:00+00:00', $date->format('c'));
+        $this->assertSame('2026-05-01T10:00:00.500000+00:00', ScalarCoercer::toDateTime('2026-05-01T10:00:00.5-00:00')->format('Y-m-d\TH:i:s.uP'));
+    }
+}
+
+enum EmptyStringEnum: string
+{
+}

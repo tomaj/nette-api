@@ -257,6 +257,11 @@ final class ApiPresenterRateLimitTest extends TestCase
                 $this->rateLimit = $rateLimit;
                 return $this->inner->handleRateLimit($rateLimit);
             }
+
+            public function handleUnsupportedMediaType(string $detail): ResponseInterface
+            {
+                return $this->inner->handleUnsupportedMediaType($detail);
+            }
         };
         $presenter->errorHandler = $handler;
         [$result, $headers] = $this->call($presenter);

@@ -15,7 +15,16 @@ $url = $apiLink->link(new EndpointIdentifier('GET', 1, 'users', 'detail'), ['id'
 
 Potrebuje routu na `Api:Api:default` s parametrami `version`, `package` a `apiAction`, ako v [Začíname](/sk/guide/getting-started).
 
-V handleri, ktorý dedí z `BaseHandler`, zavolajte `$this->createLink($params)` pre odkaz na vlastný endpoint handlera. Najprv potrebuje Nette `LinkGenerator`, inak vyhodí `Nette\InvalidStateException`. Pridajte do služby handlera riadok `setup`:
+Pri endpointe, ktorého URL má segmenty `{name}`, napríklad `{id}/detail`, `link()` doplní každý segment z rovnomenného parametra (s URL kódovaním); ostatné parametre idú do query stringu. Segment bez hodnoty ostane doslovný, čo je šablóna cesty z OpenAPI. Hodnota cesty `''`, `'.'`, `'..'` alebo hodnota s lomítkom vyhodí `Nette\Application\UI\InvalidLinkException`, pretože taký segment by nikdy nezodpovedal alebo by viedol na inú URL. `BaseHandler::createLink()` dopĺňa segmenty rovnako. Maska routy musí mať `<package>` a `<apiAction>` ako segmenty cesty:
+
+```php
+$url = $apiLink->link(new EndpointIdentifier('GET', 1, 'users', '{id}/detail'), ['id' => 42, 'limit' => 5]);
+// https://example.com/api/v1/users/42/detail?limit=5
+$url = $apiLink->link(new EndpointIdentifier('GET', 1, 'users', '{id}/detail'));
+// https://example.com/api/v1/users/{id}/detail
+```
+
+V handleri, ktorý dedí z `BaseHandler` alebo `TypedHandler`, zavolajte `$this->createLink($params)` pre odkaz na vlastný endpoint handlera. Najprv potrebuje Nette `LinkGenerator`, inak vyhodí `Nette\InvalidStateException`. Pridajte do služby handlera riadok `setup`:
 
 ```yaml
 services:

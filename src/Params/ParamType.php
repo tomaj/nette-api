@@ -16,4 +16,7 @@ enum ParamType: string
     case Cookie = InputParam::TYPE_COOKIE;
     case PostRaw = InputParam::TYPE_POST_RAW;
     case PostJson = InputParam::TYPE_POST_JSON;
+    case Path = InputParam::TYPE_PATH;
+    case Header = InputParam::TYPE_HEADER;
+    case Body = InputParam::TYPE_BODY;
 }

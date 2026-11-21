@@ -55,7 +55,11 @@
     "autoload-dev": {
         "psr-4": {
             "Tomaj\\NetteApi\\Test\\": "tests"
-        }
+        },
+        "classmap": [
+            "tests/Input/Fixtures/Handlers.php",
+            "tests/Input/Fixtures/Shared.php"
+        ]
     },
     "scripts": {
         "test": "phpunit",

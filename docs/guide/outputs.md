@@ -88,4 +88,4 @@ If the endpoint has outputs, a `404` you return must match one too, or validatio
 
 ### Can I use Fractal transformers?
 
-Yes. `BaseHandler` creates a Fractal `Manager`, available as `$this->getFractal()`, and accepts an optional `ScopeFactoryInterface` in the constructor. See [Handlers](/guide/handlers#the-methods).
+Yes. `BaseHandler` (and so `TypedHandler`) creates a Fractal `Manager`, available as `$this->getFractal()`, and accepts an optional `ScopeFactoryInterface` in the constructor. See [Handlers](/guide/handlers#the-methods).

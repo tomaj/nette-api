@@ -5,7 +5,12 @@ description: Write Nette API handlers - extend BaseHandler, declare params(), ou
 
 # Handlers
 
-A handler is the code of one endpoint. It implements `Tomaj\NetteApi\Handlers\ApiHandlerInterface`; in practice you extend `BaseHandler` and write `handle()`.
+A handler is the code of one endpoint. It implements `Tomaj\NetteApi\Handlers\ApiHandlerInterface`; in practice you extend one of two equal base classes, depending on how you want to declare the input:
+
+- `BaseHandler`: list the input in `params()` and read it as an array in `handle(array $params)`.
+- `TypedHandler`: describe the input as a readonly DTO with `#[Query]`, `#[Path]`, `#[Header]`, `#[Body]` and `#[File]` and read it as an object in `handleDto(SomeInput $input)`. See [Typed input (DTO)](/guide/typed-input).
+
+Both end up as the same `InputParam` objects, so the validation pipeline, error responses, OpenAPI and the web console are shared. Only the conversion differs: a typed DTO converts strictly (`?page=1a` is a `400`), while `params()` keeps its looser conversion, see [Input params](/guide/params#types). One API can mix both.
 
 <Diagram name="handlers-1" alt="A handler declares params, outputs and metadata; ApiPresenter, OpenApiHandler and the web console read them" />
 
@@ -13,17 +18,19 @@ A handler is the code of one endpoint. It implements `Tomaj\NetteApi\Handlers\Ap
 
 | Method | Default in BaseHandler | Used by |
 | --- | --- | --- |
-| `handle(array $params): ResponseInterface` | abstract, you write it | ApiPresenter |
-| `params(): array` | `[]` | validation, OpenAPI, console |
+| `handle(array $params): ResponseInterface` | abstract, you write it; `TypedHandler` implements it and calls `handleDto()` | ApiPresenter |
+| `params(): array` | `[]`; `TypedHandler` builds it from the DTO | validation, OpenAPI, console |
 | `outputs(): array` | `[]` | output check, OpenAPI |
 | `summary(): string` | `''` | OpenAPI, console |
 | `description(): string` | `''` | OpenAPI, console |
 | `tags(): array` | `[]` | OpenAPI |
 | `deprecated(): bool` | `false` | OpenAPI |
 
-`handle()` gets the values of the params keyed by their names. It returns a response such as `JsonApiResponse`, see [Outputs and responses](/guide/outputs).
+`handle()` gets the values of the params keyed by their names; `handleDto()` gets the DTO. It returns a response such as `JsonApiResponse`, see [Outputs and responses](/guide/outputs).
 
-```php
+::: code-group
+
+```php [params()]
 <?php
 
 declare(strict_types=1);
@@ -66,6 +73,53 @@ final class UserDetailHandler extends BaseHandler
     }
 }
 ```
+
+```php [Typed DTO]
+<?php
+
+declare(strict_types=1);
+
+namespace App\Api;
+
+use App\Model\UserRepository;
+use Tomaj\NetteApi\Handlers\TypedHandler;
+use Tomaj\NetteApi\Input\Query;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
+
+final readonly class UserDetailInput
+{
+    public function __construct(
+        #[Query]
+        public int $id,
+    ) {
+    }
+}
+
+final class UserDetailHandler extends TypedHandler
+{
+    public function __construct(private UserRepository $users)
+    {
+        parent::__construct();
+    }
+
+    public function summary(): string
+    {
+        return 'Get one user';
+    }
+
+    public function handleDto(UserDetailInput $input): ResponseInterface
+    {
+        $user = $this->users->find($input->id);
+        if ($user === null) {
+            return new JsonApiResponse(404, ['status' => 'error', 'message' => 'User not found']);
+        }
+        return new JsonApiResponse(200, ['id' => $user->id, 'name' => $user->name]);
+    }
+}
+```
+
+:::
 
 `BaseHandler` has a constructor with an optional Fractal `ScopeFactoryInterface`. When your handler has its own constructor, call `parent::__construct()`.
 

@@ -74,6 +74,16 @@ new BearerTokenAuthorization(new StaticBearerTokenRepository(['token' => '*']), 
 new BearerTokenAuthorization(new StaticTokenRepository(['token' => '*']), $ipDetector);
 ```
 
+## Typed input: enum cases and InputParam methods
+
+`TypedHandler` is an additional way to declare input; handlers on `params()` keep their conversion, validation and OpenAPI output. What can affect existing code:
+
+* `ParamType` has new cases `Path`, `Header` and `Body`. An exhaustive `match` on `ParamType` without a `default` arm throws `UnhandledMatchError` for them.
+* `InputParam` has new public methods `setOpenApiSchema()`, `getOpenApiSchema()`, `setContentTypes()` and `getContentTypes()`. A subclass with a method of the same name must match their signatures.
+* An own `InputParam` subclass whose `$type` is `'PATH'`, `'HEADER'` or `'BODY'` is now treated as the new `PathInputParam`, `HeaderInputParam` or `BodyInputParam`: OpenAPI lists it `in: path`, `in: header` or in the request body, and the console sends it there. A `'PATH'` param also needs a `{name}` segment of the same name in the endpoint URL; without it the first request to the endpoint throws a `LogicException` that names the handler. Rename such a type, for example to `'CUSTOM_HEADER'`, to keep the 3.x behaviour.
+
+`ApiDecider::getApi()` and `ApiLink::link()` keep their signatures; endpoints with `{name}` segments are found by the new `ApiDecider::matchPath($method, $version, $package, $apiAction, $params)` from the values of the route, where `$params` are the segments after the action. `ApiPresenter` calls it when `getApi()` returns no static endpoint, and first when the URL has segments after the action. An own presenter that should serve URL templates calls `matchPath()` the same way; `getApi()` returns a template only for its literal URL, such as `{id}/detail`, which the presenter must not treat as a match of a request.
+
 ## Stricter types
 
 * Every file declares `strict_types=1`.
@@ -125,7 +135,7 @@ Overriding methods are marked with `#[\Override]`.
 
 ## Error handlers
 
-`ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has two new methods. An own implementation must add them; a wrapper can delegate to `DefaultErrorHandler`:
+`ErrorHandlerInterface` methods return `ResponseInterface` instead of `JsonApiResponse`, and the interface has three new methods compared with 3.x: `handleNotFound()` and `handleRateLimit()` (#196), and `handleUnsupportedMediaType(string $detail)` for the `415` that a typed handler sends when the body content type is missing or not accepted (#197; a `params()` handler gets it only with a `BodyInputParam`). An own implementation must add them; a wrapper can delegate to `DefaultErrorHandler`:
 
 ```php
 use Tomaj\NetteApi\EndpointInterface;
@@ -140,6 +150,11 @@ public function handleNotFound(EndpointInterface $endpoint): ResponseInterface
 public function handleRateLimit(RateLimitResponse $rateLimit): ResponseInterface
 {
     return $this->inner->handleRateLimit($rateLimit);
+}
+
+public function handleUnsupportedMediaType(string $detail): ResponseInterface
+{
+    return $this->inner->handleUnsupportedMediaType($detail);
 }
 ```
 

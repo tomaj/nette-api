@@ -13,6 +13,38 @@ use Tomaj\NetteApi\Misc\StaticIpDetector;
 
 final class BearerTokenAuthorizationTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        unset($_SERVER['HTTP_AUTHORIZATION'], $_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+    }
+
+    public function testTheTokenThatApacheHandsOverAfterARewriteIsRead(): void
+    {
+        unset($_SERVER['HTTP_AUTHORIZATION']);
+        $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
+        $authorization = new BearerTokenAuthorization(new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']), new StaticIpDetector('34.24.126.44'));
+
+        $this->assertTrue($authorization->authorized());
+    }
+
+    public function testWithoutAnyAuthorizationHeaderThereIsNoToken(): void
+    {
+        unset($_SERVER['HTTP_AUTHORIZATION'], $_SERVER['REDIRECT_HTTP_AUTHORIZATION']);
+        $authorization = new BearerTokenAuthorization(new StaticTokenRepository(['x' => '*']), new StaticIpDetector('34.24.126.44'));
+
+        $this->assertFalse($authorization->authorized());
+        $this->assertSame('Authorization header HTTP_Authorization is not set', $authorization->getErrorMessage());
+    }
+
+    public function testTheHeaderWinsOverTheRewrittenOne(): void
+    {
+        $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer wrong';
+        $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';
+        $authorization = new BearerTokenAuthorization(new StaticTokenRepository(['sad0f98uwegoihweg09i4hergy' => '*']), new StaticIpDetector('34.24.126.44'));
+
+        $this->assertFalse($authorization->authorized());
+    }
+
     public function testAuthorizedToken(): void
     {
         $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer sad0f98uwegoihweg09i4hergy';

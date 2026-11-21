@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Tomaj\NetteApi\EndpointIdentifier;
 use Tomaj\NetteApi\Handlers\DefaultHandler;
 use Nette\Application\LinkGenerator;
+use Nette\Application\Routers\RouteList;
 use Nette\Application\Routers\SimpleRouter;
 
 final class DefaultHandlerTest extends TestCase
@@ -66,5 +67,16 @@ final class DefaultHandlerTest extends TestCase
         $defaultHandler->setEndpointIdentifier($endpointIdentifier);
 
         $this->assertSame('http://test/?version=1&package=article&apiAction=detail&page=2&action=default&presenter=Api%3AApi', $defaultHandler->createLink(['page' => 2]));
+    }
+
+    public function testCreateLinkFillsAUrlTemplate(): void
+    {
+        $router = new RouteList();
+        $router->addRoute('api/v<version>/<package>[/<apiAction>]', 'Api:Api:default');
+        $handler = new DefaultHandler();
+        $handler->setupLinkGenerator(new LinkGenerator($router, new UrlScript('http://test/')));
+        $handler->setEndpointIdentifier(new EndpointIdentifier('GET', '1', 'users', '{id}/detail'));
+
+        $this->assertSame('http://test/api/v1/users/5/detail?page=2', $handler->createLink(['id' => 5, 'page' => 2]));
     }
 }

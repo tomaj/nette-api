@@ -12,11 +12,11 @@ description: 'The exact order of steps in Nette API ApiPresenter::run(), from CO
 | Step | Code | Exit |
 | --- | --- | --- |
 | 1. CORS headers | `sendCorsHeaders()` | |
-| 2. Endpoint | `$this->apiDecider->getApi(...)` | `404` through `DefaultHandler` and `handleNotFound()` |
+| 2. Endpoint | `$this->apiDecider->getApi(...)`, then `matchPath(...)` for `{name}` URLs (first when the URL has segments after the action) | `404` through `DefaultHandler` and `handleNotFound()` |
 | 3. Rate limit | `checkRateLimit($rateLimit)` | `429`, not logged |
 | 4. Read params | `new ParamsProcessor($handler->params())` | |
 | 5. Authorization | `checkAuth($authorization, $params)` | `401` or `500`, not logged |
-| 6. Param errors | `errorHandler->handleInputParams()` | `400`, not logged |
+| 6. Param errors | `errorHandler->handleUnsupportedMediaType()`, `errorHandler->handleInputParams()` | `415` of a typed handler, logged; `400`, not logged |
 | 7. Handler | `$handler->handle($params)` | exception: `500` |
 | 8. Output check | `$output->validate($response)` | no match: `500` |
 | 9. Logger | `logRequest()` | |
@@ -48,7 +48,7 @@ $paramsProcessor = new ParamsProcessor($handler->params());
 $params = $paramsProcessor->isError() ? [] : $paramsProcessor->getValues();
 ```
 
-Every param is read and validated. With an error, `$params` is empty and the error waits for step 6.
+Every param is read and validated. With an error, `$params` is empty and the error waits for step 6. An exception thrown while reading, for example by the constructor of a nested DTO or by a caster, also waits: after the authorization the error handler answers it with `500`.
 
 ## 5. Authorization
 

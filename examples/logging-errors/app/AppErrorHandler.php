@@ -58,4 +58,9 @@ final class AppErrorHandler implements ErrorHandlerInterface
     {
         return $this->inner->handleRateLimit($rateLimit);
     }
+
+    public function handleUnsupportedMediaType(string $detail): ResponseInterface
+    {
+        return $this->inner->handleUnsupportedMediaType($detail);
+    }
 }

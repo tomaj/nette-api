@@ -50,7 +50,7 @@ Každá položka `api.endpoints` je jeden endpoint:
 | `method` | áno | HTTP metóda, `GET`, `post`, ... (na veľkosti písmen nezáleží) |
 | `version` | áno | `1`, `2`, `'2.1'` bez `v`; URL je `/api/v{version}/...`. Verziu s bodkou píšte v úvodzovkách, neon číta `2.10` ako číslo `2.1` |
 | `package` | áno | prvá časť URL za verziou, bez lomky |
-| `action` | nie | druhá časť, `/api/v1/users/detail` má akciu `detail`, bez lomky |
+| `action` | nie | druhá časť, `/api/v1/users/detail` má akciu `detail`, bez lomky; `'{id}/detail'` (v úvodzovkách) je šablóna URL, pozrite [Typovaný vstup](/sk/guide/typed-input#hodnoty-z-cesty-a-sablony-url) |
 | `handler` | áno | handler, pozrite nižšie |
 | `authorization` | nie | kto ho smie volať, pozrite [Autorizácia](#autorizacia-a-obmedzenie-poziadaviek) |
 | `rateLimit` | nie | ako často, pozrite [Autorizácia](#autorizacia-a-obmedzenie-poziadaviek) |
@@ -62,6 +62,8 @@ api:
 		- {method: GET, version: 1, package: users, handler: App\Api\UsersListHandler}
 		# GET /api/v1/users/detail?id=5
 		- {method: GET, version: 1, package: users, action: detail, handler: App\Api\UserDetailHandler}
+		# GET /api/v1/users/5/detail, id číta property #[Path]
+		- {method: GET, version: 1, package: users, action: '{id}/detail', handler: App\Api\UserDetailByPathHandler}
 		# POST /api/v1/users
 		- {method: POST, version: 1, package: users, handler: App\Api\UserCreateHandler}
 		# GET /api/v2.1/users

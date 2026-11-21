@@ -25,7 +25,7 @@ Summary, description, tags, params and outputs all end up in the OpenAPI documen
 
 <<< @/../examples/openapi-console/app/UI/Console/ConsolePresenter.php
 
-The `default` view (`default.latte`) renders the endpoint list. Clicking an endpoint redirects to `actionShow`, which renders `show.latte` with the console form for that one endpoint.
+The `default` view (`default.latte`) renders the endpoint list. Clicking an endpoint redirects to `actionShow`, which renders `show.latte` with the console form for that one endpoint. `GET /api/v1/books/{id}` has a URL template: the form asks for `id` and the console puts it into the URL.
 
 <<< @/../examples/openapi-console/app/UI/Console/default.latte
 
